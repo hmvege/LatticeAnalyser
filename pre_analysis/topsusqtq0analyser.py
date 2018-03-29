@@ -7,7 +7,7 @@ from tools.folderreadingtools import check_folder
 class TopsusQtQ0Analyser(TopsusAnalyserCore):
 	"""Topological susceptibility QtQ0 analysis class."""
 	observable_name = r"$\chi(\langle Q_t Q_{t_0} \rangle)^{1/4}$"
-	observable_name_compact = "qtqzero"
+	observable_name_compact = "topsusqtq0"
 	x_label = r"$\sqrt{8t_{flow}}[fm]$"
 	y_label = r"$\chi(\langle Q_{t} Q_{t_0} \rangle)^{1/4} [GeV]$" # $\chi_t^{1/4}[GeV]$
 

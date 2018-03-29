@@ -1,5 +1,5 @@
 from pre_analysis import *
-from post_analysis.post_analysis import *
+from post_analysis import *
 from tools.folderreadingtools import DataReader
 from tools.postanalysisdatareader import PostAnalysisDataReader
 import statistics.parallel_tools as ptools
@@ -328,7 +328,7 @@ def analyse(parameters):
 	if "topsusMC" in parameters["observables"]:
 		analyse_topsusMCTime(params, parameters["MC_time_splits"])
 	if "topsusqtq0" in parameters["observables"]:
-		analyse_qtq0(params, parameters["q0_flow_times"])
+		analyse_topsus_qtq0(params, parameters["q0_flow_times"])
 	
 	# Other definitions
 	if "qtq0e" in parameters["observables"]:
@@ -444,6 +444,12 @@ def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target
 				topcmc_analysis.plot_interval(i)
 			topcmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
+		if "topsus4" in observables:
+			topsus4_analysis = topsus4_postanalysis(data, verbose=verbose)
+			print topsus4_analysis
+			topsus4_analysis.set_analysis_data_type(analysis_type)
+			topsus4_analysis.plot()
+
 		if "topsust" in observables:
 			topsust_analysis = TopSusTPostAnalysis(data, verbose=verbose)
 			print topsust_analysis
@@ -493,7 +499,7 @@ def main():
 	# observables = ["topcte", "topcMC", "topsuste", "topsusMC", "topct"]
 	# observables = ["topsuste", "topsusMC", "topct"]
 	# observables = ["topsusMC"]
-	# observables = ["qtq0e"]
+	# observables = ["topsusqtq0"]#, "qtq0e"]
 
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
 	print 100*"=" + "\n"
@@ -618,14 +624,14 @@ def main():
 	# analysis_parameter_list = [databeta61, databeta62]
 	# analysis_parameter_list = [smaug_data_beta61_analysis]
 
-	#### Submitting observable-batches
-	for analysis_parameters in analysis_parameter_list:
-		analyse(analysis_parameters)
+	# #### Submitting observable-batches
+	# for analysis_parameters in analysis_parameter_list:
+	# 	analyse(analysis_parameters)
 
-	# #### Submitting post-analysis data
-	# if len(analysis_parameter_list) >= 2:
-	# 	post_analysis(data_batch_folder, beta_folders, observables, topsus_fit_targets,
-	# 		line_fit_interval, energy_fit_target, verbose=verbose)
+	#### Submitting post-analysis data
+	if len(analysis_parameter_list) >= 2:
+		post_analysis(data_batch_folder, beta_folders, observables, topsus_fit_targets,
+			line_fit_interval, energy_fit_target, verbose=verbose)
 
 if __name__ == '__main__':
 	main()

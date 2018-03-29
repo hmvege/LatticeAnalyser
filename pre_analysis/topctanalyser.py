@@ -1,4 +1,5 @@
 from core.flowanalyser import FlowAnalyser
+from tools.folderreadingtools import check_folder
 import copy
 import os
 

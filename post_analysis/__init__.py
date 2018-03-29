@@ -1,0 +1,22 @@
+# Energy definition
+from energypostanalysis import EnergyPostAnalysis
+
+# Plaqeutte definition
+from plaqpostanalysis import PlaqPostAnalysis
+
+# Topological charge post analyses
+from topcpostanalysis import TopcPostAnalysis
+from topctpostanalysis import TopctPostAnalysis
+from topc4postanalysis import Topc4PostAnalysis
+from topcteintervalpostanalysis import TopcteIntervalPostAnalysis
+from topcmcintervalpostanalysis import TopcMCIntervalPostAnalysis
+
+# Topological susceptibility post analyses
+from topsuspostanalysis import TopsusPostAnalysis
+from topsustpostanalysis import TopSusTPostAnalysis
+from topsus4postanalysis import TopcsusPostAnalysis
+from topsusteintervalpostanalysis import TopsusteIntervalPostAnalysis
+from topsusmcintervalpostanalysis import TopsusMCIntervalPostAnalysis
+from topsusqtq0postanalysis import TopsusQtQ0PostAnalysis
+
+# Other definitions and observable post analyses

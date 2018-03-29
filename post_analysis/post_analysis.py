@@ -19,7 +19,7 @@ __all__ = [
 	"TopChargeEuclSplitPostAnalysis", "TopChargeMCSplitPostAnalysis",
 ]
 
-class _PostAnalysis:
+class _postcore:
 	"""Post analysis base class."""
 	observable_name = "Observable"
 	observable_name_compact = "obs"
@@ -416,7 +416,6 @@ class _MultiObservablePostAnalysis(_PostAnalysis):
 		plt.rcParams['xtick.labelsize'] = old_rc_paramx
 		plt.rcParams['ytick.labelsize'] = old_rc_paramy
 
-
 class TopSusPostAnalysis(_PostAnalysis):
 	observable_name = "Topological Susceptibility"
 	observable_name_compact = "topsus"
@@ -528,7 +527,6 @@ class TopSusPostAnalysis(_PostAnalysis):
 		print "Continuum plot of %s created in %s" % (self.observable_name.lower(), fname)
 		# plt.show()
 		plt.close(fig)
-
 
 class EnergyPostAnalysis(_PostAnalysis):
 	observable_name = "Energy"
@@ -810,7 +808,6 @@ class TopSusMCSplitPostAnalysis(_MultiObservablePostAnalysis):
 	x_label = r"$\sqrt{8t_{flow}}[fm]$"
 	y_label = r"$\chi^{1/4} [GeV]$"
 	sub_obs = True
-
 
 def main(args):
 	"""
