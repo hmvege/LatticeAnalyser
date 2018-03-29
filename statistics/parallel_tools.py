@@ -44,7 +44,7 @@ def _return_mean_squared(x, axis=None):
 	# For use instead of lambda x**2 : np.mean(x**2) in parallel
 	return np.mean(x**2, axis=axis)
 
-# Functions to be passed with **kwargs
+# Topsus functions to be passed with **kwargs
 def _chi(Q2, const=None):
 	return const*Q2**(0.25)
 
@@ -54,8 +54,22 @@ def _chi_error(Q2, Q2_std, const=None):
 def _chi_derivative(Q2, const=None):
 	return 0.25*const / Q2**(0.75)
 
+def _chi_derivative_unnormalized(Q2, const=None):
+	return const
+
 def _chi_derivativeQ4(Q4, const=None):
 	return (0.25*const)**2 / Q4**(0.5625)
+
+# Correlator function for C to be passed with **kwargs
+def _C(QtQ0, const=None):
+	return const*QtQ0
+
+def _C_error(QtQ0, const=None):
+	return const*QtQ0
+
+def _C_derivative(QtQ0, const=None):
+	return const*QtQ0
+
 
 if __name__ == '__main__':
 	exit("Exit: %s to be imported as module in other programs." % __file__.split("/")[-1])

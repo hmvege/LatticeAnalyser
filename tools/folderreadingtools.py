@@ -9,7 +9,7 @@ import json
 __all__ = ["DataReader", "check_folder", "write_data_to_file", "write_raw_analysis_to_file"]
 
 class _DirectoryTree:
-	def __init__(self, batch_name, batch_folder, dryrun=False):
+	def __init__(self, batch_name, batch_folder, dryrun=False, verbose=True):
 		self.flow_tree = {}
 		self.obs_tree = {}
 		self.CURRENT_FOLDER = os.getcwd()
@@ -19,13 +19,15 @@ class _DirectoryTree:
 		self.found_observables = []
 		self.batch_name = batch_name
 		self.dryrun = dryrun
+		self.verbose = verbose
 
 		# Checks that the output folder actually exist
-		if not os.path.isdir(os.path.join("..", self.data_batch_folder)):
-			raise EnvironmentError("No folder name output at location %s" % os.path.join("..", self.data_batch_folder))
+		print self.CURRENT_FOLDER
+		if not os.path.isdir(self.data_batch_folder):
+			raise IOError("No folder name output at location %s" % self.data_batch_folder)
 
 		# Retrieves folders and subfolders
-		self.batch_name_folder = os.path.join("..", self.data_batch_folder,batch_name)
+		self.batch_name_folder = os.path.join(self.data_batch_folder, batch_name)
 
 		# Retrieves potential .npy files
 		self.observables_binary_files = {}
@@ -76,16 +78,6 @@ class _DirectoryTree:
 					self.flow_tree[flow_obs] = self.natural_sort(flow_obs_dir_list)
 
 					self.found_flow_observables.append(flow_obs)
-
-		# Creates figures folder
-		if os.path.split(self.CURRENT_FOLDER)[-1] == "tools":
-			self.figures_path = os.path.join("..", "..", "figures", batch_name)
-		elif os.path.split(self.CURRENT_FOLDER)[-1] == "analysis":
-			self.figures_path = os.path.join("..", "figures", batch_name)
-		else:
-			raise OSError("Current folder path not recognized: %s" % self.CURRENT_FOLDER)
-		
-		check_folder(self.figures_path, self.dryrun, verbose=True)
 
 	@staticmethod
 	def natural_sort(l):
@@ -298,7 +290,7 @@ class DataReader:
 	beta_to_spatial_size = {6.0: 24, 6.1: 28, 6.2: 32, 6.45: 48}
 	fobs = ["plaq", "energy", "topc"]
 
-	def __init__(self, batch_name, batch_folder, load_file=None, 
+	def __init__(self, batch_name, batch_folder, figures_folder, load_file=None, 
 			flow_epsilon=0.01, NCfgs=None, create_perflow_data=False, 
 			verbose=True, dryrun=False, correct_energy=False):
 		"""
@@ -307,6 +299,7 @@ class DataReader:
 		Args:
 			batch_name: string containing batch name.
 			batch_folder: string containing location of batch.
+			figures_folder: location of where to place figures from analysis.
 			load_file: bool if we will try to look for a .npy file in 
 				batch_folder/batch_name. Will look for the topct file as well.
 			flow_epsilon: flow epsilon in flow of file we are loading. Default
@@ -320,16 +313,15 @@ class DataReader:
 
 		self.verbose = verbose
 		self.dryrun = dryrun
-
 		self.data = {}
-
 		self.correct_energy = correct_energy
-
 		self.batch_name = batch_name
 		self.batch_folder = batch_folder
+		self.figures_folder = figures_folder
+
 		self.__print_load_info()
 
-		self.file_tree = _DirectoryTree(self.batch_name, self.batch_folder, dryrun=dryrun)
+		self.file_tree = _DirectoryTree(self.batch_name, self.batch_folder, dryrun=dryrun, verbose=verbose)
 
 		if NCfgs == None:
 			raise ValueError("missing number of observables associated with batch.")
@@ -387,6 +379,10 @@ class DataReader:
 
 			if create_perflow_data:
 				self._create_perflow_data()
+
+		# Checks that provided folder exists
+		check_folder(self.figures_folder, self.dryrun, verbose=self.verbose)
+
 
 	def __print_load_info(self):
 		load_job_info = "="*100
@@ -571,13 +567,14 @@ def write_data_to_file(analysis_object):
 		post_analysis_folder: optional string output folder, default is ../output/analyzed_data
 	"""
 	dryrun = analysis_object.dryrun
+	verbose = analysis_object.verbose
 	post_analysis_folder = analysis_object.post_analysis_folder
 
 	# Retrieves beta value and makes it into a string
 	beta_string = str(analysis_object.beta).replace(".", "_")
 	
 	# Ensures that the post analysis data folder exists
-	check_folder(post_analysis_folder, dryrun, verbose=True)
+	check_folder(post_analysis_folder, dryrun, verbose=verbose)
 
 	# Retrieves analyzed data
 	x = copy.deepcopy(analysis_object.x)
@@ -629,7 +626,7 @@ def write_data_to_file(analysis_object):
 	# 	print data
 	# 	exit(1)
 
-def write_raw_analysis_to_file(raw_data, analysis_type, observable, post_analysis_folder, dryrun=False, verbose=True):
+def write_raw_analysis_to_file(raw_data, analysis_type, observable, post_analysis_folder, dryrun=False, verbose=False):
 	"""
 	Function that writes raw analysis data to file, either bootstrapped or
 		jackknifed data.
@@ -663,5 +660,5 @@ def write_raw_analysis_to_file(raw_data, analysis_type, observable, post_analysi
 	if verbose:
 		print "Analysis %s for observable %s stored as binary data at %s.npy" % (analysis_type, observable, file_name_path)
 
-if __name__ == '__main__':
-	sys.exit("Exiting module.")
+# if __name__ == '__main__':
+# 	sys.exit("Exiting module.")

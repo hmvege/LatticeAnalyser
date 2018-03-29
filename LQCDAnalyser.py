@@ -1,7 +1,7 @@
-from pre_analysis.flow_analyser import *
+from pre_analysis import *
+from post_analysis.post_analysis import *
 from tools.folderreadingtools import DataReader
 from tools.postanalysisdatareader import PostAnalysisDataReader
-from post_analysis.post_analysis import *
 import statistics.parallel_tools as ptools
 import os
 import numpy as np
@@ -9,7 +9,7 @@ import copy
 import sys
 import time
 
-def analyse_default(analysis_object, N_bs, NBins=30):
+def analyse_default(analysis_object, N_bs, NBins=30, skip_histogram=False):
 	print analysis_object
 	analysis_object.boot(N_bs)
 	analysis_object.jackknife()
@@ -28,33 +28,34 @@ def analyse_default(analysis_object, N_bs, NBins=30):
 	analysis_object.plot_original()
 	analysis_object.plot_boot()
 	analysis_object.plot_jackknife()
-	analysis_object.plot_histogram(0, NBins=NBins)
-	analysis_object.plot_histogram(int(analysis_object.NFlows * 0.25), NBins=NBins)
-	analysis_object.plot_histogram(int(analysis_object.NFlows * 0.50), NBins=NBins)
-	analysis_object.plot_histogram(int(analysis_object.NFlows * 0.75), NBins=NBins)
-	analysis_object.plot_histogram(-1, NBins=NBins)
+	if not skip_histogram:
+		analysis_object.plot_histogram(0, NBins=NBins)
+		analysis_object.plot_histogram(int(analysis_object.NFlows * 0.25), NBins=NBins)
+		analysis_object.plot_histogram(int(analysis_object.NFlows * 0.50), NBins=NBins)
+		analysis_object.plot_histogram(int(analysis_object.NFlows * 0.75), NBins=NBins)
+		analysis_object.plot_histogram(-1, NBins=NBins)
 	analysis_object.plot_integrated_correlation_time()
 	analysis_object.plot_integrated_correlation_time()
 	analysis_object.save_post_analysis_data()
 
 def analyse_plaq(params):
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params 
-	plaq_analysis = AnalysePlaquette(obs_data("plaq"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+	plaq_analysis = PlaquetteAnalyser(obs_data("plaq"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
 	analyse_default(plaq_analysis, N_bs)
 
 def analyse_energy(params):
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params 
-	energy_analysis = AnalyseEnergy(obs_data("energy"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+	energy_analysis = EnergyAnalyser(obs_data("energy"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
 	analyse_default(energy_analysis, N_bs)
 
 def analyse_topsus(params):
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params 
-	topsus_analysis = AnalyseTopologicalSusceptibility(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+	topsus_analysis = TopsusAnalyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
 	analyse_default(topsus_analysis, N_bs)
 
 def analyse_topc(params):
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params 
-	topc_analysis = AnalyseTopologicalCharge(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+	topc_analysis = TopcAnalyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
 
 	if topc_analysis.beta == 6.0:
 		topc_analysis.y_limits = [-9, 9]
@@ -68,36 +69,47 @@ def analyse_topc(params):
 	analyse_default(topc_analysis, N_bs, NBins=150)
 
 def analyse_topc4(params):
+	"""Analysis the topological chage with q^4."""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
-	topcq4_analysis = AnalyseQQuartic(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+	topc4_analysis = Topc4Analyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+	analyse_default(topc4_analysis, N_bs)
 
-	analyse_default(topcq4_analysis, N_bs)
+def analyse_topsus4(params):
+	"""Analysis topological susceptiblity with q^4."""
+	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
+	topsus4_analysis = Topsus4Analyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+	analyse_default(topsus4_analysis, N_bs)
 
-def analyse_qtq0(params, qzero_flow_times):
+def analyse_topsus_qtq0(params, q0_flow_times):
+	"""
+	Analysis the topological susceptiblity with one charge q0 set a given 
+	flow time.
+	"""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
 
-	qtqzero_analysis = AnalyseQtQZero(obs_data("topc"), dryrun=dryrun,
+	qtq0_analysis = TopsusQtQ0Analyser(obs_data("topc"), dryrun=dryrun,
 		parallel=parallel, numprocs=numprocs, verbose=verbose)
 
-	for qzero_flow_time_index in qzero_flow_times:
-		qtqzero_analysis.setQ0(qzero_flow_time_index)
-		analyse_default(qtqzero_analysis, N_bs)
+	for q0_flow_time_percent in q0_flow_times:
+		qtq0_analysis.setQ0(q0_flow_time_percent) 
+		analyse_default(qtq0_analysis, N_bs, skip_histogram=True)
 
 def analyse_qtq0e(params, flow_time_indexes, euclidean_time_percents):
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
 
-	qtqzero_analysis = AnalyseQtQ0Euclidean(obs_data("topct"), dryrun=dryrun,
+	qtq0_analysis = QtQ0EuclideanAnalyser(obs_data("topct"), dryrun=dryrun,
 		parallel=parallel, numprocs=numprocs, verbose=verbose)
 
 	for flow_time_index in flow_time_indexes:
 		for euclidean_percent in euclidean_time_percents:
-			qtqzero_analysis.set_flow_time(flow_time_index, euclidean_percent)
-			analyse_default(qtqzero_analysis, N_bs)
+			qtq0_analysis.set_flow_time(flow_time_index, euclidean_percent)
+			analyse_default(qtq0_analysis, N_bs)
 
 def analyse_topct(params, numsplits):
+	"""Analyses topological charge at a specific euclidean time."""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
 
-	topct_analysis = AnalyseTopChargeInEuclTime(obs_data("topct"),
+	topct_analysis = TopctAnalyser(obs_data("topct"),
 		dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
 
 	indexes = np.linspace(0, topct_analysis.NT, numsplits, dtype=int) - 1
@@ -107,21 +119,22 @@ def analyse_topct(params, numsplits):
 		analyse_default(topct_analysis, N_bs)
 
 def analyse_topsust(params, numsplits):
+	"""Analyses topological susceptibility at a specific euclidean time."""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
 
-	topct_analysis = AnalyseTopSusInEuclTime(obs_data("topct"),
+	topct_analysis = TopsustAnalyser(obs_data("topct"),
 		dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
 
 	indexes = np.linspace(0, topct_analysis.NT, numsplits, dtype=int) - 1
 	indexes[0] += 1
 	for ie in indexes:
 		topct_analysis.setEQ0(ie)
-		analyse_default(topct_analysis, N_bs)
+		analyse_default(topct_analysis, N_bs, skip_histogram=True)
 
-def analyse_topcEuclTime(params, numsplits=None, intervals=None):
+def analyse_topcte_intervals(params, numsplits=None, intervals=None):
 	"""
-	Analysis function for the topological charge in euclidean time. Requires
-	either numsplits or intervals.
+	Analysis function for the topological charge in euclidean time intervals. 
+	Requires either numsplits or intervals.
 
 	Args:
 		params: list of default parameters containing obs_data, dryrun, 
@@ -131,7 +144,7 @@ def analyse_topcEuclTime(params, numsplits=None, intervals=None):
 	"""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
 
-	analyse_topcte = AnalyseTopChargeSplitEuclideanTime(obs_data("topct"),
+	analyse_topcte = TopcteIntervalAnalyser(obs_data("topct"),
 		dryrun=dryrun, parallel=parallel, 
 		numprocs=numprocs, verbose=verbose)
 
@@ -154,7 +167,7 @@ def analyse_topcEuclTime(params, numsplits=None, intervals=None):
 		analyse_topcte.set_t_interval(t_int)
 		analyse_default(analyse_topcte, N_bs)
 
-def analyse_topsusEuclTime(params, numsplits=None, intervals=None):
+def analyse_topsuste_intervals(params, numsplits=None, intervals=None):
 	"""
 	Analysis function for the topological susceptibility in euclidean time. 
 	Requires either numsplits or intervals.
@@ -167,7 +180,7 @@ def analyse_topsusEuclTime(params, numsplits=None, intervals=None):
 	"""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
 
-	analyse_topsuste = AnalysisTopSusSplitEuclideanTime(obs_data("topct"),
+	analyse_topsuste = TopsusteIntervalAnalyser(obs_data("topct"),
 		dryrun=dryrun, parallel=parallel, 
 		numprocs=numprocs, verbose=verbose)
 
@@ -192,9 +205,10 @@ def analyse_topsusEuclTime(params, numsplits=None, intervals=None):
 
 
 def analyse_topcMCTime(params, numsplits=None, intervals=None):
+	"""Analysis the topological charge in monte carlo time slices."""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
 
-	analyse_topcMC = AnalysisTopChargeSplitMCTime(obs_data("topc"),
+	analyse_topcMC = TopcMCIntervalAnalyser(obs_data("topc"),
 		dryrun=dryrun, parallel=parallel,
 		numprocs=numprocs, verbose=verbose)
 
@@ -218,9 +232,10 @@ def analyse_topcMCTime(params, numsplits=None, intervals=None):
 		analyse_default(analyse_topcMC, N_bs)
 
 def analyse_topsusMCTime(params, numsplits=None, intervals=None):
+	"""Analysis the topological susceptibility in monte carlo time slices."""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
 
-	analyse_topcMC = AnalysisTopSusSplitMCTime(obs_data("topc"),
+	analyse_topcMC = TopsusMCIntervalAnalyser(obs_data("topc"),
 		dryrun=dryrun, parallel=parallel,
 		numprocs=numprocs, verbose=verbose)
 
@@ -262,15 +277,16 @@ def analyse(parameters):
 	# Retrieves analysis parameters
 	batch_name = parameters["batch_name"]
 	batch_folder = parameters["batch_folder"]
+	figures_folder = parameters["figures_folder"]
 
 	_bp = parameters["base_parameters"]
 
 	# Retrieves data
-	obs_data = DataReader(batch_name, batch_folder,
+	obs_data = DataReader(batch_name, batch_folder, figures_folder, 
 		load_file=parameters["load_file"],
 		flow_epsilon=parameters["flow_epsilon"], NCfgs=parameters["NCfgs"],
 		create_perflow_data=parameters["create_perflow_data"],
-		dryrun=_bp["dryrun"], verbose=_bp["verbose"],
+		verbose=_bp["verbose"], dryrun=_bp["dryrun"],
 		correct_energy=parameters["correct_energy"])
 
 	# Writes raw observable data to a single binary file
@@ -287,29 +303,37 @@ def analyse(parameters):
 		analyse_plaq(params)
 	if "energy" in parameters["observables"]:
 		analyse_energy(params)
+
+	# Topological charge definitions
 	if "topc" in parameters["observables"]:
 		analyse_topc(params)
-	if "topsus" in parameters["observables"]:
-		analyse_topsus(params)
-	if "qtqzero" in parameters["observables"]:
-		analyse_qtq0(params, parameters["qzero_flow_times"])
-	if "qtq0e" in parameters["observables"]:
-		analyse_qtq0e(params, parameters["flow_time_indexes"], parameters["euclidean_time_percents"])
 	if "topc4" in parameters["observables"]:
 		analyse_topc4(params)
-	if "topsust" in parameters["observables"]:
-		analyse_topsust(params, parameters["num_t_euclidean_indexes"])
 	if "topct" in parameters["observables"]:
 		analyse_topct(params, parameters["num_t_euclidean_indexes"])
 	if "topcte" in parameters["observables"]:
-		analyse_topcEuclTime(params, parameters["numsplits_eucl"], parameters["intervals_eucl"])
-	if "topsuste" in parameters["observables"]:
-		analyse_topsusEuclTime(params, parameters["numsplits_eucl"], parameters["intervals_eucl"])
+		analyse_topcte_intervals(params, parameters["numsplits_eucl"], parameters["intervals_eucl"])
 	if "topcMC" in parameters["observables"]:
 		analyse_topcMCTime(params, parameters["MC_time_splits"])
+
+	# Topological susceptibility definitions
+	if "topsus" in parameters["observables"]:
+		analyse_topsus(params)
+	if "topsus4" in parameters["observables"]:
+		analyse_topsus4(params)
+	if "topsust" in parameters["observables"]:
+		analyse_topsust(params, parameters["num_t_euclidean_indexes"])
+	if "topsuste" in parameters["observables"]:
+		analyse_topsuste_intervals(params, parameters["numsplits_eucl"], parameters["intervals_eucl"])
 	if "topsusMC" in parameters["observables"]:
 		analyse_topsusMCTime(params, parameters["MC_time_splits"])
+	if "topsusqtq0" in parameters["observables"]:
+		analyse_qtq0(params, parameters["q0_flow_times"])
 	
+	# Other definitions
+	if "qtq0e" in parameters["observables"]:
+		analyse_qtq0e(params, parameters["flow_time_indexes"], parameters["euclidean_time_percents"])
+
 	post_time = time.clock()
 	print "="*100
 	print "Analysis of batch %s observables %s in %.2f seconds" % (batch_name,
@@ -383,7 +407,7 @@ def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target
 			topc4_analysis.set_analysis_data_type(analysis_type)
 			topc4_analysis.plot()
 
-		if "qtqzero" in observables:
+		if "qtq0" in observables:
 			qtq0_analysis = QtQ0PostAnalysis(data, verbose=verbose)
 			print qtq0_analysis
 			qtq0_analysis.set_analysis_data_type(analysis_type)
@@ -451,9 +475,13 @@ def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target
 def main():
 	#### Available observables
 	observables = [
-		"plaq", "energy", "topc", "topsus", "qtqzero", "topc4", 
-		"topct", "topcte", "topcMC", "topsuste", 
-		"topsusMC", "topsust", "qtq0e"
+		"plaq", "energy", 
+		# Topological charge definitions
+		"topc", "topc4", "topct", "topcte", "topcMC", 
+		# Topological susceptibility definitions
+		"topsus", "topsus4", "topsust", "topsuste", "topsusMC", "topsusqtq0",
+		# Other quantities
+		"qtq0e",
 	]
 
 	# ### Basic observables
@@ -465,7 +493,7 @@ def main():
 	# observables = ["topcte", "topcMC", "topsuste", "topsusMC", "topct"]
 	# observables = ["topsuste", "topsusMC", "topct"]
 	# observables = ["topsusMC"]
-	observables = ["qtq0e"]
+	# observables = ["qtq0e"]
 
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
 	print 100*"=" + "\n"
@@ -502,8 +530,9 @@ def main():
 	#### Different batches
 	# data_batch_folder = "data2"
 	# data_batch_folder = "data4"
-	data_batch_folder = "data5"
-	# data_batch_folder = "DataGiovanni"
+	data_batch_folder = "../GluonAction/data5"
+	figures_folder = "figures"
+	# data_batch_folder = "../GluonAction/DataGiovanni"
 	# data_batch_folder = "smaug_data_beta61"
 
 	#### If we need to multiply
@@ -533,7 +562,7 @@ def main():
 	MC_time_splits = 4
 
 	# Percents of data where we do qtq0
-	qzero_flow_times = [0.0, 0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.0]
+	q0_flow_times = [0.0, 0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.0]
 
 	# Flow time indexes to plot qtq0 in euclidean time at
 	flow_time_indexes = [0, 50, 200, 400, 700, 999]
@@ -542,13 +571,14 @@ def main():
 	#### Analysis batch setups
 	default_params = {
 		"batch_folder": data_batch_folder,
+		"figures_folder": figures_folder,
 		"observables": observables, "load_file": load_file,
 		"save_to_binary": save_to_binary, "base_parameters": base_parameters,
 		"flow_epsilon": flow_epsilon, "NFlows": NFlows,
 		"create_perflow_data": create_perflow_data,
 		"correct_energy": correct_energy,
 		"num_t_euclidean_indexes": num_t_euclidean_indexes,
-		"qzero_flow_times": qzero_flow_times,
+		"q0_flow_times": q0_flow_times,
 		"flow_time_indexes": flow_time_indexes,
 		"euclidean_time_percents": euclidean_time_percents,
 		"numsplits_eucl": numsplits_eucl,
