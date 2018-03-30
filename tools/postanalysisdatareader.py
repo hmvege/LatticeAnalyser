@@ -27,7 +27,8 @@ class PostAnalysisDataReader:
 		# Dictionary variable to hold all the data sorted by batches
 		self.data_batches = {}
 
-		# Dictionaries to hold the raw bootstrapped/jackknifed data and autocorrelation data
+		# Dictionaries to hold the raw bootstrapped/jackknifed 
+		# data and autocorrelation data
 		self.data_raw = {}
 
 		# Binary folder types available
@@ -42,22 +43,33 @@ class PostAnalysisDataReader:
 		# Iterates over the different beta value folders
 		for beta_folder in self._get_folder_content(self.batch_folder):
 
-			fix innlasting av beta her
-
 			#### TEMP ####
 			if beta_folder == "beta645": continue
 			#### TEMP ####
 
 			# Construct beta folder path
-			beta_folder_path = os.path.join(self.batch_folder, beta_folder, "post_analysis")
+			beta_folder_path = os.path.join(self.batch_folder, beta_folder,
+				"post_analysis_data")
 
 			observables_data = {}
 			obs_data_raw = {}
 
 			_beta_values = []
 
+			# Tries to load the parameter file
+			try:
+				param_file = os.path.join(self.batch_folder, beta_folder, 
+					"post_analysis_data", "params.json")
+				self.param_beta = self._get_parameter_data(param_file)["beta"]
+				_beta_values.append(self.param_beta)
+			except IOError:
+				print "No parameter file found."
+
 			for obs in self._get_folder_content(beta_folder_path):
 				obs_folder_path = os.path.join(beta_folder_path, obs)
+
+				if os.path.splitext(obs_folder_path)[-1] == ".json": 
+					continue
 
 				if self._check_folder_content_type_is_dir(obs_folder_path):
 					# In case we have an observable that contains sub folders 
@@ -210,19 +222,22 @@ class PostAnalysisDataReader:
 
 		# Retrieves meta data
 		# Make it so one can retrieve the key as meta_data[i] and then value as meta_data[i+1]
-		json_fpath = os.path.join(self.batch_folder, self.batch_name, 
-			"post_analysis_data", "params.json")
-		meta_data = self._get_parameter_data(json_fpath)
-		print meta_data
+		if os.path.splitext(observable_file)[-1] == ".txt":
+			meta_data = self._get_meta_data(observable_file)
+			
+			# Loads data into temporary holder
+			retrieved_data = np.loadtxt(observable_file)
+		else:
+			meta_data = {"beta": self.param_beta}
+
+			# Loads data into temporary holder
+			retrieved_data = np.load(observable_file)
 
 		# Temporary methods for getting observable name and beta value, as this will be put into the meta data
 		obs = os.path.split(os.path.splitext(observable_file)[0])[-1]
 
 		# Dictionary to store all observable data in
 		obs_data = {}
-
-		# Loads data into temporary holder
-		retrieved_data = np.load(observable_file)
 
 		# Puts data into temporary holding facilities
 		t 			= retrieved_data[:,0]
@@ -281,8 +296,18 @@ class PostAnalysisDataReader:
 			return_dict = json.load(f)
 		return return_dict
 
+	@staticmethod
+	def _get_meta_data(file):
+		"""Retrieves meta data from header or file."""
+		meta_data = {}
+		with open(file) as f:
+			header_content = f.readline().split(" ")[1:]
+			meta_data[header_content[0]] = header_content[1]
+			meta_data[header_content[2]] = float(header_content[3].replace("_", "."))
+		return meta_data
+
 	def _reorganize_data(self):
-		# Reorganizes the data into beta-values and observables sorting
+		"""Reorganizes the data into beta-values and observables sorting."""
 		self.data_observables = {}
 
 		# Sets up new dictionaries by looping over batch names
@@ -300,7 +325,7 @@ class PostAnalysisDataReader:
 				self.data_observables[observable_name][beta] = self.data_batches[beta][observable_name]
 
 	def _reorganize_raw_data(self):
-		# Reorganizes the data into beta-values and observables sorting
+		"""Reorganizes the data into beta-values and observables sorting."""
 		self.raw_analysis = {analysis_type: {} for analysis_type in self.analysis_types}
 
 		# Sets up new beta value dictionaries
@@ -337,6 +362,7 @@ class PostAnalysisDataReader:
 
 
 	def _check_raw_bin_dict_keys(self, analysis_type, beta, observable_name, sub_obs=None):
+		"""Internal method for setting up dictionaries in case they do not exist."""
 		if beta not in self.raw_analysis[analysis_type]:
 			self.raw_analysis[analysis_type][beta] = {}
 

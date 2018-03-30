@@ -1,6 +1,6 @@
-from core.topsusanalysercore import TopsusAnalyserCore
+from core.flowanalyser import FlowAnalyser
 
-class Topc4Analyser(TopsusAnalyserCore):
+class Topc4Analyser(FlowAnalyser):
 	"""Class for topological charge with quartic topological charge."""
 	observable_name = r"$Q^4$"
 	observable_name_compact = "topq4"

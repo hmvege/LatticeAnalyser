@@ -389,7 +389,7 @@ class DataReader:
 	def write_parameter_file(self):
 		"""Writes a parameter file for the analysis of a given batch."""
 
-		post_analysis_path = os.path.join(self.batch_folder, self.batch_name, "post_analysis")
+		post_analysis_path = os.path.join(self.batch_folder, self.batch_name, "post_analysis_data")
 		param_file_path = os.path.join(post_analysis_path, "params.json")
 		json_dict = {}
 
@@ -418,6 +418,7 @@ class DataReader:
 		print load_job_info
 
 	def __retrieve_observable_data(self, observables_to_retrieve, create_perflow_data=False):
+		"""Retrieves observable data when there is no binary file to retrieve from."""
 		_NFlows = []
 		_beta_values = []
 		for obs in observables_to_retrieve:
@@ -459,12 +460,14 @@ class DataReader:
 
 	@staticmethod
 	def __get_size_and_beta(input_file):
+		"""Gets size and beta value from binary file name."""
 		_parts = input_file.split("/")[-1].split("_")
 		N, beta = _parts[:2]
 		beta = float(beta.strip(".npy"))
 		return int(N), float(beta)
 
 	def __load_files(self, input_file, obs_list, flow_epsilon):
+		"""Binary file loader for quicker loading of data."""
 		raw_data = np.load(input_file)
 
 		N, beta = self.__get_size_and_beta(input_file)
@@ -598,7 +601,7 @@ def check_folder(folder_name, dryrun=False, verbose=False):
 		if not dryrun:
 			os.mkdir(folder_name)
 
-def write_data_to_file(analysis_object):
+def write_data_to_file(analysis_object, save_as_txt=False):
 	"""
 	Function that write data to file for the post analysis class
 
@@ -653,8 +656,10 @@ def write_data_to_file(analysis_object):
 
 	# Saves data to file
 	if not dryrun:
-		# np.savetxt(fname_path, data, fmt="%.16f", header=header_string)
-		np.save(fname_path, data)
+		if save_as_txt:
+			np.savetxt(fname_path + ".txt", data, fmt="%.16f", header=header_string)
+		else:
+			np.save(fname_path, data)
 
 	print "Data for the post analysis written to %s" % fname_path
 

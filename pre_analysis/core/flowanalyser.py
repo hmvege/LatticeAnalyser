@@ -156,10 +156,10 @@ class FlowAnalyser(object):
 		else:
 			return head + ext
 
-	def save_post_analysis_data(self):
+	def save_post_analysis_data(self, save_as_txt=False):
 		"""Saves post analysis data to a file."""
 		if self.bootstrap_performed:
-			write_data_to_file(self)
+			write_data_to_file(self, save_as_txt=save_as_txt)
 
 	def save_raw_analysis_data(self, data, analysis_type):
 		"""Saves the raw analysis data to post analysis folder as binary."""

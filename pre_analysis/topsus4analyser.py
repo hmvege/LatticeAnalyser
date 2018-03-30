@@ -3,7 +3,7 @@ from core.topsusanalysercore import TopsusAnalyserCore
 class Topsus4Analyser(TopsusAnalyserCore):
 	"""Class for topological susceptibility with quartic topological charge."""
 	observable_name = r"$\chi(\langle Q^4 \rangle)^{1/8}$"
-	observable_name_compact = "topq4"
+	observable_name_compact = "topsus4"
 	x_label = r"$\sqrt{8t_{flow}}[fm]$"
 	# y_label = r"$\chi(\langle Q^4 \rangle)^{1/8} = \frac{\hbar}{aV^{1/4}} \langle Q^4 \rangle^{1/8} [GeV]$" # 1/8 correct?
 	y_label = r"$\chi(\langle Q^4 \rangle)^{1/8} [GeV]$" # 1/8 correct?
@@ -20,8 +20,8 @@ class Topsus4Analyser(TopsusAnalyserCore):
 		"""Topological susceptibility with error propagation."""
 		return 0.125*self.const * Q4_std / Q4**(0.875)
 
-# def main():
-# 	exit("Module Topsus4Analyser not intended for standalone usage.")
+def main():
+	exit("Module Topsus4Analyser not intended for standalone usage.")
 
-# if __name__ == '__main__':
-# 	main()
+if __name__ == '__main__':
+	main()

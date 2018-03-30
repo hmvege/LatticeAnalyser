@@ -36,7 +36,7 @@ def analyse_default(analysis_object, N_bs, NBins=30, skip_histogram=False):
 		analysis_object.plot_histogram(-1, NBins=NBins)
 	analysis_object.plot_integrated_correlation_time()
 	analysis_object.plot_integrated_correlation_time()
-	analysis_object.save_post_analysis_data()
+	analysis_object.save_post_analysis_data() # save_as_txt=False
 
 def analyse_plaq(params):
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params 
@@ -258,7 +258,6 @@ def analyse_topsusMCTime(params, numsplits=None, intervals=None):
 		analyse_topcMC.set_MC_interval(MC_int)
 		analyse_default(analyse_topcMC, N_bs)
 
-
 def analyse(parameters):
 	"""
 	Function for starting flow analyses.
@@ -368,14 +367,11 @@ def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target
 
 	for analysis_type in post_analysis_data_type:
 		if "topsus" in observables:
-			# Plots topsus
+			# Plots topsusprint analysis
 			topsus_analysis = TopsusPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
-			print topsus_analysis
 			topsus_analysis.set_analysis_data_type(analysis_type)
 			topsus_analysis.plot()
-
-			# Retrofits the topsus for continuum limit
-			continium_targets = [0.3, 0.4, 0.5, 0.58]
+			continium_targets = [0.3, 0.4, 0.5, 0.6]
 			for cont_target in continium_targets:
 				topsus_analysis.plot_continuum(cont_target)
 
@@ -412,7 +408,7 @@ def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target
 
 		if "topsusqtq0" in observables:
 			topsusqtq0_analysis = TopsusQtQ0PostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
-			print qtq0_analysis
+			print topsusqtq0_analysis
 			topsusqtq0_analysis.set_analysis_data_type(analysis_type)
 			N_int, intervals = topsusqtq0_analysis.get_N_intervals()
 			for i in range(N_int):
@@ -448,7 +444,7 @@ def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target
 			topcmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
 		if "topsus4" in observables:
-			topsus4_analysis = topsus4_postanalysis(data, verbose=verbose)
+			topsus4_analysis = Topsus4PostAnalysis(data, verbose=verbose)
 			print topsus4_analysis
 			topsus4_analysis.set_analysis_data_type(analysis_type)
 			topsus4_analysis.plot()
@@ -478,6 +474,10 @@ def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target
 			N_int, intervals = topsusmc_analysis.get_N_intervals()
 			for i in range(N_int):
 				topsusmc_analysis.plot_interval(i)
+				continium_targets = [0.3, 0.4, 0.5, 0.6]
+				for cont_target in continium_targets:
+					topsusmc_analysis.plot_continuum(cont_target, i)
+
 			topsusmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
 
@@ -498,18 +498,10 @@ def main():
 	# observables = basic_observables
 	# observables = ["topc", "plaq", "topsus", "topc4"]
 
-	# observables = ["topcMC", "topsusMC"]
+	# observables = ["topc4", "topsus4"]
 	# observables = ["topcte", "topcMC", "topsuste", "topsusMC", "topct"]
-	# observables = ["topsuste", "topsusMC", "topct"]
-	# observables = ["topsusMC"]
-
-	# observables = [
-	# 	"topct", "topcte", "topcMC", 
-	# 	# Topological susceptibility definitions
-	# 	"topsus4", "topsust", "topsuste", "topsusMC", "topsusqtq0",
-	# 	# Other quantities
-	# 	"qtq0e",
-	# ]
+	observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
+	observables = ["topsusMC"]
 
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
 	print 100*"=" + "\n"
@@ -630,7 +622,7 @@ def main():
 	#### Adding relevant batches to args
 	analysis_parameter_list = [databeta60, databeta61, databeta62, databeta645]
 	analysis_parameter_list = [databeta60, databeta61, databeta62]
-	# analysis_parameter_list = [databeta62]
+	# analysis_parameter_list = [databeta60]
 	# analysis_parameter_list = [databeta61, databeta62]
 	# analysis_parameter_list = [smaug_data_beta61_analysis]
 

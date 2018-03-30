@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-class PostCore:
+class PostCore(object):
 	"""Post analysis base class."""
 	observable_name = "Observable"
 	observable_name_compact = "obs"
@@ -40,8 +40,6 @@ class PostCore:
 		self.unanalyzed_data = {}
 		self.bootstrap_data	= {}
 		self.jackknife_data = {}
-
-		print data.data_observables.keys()
 
 		for beta in sorted(data.data_observables[observable].keys()):
 			if self.sub_obs:
@@ -123,7 +121,7 @@ class PostCore:
 		self._initiate_plot_values(data)
 
 	def _initiate_plot_values(self, data):
-		# Sorts data into a format specific for the plotting method
+		"""Sorts data into a format specific for the plotting method."""
 		for beta in sorted(data.keys()):
 			if beta == 6.45: self.flow_time *= 2
 			values = {}

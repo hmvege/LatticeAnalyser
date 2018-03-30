@@ -69,7 +69,7 @@ class MultiPlotCore(PostCore):
 			print "Intervals N=%d, possible for %s: " % (len(self.observable_intervals), 
 				self.observable_name_compact),
 			print self.observable_intervals
-		return len(self.observable_intervals), self.observable_intervals
+		return len(self.observable_intervals.values()[0]), self.observable_intervals
 
 	def plot_series(self, indexes, beta="all", x_limits=False, 
 		y_limits=False, plot_with_formula=False):
