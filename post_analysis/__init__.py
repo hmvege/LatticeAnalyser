@@ -6,8 +6,9 @@ from plaqpostanalysis import PlaqPostAnalysis
 
 # Topological charge post analyses
 from topcpostanalysis import TopcPostAnalysis
-from topctpostanalysis import TopctPostAnalysis
+from topc2postanalysis import Topc2PostAnalysis
 from topc4postanalysis import Topc4PostAnalysis
+from topctpostanalysis import TopctPostAnalysis
 from topcteintervalpostanalysis import TopcteIntervalPostAnalysis
 from topcmcintervalpostanalysis import TopcMCIntervalPostAnalysis
 

@@ -34,6 +34,9 @@ class PostAnalysisDataReader:
 		# Binary folder types available
 		self.analysis_types = []
 
+		# Observable list
+		self.observable_list = []
+
 		# Variable to store if we have retrieved flow time or not
 		self.retrieved_flow_time = False
 
@@ -70,6 +73,9 @@ class PostAnalysisDataReader:
 
 				if os.path.splitext(obs_folder_path)[-1] == ".json": 
 					continue
+
+				if obs not in self.observable_list:
+					self.observable_list.append(obs)
 
 				if self._check_folder_content_type_is_dir(obs_folder_path):
 					# In case we have an observable that contains sub folders 
@@ -143,6 +149,9 @@ class PostAnalysisDataReader:
 
 	def __call__(self, observable):
 		return self.data_observables[observable]
+
+	def get_observables(self):
+		return self.observable_list
 
 	def _check_folder_content_type_is_dir(self, folder):
 		"""Returns True if all of the contents are folders."""

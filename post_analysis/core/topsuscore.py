@@ -20,6 +20,9 @@ class TopsusCore(PostCore):
 	def plot_continuum(self, fit_target, title_addendum=""):
 		# Gets the beta values
 
+		if fit_target == -1:
+			fit_target = self.plot_values[max(self.plot_values)]["x"][-1]
+
 		a_squared, obs, obs_err = [], [], []
 		for beta in sorted(self.plot_values):
 			x = self.plot_values[beta]["x"]

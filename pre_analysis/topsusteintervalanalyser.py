@@ -7,7 +7,7 @@ class TopsusteIntervalAnalyser(EuclideanIntervalAnalyser, TopsusAnalyserCore):
 	Analysis where one can split the topological susceptibility in Euclidean
 	time to obtain an estimate of the topological charge.
 	"""
-	observable_name = "Topological Susceptibility in MC Time"
+	observable_name = "Topological Susceptibility in Euclidean time"
 	observable_name_compact = "topsuste"
 	x_label = r"$\sqrt{8t_{flow}}[fm]$"
 	y_label = r"$\chi^{1/4} [GeV]$"

@@ -26,9 +26,10 @@ class MultiPlotCore(PostCore):
 					sub_values["a"] = get_lattice_spacing(beta)
 					sub_values["x"] = sub_values["a"]* np.sqrt(8*self.flow_time)
 					sub_values["y"] = data[beta][sub_obs]["y"]
+					sub_values["y_err"] = data[beta][sub_obs]["y_error"]
 					sub_values["bs"] = self.bs_raw[beta][self.observable_name_compact][sub_obs]
-					sub_values["y_err"] = data[beta][sub_obs]["y_error"] # negative since the minus sign will go away during linear error propagation
-					sub_values["label"] = r"%s $\beta=%2.2f$ %s" % (self.size_labels[beta], beta, sub_obs)
+					sub_values["label"] = r"%s $\beta=%2.2f$ %s" % (
+						self.size_labels[beta], beta, self._convert_label(sub_obs))
 					sub_values["color"] = self.colors[beta]
 					values[sub_obs] = sub_values
 			else:
@@ -36,12 +37,21 @@ class MultiPlotCore(PostCore):
 				values["a"] = get_lattice_spacing(beta)
 				values["x"] = values["a"]* np.sqrt(8*self.flow_time)
 				values["y"] = data[beta][sorted_intervals[interval_index]]["y"]
-				values["bs"] = self.bs_raw[beta][self.observable_name_compact][sorted_intervals[interval_index]]
-				values["y_err"] = data[beta][sorted_intervals[interval_index]]["y_error"] # negative since the minus sign will go away during linear error propagation
-				values["label"] = r"%s $\beta=%2.2f$ %s" % (self.size_labels[beta], beta, sorted_intervals[interval_index])
+				values["y_err"] = data[beta][sorted_intervals[interval_index]]["y_error"]
+				values["bs"] = self.bs_raw[beta][self.observable_name_compact] \
+					[sorted_intervals[interval_index]]
+				values["label"] = r"%s $\beta=%2.2f$ %s" % (self.size_labels[beta], 
+					beta, self._convert_label(sorted_intervals[interval_index]))
 				values["color"] = self.colors[beta]
 				values["interval"] = sorted_intervals[interval_index]
 			self.plot_values[beta] = values
+
+	def _convert_label(self, label):
+		"""Short method for formatting time in labels."""
+		try:
+			return r"$%d$" % int(label)
+		except ValueError:
+			return r"$%s$" % label
 
 	def set_analysis_type(self, analysis_data_type):
 		"""Sets a global analysis type."""
@@ -60,7 +70,8 @@ class MultiPlotCore(PostCore):
 		"""Retrieves appropriate figure file name."""
 		output_folder = os.path.join(self.output_folder_path, "slices")
 		check_folder(output_folder, False, True)
-		fname = "post_analysis_%s_%s_int%d.png" % (self.observable_name_compact, self.analysis_data_type, self.interval_index)
+		fname = "post_analysis_%s_%s_int%d.png" % (self.observable_name_compact,
+			self.analysis_data_type, self.interval_index)
 		return os.path.join(output_folder, fname)
 
 	def get_N_intervals(self):
@@ -117,7 +128,8 @@ class MultiPlotCore(PostCore):
 				y = value["y"]
 				y_err = value["y_err"]
 				ax.plot(x, y, "-", label=value["label"], color=value["color"])
-				ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, edgecolor='', facecolor=value["color"])
+				ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, edgecolor='',
+					facecolor=value["color"])
 				
 				# Basic plotting commands
 				ax.grid(True)
@@ -131,8 +143,10 @@ class MultiPlotCore(PostCore):
 
 		# Set common labels
 		# https://stackoverflow.com/questions/6963035/pyplot-axes-labels-for-subplots
-		fig.text(0.52, 0.035, self.x_label, ha='center', va='center', fontsize=9)
-		fig.text(0.03, 0.5, self.y_label, ha='center', va='center', rotation='vertical', fontsize=11)
+		fig.text(0.52, 0.035, self.x_label, ha='center', va='center', 
+			fontsize=9)
+		fig.text(0.03, 0.5, self.y_label, ha='center', va='center', 
+			rotation='vertical', fontsize=11)
 
 		# Sets the title string
 		title_string = r"%s" % self.observable_name
@@ -150,7 +164,8 @@ class MultiPlotCore(PostCore):
 		folder_path = os.path.join(self.output_folder_path, folder_name)
 		check_folder(folder_path, False, True)
 
-		fname = os.path.join(folder_path, "post_analysis_%s_%s.png" % (self.observable_name_compact, self.analysis_data_type))
+		fname = os.path.join(folder_path, "post_analysis_%s_%s.png" % (
+			self.observable_name_compact, self.analysis_data_type))
 		plt.savefig(fname, dpi=400)
 		print "Figure saved in %s" % fname
 		# plt.show()

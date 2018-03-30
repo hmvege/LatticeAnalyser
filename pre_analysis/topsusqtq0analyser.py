@@ -42,6 +42,9 @@ class TopsusQtQ0Analyser(TopsusAnalyserCore):
 		for iFlow in xrange(self.y.shape[1]):
 			self.y[:,iFlow] *= y_q0
 
+		# for i in xrange(	)
+		# exit(1)
+
 		# self.y = np.abs(self.y)
 
 		if y_label != None:

@@ -7,6 +7,7 @@ from plaquetteanalyser import PlaquetteAnalyser
 # Topological charge definitions
 from topcanalyser import TopcAnalyser
 from topctanalyser import TopctAnalyser
+from topc2analyser import Topc2Analyser
 from topc4analyser import Topc4Analyser
 from topcteintervalanalyser import TopcteIntervalAnalyser
 from topcmcintervalanalyser import TopcMCIntervalAnalyser

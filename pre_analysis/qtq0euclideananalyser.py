@@ -3,21 +3,23 @@ import copy
 import numpy as np
 import os
 from tools.folderreadingtools import check_folder
-from statistics.parallel_tools import _C_derivative
+import statistics.parallel_tools as ptools
 
 class QtQ0EuclideanAnalyser(FlowAnalyser):
 	"""Correlator of <QtQ0> in euclidean time analysis class."""
-	observable_name = r"$\chi(\langle Q_{t_e} Q_{t_{e,0}} \rangle)^{1/4}$"
+	observable_name = r"$\chi(\langle Q_{t_e} Q_{t_{e,0}} \rangle)$"
 	observable_name_compact = "qtq0e"
 	x_label = r"$t_e[fm]$"
-	y_label = r"$\chi(\langle Q_{t_e} Q_{t_{e,0}} \rangle)^{1/4} [GeV]$" # $\chi_t^{1/4}[GeV]$
+	y_label = r"$\chi(\langle Q_{t_e} Q_{t_{e,0}} \rangle) [GeV]$" # $\chi_t^{1/4}[GeV]$
+	mark_interval = 1
+	error_mark_interval = 1
 
 	def __init__(self, *args, **kwargs):
 		super(QtQ0EuclideanAnalyser, self).__init__(*args, **kwargs)
 		self.y_original = copy.deepcopy(self.y)
 		self.NT = self.y_original.shape[-1]
 
-		raise NotImplementedError("QtQ0EuclideanAnalyser is not fully implemented. Missing documentation, proper file structure and proper analysis setup.")
+		# raise NotImplementedError("QtQ0EuclideanAnalyser is not fully implemented. Missing documentation, proper file structure and proper analysis setup.")
 
 		# Stores old variables for resetting at each new flow time
 		self.N_configurations_old = self.N_configurations
@@ -43,37 +45,59 @@ class QtQ0EuclideanAnalyser(FlowAnalyser):
 		self.NFlows = self.NT
 
 		self.V = self.lattice_sizes[self.beta] / float(self.NT)
-		self.const = self.hbarc/self.a/self.V**(1./4)
+		self.const = (self.hbarc**4)/(self.a**4)/self.V
 		self.function_derivative_parameters = {"const": self.const}
 
-		self.function_derivative = _C_derivative
+		self.function_derivative = ptools._C_derivative
 
 		# Sets file name
-		self.observable_name = r"$\chi(\langle Q_{t_e} Q_{t_{e,0}} \rangle)^{1/4}$ at $t_e=%.2f$, $t_{flow}=%.2f$" % (self.euclidean_time, self.flow_time)
+		self.observable_name = r"$\chi(\langle Q_{t_e} Q_{t_{e,0}} \rangle)$ at $t_e=%.2f$, $t_{flow}=%.2f$" % (self.euclidean_time, self.flow_time)
 		# self.observable_name = r"$\chi(\langle Q_{t_e} Q_{t_{e,0}} \rangle)^{1/4}$ at $t_{flow}=%.2f$" % (self.flow_time)
 
+		# Selects the configurations in euclidean time in flow time to multiply
 		y_e0 = copy.deepcopy(self.y_original[:, self.flow_time_index, self.euclidean_time])
-		# print y_e0.shape
-		# print self.y.shape
 
 		# Multiplying QtQ0
-		for iFlow in xrange(self.NFlows):
-			self.y[:,iFlow] *= y_e0
+		for iteuclidean in xrange(self.NFlows):
+			self.y[:,iteuclidean] *= y_e0
 
-		# print "Taking abs @ 1035"
-		# self.y = np.abs(self.y)
+		# Sets a new x-axis
+		self.x = np.linspace(0, self.NFlows - 1, self.NFlows)
 
 		# Sets up variables deependent on the number of configurations again
+		self.unanalyzed_y = np.zeros(self.NFlows)
+		self.unanalyzed_y_std = np.zeros(self.NFlows)
 		self.unanalyzed_y_data = np.zeros((self.NFlows, self.N_configurations))
+
+		# Resets bootstrap arrays
+		self.bs_y = np.zeros(self.NFlows)
+		self.bs_y_std = np.zeros(self.NFlows)
+
+		# Resets jackknifed arrays
+		self.jk_y = np.zeros(self.NFlows)
+		self.jk_y_std = np.zeros(self.NFlows)
+
+		# Resets autocorrelation arrays
 		self.autocorrelations = np.zeros((self.NFlows, self.N_configurations/2))
 		self.autocorrelations_errors = np.zeros((self.NFlows, self.N_configurations/2))
+		self.integrated_autocorrelation_time = np.ones(self.NFlows)
+		self.integrated_autocorrelation_time_error = np.zeros(self.NFlows)
+		self.autocorrelation_error_correction = np.ones(self.NFlows)
 
-		# Creates a new folder to store t0 results in
-		self.observable_output_folder_path = os.path.join(self.observable_output_folder_path_old, "%04d" % self.flow_time_index)
+		# Creates a new folder to store results in {beta}/{observable_name}/{flow time} exist
+		self.observable_output_folder_path = os.path.join(self.observable_output_folder_path_old, "tflow%04d" % self.flow_time_index)
 		check_folder(self.observable_output_folder_path, self.dryrun, self.verbose)
 
-		# Checks that {post_analysis_folder}/{observable_name}/{time interval} exist
-		self.post_analysis_folder = os.path.join(self.post_analysis_folder_old, "%04d" % self.flow_time_index)
+		# Creates a new folder to store results in {beta}/{observable_name}/{flow time}/{euclidean time} exist
+		self.observable_output_folder_path = os.path.join(self.observable_output_folder_path, "te%04d" % self.euclidean_time)
+		check_folder(self.observable_output_folder_path, self.dryrun, self.verbose)
+
+		# Checks that {post_analysis_folder}/{observable_name}/{flow time} exist
+		self.post_analysis_folder = os.path.join(self.post_analysis_folder_old, "tflow%04d" % self.flow_time_index)
+		check_folder(self.post_analysis_folder, self.dryrun, self.verbose)
+
+		# Checks that {post_analysis_folder}/{observable_name}/{flow time}/{euclidean time} exist
+		self.post_analysis_folder = os.path.join(self.post_analysis_folder, "te%04d" % self.euclidean_time)
 		check_folder(self.post_analysis_folder, self.dryrun, self.verbose)
 
 		# Resets some of the ac, jk and bs variable
@@ -98,6 +122,18 @@ class QtQ0EuclideanAnalyser(FlowAnalyser):
 		"""Overriding the bootstrap class by adding the Correaltor function"""
 		super(QtQ0EuclideanAnalyser, self).boot(N_bs, F=self.C,
 			F_error=self.C_std, store_raw_bs_values=store_raw_bs_values)
+
+	def plot_jacknife(self, *args, **kwargs):
+		"""Making sure we are plotting with in euclidean time."""
+		kwargs["x"] = self.x
+		print self.x
+		super(QtQ0EuclideanAnalyser, self).plot_jacknife(*args, **kwargs)
+		# plot_jackknife(self, x=None, correction_function=lambda x: x):
+
+	def plot_boot(self, *args, **kwargs):
+		"""Making sure we are plotting with in euclidean time."""
+		kwargs["x"] = self.x
+		super(QtQ0EuclideanAnalyser, self).plot_boot(*args, **kwargs)
 
 	# def autocorrelation(self, store_raw_ac_error_correction=True, method="wolff"):
 	# 	"""Overriding the ac class."""

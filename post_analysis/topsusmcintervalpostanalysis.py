@@ -21,7 +21,8 @@ class TopsusMCIntervalPostAnalysis(MultiPlotCore, TopsusCore):
 		self._initiate_plot_values(data, interval_index=interval_index)
 		self.output_folder_path = os.path.join(self.output_folder_path, "int%d" % interval_index)
 		check_folder(self.output_folder_path, False, self.verbose)
-		super(TopsusMCIntervalPostAnalysis, self).plot_continuum(fit_target, title_addendum=)
+		title_addendum = r", MC-Interval: $[%s)$" % sorted(self.plot_values.values())[0]["interval"]
+		super(TopsusMCIntervalPostAnalysis, self).plot_continuum(fit_target, title_addendum=title_addendum)
 
 		# Resets the plot values and output folder path
 		self.plot_values = self.plot_values_old

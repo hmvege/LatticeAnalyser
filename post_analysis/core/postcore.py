@@ -41,6 +41,11 @@ class PostCore(object):
 		self.bootstrap_data	= {}
 		self.jackknife_data = {}
 
+		# Checks that the observable is among the available data
+		assert_msg = ("%s is not among current data(%s). Have the pre analysis"
+			" been performed?" % (observable, ", ".join(data.observable_list)))
+		assert observable in data.observable_list, assert_msg
+
 		for beta in sorted(data.data_observables[observable].keys()):
 			if self.sub_obs:
 				self.observable_intervals[beta] = data.data_observables[observable][beta].keys()
