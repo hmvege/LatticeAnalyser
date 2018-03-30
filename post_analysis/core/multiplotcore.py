@@ -1,5 +1,5 @@
 from postcore import PostCore
-from tools.postanalysisdatareader import getLatticeSpacing
+from tools.latticefunctions import get_lattice_spacing
 from tools.folderreadingtools import check_folder
 import matplotlib.pyplot as plt
 import numpy as np
@@ -23,7 +23,7 @@ class MultiPlotCore(PostCore):
 				for sub_obs in self.observable_intervals[beta]:
 					if beta == 6.45: self.flow_time *= 2
 					sub_values = {}
-					sub_values["a"] = getLatticeSpacing(beta)
+					sub_values["a"] = get_lattice_spacing(beta)
 					sub_values["x"] = sub_values["a"]* np.sqrt(8*self.flow_time)
 					sub_values["y"] = data[beta][sub_obs]["y"]
 					sub_values["bs"] = self.bs_raw[beta][self.observable_name_compact][sub_obs]
@@ -33,7 +33,7 @@ class MultiPlotCore(PostCore):
 					values[sub_obs] = sub_values
 			else:
 				sorted_intervals = sorted(data[beta].keys())
-				values["a"] = getLatticeSpacing(beta)
+				values["a"] = get_lattice_spacing(beta)
 				values["x"] = values["a"]* np.sqrt(8*self.flow_time)
 				values["y"] = data[beta][sorted_intervals[interval_index]]["y"]
 				values["bs"] = self.bs_raw[beta][self.observable_name_compact][sorted_intervals[interval_index]]

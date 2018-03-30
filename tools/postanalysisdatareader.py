@@ -2,21 +2,15 @@ from folderreadingtools import check_folder
 import os
 import numpy as np
 import copy
+import json
 
 __all__ = ["PostAnalysisDataReader", "getLatticeSpacing"]
-
-def getLatticeSpacing(beta):
-	# if beta < 5.7: raise ValueError("Beta should be larger than 5.7!")
-	r = 0.5
-	bval = (beta - 6)
-	a = np.exp(-1.6805 - 1.7139*bval + 0.8155*bval**2 - 0.6667*bval**3)*0.5
-	return a # fermi
 
 class PostAnalysisDataReader:
 	"""
 	Small class for reading post analysis data
 	"""
-	def __init__(self, batch_folder, verbose=False, base_folder_location=".."):
+	def __init__(self, batch_folder, verbose=False):
 		"""
 		Class for loading the post analysis data.
 
@@ -27,7 +21,7 @@ class PostAnalysisDataReader:
 				one layer above code, "..".
 		"""
 		self.batch_name = os.path.split(batch_folder)[-1]
-		self.batch_folder = os.path.join(base_folder_location, batch_folder)
+		self.batch_folder = batch_folder
 		self.verbose = verbose
 
 		# Dictionary variable to hold all the data sorted by batches
@@ -48,12 +42,14 @@ class PostAnalysisDataReader:
 		# Iterates over the different beta value folders
 		for beta_folder in self._get_folder_content(self.batch_folder):
 
+			fix innlasting av beta her
+
 			#### TEMP ####
 			if beta_folder == "beta645": continue
 			#### TEMP ####
 
 			# Construct beta folder path
-			beta_folder_path = os.path.join(self.batch_folder, beta_folder, "post_analysis_data")
+			beta_folder_path = os.path.join(self.batch_folder, beta_folder, "post_analysis")
 
 			observables_data = {}
 			obs_data_raw = {}
@@ -214,7 +210,10 @@ class PostAnalysisDataReader:
 
 		# Retrieves meta data
 		# Make it so one can retrieve the key as meta_data[i] and then value as meta_data[i+1]
-		meta_data = self._get_meta_data(observable_file)
+		json_fpath = os.path.join(self.batch_folder, self.batch_name, 
+			"post_analysis_data", "params.json")
+		meta_data = self._get_parameter_data(json_fpath)
+		print meta_data
 
 		# Temporary methods for getting observable name and beta value, as this will be put into the meta data
 		obs = os.path.split(os.path.splitext(observable_file)[0])[-1]
@@ -223,7 +222,7 @@ class PostAnalysisDataReader:
 		obs_data = {}
 
 		# Loads data into temporary holder
-		retrieved_data = np.loadtxt(observable_file)
+		retrieved_data = np.load(observable_file)
 
 		# Puts data into temporary holding facilities
 		t 			= retrieved_data[:,0]
@@ -273,16 +272,14 @@ class PostAnalysisDataReader:
 		"""Gets binary data."""
 		assert len(os.listdir(folder)) == 1, "multiple files in binary folder."
 		return np.load(os.path.join(folder, self._get_folder_content(folder)[0]))
-		
+
 	@staticmethod
-	def _get_meta_data(file):
+	def _get_parameter_data(file):
 		# Retrieves meta data from header or file
-		meta_data = {}
-		with open(file) as f:
-			header_content = f.readline().split(" ")[1:]
-			meta_data[header_content[0]] = header_content[1]
-			meta_data[header_content[2]] = float(header_content[3].replace("_", "."))
-		return meta_data
+		return_dict = {}
+		with open(file, "r") as f:
+			return_dict = json.load(f)
+		return return_dict
 
 	def _reorganize_data(self):
 		# Reorganizes the data into beta-values and observables sorting

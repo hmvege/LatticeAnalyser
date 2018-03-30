@@ -13,8 +13,8 @@ from topcmcintervalpostanalysis import TopcMCIntervalPostAnalysis
 
 # Topological susceptibility post analyses
 from topsuspostanalysis import TopsusPostAnalysis
-from topsustpostanalysis import TopSusTPostAnalysis
-from topsus4postanalysis import TopcsusPostAnalysis
+from topsustpostanalysis import TopsustPostAnalysis
+from topsus4postanalysis import Topsus4PostAnalysis
 from topsusteintervalpostanalysis import TopsusteIntervalPostAnalysis
 from topsusmcintervalpostanalysis import TopsusMCIntervalPostAnalysis
 from topsusqtq0postanalysis import TopsusQtQ0PostAnalysis

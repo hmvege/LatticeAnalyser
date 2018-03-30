@@ -1,4 +1,5 @@
 from core.postcore import PostCore
+from tools.latticefunctions import get_lattice_spacing
 from statistics.linefit import LineFit
 import matplotlib.pyplot as plt
 import numpy as np
@@ -92,8 +93,8 @@ class EnergyPostAnalysis(PostCore):
 		for beta in sorted(data.keys()):
 			values = {}
 			values["beta"] = beta
-			values["a"] = getLatticeSpacing(beta)
-			values["x"] = self.flow_time/self.r0**2*getLatticeSpacing(beta)**2
+			values["a"] = get_lattice_spacing(beta)
+			values["x"] = self.flow_time/self.r0**2*get_lattice_spacing(beta)**2
 			values["y"] = self._function_correction(data[beta]["y"])
 			values["bs"] = np.asarray([self._function_correction(self.bs_raw[beta][self.observable_name_compact][:,iBoot]) for iBoot in xrange(self.NBoots)]).T
 			values["y_err"] = - self._function_correction(data[beta]["y_error"]) # negative since the minus sign will go away during linear error propagation

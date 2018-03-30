@@ -289,6 +289,9 @@ def analyse(parameters):
 		verbose=_bp["verbose"], dryrun=_bp["dryrun"],
 		correct_energy=parameters["correct_energy"])
 
+	# Writes a parameters file for the post analysis
+	obs_data.write_parameter_file()
+
 	# Writes raw observable data to a single binary file
 	if parameters["save_to_binary"] and not parameters["load_file"]:
 		obs_data.write_single_file()
@@ -341,7 +344,7 @@ def analyse(parameters):
 	print "="*100
 
 def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target,
-	line_fit_interval, energy_fit_target, post_analysis_data_type=None, 
+	line_fit_interval, energy_fit_target, figures_folder="figures", post_analysis_data_type=None, 
 	bval_to_plot="all", verbose=False):
 	"""
 	Post analysis of the flow observables.
@@ -366,7 +369,7 @@ def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target
 	for analysis_type in post_analysis_data_type:
 		if "topsus" in observables:
 			# Plots topsus
-			topsus_analysis = TopSusPostAnalysis(data, verbose=verbose)
+			topsus_analysis = TopsusPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
 			print topsus_analysis
 			topsus_analysis.set_analysis_data_type(analysis_type)
 			topsus_analysis.plot()
@@ -378,7 +381,7 @@ def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target
 
 		if "energy" in observables:
 			# Plots energy
-			energy_analysis = EnergyPostAnalysis(data, verbose=verbose)
+			energy_analysis = EnergyPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
 			print energy_analysis
 			energy_analysis.set_analysis_data_type(analysis_type)
 			energy_analysis.plot()
@@ -390,35 +393,35 @@ def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target
 			# energy_analysis.coupling_fit()
 
 		if "topc" in observables:
-			topc_analysis = TopChargePostAnalysis(data, verbose=verbose)
+			topc_analysis = TopcPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
 			print topc_analysis
 			topc_analysis.set_analysis_data_type(analysis_type)
 			topc_analysis.plot(y_limits=[-5,5])
 
 		if "plaq" in observables:
-			plaq_analysis = PlaqPostAnalysis(data, verbose=verbose)
+			plaq_analysis = PlaqPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
 			print plaq_analysis
 			plaq_analysis.set_analysis_data_type(analysis_type)
 			plaq_analysis.plot()
 
 		if "topc4" in observables:
-			topc4_analysis = TopCharge4PostAnalysis(data, verbose=verbose)
+			topc4_analysis = Topc4PostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
 			print topc4_analysis
 			topc4_analysis.set_analysis_data_type(analysis_type)
 			topc4_analysis.plot()
 
-		if "qtq0" in observables:
-			qtq0_analysis = QtQ0PostAnalysis(data, verbose=verbose)
+		if "topsusqtq0" in observables:
+			topsusqtq0_analysis = TopsusQtQ0PostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
 			print qtq0_analysis
-			qtq0_analysis.set_analysis_data_type(analysis_type)
-			N_int, intervals = qtq0_analysis.get_N_intervals()
+			topsusqtq0_analysis.set_analysis_data_type(analysis_type)
+			N_int, intervals = topsusqtq0_analysis.get_N_intervals()
 			for i in range(N_int):
-				qtq0_analysis.plot_interval(i)
-			qtq0_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
-			qtq0_analysis.plot_series([4,5,6,7], beta=bval_to_plot)
+				topsusqtq0_analysis.plot_interval(i)
+			topsusqtq0_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+			topsusqtq0_analysis.plot_series([4,5,6,7], beta=bval_to_plot)
 
 		if "topct" in observables:
-			topct_analysis = TopChargeTPostAnalysis(data, verbose=verbose)
+			topct_analysis = TopctPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
 			print topct_analysis
 			topct_analysis.set_analysis_data_type(analysis_type)
 			N_int, intervals = topct_analysis.get_N_intervals()
@@ -427,7 +430,7 @@ def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target
 			topct_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
 		if "topcte" in observables:
-			topcte_analysis = TopChargeEuclSplitPostAnalysis(data, verbose=verbose)
+			topcte_analysis = TopcteIntervalPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
 			print topcte_analysis
 			topcte_analysis.set_analysis_data_type(analysis_type)
 			N_int, intervals = topcte_analysis.get_N_intervals()
@@ -436,7 +439,7 @@ def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target
 			topcte_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
 		if "topcMC" in observables:
-			topcmc_analysis = TopChargeMCSplitPostAnalysis(data, verbose=verbose)
+			topcmc_analysis = TopcMCIntervalPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
 			print topcmc_analysis
 			topcmc_analysis.set_analysis_data_type(analysis_type)
 			N_int, intervals = topcmc_analysis.get_N_intervals()
@@ -451,7 +454,7 @@ def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target
 			topsus4_analysis.plot()
 
 		if "topsust" in observables:
-			topsust_analysis = TopSusTPostAnalysis(data, verbose=verbose)
+			topsust_analysis = TopsustPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
 			print topsust_analysis
 			topsust_analysis.set_analysis_data_type(analysis_type)
 			N_int, intervals = topsust_analysis.get_N_intervals()
@@ -460,7 +463,7 @@ def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target
 			topsust_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
 		if "topsuste" in observables:
-			topsuste_analysis = TopSusEuclSplitPostAnalysis(data, verbose=verbose)
+			topsuste_analysis = TopsusteIntervalPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
 			print topsuste_analysis
 			topsuste_analysis.set_analysis_data_type(analysis_type)
 			N_int, intervals = topsuste_analysis.get_N_intervals()
@@ -469,7 +472,7 @@ def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target
 			topsuste_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
 		if "topsusMC" in observables:
-			topsusmc_analysis = TopSusMCSplitPostAnalysis(data, verbose=verbose)
+			topsusmc_analysis = TopsusMCIntervalPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
 			print topsusmc_analysis
 			topsusmc_analysis.set_analysis_data_type(analysis_type)
 			N_int, intervals = topsusmc_analysis.get_N_intervals()
@@ -499,7 +502,14 @@ def main():
 	# observables = ["topcte", "topcMC", "topsuste", "topsusMC", "topct"]
 	# observables = ["topsuste", "topsusMC", "topct"]
 	# observables = ["topsusMC"]
-	# observables = ["topsusqtq0"]#, "qtq0e"]
+
+	# observables = [
+	# 	"topct", "topcte", "topcMC", 
+	# 	# Topological susceptibility definitions
+	# 	"topsus4", "topsust", "topsuste", "topsusMC", "topsusqtq0",
+	# 	# Other quantities
+	# 	"qtq0e",
+	# ]
 
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
 	print 100*"=" + "\n"
@@ -631,7 +641,7 @@ def main():
 	#### Submitting post-analysis data
 	if len(analysis_parameter_list) >= 2:
 		post_analysis(data_batch_folder, beta_folders, observables, topsus_fit_targets,
-			line_fit_interval, energy_fit_target, verbose=verbose)
+			line_fit_interval, energy_fit_target, figures_folder=figures_folder, verbose=verbose)
 
 if __name__ == '__main__':
 	main()

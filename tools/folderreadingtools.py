@@ -383,6 +383,32 @@ class DataReader:
 		# Checks that provided folder exists
 		check_folder(self.figures_folder, self.dryrun, verbose=self.verbose)
 
+	def __call__(self, obs):
+		return copy.deepcopy(self.data[obs])
+
+	def write_parameter_file(self):
+		"""Writes a parameter file for the analysis of a given batch."""
+
+		post_analysis_path = os.path.join(self.batch_folder, self.batch_name, "post_analysis")
+		param_file_path = os.path.join(post_analysis_path, "params.json")
+		json_dict = {}
+
+		# Writes parameters to json dictionary
+		json_dict["beta"] = self.beta
+		json_dict["NFlows"] = self.NFlows
+
+		# Prints configuration file content if verbose or dryrun is true
+		if self.dryrun or self.verbose:
+			print "Writing json parameter file at location {0:<s}:".format(param_file_path)
+			print json.dumps(json_dict, indent=4, separators=(", ", ": "))
+
+		# Checks if the post analysis folder exists.
+		check_folder(post_analysis_path, self.dryrun, verbose=self.verbose)
+
+		# Creates configuration file
+		if not self.dryrun:
+			with file(param_file_path, "w+") as json_file:
+				json.dump(json_dict, json_file, indent=4)
 
 	def __print_load_info(self):
 		load_job_info = "="*100
@@ -393,6 +419,7 @@ class DataReader:
 
 	def __retrieve_observable_data(self, observables_to_retrieve, create_perflow_data=False):
 		_NFlows = []
+		_beta_values = []
 		for obs in observables_to_retrieve:
 			# Creates a dictionary to hold data associated with an observable
 			self.data[obs] = {}
@@ -416,6 +443,7 @@ class DataReader:
 
 			# Stores all the number of flow values
 			_NFlows.append(self.data[obs]["NFlows"])
+			_beta_values.append(self.data[obs]["beta"])
 
 			del _data_obj
 
@@ -423,11 +451,11 @@ class DataReader:
 
 		# Checks that all values have been flowed for an equal amount of time
 		assert len(set(_NFlows)) == 1, "flow times differ for the different observables: %s" % (", ".join(_NFlows))
-
 		self.NFlows = int(_NFlows[0])
 
-	def __call__(self, obs):
-		return copy.deepcopy(self.data[obs])
+		# Sets a global beta value for the batch
+		assert np.asarray(_beta_values).all(), "beta values are not equal."
+		self.beta = _beta_values[0]
 
 	@staticmethod
 	def __get_size_and_beta(input_file):
@@ -450,6 +478,9 @@ class DataReader:
 
 		raw_data_splitted = np.array(np.split(raw_data[:,1:], num_splits, axis=1))
 
+		_NFlows = []
+		_betas = []
+
 		# Loads from the plaq, energy, topc and topct
 		for i, obs in enumerate(obs_list):
 			self.data[obs] = {}
@@ -470,11 +501,20 @@ class DataReader:
 			self.data[obs]["batch_name"] = self.batch_name
 			self.data[obs]["batch_data_folder"] = self.batch_folder
 
+			_NFlows.append(self.data[obs]["NFlows"])
+			_betas.append(beta)
+
+		# Checks that all values have been flowed for an equal amount of time
+		assert len(set(_NFlows)) == 1, "flow times differ for the different observables: %s" % (", ".join(_NFlows))
+		self.NFlows = int(_NFlows[0])
+
+		# Sets a global beta value for the batch
+		assert np.asarray(_betas).all(), "beta values are not equal."
+		self.beta = _betas[0]
+
 		print "Loaded %s from file %s. Size: %.2f MB" % (", ".join(obs_list), input_file, raw_data.nbytes/1024.0/1024.0)
 
 	def write_single_file(self):
-		# observables_to_write = ["plaq", "energy", "topc"]#"topct"]
-
 		self.__write_file(["plaq", "energy", "topc"])
 		if "topct" in self.file_tree.getFoundFlowObservables():
 			self.__write_file(["topct"])
@@ -566,13 +606,14 @@ def write_data_to_file(analysis_object):
 		analysis_object: object of FlowAnalyser class
 		post_analysis_folder: optional string output folder, default is ../output/analyzed_data
 	"""
+
 	dryrun = analysis_object.dryrun
 	verbose = analysis_object.verbose
 	post_analysis_folder = analysis_object.post_analysis_folder
 
 	# Retrieves beta value and makes it into a string
 	beta_string = str(analysis_object.beta).replace(".", "_")
-	
+
 	# Ensures that the post analysis data folder exists
 	check_folder(post_analysis_folder, dryrun, verbose=verbose)
 
@@ -580,16 +621,10 @@ def write_data_to_file(analysis_object):
 	x = copy.deepcopy(analysis_object.x)
 	y_org = copy.deepcopy(analysis_object.unanalyzed_y)
 	y_err_org = copy.deepcopy(analysis_object.unanalyzed_y_std*analysis_object.autocorrelation_error_correction)
-
-	# if analysis_object.observable_name_compact == "topc":
-	# 	print analysis_object.unanalyzed_y_std
-	# 	print analysis_object.autocorrelation_error_correction
-
 	y_bs = copy.deepcopy(analysis_object.bs_y)
 	y_err_bs = copy.deepcopy(analysis_object.bs_y_std*analysis_object.autocorrelation_error_correction)
 	y_jk = copy.deepcopy(analysis_object.jk_y)
 	y_err_jk = copy.deepcopy(analysis_object.jk_y_std*analysis_object.autocorrelation_error_correction)
-
 
 	# Stacks data to be written to file together
 	if not analysis_object.autocorrelation_performed:
@@ -608,23 +643,20 @@ def write_data_to_file(analysis_object):
 
 	# Sets up file name and file path
 	if not analysis_object.autocorrelation_performed:
-		fname = "%s_no_autocorr.txt" % observable
+		fname = "%s_no_autocorr" % observable
 		header_string = "observable %s beta %s\nt original original_error bs bs_error jk jk_error" % (observable, beta_string)
 	else:
-		fname = "%s.txt" % observable
+		fname = "%s" % observable
 		header_string = "observable %s beta %s\nt original original_error bs bs_error jk jk_error tau_int tau_int_err sqrt2tau_int" % (observable, beta_string)
 
 	fname_path = os.path.join(post_analysis_folder, fname)
 
 	# Saves data to file
 	if not dryrun:
-		np.savetxt(fname_path, data, fmt="%.16f", header=header_string)
+		# np.savetxt(fname_path, data, fmt="%.16f", header=header_string)
+		np.save(fname_path, data)
 
 	print "Data for the post analysis written to %s" % fname_path
-
-	# if analysis_object.observable_name_compact == "topc":
-	# 	print data
-	# 	exit(1)
 
 def write_raw_analysis_to_file(raw_data, analysis_type, observable, post_analysis_folder, dryrun=False, verbose=False):
 	"""
@@ -660,5 +692,5 @@ def write_raw_analysis_to_file(raw_data, analysis_type, observable, post_analysi
 	if verbose:
 		print "Analysis %s for observable %s stored as binary data at %s.npy" % (analysis_type, observable, file_name_path)
 
-# if __name__ == '__main__':
-# 	sys.exit("Exiting module.")
+if __name__ == '__main__':
+	exit("Exiting: folderreadingtools not intended to be run as a standalone module.")

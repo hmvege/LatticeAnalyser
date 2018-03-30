@@ -1,4 +1,6 @@
 from core.postcore import PostCore
+from tools.latticefunctions import get_lattice_spacing
+from statistics.linefit import LineFit
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -24,7 +26,7 @@ class TopsusPostAnalysis(PostCore):
 		for beta in sorted(data.keys()):
 			if beta == 6.45: self.flow_time *= 2
 			values = {}
-			values["a"] = getLatticeSpacing(beta)
+			values["a"] = get_lattice_spacing(beta)
 			values["x"] = values["a"]*np.sqrt(8*self.flow_time)
 			values["y"] = data[beta]["y"]
 			values["bs"] = self.bs_raw[beta][self.observable_name_compact]

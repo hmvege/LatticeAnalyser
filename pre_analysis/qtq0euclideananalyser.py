@@ -114,3 +114,9 @@ class QtQ0EuclideanAnalyser(FlowAnalyser):
 		return_string += info_string("Flow time:", "%f" % self.flow_time)
 		return_string += "\n" + "="*100
 		return return_string
+
+def main():
+	exit("Module QtQ0EuclideanAnalyser not intended for standalone usage.")
+
+if __name__ == '__main__':
+	main()

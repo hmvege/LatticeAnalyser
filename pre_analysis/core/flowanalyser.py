@@ -1,4 +1,5 @@
 from tools.folderreadingtools import write_data_to_file, check_folder, write_raw_analysis_to_file, DataReader
+from tools.latticefunctions import get_lattice_spacing
 from statistics.jackknife import Jackknife
 from statistics.bootstrap import Bootstrap
 from statistics.autocorrelation import Autocorrelation
@@ -67,7 +68,7 @@ class FlowAnalyser(object):
 
 		# Sets lattice parameters
 		self.beta = data["beta"]
-		self.a = self.getLatticeSpacing(self.beta)
+		self.a = get_lattice_spacing(self.beta)
 		self.r0 = 0.5 # Sommer Parameters
 
 		# Sets up the function derivative parameters as an empty dictionary
@@ -154,24 +155,6 @@ class FlowAnalyser(object):
 			return head + "_noErrorCorrection" + ext
 		else:
 			return head + ext
-			
-	@staticmethod
-	def getLatticeSpacing(beta):
-		"""
-		Static method for calculating the lattice spacing a from
-		the beta-value. Based on paper by M. Guagnelli et al(1998).
-
-		Args:
-			beta: beta value
-
-		Returns:
-			a: lattice spacing
-		"""
-		if beta < 5.7: raise ValueError("Beta should be larger than 5.7!")
-		r = 0.5
-		bval = (beta - 6)
-		a = np.exp(-1.6805 - 1.7139*bval + 0.8155*bval**2 - 0.6667*bval**3)*0.5
-		return a
 
 	def save_post_analysis_data(self):
 		"""Saves post analysis data to a file."""

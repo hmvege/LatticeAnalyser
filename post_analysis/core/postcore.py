@@ -1,4 +1,5 @@
-from tools.postanalysisdatareader import PostAnalysisDataReader, getLatticeSpacing
+from tools.postanalysisdatareader import PostAnalysisDataReader
+from tools.latticefunctions import get_lattice_spacing
 from tools.folderreadingtools import check_folder
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,10 +13,12 @@ class PostCore:
 	x_label = r""
 	y_label = r""
 	dpi=350
-	size_labels = {	6.0  : r"$24^3 \times 48$",
-					6.1  : r"$28^3 \times 56$",
-					6.2  : r"$32^3 \times 64$",
-					6.45 : r"$48^3 \times 96$"}
+	size_labels = {
+		6.0  : r"$24^3 \times 48$",
+		6.1  : r"$28^3 \times 56$",
+		6.2  : r"$32^3 \times 64$",
+		6.45 : r"$48^3 \times 96$",
+	}
 	r0 = 0.5
 	sub_obs = False
 	observable_intervals = {}
@@ -37,6 +40,8 @@ class PostCore:
 		self.unanalyzed_data = {}
 		self.bootstrap_data	= {}
 		self.jackknife_data = {}
+
+		print data.data_observables.keys()
 
 		for beta in sorted(data.data_observables[observable].keys()):
 			if self.sub_obs:
@@ -122,7 +127,7 @@ class PostCore:
 		for beta in sorted(data.keys()):
 			if beta == 6.45: self.flow_time *= 2
 			values = {}
-			values["a"] = getLatticeSpacing(beta)
+			values["a"] = get_lattice_spacing(beta)
 			values["x"] = values["a"]* np.sqrt(8*self.flow_time)
 			values["y"] = data[beta]["y"]
 			values["bs"] = self.bs_raw[beta][self.observable_name_compact]
