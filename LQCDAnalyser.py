@@ -526,10 +526,10 @@ def main():
 		# Topological susceptibility definitions
 		"topsus", "topsus4", "topsust", "topsuste", "topsusMC", "topsusqtq0",
 		# Other quantities
-		# "qtq0e",
+		"qtq0e",
 	]
 
-	observables = ["topsus"]
+	# observables = ["topc"]
 
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
 	print 100*"=" + "\n"
@@ -544,7 +544,7 @@ def main():
 		"parallel": parallel, "numprocs": numprocs}
 
 	#### Try to load binary file(much much faster)
-	load_file = True
+	load_file = False
 
 	# If we are to create per-flow datasets as opposite to per-cfg datasets
 	create_perflow_data = False
@@ -554,7 +554,6 @@ def main():
 
 	#### Load specific parameters
 	NFlows = 1000
-	NFlows = 50
 	flow_epsilon = 0.01
 
 	#### Post analysis parameters
@@ -566,7 +565,8 @@ def main():
 	#### Different batches
 	# data_batch_folder = "data2"
 	# data_batch_folder = "data4"
-	data_batch_folder = "../GluonAction/data5"
+	# data_batch_folder = "../GluonAction/data5"
+	data_batch_folder = "../GluonAction/data6"
 	figures_folder = "figures"
 	# data_batch_folder = "../GluonAction/DataGiovanni"
 	# data_batch_folder = "smaug_data_beta61"
@@ -654,9 +654,9 @@ def main():
 	# analysis_parameter_list = [databeta61, databeta62]
 	# analysis_parameter_list = [smaug_data_beta61_analysis]
 
-	# #### Submitting observable-batches
-	# for analysis_parameters in analysis_parameter_list:
-	# 	analyse(analysis_parameters)
+	#### Submitting observable-batches
+	for analysis_parameters in analysis_parameter_list:
+		analyse(analysis_parameters)
 
 	#### Submitting post-analysis data
 	if len(analysis_parameter_list) >= 2:
