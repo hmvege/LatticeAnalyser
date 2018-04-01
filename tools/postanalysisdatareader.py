@@ -84,6 +84,8 @@ class PostAnalysisDataReader:
 					obs_data = {}
 					sub_obs_raw = {}
 
+					if obs == "qtq0e": continue
+
 					for sub_obs in self._sort_folder_list(obs_folder_path):
 						sub_obs_path = os.path.join(obs_folder_path, sub_obs)
 

@@ -1,5 +1,6 @@
 from postcore import PostCore
 from tools.latticefunctions import get_lattice_spacing
+from tools.latticefunctions import witten_veneziano
 from statistics.linefit import LineFit
 import matplotlib.pyplot as plt
 import numpy as np
@@ -66,6 +67,10 @@ class TopsusCore(PostCore):
 			y0_err_lower = y0[0] - y_cont_err[0][cont_index]
 			y0_err_upper = y_cont_err[1][cont_index] - y0[0]
 
+		# Stores the chi continuum
+		self.chi_continuum = y_cont[cont_index]
+		self.chi_continuum_error = [y0_err_lower, y0_err_upper]
+
 		y0_err = [[y0_err_lower, 0], [y0_err_upper, 0]]
 
 		# Creates figure and plot window
@@ -104,6 +109,18 @@ class TopsusCore(PostCore):
 		print "Continuum plot of %s created in %s" % (self.observable_name.lower(), fname)
 		# plt.show()
 		plt.close(fig)
+
+		self.print_continuum_estimate()
+
+	def print_continuum_estimate(self):
+		"""Prints the NF from the Witten-Veneziano formula."""
+		NF, NF_error = witten_veneziano(self.chi_continuum, self.chi_continuum_error[0])
+		msg = "\n    Chi = %.16f" % self.chi_continuum
+		msg += "\n    Chi_error = %.16f" % self.chi_continuum_error[0]
+		msg += "\n    N_f = %.16f" % NF
+		msg += "\n    N_f_error = %.16f" % NF_error
+		msg += "\n"
+		print msg 
 
 def main():
 	exit("Exit: TopsusCore not intended to be a standalone module.")

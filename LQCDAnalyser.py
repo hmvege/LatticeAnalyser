@@ -17,7 +17,6 @@ def analyse_default(analysis_object, N_bs, NBins=30, skip_histogram=False):
 	analysis_object.plot_original()
 	analysis_object.plot_boot()
 	analysis_object.plot_jackknife()
-	exit("Exiting after jackknife")
 	analysis_object.autocorrelation()
 	analysis_object.plot_autocorrelation(0)
 	analysis_object.plot_autocorrelation(-1)
@@ -30,11 +29,16 @@ def analyse_default(analysis_object, N_bs, NBins=30, skip_histogram=False):
 	analysis_object.plot_boot()
 	analysis_object.plot_jackknife()
 	if not skip_histogram:
-		analysis_object.plot_histogram(0, NBins=NBins)
-		analysis_object.plot_histogram(int(analysis_object.NFlows * 0.25), NBins=NBins)
-		analysis_object.plot_histogram(int(analysis_object.NFlows * 0.50), NBins=NBins)
-		analysis_object.plot_histogram(int(analysis_object.NFlows * 0.75), NBins=NBins)
-		analysis_object.plot_histogram(-1, NBins=NBins)
+		# Plots histogram at the beginning, during and end.
+		hist_pts = [0, 
+			int(analysis_object.NFlows * 0.25), 
+			int(analysis_object.NFlows * 0.50), 
+			int(analysis_object.NFlows * 0.75), -1
+		]
+		for iHist in hist_pts:
+			analysis_object.plot_histogram(iHist, NBins=NBins)
+		analysis_object.plot_multihist([hist_pts[0], hist_pts[2], hist_pts[-1]],
+			NBins=NBins)
 	analysis_object.plot_integrated_correlation_time()
 	analysis_object.plot_integrated_correlation_time()
 	analysis_object.save_post_analysis_data() # save_as_txt=False
@@ -522,10 +526,10 @@ def main():
 		# Topological susceptibility definitions
 		"topsus", "topsus4", "topsust", "topsuste", "topsusMC", "topsusqtq0",
 		# Other quantities
-		"qtq0e",
+		# "qtq0e",
 	]
 
-	observables = ["qtq0e"]
+	observables = ["topsus"]
 
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
 	print 100*"=" + "\n"
@@ -650,9 +654,9 @@ def main():
 	# analysis_parameter_list = [databeta61, databeta62]
 	# analysis_parameter_list = [smaug_data_beta61_analysis]
 
-	#### Submitting observable-batches
-	for analysis_parameters in analysis_parameter_list:
-		analyse(analysis_parameters)
+	# #### Submitting observable-batches
+	# for analysis_parameters in analysis_parameter_list:
+	# 	analyse(analysis_parameters)
 
 	#### Submitting post-analysis data
 	if len(analysis_parameter_list) >= 2:

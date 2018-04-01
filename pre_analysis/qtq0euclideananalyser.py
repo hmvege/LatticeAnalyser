@@ -7,10 +7,10 @@ import statistics.parallel_tools as ptools
 
 class QtQ0EuclideanAnalyser(FlowAnalyser):
 	"""Correlator of <QtQ0> in euclidean time analysis class."""
-	observable_name = r"$\chi(\langle Q_{t_e} Q_{t_{e,0}} \rangle)$"
+	observable_name = r"$\langle Q_{t_e} Q_{t_{e,0}} \rangle$"
 	observable_name_compact = "qtq0e"
 	x_label = r"$t_e[fm]$"
-	y_label = r"$\chi(\langle Q_{t_e} Q_{t_{e,0}} \rangle) [GeV]$" # $\chi_t^{1/4}[GeV]$
+	y_label = r"$\langle Q_{t_e} Q_{t_{e,0}} \rangle [GeV]$"
 	mark_interval = 1
 	error_mark_interval = 1
 
@@ -19,20 +19,19 @@ class QtQ0EuclideanAnalyser(FlowAnalyser):
 		self.y_original = copy.deepcopy(self.y)
 		self.NT = self.y_original.shape[-1]
 
-		# raise NotImplementedError("QtQ0EuclideanAnalyser is not fully implemented. Missing documentation, proper file structure and proper analysis setup.")
-
 		# Stores old variables for resetting at each new flow time
 		self.N_configurations_old = self.N_configurations
 		self.observable_output_folder_path_old = self.observable_output_folder_path
 		self.post_analysis_folder_old = self.post_analysis_folder
 		self.NFlows_old = self.NFlows
+		self.x_old = self.x
 
 	def set_flow_time(self, flow_time_index, euclidean_percent):
 		"""Function for setting the flow time we will plot in euclidean time."""
 
 		# Finds the q flow time zero value
 		self.flow_time_index = flow_time_index
-		self.flow_time = self.x[flow_time_index]
+		self.flow_time = self.x_old[flow_time_index]
 		self.euclidean_time = int((self.NT - 1) * euclidean_percent)
 
 		# Restores y from original data
@@ -46,12 +45,13 @@ class QtQ0EuclideanAnalyser(FlowAnalyser):
 
 		self.V = self.lattice_sizes[self.beta] / float(self.NT)
 		self.const = (self.hbarc**4)/(self.a**4)/self.V
+		self.const = 1.0 # Correlator contains no normalization
 		self.function_derivative_parameters = {"const": self.const}
 
 		self.function_derivative = ptools._C_derivative
 
 		# Sets file name
-		self.observable_name = r"$\chi(\langle Q_{t_e} Q_{t_{e,0}} \rangle)$ at $t_e=%.2f$, $t_{flow}=%.2f$" % (self.euclidean_time, self.flow_time)
+		self.observable_name = r"$\langle Q_{t_e} Q_{t_{e,0}} \rangle$ at $t_e=%.2f$, $t_{flow}=%.2f$" % (self.euclidean_time, self.flow_time)
 		# self.observable_name = r"$\chi(\langle Q_{t_e} Q_{t_{e,0}} \rangle)^{1/4}$ at $t_{flow}=%.2f$" % (self.flow_time)
 
 		# Selects the configurations in euclidean time in flow time to multiply
@@ -123,12 +123,10 @@ class QtQ0EuclideanAnalyser(FlowAnalyser):
 		super(QtQ0EuclideanAnalyser, self).boot(N_bs, F=self.C,
 			F_error=self.C_std, store_raw_bs_values=store_raw_bs_values)
 
-	def plot_jacknife(self, *args, **kwargs):
+	def plot_jackknife(self, *args, **kwargs):
 		"""Making sure we are plotting with in euclidean time."""
 		kwargs["x"] = self.x
-		print self.x
-		super(QtQ0EuclideanAnalyser, self).plot_jacknife(*args, **kwargs)
-		# plot_jackknife(self, x=None, correction_function=lambda x: x):
+		super(QtQ0EuclideanAnalyser, self).plot_jackknife(*args, **kwargs)
 
 	def plot_boot(self, *args, **kwargs):
 		"""Making sure we are plotting with in euclidean time."""
@@ -147,7 +145,8 @@ class QtQ0EuclideanAnalyser(FlowAnalyser):
 		return_string += info_string("Batch name", self.batch_name)
 		return_string += info_string("Observable", self.observable_name_compact)
 		return_string += info_string("Beta", "%.2f" % self.beta)
-		return_string += info_string("Flow time:", "%f" % self.flow_time)
+		return_string += info_string("Flow time:", "%.2f" % self.flow_time)
+		return_string += info_string("Euclidean time:", "%d" % self.euclidean_time)
 		return_string += "\n" + "="*100
 		return return_string
 
