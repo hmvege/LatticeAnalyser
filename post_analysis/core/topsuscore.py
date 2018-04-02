@@ -16,7 +16,7 @@ class TopsusCore(PostCore):
 	# Continuum plot variables
 	y_label_continuum = r"$\chi^{1/4}[GeV]$"
 	# x_label_continuum = r"$a/{{r_0}^2}$"
-	x_label_continuum = r"$a^2/t_0$"
+	x_label_continuum = r"$a^2/{t_0^2}$"
 
 	def plot_continuum(self, fit_target, title_addendum=""):
 		# Gets the beta values
@@ -32,7 +32,7 @@ class TopsusCore(PostCore):
 
 			fit_index = np.argmin(np.abs(x - fit_target))
 
-			a_squared.append(self.plot_values[beta]["a"]**2/fit_target)
+			a_squared.append(self.plot_values[beta]["a"]**2/fit_target**2)
 			obs.append(y[fit_index])
 			obs_err.append(y_err[fit_index])
 

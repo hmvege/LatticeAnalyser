@@ -21,13 +21,24 @@ class TopsusQtQ0PostAnalysis(MultiPlotCore, TopsusCore):
 
 		# Sets plot values
 		data = self._get_analysis_data(self.analysis_data_type)
+		# All flow times should be the same for every beta
 		self._initiate_plot_values(data, interval_index=interval_index)
 
-		t_flow = float(sorted(self.plot_values.values())[0]["interval"])/100 # To normalize the flow
+		# Gets the exact interval
+		interval = sorted(self.plot_values.values())[0]["interval"]
 
-		self.output_folder_path = os.path.join(self.output_folder_path, "t%d" % t_flow)
+		# Sets up interval folder 
+		self.output_folder_path = os.path.join(self.output_folder_path, "tf%s" % interval)
 		check_folder(self.output_folder_path, False, self.verbose)
-		title_addendum = r", $t_{flow}=%.2f$" % t_flow
+
+		# Sets up fit target folder target folder
+		if fit_target == -1:
+			fit_target = self.plot_values[max(self.plot_values)]["x"][-1]
+		self.output_folder_path = os.path.join(self.output_folder_path, "%02.2f" % fit_target)
+		check_folder(self.output_folder_path, False, self.verbose)
+
+		t_flow = float(interval)/100.0 # To normalize the flow
+		title_addendum = r", $t_{0=%.2f}$" % t_flow
 		super(TopsusQtQ0PostAnalysis, self).plot_continuum(fit_target, title_addendum=title_addendum)
 
 		# Resets the plot values and output folder path

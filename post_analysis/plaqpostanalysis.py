@@ -1,6 +1,5 @@
 from core.postcore import PostCore
 
-
 class PlaqPostAnalysis(PostCore):
 	"""Post-analysis of the topological charge."""
 	observable_name = "Plaquette"

@@ -525,11 +525,19 @@ def main():
 		"topc", "topc2", "topc4", "topct", "topcte", "topcMC", 
 		# Topological susceptibility definitions
 		"topsus", "topsus4", "topsust", "topsuste", "topsusMC", "topsusqtq0",
-		# Other quantities
+		# Other quantities 
 		"qtq0e",
 	]
 
-	# observables = ["topc"]
+	observables = [
+
+		# Topological susceptibility definitions
+		"topsus", "topsus4", "topsust", "topsuste", "topsusMC",
+		# Other quantities 
+		
+	]
+
+	observables = ["topsusqtq0"]
 
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
 	print 100*"=" + "\n"
@@ -544,7 +552,7 @@ def main():
 		"parallel": parallel, "numprocs": numprocs}
 
 	#### Try to load binary file(much much faster)
-	load_file = False
+	load_file = True
 
 	# If we are to create per-flow datasets as opposite to per-cfg datasets
 	create_perflow_data = False
@@ -654,9 +662,9 @@ def main():
 	# analysis_parameter_list = [databeta61, databeta62]
 	# analysis_parameter_list = [smaug_data_beta61_analysis]
 
-	#### Submitting observable-batches
-	for analysis_parameters in analysis_parameter_list:
-		analyse(analysis_parameters)
+	# #### Submitting observable-batches
+	# for analysis_parameters in analysis_parameter_list:
+	# 	analyse(analysis_parameters)
 
 	#### Submitting post-analysis data
 	if len(analysis_parameter_list) >= 2:

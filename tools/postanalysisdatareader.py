@@ -42,6 +42,7 @@ class PostAnalysisDataReader:
 
 		# Number of betas variable
 		self.N_betas = 0
+		self.beta_values = []
 
 		# Iterates over the different beta value folders
 		for beta_folder in self._get_folder_content(self.batch_folder):
@@ -132,6 +133,7 @@ class PostAnalysisDataReader:
 
 			assert np.asarray(_beta_values).all(), "betas not equal."
 			beta = _beta_values[0]
+			self.beta_values.append(beta)
 
 			# Stores batch data
 			self.data_batches[beta] = copy.deepcopy(observables_data)

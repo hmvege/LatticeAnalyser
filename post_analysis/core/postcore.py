@@ -251,6 +251,7 @@ class PostCore(object):
 	def __str__(self):
 		msg = "\n" +"="*100
 		msg += "\nPost analaysis for:        " + self.observable_name_compact
+		msg += "\nDescription: " + self.__doc__
 		msg += "\nIncluding autocorrelation: " + self.ac
 		msg += "\nOutput folder:             " + self.output_folder_path
 		msg += "\n" + "="*100

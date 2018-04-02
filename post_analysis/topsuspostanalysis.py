@@ -6,6 +6,7 @@ import numpy as np
 import os
 
 class TopsusPostAnalysis(TopsusCore):
+	"""Default topological susceptibility."""
 	observable_name = "Topological Susceptibility"
 	observable_name_compact = "topsus"
 
