@@ -427,6 +427,12 @@ def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target
 			topc4_analysis.set_analysis_data_type(analysis_type)
 			topc4_analysis.plot()
 
+		if "topcr" in observables:
+			topcr_analysis = TopcRPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
+			print topcr_analysis
+			topcr_analysis.set_analysis_data_type(analysis_type)
+			topcr_analysis.plot()
+
 		if "topct" in observables:
 			topct_analysis = TopctPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
 			print topct_analysis
@@ -522,22 +528,14 @@ def main():
 	observables = [
 		"plaq", "energy", 
 		# Topological charge definitions
-		"topc", "topc2", "topc4", "topct", "topcte", "topcMC", 
+		"topc", "topc2", "topc4", "topcr", "topct", "topcte", "topcMC", 
 		# Topological susceptibility definitions
 		"topsus", "topsus4", "topsust", "topsuste", "topsusMC", "topsusqtq0",
 		# Other quantities 
 		"qtq0e",
 	]
 
-	observables = [
-
-		# Topological susceptibility definitions
-		"topsus", "topsus4", "topsust", "topsuste", "topsusMC",
-		# Other quantities 
-		
-	]
-
-	observables = ["topsusqtq0"]
+	observables = ["topcr"]
 
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
 	print 100*"=" + "\n"

@@ -100,7 +100,7 @@ class PostCore(object):
 
 	def _check_plot_values(self):
 		"""Checks if we have set the analysis data type yet."""
-		if not hasattr(self,"plot_values"):
+		if not hasattr(self, "plot_values"):
 			raise AttributeError("set_analysis_data_type() has not been set yet.")
 
 	def _get_analysis_data(self, analysis_data_type):

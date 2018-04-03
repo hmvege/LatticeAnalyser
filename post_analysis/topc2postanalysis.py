@@ -1,7 +1,7 @@
 from core.postcore import PostCore
 
 class Topc2PostAnalysis(PostCore):
-	"""Post-analysis of the topsus with Q^2."""
+	"""Post-analysis of the topc with Q^2."""
 	observable_name = r"$Q^2$"
 	observable_name_compact = "topq2"
 	x_label = r"$\sqrt{8t_{flow}}[fm]$"

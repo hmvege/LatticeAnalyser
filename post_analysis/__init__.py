@@ -8,6 +8,7 @@ from plaqpostanalysis import PlaqPostAnalysis
 from topcpostanalysis import TopcPostAnalysis
 from topc2postanalysis import Topc2PostAnalysis
 from topc4postanalysis import Topc4PostAnalysis
+from topcrpsotanalysis import TopcRPostAnalysis
 from topctpostanalysis import TopctPostAnalysis
 from topcteintervalpostanalysis import TopcteIntervalPostAnalysis
 from topcmcintervalpostanalysis import TopcMCIntervalPostAnalysis
