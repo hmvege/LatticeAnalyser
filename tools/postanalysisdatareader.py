@@ -85,7 +85,8 @@ class PostAnalysisDataReader:
 					obs_data = {}
 					sub_obs_raw = {}
 
-					if obs == "qtq0e": continue
+					if obs == "qtq0e":
+						self._retrieve_qtq0e(obs_folder_path)
 
 					for sub_obs in self._sort_folder_list(obs_folder_path):
 						sub_obs_path = os.path.join(obs_folder_path, sub_obs)
@@ -386,6 +387,18 @@ class PostAnalysisDataReader:
 			if sub_obs not in self.raw_analysis[analysis_type][beta][observable_name]:
 				self.raw_analysis[analysis_type][beta][observable_name][sub_obs] = {}
 
+
+	def _retrieve_qtq0e(self, obs_folder_path):
+		print obs_folder_path
+		for flow_folder in self._get_folder_content(obs_folder_path):
+			flow_folder_path = os.path.join(obs_folder_path, flow_folder)
+			for eucl_folder in self._get_folder_content(flow_folder_path):
+				eucl_folder_path = os.path.join(flow_folder_path, eucl_folder)
+				print self._get_folder_content(eucl_folder_path)
+				
+
+			exit(1)
+		raise NotImplementedError("qtq0e not completely implemented")
 
 	@staticmethod
 	def _get_folder_content(folder):

@@ -7,7 +7,7 @@ import statistics.parallel_tools as ptools
 
 class QtQ0EuclideanAnalyser(FlowAnalyser):
 	"""Correlator of <QtQ0> in euclidean time analysis class."""
-	observable_name = r"$\langle Q_{t_e} Q_{t_{e,0}} \rangle$"
+	observable_name = r""
 	observable_name_compact = "qtq0e"
 	x_label = r"$t_e[fm]$"
 	y_label = r"$\langle Q_{t_e} Q_{t_{e,0}} \rangle [GeV]$"
@@ -51,7 +51,7 @@ class QtQ0EuclideanAnalyser(FlowAnalyser):
 		self.function_derivative = ptools._C_derivative
 
 		# Sets file name
-		self.observable_name = r"$\langle Q_{t_e} Q_{t_{e,0}} \rangle$ at $t_e=%.2f$, $t_{flow}=%.2f$" % (self.euclidean_time, self.flow_time)
+		self.observable_name = r"$t_e=%.2f$, $t_{flow}=%.2f$" % (self.euclidean_time, self.flow_time)
 		# self.observable_name = r"$\chi(\langle Q_{t_e} Q_{t_{e,0}} \rangle)^{1/4}$ at $t_{flow}=%.2f$" % (self.flow_time)
 
 		# Selects the configurations in euclidean time in flow time to multiply

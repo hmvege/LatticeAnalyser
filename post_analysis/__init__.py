@@ -8,7 +8,7 @@ from plaqpostanalysis import PlaqPostAnalysis
 from topcpostanalysis import TopcPostAnalysis
 from topc2postanalysis import Topc2PostAnalysis
 from topc4postanalysis import Topc4PostAnalysis
-from topcrpsotanalysis import TopcRPostAnalysis
+from topcrpostanalysis import TopcRPostAnalysis
 from topctpostanalysis import TopctPostAnalysis
 from topcteintervalpostanalysis import TopcteIntervalPostAnalysis
 from topcmcintervalpostanalysis import TopcMCIntervalPostAnalysis
@@ -22,3 +22,4 @@ from topsusmcintervalpostanalysis import TopsusMCIntervalPostAnalysis
 from topsusqtq0postanalysis import TopsusQtQ0PostAnalysis
 
 # Other definitions and observable post analyses
+from qtq0euclideanpostanalysis import QtQ0EuclideanPostAnalysis 

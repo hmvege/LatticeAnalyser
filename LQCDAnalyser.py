@@ -522,6 +522,18 @@ def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target
 
 			topsusmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
+		if "qtq0e" in observables:
+			qtq0e_analysis = QtQ0EuclideanPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
+			print qtq0e_analysis
+			qtq0e_analysis.set_analysis_data_type(analysis_type)
+			N_int, intervals = qtq0e_analysis.get_N_intervals()
+			for i in range(N_int):
+				qtq0e_analysis.plot_interval(i)
+				# for cont_target in continuum_targets:
+				# 	qtq0e_analysis.plot_continuum(cont_target, i)
+			
+			qtq0e_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+
 
 def main():
 	#### Available observables
@@ -536,6 +548,7 @@ def main():
 	]
 
 	observables = ["topcr"]
+	observables = ["qtq0e"]
 
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
 	print 100*"=" + "\n"

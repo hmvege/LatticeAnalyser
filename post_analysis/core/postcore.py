@@ -25,7 +25,7 @@ class PostCore(object):
 	# blue, green, red purple
 	beta_colors = ["#5cbde0", "#6fb718", "#bc232e", "#8519b7"]
 
-	def __init__(self, data, with_autocorr=True, figures_folder="../figures", verbose=False):
+	def __init__(self, data, with_autocorr=True, figures_folder="../figures", verbose=False, dryrun=False):
 		if with_autocorr:
 			self.ac = "with_autocorr"
 		else:
@@ -34,6 +34,7 @@ class PostCore(object):
 		observable = self.observable_name_compact
 
 		self.verbose = verbose
+		self.dryrun = dryrun
 
 		# Retrieves relevant data values and sorts them by beta values
 		self.flow_time = data.flow_time
@@ -46,7 +47,7 @@ class PostCore(object):
 			" been performed?" % (observable, ", ".join(data.observable_list)))
 		assert observable in data.observable_list, assert_msg
 
-		for beta in sorted(data.data_observables[observable].keys()):
+		for beta in sorted(data.beta_values):
 			if self.sub_obs:
 				self.observable_intervals[beta] = data.data_observables[observable][beta].keys()
 				if not beta in self.unanalyzed_data:
@@ -82,16 +83,16 @@ class PostCore(object):
 
 		# Creates base output folder for post analysis figures
 		self.figures_folder = figures_folder
-		check_folder(self.figures_folder, dryrun=False, verbose=self.verbose)
-		check_folder(os.path.join(self.figures_folder, data.batch_name), dryrun=False, verbose=self.verbose)
+		check_folder(self.figures_folder, dryrun=self.dryrun, verbose=self.verbose)
+		check_folder(os.path.join(self.figures_folder, data.batch_name), dryrun=self.dryrun, verbose=self.verbose)
 
 		# Creates output folder
 		self.post_anlaysis_folder = os.path.join(self.figures_folder, data.batch_name, "post_analysis")
-		check_folder(self.post_anlaysis_folder, dryrun=False, verbose=self.verbose)
+		check_folder(self.post_anlaysis_folder, dryrun=self.dryrun, verbose=self.verbose)
 
 		# Creates observable output folder
 		self.output_folder_path = os.path.join(self.post_anlaysis_folder, self.observable_name_compact)
-		check_folder(self.output_folder_path, dryrun=False, verbose=self.verbose)
+		check_folder(self.output_folder_path, dryrun=self.dryrun, verbose=self.verbose)
 
 		# Creates colors to use
 		self.colors = {}
@@ -134,7 +135,7 @@ class PostCore(object):
 			values["x"] = values["a"]* np.sqrt(8*self.flow_time)
 			values["y"] = data[beta]["y"]
 			values["bs"] = self.bs_raw[beta][self.observable_name_compact]
-			values["y_err"] = data[beta]["y_error"] # negative since the minus sign will go away during linear error propagation
+			values["y_err"] = data[beta]["y_error"]
 			values["label"] = r"%s $\beta=%2.2f$" % (self.size_labels[beta], beta)
 			values["color"] = self.colors[beta]
 			self.plot_values[beta] = values
@@ -251,7 +252,7 @@ class PostCore(object):
 	def __str__(self):
 		msg = "\n" +"="*100
 		msg += "\nPost analaysis for:        " + self.observable_name_compact
-		msg += "\nDescription: " + self.__doc__
+		msg += "\n" + self.__doc__
 		msg += "\nIncluding autocorrelation: " + self.ac
 		msg += "\nOutput folder:             " + self.output_folder_path
 		msg += "\n" + "="*100
