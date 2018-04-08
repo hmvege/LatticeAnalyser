@@ -6,6 +6,7 @@ import numpy as np
 import os
 
 class EnergyPostAnalysis(PostCore):
+	"""Post analysis of the energy, <E>."""
 	observable_name = "Energy"
 	observable_name_compact = "energy"
 

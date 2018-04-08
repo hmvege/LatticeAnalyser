@@ -122,8 +122,18 @@ def analyse_qtq0e(params, flow_time_indexes, euclidean_time_percents):
 
 	for flow_time_index in flow_time_indexes:
 		for euclidean_percent in euclidean_time_percents:
-			qtq0_analysis.set_flow_time(flow_time_index, euclidean_percent)
+			qtq0_analysis.set_time(flow_time_index, euclidean_percent)
 			analyse_default(qtq0_analysis, N_bs)
+
+def analyse_qtq0_effective_mass(params, flow_time_indexes):
+	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
+
+	qtq0eff_analysis = QtQ0EffectiveMassAnalyser(obs_data("topct"), dryrun=dryrun,
+		parallel=parallel, numprocs=numprocs, verbose=verbose)
+
+	for flow_time_index in flow_time_indexes:
+		qtq0eff_analysis.set_time(flow_time_index)
+		analyse_default(qtq0eff_analysis, N_bs)
 
 def analyse_topct(params, numsplits):
 	"""Analyses topological charge at a specific euclidean time."""
@@ -353,10 +363,13 @@ def analyse(parameters):
 		analyse_topsusMCTime(params, parameters["MC_time_splits"])
 	if "topsusqtq0" in parameters["observables"]:
 		analyse_topsus_qtq0(params, parameters["q0_flow_times"])
-	
+
 	# Other definitions
 	if "qtq0e" in parameters["observables"]:
 		analyse_qtq0e(params, parameters["flow_time_indexes"], parameters["euclidean_time_percents"])
+	if "qtq0eff" in parameters["observables"]:
+		analyse_qtq0_effective_mass(params, parameters["eff_mass_flow_times"])
+	
 
 	post_time = time.clock()
 	print "="*100
@@ -365,8 +378,9 @@ def analyse(parameters):
 	print "="*100
 
 def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target,
-	line_fit_interval, energy_fit_target, figures_folder="figures", post_analysis_data_type=None, 
-	bval_to_plot="all", verbose=False):
+	line_fit_interval, energy_fit_target, flow_time_indexes, euclidean_time_percents,
+	figures_folder="figures", post_analysis_data_type=None, bval_to_plot="all",
+	verbose=False):
 	"""
 	Post analysis of the flow observables.
 
@@ -377,6 +391,8 @@ def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target
 		line_fit_interval: float, extension of the area around the fit target 
 			that will be used for the line fit.
 		energy_fit_target: point of which we will perform a line fit at.
+		flow_time_indexes: points where we perform qtq0e at
+		euclidean_time_percents: points where we perform qtq0e at
 	"""
 
 	print "="*100 + "\nPost-analysis: retrieving data from: %s" % batch_folder
@@ -525,14 +541,24 @@ def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target
 		if "qtq0e" in observables:
 			qtq0e_analysis = QtQ0EuclideanPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
 			print qtq0e_analysis
-			qtq0e_analysis.set_analysis_data_type(analysis_type)
-			N_int, intervals = qtq0e_analysis.get_N_intervals()
-			for i in range(N_int):
-				qtq0e_analysis.plot_interval(i)
-				# for cont_target in continuum_targets:
-				# 	qtq0e_analysis.plot_continuum(cont_target, i)
-			
-			qtq0e_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+
+			# Checks that we have similar flow times
+			N_tf, flow_intervals = qtq0e_analysis.get_N_intervals()
+			clean_string = lambda s: int(s[-4:])
+			flow_times = np.asarray([b[1].keys() for b in flow_intervals.items()]).T
+			# +1 in order to ensure the zeroth flow time does not count as false.
+			assert np.all([np.all([clean_string(i)+1 for i in ft]) for ft in flow_times]), "flow times differ."
+
+			for te in euclidean_time_percents:
+				qtq0e_analysis.set_analysis_data_type(te, analysis_type)
+				# print "flow_intervals: ", flow_intervals
+				for tf in flow_time_indexes: # Flow times
+					qtq0e_analysis.plot_interval(tf, te)
+					# for cont_target in continuum_targets:
+					# 	qtq0e_analysis.plot_continuum(cont_target, i)
+				
+				qtq0e_analysis.plot_series(te, [0,1,2,3], beta=bval_to_plot)
+				qtq0e_analysis.plot_series(te, [0,2,3,5], beta=bval_to_plot)
 
 
 def main():
@@ -544,11 +570,14 @@ def main():
 		# Topological susceptibility definitions
 		"topsus", "topsus4", "topsust", "topsuste", "topsusMC", "topsusqtq0",
 		# Other quantities 
-		"qtq0e",
+		"topcr",
+		# "qtq0e",
 	]
 
+	observables = ["topsus"]
 	observables = ["topcr"]
 	observables = ["qtq0e"]
+	observables = ["qtq0eff", "qtq0e"]
 
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
 	print 100*"=" + "\n"
@@ -623,6 +652,8 @@ def main():
 	flow_time_indexes = [0, 50, 200, 400, 700, 999]
 	euclidean_time_percents = [0, 0.25, 0.50, 0.75, 1.00]
 
+	eff_mass_flow_times = [0, 100, 400, 700, 999]
+
 	#### Analysis batch setups
 	default_params = {
 		"batch_folder": data_batch_folder,
@@ -639,6 +670,7 @@ def main():
 		"numsplits_eucl": numsplits_eucl,
 		"intervals_eucl": intervals_eucl,
 		"MC_time_splits": MC_time_splits,
+		"eff_mass_flow_times": eff_mass_flow_times,
 	}
 
 	databeta60 = copy.deepcopy(default_params)
@@ -679,8 +711,10 @@ def main():
 
 	#### Submitting post-analysis data
 	if len(analysis_parameter_list) >= 2:
-		post_analysis(data_batch_folder, beta_folders, observables, topsus_fit_targets,
-			line_fit_interval, energy_fit_target, figures_folder=figures_folder, verbose=verbose)
+		post_analysis(data_batch_folder, beta_folders, observables, 
+			topsus_fit_targets, line_fit_interval, energy_fit_target,
+			flow_time_indexes, euclidean_time_percents, 
+			figures_folder=figures_folder, verbose=verbose)
 
 if __name__ == '__main__':
 	main()

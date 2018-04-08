@@ -6,7 +6,7 @@ import re
 import pandas as pd
 import json
 
-__all__ = ["DataReader", "check_folder", "write_data_to_file", "write_raw_analysis_to_file"]
+__all__ = ["DataReader", "check_folder", "get_NBoots", "write_data_to_file", "write_raw_analysis_to_file"]
 
 class _DirectoryTree:
 	def __init__(self, batch_name, batch_folder, dryrun=False, verbose=True):
@@ -600,6 +600,13 @@ def check_folder(folder_name, dryrun=False, verbose=False):
 			print "> mkdir %s" % folder_name
 		if not dryrun:
 			os.mkdir(folder_name)
+
+def get_NBoots(raw):
+	"""Recursive method for getting the number of bootstraps."""
+	if isinstance(raw, dict):
+		return get_NBoots(raw.values()[0])
+	else:
+		return raw.shape[-1]
 
 def write_data_to_file(analysis_object, save_as_txt=False):
 	"""

@@ -1,5 +1,6 @@
 from folderreadingtools import check_folder
 import os
+import re
 import numpy as np
 import copy
 import json
@@ -45,14 +46,14 @@ class PostAnalysisDataReader:
 		self.beta_values = []
 
 		# Iterates over the different beta value folders
-		for beta_folder in self._get_folder_content(self.batch_folder):
+		for beta_folder in self._get_dir_content(self.batch_folder):
 
 			#### TEMP ####
 			if beta_folder == "beta645": continue
 			#### TEMP ####
 
 			# Construct beta folder path
-			beta_folder_path = os.path.join(self.batch_folder, beta_folder,
+			beta_dir_path = os.path.join(self.batch_folder, beta_folder,
 				"post_analysis_data")
 
 			observables_data = {}
@@ -69,66 +70,67 @@ class PostAnalysisDataReader:
 			except IOError:
 				print "No parameter file found."
 
-			for obs in self._get_folder_content(beta_folder_path):
-				obs_folder_path = os.path.join(beta_folder_path, obs)
+			for obs in self._get_dir_content(beta_dir_path):
+				obs_dir_path = os.path.join(beta_dir_path, obs)
 
-				if os.path.splitext(obs_folder_path)[-1] == ".json": 
+				if os.path.splitext(obs_dir_path)[-1] == ".json": 
 					continue
 
 				if obs not in self.observable_list:
 					self.observable_list.append(obs)
-
-				if self._check_folder_content_type_is_dir(obs_folder_path):
+				if self._check_is_content_dir(obs_dir_path):
 					# In case we have an observable that contains sub folders 
 					# with the same observable but at different points in 
 					# time or similiar.
 					obs_data = {}
 					sub_obs_raw = {}
 
-					if obs == "qtq0e":
-						self._retrieve_qtq0e(obs_folder_path)
+					for sub_obs in self._sort_folder_list(obs_dir_path):
+						sub_obs_path = os.path.join(obs_dir_path, sub_obs)
 
-					for sub_obs in self._sort_folder_list(obs_folder_path):
-						sub_obs_path = os.path.join(obs_folder_path, sub_obs)
+						if self._check_is_content_dir(sub_obs_path):
+							# Checks if we have another nested folder, which
+							# is the case for the qtq0e quantity.
+							ss_obs_data = {}
+							ss_obs_raw = {}
 
-						# Retrieves folder file lists
-						binary_data_folders, observable_files = self._get_obs_folder_content_lists(sub_obs, sub_obs_path)
+							for ss_obs in self._sort_folder_list(sub_obs_path):
+								ss_path = os.path.join(sub_obs_path, ss_obs)
 
-						# Retrieve observable data and beta
-						_beta, sub_obs_data = self._get_observable_data(obs, observable_files)
-						obs_data[sub_obs] = sub_obs_data
-						_beta_values.append(_beta)
+								# Retrieves sub-sub observable folder data
+								_data, _raw, _beta = self._get_obs_data(
+									sub_obs, sub_obs_path, sub_obs=ss_obs,
+									sub_obs_path=ss_path)
 
-						# Retrieves the raw binary data into dict
-						analysis_raw = {}
-						for binary_analysis_folder in binary_data_folders:
-							analysis_type = os.path.basename(binary_analysis_folder)
-							analysis_raw[analysis_type] = self._get_bin(binary_analysis_folder)
+								# Appends and populates dictionaries
+								_beta_values.append(_beta)
+								ss_obs_data[ss_obs] = _data
+								ss_obs_raw[ss_obs] = _raw
 
-							self._add_analysis(analysis_type)
+							# Populates dictionaries
+							obs_data[sub_obs] = ss_obs_data
+							sub_obs_raw[sub_obs] = ss_obs_raw
 
-						sub_obs_raw[sub_obs] = analysis_raw
+						else:
+							# Retrieves sub observable folder data
+							_data, _raw, _beta = self._get_obs_data(
+								obs, obs_dir_path, sub_obs=sub_obs,
+								sub_obs_path=sub_obs_path)
 
-					# Places the retrieved sub folder observables into dictionary
+							# Appends and populates dictionaries
+							obs_data[sub_obs] = _data
+							sub_obs_raw[sub_obs] = _raw
+							_beta_values.append(_beta)
+
+					# Places the retrieved sub-folder observables into dictionary
 					obs_data_raw[obs] = sub_obs_raw
-
 				else:
-					# Retrieves folder file lists
-					binary_data_folders, observable_files = self._get_obs_folder_content_lists(obs, obs_folder_path)
-					
-					# Retrieve observable data and beta
-					_beta, obs_data = self._get_observable_data(obs, observable_files)
-					_beta_values.append(_beta)
+					# In case of regular observables, that is no sub-folders.
+					_data, _raw, _beta = self._get_obs_data(
+						obs, obs_dir_path)
 
-					# Retrieves the raw binary data
-					analysis_raw = {}
-					for binary_analysis_folder in binary_data_folders:
-						analysis_type = os.path.basename(binary_analysis_folder)
-						analysis_raw[analysis_type] = self._get_bin(binary_analysis_folder)
-
-						self._add_analysis(analysis_type)
-
-					obs_data_raw[obs] = analysis_raw
+					obs_data = _data
+					obs_data_raw[obs] = _raw
 
 				observables_data[obs] = obs_data
 
@@ -158,33 +160,68 @@ class PostAnalysisDataReader:
 	def get_observables(self):
 		return self.observable_list
 
-	def _check_folder_content_type_is_dir(self, folder):
+	def _get_obs_data(self, obs, obs_path, sub_obs=None, sub_obs_path=None):
+		"""Method for retrieving data associated with an observable."""
+		if sub_obs == None:
+			sub_obs = obs
+		if sub_obs_path == None:
+			sub_obs_path = obs_path
+
+		# Retrieves folder file lists
+		binary_data_folders, observable_files = self._get_obs_dir_paths(
+			sub_obs, sub_obs_path)
+
+		# Retrieve observable data and beta
+		_beta, sub_obs_data = self._get_obs_dict(obs, observable_files)
+
+		# Retrieves the raw binary data into dictionary
+		analysis_raw = {}
+		for binary_analysis_folder in binary_data_folders:
+			analysis_type = os.path.basename(binary_analysis_folder)
+			analysis_raw[analysis_type] = self._get_bin(binary_analysis_folder)
+			self._add_analysis(analysis_type)
+
+		return sub_obs_data, analysis_raw, _beta
+
+	def _check_is_content_dir(self, folder):
 		"""Returns True if all of the contents are folders."""
-		for f in self._get_folder_content(folder):
+		for f in self._get_dir_content(folder):
+			if f.startswith("."): # If we have a .DS_Store file or similar
+				continue
 			if not os.path.isdir(os.path.join(folder, f)):
 				return False
 		else:
 			return True
 
 	def _add_analysis(self, atype):
+		"""Adds new analysis if we don't have it."""
 		if atype not in self.analysis_types:
 			self.analysis_types.append(atype)
 
+	# convert = lambda text: int(text) if text.isdigit() else text.lower()
+ #    alphanum_key = lambda key: [convert(c) for c in re.split('(\d+)', key)]
+ #    return sorted(l, key=alphanum_key)
+
 	def _sort_folder_list(self, folder_path):
 		"""
-		Sorts the folders deepending on if we have intervals or specific points.
+		Sorts the folders depending on if we have intervals or specific points.
 		"""
-		folders = self._get_folder_content(folder_path)
+
+		folders = self._get_dir_content(folder_path)
+
 		if "-" in folders[0]: # For MC and euclidean intervals
-			sort_key = key=lambda s: int(s.split("-")[-1])
+			sort_key = lambda s: int(s.split("-")[-1])
 		else:
-			sort_key = key=lambda s: int(s)
+			alphanum = lambda s: re.findall('(\d+)', s)[0]
+			sort_key = lambda s: int(alphanum(s))
+
 		return sorted(folders, key=sort_key)
 
-	def _get_obs_folder_content_lists(self, obs, obs_folder):
+	def _get_obs_dir_paths(self, obs, obs_folder):
 		"""
-		Internal method for building and returning the observable dicitonary.
+		Internal method for retrieving all of the observable data within a folder.
 		"""
+
 		# Sorts into two lists, one with .txt extensions, for retrieving the
 		# beta value. The other for retrieving the analysis types.
 		binary_data_folders = []
@@ -193,7 +230,7 @@ class PostAnalysisDataReader:
 		# Function for checking if we have a binary data folder
 		_chk_obs_f = lambda f, fp: os.path.isdir(fp) and not f.startswith(".")
 
-		for _f in self._get_folder_content(obs_folder):
+		for _f in self._get_dir_content(obs_folder):
 			# Temporary path to observable sub folder
 			_f_path = os.path.join(obs_folder, _f)
 
@@ -205,37 +242,50 @@ class PostAnalysisDataReader:
 
 		return binary_data_folders, observable_files
 
-	def _get_observable_data(self, obs, observable_files):
+	def _get_obs_dict(self, obs, observable_files):
+		"""
+		Gets the observable data dictionaries.
+		"""
+		observable_data = {}
+
 		# Temporary beta list for cross checking
 		_beta_values = []
-
-		observable_data = {}
 
 		# Gets the analyzed data for each observable
 		for obs_file_path in observable_files:			
 			# Retrieves the observable data
 			if "no_autocorr" in obs_file_path:
-				observable_data["without_autocorr"] = self._get_beta_observable_dict(obs_file_path, autocorr=False)
+				observable_data["without_autocorr"] = self._get_obs_data_dict(
+					obs_file_path, autocorr=False)
+
 				_beta_values.append(observable_data["without_autocorr"]["beta"])
+
 			else:
-				observable_data["with_autocorr"] = self._get_beta_observable_dict(obs_file_path, autocorr=True)
+				observable_data["with_autocorr"] = self._get_obs_data_dict(
+					obs_file_path, autocorr=True)
+
 				_beta_values.append(observable_data["with_autocorr"]["beta"])
 
 		assert np.asarray(_beta_values).all(), "betas not equal."
 
 		return _beta_values[0], observable_data
 
-	def _get_beta_observable_dict(self, observable_file, autocorr=False):
+	def _get_obs_data_dict(self, observable_file, autocorr=False):
 		"""
 		Internal function for retrieving observable data.
 
 		Args:
 			observable_file: string file path of a .txt-file containing
 				relevant information
+
+		Returns:
+			obs_data: dictionary with y, y_error, beta, unanalyzed, bootstrap,
+				jackknife and optional tau_int, tau_int_err, sqrt2tau_int.
 		"""
 
 		# Retrieves meta data
-		# Make it so one can retrieve the key as meta_data[i] and then value as meta_data[i+1]
+		# Make it so one can retrieve the key as meta_data[i] and then value as
+		# meta_data[i+1]
 		if os.path.splitext(observable_file)[-1] == ".txt":
 			meta_data = self._get_meta_data(observable_file)
 			
@@ -247,7 +297,8 @@ class PostAnalysisDataReader:
 			# Loads data into temporary holder
 			retrieved_data = np.load(observable_file)
 
-		# Temporary methods for getting observable name and beta value, as this will be put into the meta data
+		# Temporary methods for getting observable name and beta value, as this
+		# will be put into the meta data
 		obs = os.path.split(os.path.splitext(observable_file)[0])[-1]
 
 		# Dictionary to store all observable data in
@@ -299,8 +350,8 @@ class PostAnalysisDataReader:
 
 	def _get_bin(self, folder):
 		"""Gets binary data."""
-		assert len(os.listdir(folder)) == 1, "multiple files in binary folder."
-		return np.load(os.path.join(folder, self._get_folder_content(folder)[0]))
+		assert len(os.listdir(folder)) == 1, "multiple files in binary folder %s: %s" % (folder, ", ".join(os.listdir(folder)))
+		return np.load(os.path.join(folder, self._get_dir_content(folder)[0]))
 
 	@staticmethod
 	def _get_parameter_data(file):
@@ -363,16 +414,37 @@ class PostAnalysisDataReader:
 		for beta in self.data_raw:
 			# Loops over observable names
 			for observable_name in self.data_raw[beta]:
-				# Loops over analysis types containined in observable name,
+				# Loops over analysis types contained in observable name,
 				# unless it is a split observable
 				for sub_elem in self.data_raw[beta][observable_name]:
-					if not sub_elem in self.analysis_types:
-						for sub_obs_name in self.data_raw[beta][observable_name]:
-							for atype in self.data_raw[beta][observable_name][sub_obs_name]:
-								self.raw_analysis[atype][beta][observable_name][sub_obs_name] = self.data_raw[beta][observable_name][sub_obs_name][atype]
+					if sub_elem in self.analysis_types:
+						atype = sub_elem
+						self.raw_analysis[atype][beta][observable_name] = self.data_raw[beta][observable_name][atype]
+
 					else:
-						for atype in self.data_raw[beta][observable_name]:
-							self.raw_analysis[atype][beta][observable_name] = self.data_raw[beta][observable_name][atype]
+						for sub_sub_elem in self.data_raw[beta][observable_name][sub_elem]:
+							# Checks if we have an raw analysis dictionary
+							if sub_sub_elem in self.analysis_types:
+								atype = sub_sub_elem
+								self.raw_analysis[atype][beta][observable_name][sub_elem] = self.data_raw[beta][observable_name][sub_elem][atype]
+
+							else:
+								for atype in self.data_raw[beta][observable_name][sub_elem][sub_sub_elem]:
+									self.raw_analysis[atype][beta][observable_name][sub_elem][sub_sub_elem] = self.data_raw[beta][observable_name][sub_elem][sub_sub_elem][atype]
+
+		# print self.raw_analysis.keys()
+		# for k in self.raw_analysis:
+		# 	print " "*4, self.raw_analysis[k].keys()
+		# 	for kk in self.raw_analysis[k]:
+		# 		print " "*8, self.raw_analysis[k][kk].keys()
+		# 		for kkk in self.raw_analysis[k][kk]:
+		# 			if isinstance(self.raw_analysis[k][kk][kkk], dict):
+		# 				print " "*12, self.raw_analysis[k][kk][kkk].keys()
+		# 				for kkkk in self.raw_analysis[k][kk][kkk]:
+		# 					print " "*16, kkkk
+		# 			else:
+		# 				print " "*12, kkk
+		# 		# if type(self.raw_analysis[k][kk]) == dict:
 
 
 	def _check_raw_bin_dict_keys(self, analysis_type, beta, observable_name, sub_obs=None):
@@ -388,20 +460,24 @@ class PostAnalysisDataReader:
 				self.raw_analysis[analysis_type][beta][observable_name][sub_obs] = {}
 
 
-	def _retrieve_qtq0e(self, obs_folder_path):
-		print obs_folder_path
-		for flow_folder in self._get_folder_content(obs_folder_path):
-			flow_folder_path = os.path.join(obs_folder_path, flow_folder)
-			for eucl_folder in self._get_folder_content(flow_folder_path):
+	def _retrieve_sub_sub(self, obs_dir_path):
+		"""
+		Internal method for retrieving observable qtq0e, as that it contains nested folders.
+		"""
+
+		# print obs_dir_path
+		for flow_folder in self._get_dir_content(obs_dir_path):
+			flow_folder_path = os.path.join(obs_dir_path, flow_folder)
+			for eucl_folder in self._get_dir_content(flow_folder_path):
 				eucl_folder_path = os.path.join(flow_folder_path, eucl_folder)
-				print self._get_folder_content(eucl_folder_path)
+				# print self._get_dir_content(eucl_folder_path)
 				
 
 			exit(1)
 		raise NotImplementedError("qtq0e not completely implemented")
 
 	@staticmethod
-	def _get_folder_content(folder):
+	def _get_dir_content(folder):
 		if not os.path.isdir(folder):
 			raise IOError("No folder by the name %s found." % folder)
 		else:

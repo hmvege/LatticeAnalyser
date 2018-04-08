@@ -166,10 +166,6 @@ class TopcRPostAnalysis(PostCore):
 				self.topc4C_jackknife_data[beta]["y"],
 				self.topc2_jackknife_data[beta]["y"])
 
-			# print self.topc2_jackknife_data[beta]["y"]
-			# print self.topc4_jackknife_data[beta]["y"]
-			# print beta, self.hbarc/get_lattice_spacing(beta)/self.lattice_sizes[beta]**(1./4), self.topcR_jackknife_data[beta]["y"][-1], self.topcR_jackknife_data[beta]["y"][-1]*self.hbarc/get_lattice_spacing(beta)/self.lattice_sizes[beta]**(1./4)
-
 			self.topcR_unanalyzed_data[beta]["y_error"] = R_error(
 				self.topc4C_unanalyzed_data[beta]["y"], 
 				self.topc4C_unanalyzed_data[beta]["y_error"], 

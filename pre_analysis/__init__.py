@@ -22,3 +22,4 @@ from topsusqtq0analyser import TopsusQtQ0Analyser
 
 # Other definitions & quantities
 from qtq0euclideananalyser import QtQ0EuclideanAnalyser
+from qtq0effectivemass import QtQ0EffectiveMassAnalyser

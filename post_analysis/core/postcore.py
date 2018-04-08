@@ -1,27 +1,33 @@
 from tools.postanalysisdatareader import PostAnalysisDataReader
 from tools.latticefunctions import get_lattice_spacing
-from tools.folderreadingtools import check_folder
+from tools.folderreadingtools import check_folder, get_NBoots
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 
 class PostCore(object):
-	"""Post analysis base class."""
+	"""Post analysis base class. Based on paper DOI 10.1002/mas.20100."""
 	observable_name = "Observable"
 	observable_name_compact = "obs"
 	formula = ""
 	x_label = r""
 	y_label = r""
-	dpi=350
+	dpi = 350
 	size_labels = {
 		6.0  : r"$24^3 \times 48$",
 		6.1  : r"$28^3 \times 56$",
 		6.2  : r"$32^3 \times 64$",
 		6.45 : r"$48^3 \times 96$",
 	}
+	lattice_sizes = {
+		6.0  : [24, 48],
+		6.1  : [28, 56],
+		6.2  : [32, 64],
+		6.45 : [48, 96],
+	}
 	r0 = 0.5
 	sub_obs = False
-	observable_intervals = {}
+	sub_sub_obs = False
 	# blue, green, red purple
 	beta_colors = ["#5cbde0", "#6fb718", "#bc232e", "#8519b7"]
 
@@ -42,22 +48,50 @@ class PostCore(object):
 		self.bootstrap_data	= {}
 		self.jackknife_data = {}
 
+		# Only sets this variable if we have sub-intervals in order to avoid bugs.
+		if self.sub_obs:
+			self.observable_intervals = {}
+
 		# Checks that the observable is among the available data
 		assert_msg = ("%s is not among current data(%s). Have the pre analysis"
 			" been performed?" % (observable, ", ".join(data.observable_list)))
 		assert observable in data.observable_list, assert_msg
 
 		for beta in sorted(data.beta_values):
+			# Ensures we have dictionaries available.
+			if not beta in self.unanalyzed_data:
+				self.unanalyzed_data[beta] = {}
+				self.bootstrap_data[beta] = {}
+				self.jackknife_data[beta] = {}
+			
 			if self.sub_obs:
-				self.observable_intervals[beta] = data.data_observables[observable][beta].keys()
-				if not beta in self.unanalyzed_data:
-					self.unanalyzed_data[beta] = {}
-					self.bootstrap_data[beta] = {}
-					self.jackknife_data[beta] = {}
-				for subobs in data.data_observables[observable][beta]:
-					self.unanalyzed_data[beta][subobs] = data.data_observables[observable][beta][subobs][self.ac]["unanalyzed"]
-					self.bootstrap_data[beta][subobs] = data.data_observables[observable][beta][subobs][self.ac]["bootstrap"]
-					self.jackknife_data[beta][subobs] = data.data_observables[observable][beta][subobs][self.ac]["jackknife"]
+				# Checks that we have beta in the observable_intervals
+				if not beta in self.observable_intervals:
+					self.observable_intervals[beta] = {}
+
+				if self.sub_sub_obs:
+					for subobs in data.data_observables[observable][beta]:
+						# Sets sub-sub intervals
+						self.observable_intervals[beta][subobs] = data.data_observables[observable][beta][subobs].keys()
+						
+						# Sets up additional subsub-dictionaries
+						self.unanalyzed_data[beta][subobs] = {}
+						self.bootstrap_data[beta][subobs] = {}
+						self.jackknife_data[beta][subobs] = {}
+
+
+						for subsubobs in data.data_observables[observable][beta][subobs]:
+							self.unanalyzed_data[beta][subobs][subsubobs] = data.data_observables[observable][beta][subobs][subsubobs][self.ac]["unanalyzed"]
+							self.bootstrap_data[beta][subobs][subsubobs] = data.data_observables[observable][beta][subobs][subsubobs][self.ac]["bootstrap"]
+							self.jackknife_data[beta][subobs][subsubobs] = data.data_observables[observable][beta][subobs][subsubobs][self.ac]["jackknife"]
+				else:
+					# Fills up observable intervals
+					self.observable_intervals[beta] = data.data_observables[observable][beta].keys()
+
+					for subobs in data.data_observables[observable][beta]:
+						self.unanalyzed_data[beta][subobs] = data.data_observables[observable][beta][subobs][self.ac]["unanalyzed"]
+						self.bootstrap_data[beta][subobs] = data.data_observables[observable][beta][subobs][self.ac]["bootstrap"]
+						self.jackknife_data[beta][subobs] = data.data_observables[observable][beta][subobs][self.ac]["jackknife"]
 			else:
 				self.unanalyzed_data[beta] = data.data_observables[observable][beta][self.ac]["unanalyzed"]
 				self.bootstrap_data[beta] = data.data_observables[observable][beta][self.ac]["bootstrap"]
@@ -67,19 +101,11 @@ class PostCore(object):
 		self.jk_raw = data.raw_analysis["jackknife"]
 		self.ac_corrections	= data.raw_analysis["autocorrelation"]
 
-		if not isinstance(self.bs_raw[self.bs_raw.keys()[0]][self.observable_name_compact], np.ndarray):
-			self.NBoots = self.bs_raw.values()[0][self.observable_name_compact].values()[0].shape[-1]
-		else:
-			self.NBoots = self.bs_raw[self.bs_raw.keys()[0]][self.observable_name_compact].shape[-1]
-
 		# Small test to ensure that the number of bootstraps and number of different beta batches match
 		err_msg = "Number of bootstraps do not match number of different beta values"
-		if self.sub_obs:
-			chk_bs_len = lambda _a, _i: _a[_i][self.observable_name_compact].values()[0].shape[-1] == self.NBoots
-		else:
-			chk_bs_len = lambda _a, _i: _a[_i][self.observable_name_compact].shape[-1] == self.NBoots
+		assert np.asarray([get_NBoots(self.bs_raw[i]) for i in self.bs_raw.keys()]).all(), err_msg
 
-		assert sum([True for i in self.bs_raw.keys() if chk_bs_len(self.bs_raw, i)]) == data.N_betas, err_msg
+		self.NBoots = get_NBoots(self.bs_raw)
 
 		# Creates base output folder for post analysis figures
 		self.figures_folder = figures_folder
