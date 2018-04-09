@@ -40,7 +40,7 @@ class QtQ0EuclideanAnalyser(FlowAnalyser):
 
 		# Sets the number of flows as the number of euclidean time slices,
 		# as that is now what we are plotting in.
-		assert self.y.shape[1] == self.NT, "the first row does not NT."
+		assert self.y.shape[1] == self.NT, "the first row does not match NT."
 		self.NFlows = self.NT
 
 		self.V = self.lattice_sizes[self.beta] / float(self.NT)

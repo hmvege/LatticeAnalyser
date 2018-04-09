@@ -10,7 +10,7 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 	observable_name = r""
 	observable_name_compact = "qtq0eff"
 	x_label = r"$t_e[fm]$"
-	y_label = r"$\log |\frac{\langle Q_{t_e} \rangle}{\langle Q_{t_e+1} \rangle}| )$"
+	y_label = r"$\ln \frac{\langle Q_{t_e} Q_0 \rangle}{\langle Q_{t_e+1} Q_0 \rangle} )$"
 	mark_interval = 1
 	error_mark_interval = 1
 
@@ -39,7 +39,7 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 
 		# Sets the number of flows as the number of euclidean time slices,
 		# as that is now what we are plotting in.
-		assert self.y.shape[1] == self.NT, "the first row does not NT."
+		assert self.y.shape[1] == self.NT, "the first row does not match NT."
 		self.NFlows = self.NT
 
 		# Sets file name
@@ -48,6 +48,12 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 
 		# Sets a new x-axis
 		self.x = np.linspace(0, self.NFlows - 1, self.NFlows)
+
+		# Multiplies by Q0 to get the correlator
+		y_e0 = copy.deepcopy(self.y_original[:,flow_time_index,0])
+
+		for iteuclidean in xrange(self.NFlows):
+			self.y[:,iteuclidean] *= y_e0
 
 		# Sets up variables deependent on the number of configurations again
 		self.unanalyzed_y = np.zeros(self.NFlows)
@@ -84,14 +90,13 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 
 	def C(self, Q):
 		"""Correlator for qtq0."""
-		return np.log(np.abs( Q/np.roll(Q, -1, axis=0) ))
+		return np.log(Q/np.roll(Q, -1, axis=0))
 
 	def C_std(self, Q, dQ):
 		"""Correlator for qtq0 with error propagation."""
 		q = np.roll(Q, -1, axis=0)
 		dq = np.roll(dQ, -1, axis=0)
-
-		return 1/(Q/q)*dQ + 1/(Q/q) * (-1)/q**2 * dq * Q
+		return np.sqrt((dQ/Q)**2 + (dq/q)**2 - dQ*dq/(Q*q))
 
 	def jackknife(self, F=None, F_error=None, store_raw_jk_values=True):
 		"""Overriding the jackknife class by adding the Correaltor function"""
@@ -114,8 +119,14 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 		super(QtQ0EffectiveMassAnalyser, self).plot_boot(*args, **kwargs)
 
 	def plot_histogram(self, *args, **kwargs):
-		kwargs["NBins"] = 15
+		print "Skipping histogram for %s" % self.observable_name_compact
+		return
 		super(QtQ0EffectiveMassAnalyser, self).plot_histogram(*args, **kwargs)		
+
+	def plot_multihist(self, *args, **kwargs):
+		print "Skipping multi-histogram for %s" % self.observable_name_compact
+		return
+		super(QtQ0EffectiveMassAnalyser, self).plot_multihist(*args, **kwargs)		
 
 	# def autocorrelation(self, store_raw_ac_error_correction=True, method="wolff"):
 	# 	"""Overriding the ac class."""

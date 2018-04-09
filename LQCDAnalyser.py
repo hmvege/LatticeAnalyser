@@ -398,7 +398,7 @@ def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target
 	print "="*100 + "\nPost-analysis: retrieving data from: %s" % batch_folder
 
 	if post_analysis_data_type == None:
-		post_analysis_data_type = ["bootstrap", "jackknife"]
+		post_analysis_data_type = ["bootstrap", "jackknife", "unanalyzed"]
 
 	# Loads data from post analysis folder
 	data = PostAnalysisDataReader(batch_folder)
@@ -549,7 +549,7 @@ def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target
 			# +1 in order to ensure the zeroth flow time does not count as false.
 			assert np.all([np.all([clean_string(i)+1 for i in ft]) for ft in flow_times]), "flow times differ."
 
-			for te in euclidean_time_percents:
+			for te in euclidean_time_percents[:1]:
 				qtq0e_analysis.set_analysis_data_type(te, analysis_type)
 				# print "flow_intervals: ", flow_intervals
 				for tf in flow_time_indexes: # Flow times
@@ -559,6 +559,17 @@ def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target
 				
 				qtq0e_analysis.plot_series(te, [0,1,2,3], beta=bval_to_plot)
 				qtq0e_analysis.plot_series(te, [0,2,3,5], beta=bval_to_plot)
+
+		if "qtq0eff" in observables:
+			qtq0e_analysis = QtQ0EffectiveMassPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
+			print qtq0e_analysis
+
+			qtq0e_analysis.set_analysis_data_type(analysis_type)
+			for tf in flow_time_indexes: # Flow times
+				qtq0e_analysis.plot_interval(tf)
+			qtq0e_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+			qtq0e_analysis.plot_series([0,2,3,4], beta=bval_to_plot)
+
 
 
 def main():
@@ -571,13 +582,13 @@ def main():
 		"topsus", "topsus4", "topsust", "topsuste", "topsusMC", "topsusqtq0",
 		# Other quantities 
 		"topcr",
-		# "qtq0e",
+		# "qtq0e", "qtq0eff",
 	]
 
 	observables = ["topsus"]
 	observables = ["topcr"]
-	observables = ["qtq0e"]
-	observables = ["qtq0eff", "qtq0e"]
+	# observables = ["qtq0e"]
+	observables = ["qtq0eff"]
 
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
 	print 100*"=" + "\n"
@@ -649,8 +660,9 @@ def main():
 	q0_flow_times = [0.0, 0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.0]
 
 	# Flow time indexes to plot qtq0 in euclidean time at
-	flow_time_indexes = [0, 50, 200, 400, 700, 999]
+	flow_time_indexes = [0, 100, 400, 700, 999]
 	euclidean_time_percents = [0, 0.25, 0.50, 0.75, 1.00]
+	# euclidean_time_percents = [0]
 
 	eff_mass_flow_times = [0, 100, 400, 700, 999]
 
@@ -705,16 +717,16 @@ def main():
 	# analysis_parameter_list = [databeta61, databeta62]
 	# analysis_parameter_list = [smaug_data_beta61_analysis]
 
-	# #### Submitting observable-batches
-	# for analysis_parameters in analysis_parameter_list:
-	# 	analyse(analysis_parameters)
+	#### Submitting observable-batches
+	for analysis_parameters in analysis_parameter_list:
+		analyse(analysis_parameters)
 
-	#### Submitting post-analysis data
-	if len(analysis_parameter_list) >= 2:
-		post_analysis(data_batch_folder, beta_folders, observables, 
-			topsus_fit_targets, line_fit_interval, energy_fit_target,
-			flow_time_indexes, euclidean_time_percents, 
-			figures_folder=figures_folder, verbose=verbose)
+	# #### Submitting post-analysis data
+	# if len(analysis_parameter_list) >= 2:
+	# 	post_analysis(data_batch_folder, beta_folders, observables, 
+	# 		topsus_fit_targets, line_fit_interval, energy_fit_target,
+	# 		flow_time_indexes, euclidean_time_percents, 
+	# 		figures_folder=figures_folder, verbose=verbose)
 
 if __name__ == '__main__':
 	main()
