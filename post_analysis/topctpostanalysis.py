@@ -5,7 +5,7 @@ class TopctPostAnalysis(MultiPlotCore):
 	observable_name = "Topological Charge at a fixed Euclidean Time"
 	observable_name_compact = "topct"
 	x_label = r"$\sqrt{8t_{flow}}[fm]$"
-	y_label = r"$Q_{t_{euclidean}}$"
+	y_label = r"$\langle Q_{t_{euclidean}} \rangle$"
 	sub_obs = True
 
 	def _convert_label(self, label):

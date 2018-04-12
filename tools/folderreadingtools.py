@@ -42,7 +42,10 @@ class _DirectoryTree:
 		if os.path.isdir(obs_path) and len(os.listdir(obs_path)) != 0:
 			self.observables_folder = obs_path
 			self.observables_folders = True
+
+
 			for obs, file_name in zip(self.observables_list, os.listdir(self.observables_folder)):
+
 				# Removes .DS_Store
 				if obs.startswith("."):
 					continue
@@ -67,6 +70,12 @@ class _DirectoryTree:
 				if os.path.isdir(obs_path):
 					# Finds and sets the observable file paths
 					flow_obs_dir_list = []
+
+					# In case batch contains an empty observable folder, it 
+					# will be skipped and not added to the observable list.
+					if len(os.listdir(obs_path)) == 0:
+						continue
+
 					for obs_file in os.listdir(obs_path):
 						# Removes .DS_Store
 						if obs_file.startswith("."):
@@ -192,7 +201,6 @@ class _FolderData:
 
 		# Number of files is the length of files in the the folder
 		N_files = len(self.files)
-
 		# Goes through files in folder and reads the contents into a file
 		for i, file in enumerate(self.files):
 			# Gets the metadata
@@ -292,7 +300,7 @@ class DataReader:
 
 	def __init__(self, batch_name, batch_folder, figures_folder, load_file=None, 
 			flow_epsilon=0.01, NCfgs=None, create_perflow_data=False, 
-			verbose=True, dryrun=False, correct_energy=False):
+			verbose=True, dryrun=False, correct_energy=False, lattice_sizes=None):
 		"""
 		Class that reads and loads the observable data.
 
@@ -318,6 +326,11 @@ class DataReader:
 		self.batch_name = batch_name
 		self.batch_folder = batch_folder
 		self.figures_folder = figures_folder
+
+		if lattice_sizes != None:
+			self.lattice_sizes = lattice_sizes
+		else:
+			self.lattice_sizes = {6.0: 24**3*48, 6.1: 28**3*56, 6.2: 32**3*64, 6.45: 48**3*96}
 
 		self.__print_load_info()
 
@@ -354,7 +367,7 @@ class DataReader:
 				self.__load_files(topct_fp, ["topct"],
 					flow_epsilon=flow_epsilon)
 			else:
-				if os.path.isdir(self.file_tree.flow_path):
+				if os.path.isdir(self.file_tree.flow_path) and "topct" in self.file_tree.found_flow_observables:
 					# Loads in file from non binary
 					print "No binary file found for topct. Loads from .dat files."
 					self.__retrieve_observable_data(["topct"],
@@ -430,6 +443,7 @@ class DataReader:
 			self.data[obs]["t"] = _data_obj.data_x
 			self.data[obs]["obs"] = _data_obj.data_y
 			self.data[obs]["beta"] = _data_obj.meta_data["beta"]
+			self.data[obs]["lattice_sizes"] = self.lattice_sizes
 			self.data[obs]["FlowEpsilon"] = _data_obj.meta_data["FlowEpsilon"]
 			self.data[obs]["NFlows"] = _data_obj.meta_data["NFlows"]
 			self.data[obs]["batch_name"] = self.file_tree.batch_name
@@ -503,6 +517,7 @@ class DataReader:
 			self.data[obs]["NFlows"] = self.data[obs]["obs"].shape[1]
 			self.data[obs]["batch_name"] = self.batch_name
 			self.data[obs]["batch_data_folder"] = self.batch_folder
+			self.data[obs]["lattice_sizes"] = self.lattice_sizes
 
 			_NFlows.append(self.data[obs]["NFlows"])
 			_betas.append(beta)

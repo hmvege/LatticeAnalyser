@@ -5,7 +5,7 @@ class TopcteIntervalPostAnalysis(MultiPlotCore):
 	observable_name = "Topological Charge in Euclidean Time intervals"
 	observable_name_compact = "topcte"
 	x_label = r"$\sqrt{8t_{flow}}[fm]$"
-	y_label = r"$Q$"
+	y_label = r"$\langle Q \rangle$"
 	sub_obs = True
 
 def main():

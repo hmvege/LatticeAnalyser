@@ -11,7 +11,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 	observable_name = r""
 	observable_name_compact = "qtq0eff"
 	x_label = r"$t_e[fm]$"
-	y_label = r"$\log |\frac{\langle Q_{t_e} \rangle}{\langle Q_{t_e+1} \rangle}| )$"
+	y_label = r"$\log \frac{\langle Q_{t_e} \rangle}{\langle Q_{t_e+1} \rangle}$"
 	sub_obs = True
 	hbarc = 0.19732697 #eV micro m
 
@@ -155,9 +155,11 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 				x = value["x"]
 				y = value["y"]
 				y_err = value["y_err"]
-				ax.plot(x, y, "-", label=value["label"], color=value["color"])
-				ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, edgecolor='',
-					facecolor=value["color"])
+				# ax.plot(x, y, "o", label=value["label"], color=value["color"])
+				# ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, edgecolor='',
+				# 	facecolor=value["color"])
+				ax.errorbar(x, y, yerr=y_std, fmt=".", color=value["color"], ecolor=value["color"],
+					label=value["label"])
 				
 				# Basic plotting commands
 				ax.grid(True)

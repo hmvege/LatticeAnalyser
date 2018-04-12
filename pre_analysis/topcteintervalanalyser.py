@@ -3,13 +3,13 @@ import numpy as np
 
 class TopcteIntervalAnalyser(EuclideanIntervalAnalyser):
 	"""
-	Analysis where one can split the topological in Euclidean time to obtain 
-	an estimate of the topological charge.
+	Analysis where one can split the topological in Euclidean time intervals
+	to obtain an estimate of the topological charge.
 	"""
 	observable_name = "Topological Charge in Euclidean Time"
 	observable_name_compact = "topcte"
 	x_label = r"$\sqrt{8t_{flow}}[fm]$"
-	y_label = r"$Q$"
+ 	y_label = r"$\langle Q \rangle$"
 
 	def __init__(self, *args, **kwargs):
 		super(TopcteIntervalAnalyser, self).__init__(*args, **kwargs)

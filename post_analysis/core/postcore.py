@@ -81,6 +81,7 @@ class PostCore(object):
 
 
 						for subsubobs in data.data_observables[observable][beta][subobs]:
+							print data.data_observables[observable][beta][subobs][subsubobs].keys(), self.observable_name_compact
 							self.unanalyzed_data[beta][subobs][subsubobs] = data.data_observables[observable][beta][subobs][subsubobs][self.ac]["unanalyzed"]
 							self.bootstrap_data[beta][subobs][subsubobs] = data.data_observables[observable][beta][subobs][subsubobs][self.ac]["bootstrap"]
 							self.jackknife_data[beta][subobs][subsubobs] = data.data_observables[observable][beta][subobs][subsubobs][self.ac]["jackknife"]

@@ -10,7 +10,7 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 	observable_name = r""
 	observable_name_compact = "qtq0eff"
 	x_label = r"$t_e[fm]$"
-	y_label = r"$\ln \frac{\langle Q_{t_e} Q_0 \rangle}{\langle Q_{t_e+1} Q_0 \rangle} )$"
+	y_label = r"$m_eff = \ln \frac{\langle Q_{t_e} Q_0 \rangle}{\langle Q_{t_e+1} Q_0 \rangle} $"
 	mark_interval = 1
 	error_mark_interval = 1
 
@@ -18,6 +18,8 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 		super(QtQ0EffectiveMassAnalyser, self).__init__(*args, **kwargs)
 		self.y_original = copy.deepcopy(self.y)
 		self.NT = self.y_original.shape[-1]
+
+		self.y_limits = [-1,1]
 
 		# Stores old variables for resetting at each new flow time
 		self.N_configurations_old = self.N_configurations
@@ -53,7 +55,9 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 		y_e0 = copy.deepcopy(self.y_original[:,flow_time_index,0])
 
 		for iteuclidean in xrange(self.NFlows):
-			self.y[:,iteuclidean] *= y_e0
+			# np.log(Q/np.roll(Q, -1, axis=0))
+			# self.y[:,iteuclidean] = np.roll(self.y[:,iteuclidean], -1, axis=1) * y_e0
+			self.y[:,iteuclidean] = self.y[:,iteuclidean] * y_e0
 
 		# Sets up variables deependent on the number of configurations again
 		self.unanalyzed_y = np.zeros(self.NFlows)

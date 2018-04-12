@@ -309,6 +309,8 @@ def analyse(parameters):
 	figures_folder = parameters["figures_folder"]
 
 	_bp = parameters["base_parameters"]
+	_latsize = parameters["lattice_size"].items()[0]
+	parameters["lattice_sizes"][_latsize[0]] = _latsize[1]
 
 	# Retrieves data
 	obs_data = DataReader(batch_name, batch_folder, figures_folder, 
@@ -316,7 +318,8 @@ def analyse(parameters):
 		flow_epsilon=parameters["flow_epsilon"], NCfgs=parameters["NCfgs"],
 		create_perflow_data=parameters["create_perflow_data"],
 		verbose=_bp["verbose"], dryrun=_bp["dryrun"],
-		correct_energy=parameters["correct_energy"])
+		correct_energy=parameters["correct_energy"],
+		lattice_sizes=parameters["lattice_sizes"])
 
 	# Writes a parameters file for the post analysis
 	obs_data.write_parameter_file()
@@ -558,7 +561,7 @@ def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target
 					# 	qtq0e_analysis.plot_continuum(cont_target, i)
 				
 				qtq0e_analysis.plot_series(te, [0,1,2,3], beta=bval_to_plot)
-				qtq0e_analysis.plot_series(te, [0,2,3,5], beta=bval_to_plot)
+				qtq0e_analysis.plot_series(te, [0,2,3,4], beta=bval_to_plot)
 
 		if "qtq0eff" in observables:
 			qtq0e_analysis = QtQ0EffectiveMassPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
@@ -579,15 +582,16 @@ def main():
 		# Topological charge definitions
 		"topc", "topc2", "topc4", "topcr", "topct", "topcte", "topcMC", 
 		# Topological susceptibility definitions
-		"topsus", "topsus4", "topsust", "topsuste", "topsusMC", "topsusqtq0",
+		# "topsus", "topsus4", "topsust", "topsuste", "topsusMC", "topsusqtq0",
 		# Other quantities 
 		"topcr",
-		# "qtq0e", "qtq0eff",
+		"qtq0e",
+		"qtq0eff",
 	]
 
-	observables = ["topsus"]
-	observables = ["topcr"]
-	# observables = ["qtq0e"]
+	# observables = ["topsus", "qtq0e", "topcr", "qtq0eff"]
+	# observables = ["topsus"]
+	observables = ["topcr", "qtq0eff"]
 	observables = ["qtq0eff"]
 
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
@@ -625,7 +629,9 @@ def main():
 	# data_batch_folder = "data2"
 	# data_batch_folder = "data4"
 	# data_batch_folder = "../GluonAction/data5"
-	data_batch_folder = "../GluonAction/data6"
+	# data_batch_folder = "../GluonAction/data6"
+	data_batch_folder = "../GluonAction/data8"
+	# data_batch_folder = "../topc_modes_8x16"
 	figures_folder = "figures"
 	# data_batch_folder = "../GluonAction/DataGiovanni"
 	# data_batch_folder = "smaug_data_beta61"
@@ -641,10 +647,10 @@ def main():
 		correct_energy = True
 
 	#### Different beta values folders:
-	# beta_folders = ["beta60", "beta61", "beta62"]
 	beta_folders = ["beta60", "beta61", "beta62", "beta645"]
 	# beta_folders = ["beta6_0", "beta6_1", "beta6_2"]
 	# beta_folders = ["beta61"]
+	# beta_folders = ["beta60"]
 
 	# Indexes to look at for topct.
 	num_t_euclidean_indexes = 5
@@ -683,27 +689,33 @@ def main():
 		"intervals_eucl": intervals_eucl,
 		"MC_time_splits": MC_time_splits,
 		"eff_mass_flow_times": eff_mass_flow_times,
+		"lattice_sizes": {6.0: 24**3*48, 6.1: 28**3*56, 6.2: 32**3*64, 6.45: 48**3*96},
 	}
 
 	databeta60 = copy.deepcopy(default_params)
 	databeta60["batch_name"] = beta_folders[0]
 	databeta60["NCfgs"] = 1000
-	databeta60["obs_file"] = "24_6.00"
+	# databeta60["NCfgs"] = 8135
+	databeta60["obs_file"] = "8_6.00"
+	databeta60["lattice_size"] = {6.0: 8**3*16}
 
 	databeta61 = copy.deepcopy(default_params)
 	databeta61["batch_name"] = beta_folders[1]
-	databeta61["NCfgs"] = 500
+	databeta61["NCfgs"] = 1000
 	databeta61["obs_file"] = "28_6.10"
+	databeta61["lattice_size"] = {6.1: 28**3*56}
 
 	databeta62 = copy.deepcopy(default_params)
 	databeta62["batch_name"] = beta_folders[2]
-	databeta62["NCfgs"] = 500
+	databeta62["NCfgs"] = 1000
 	databeta62["obs_file"] = "32_6.20"
+	databeta62["lattice_size"] = {6.2: 32**3*64}
 
 	databeta645 = copy.deepcopy(default_params)
 	databeta645["batch_name"] = beta_folders[3]
 	databeta645["NCfgs"] = 250
 	databeta645["obs_file"] = "48_6.45"
+	databeta645["lattice_size"] = {6.45: 48**3*96}
 
 
 	# smaug_data_beta61_analysis = copy.deepcopy(default_params)
@@ -711,7 +723,7 @@ def main():
 	# smaug_data_beta61_analysis["NCfgs"] = 100
 
 	#### Adding relevant batches to args
-	analysis_parameter_list = [databeta60, databeta61, databeta62, databeta645]
+	# analysis_parameter_list = [databeta60, databeta61, databeta62, databeta645]
 	analysis_parameter_list = [databeta60, databeta61, databeta62]
 	# analysis_parameter_list = [databeta60]
 	# analysis_parameter_list = [databeta61, databeta62]
@@ -721,12 +733,12 @@ def main():
 	for analysis_parameters in analysis_parameter_list:
 		analyse(analysis_parameters)
 
-	# #### Submitting post-analysis data
-	# if len(analysis_parameter_list) >= 2:
-	# 	post_analysis(data_batch_folder, beta_folders, observables, 
-	# 		topsus_fit_targets, line_fit_interval, energy_fit_target,
-	# 		flow_time_indexes, euclidean_time_percents, 
-	# 		figures_folder=figures_folder, verbose=verbose)
+	#### Submitting post-analysis data
+	if len(analysis_parameter_list) >= 2:
+		post_analysis(data_batch_folder, beta_folders, observables, 
+			topsus_fit_targets, line_fit_interval, energy_fit_target,
+			flow_time_indexes, euclidean_time_percents, 
+			figures_folder=figures_folder, verbose=verbose)
 
 if __name__ == '__main__':
 	main()

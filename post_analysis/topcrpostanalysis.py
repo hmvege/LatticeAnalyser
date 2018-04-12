@@ -53,6 +53,12 @@ class TopcRPostAnalysis(PostCore):
 		self.topcR_bootstrap_data	= {}
 		self.topcR_jackknife_data = {}
 
+		# Q^2 and Q^4 raw bs values
+		self.topc2_raw_bs = {}
+		self.topc4_raw_bs = {}
+		self.topc4c_raw_bs = {}
+		self.topcR_raw_bs = {}
+
 		# First, gets the topc2, then topc4
 		self.beta_values = []
 		for beta in sorted(data.beta_values):
@@ -75,6 +81,10 @@ class TopcRPostAnalysis(PostCore):
 			self.topcR_unanalyzed_data[beta] = {}
 			self.topcR_bootstrap_data[beta] = {}
 			self.topcR_jackknife_data[beta] = {}
+
+			self.topc2_raw_bs[beta] = data.raw_analysis["jackknife"][beta]["topq2"]
+			self.topc4_raw_bs[beta] = data.raw_analysis["jackknife"][beta]["topq4"]
+			self.topc4c_raw_bs[beta] = {}
 
 			self.beta_values.append(beta)
 
@@ -146,6 +156,10 @@ class TopcRPostAnalysis(PostCore):
 				self.topc2_jackknife_data[beta]["y"],
 				self.topc2_jackknife_data[beta]["y_error"])
 
+			# Finds raw bs data values
+			self.topc4c_raw_bs[beta] = Q4C(self.topc4_raw_bs[beta], 
+				self.topc2_raw_bs[beta])
+
 		R = lambda q4c, q2: q4c / q2
 
 		R_error = lambda q4c, q4cerr, q2, q2err: np.sqrt(
@@ -182,9 +196,15 @@ class TopcRPostAnalysis(PostCore):
 				self.topc2_jackknife_data[beta]["y"], 
 				self.topc2_jackknife_data[beta]["y_error"])
 
+			self.topcR_raw_bs[beta] = {"y": np.mean(R(self.topc4c_raw_bs[beta],
+				self.topc2_raw_bs[beta]), axis=1), "y_error": np.std(R(self.topc4c_raw_bs[beta],
+				self.topc2_raw_bs[beta]), axis=1)}
+
 		self.unanalyzed_data = self.topcR_unanalyzed_data
 		self.bootstrap_data	= self.topcR_bootstrap_data
 		self.jackknife_data = self.topcR_jackknife_data
+
+		self.bootstrap_data	= self.topcR_raw_bs
 
 		# Q2 = self.topc2_bootstrap_data[6.2]["y"]
 		# Q4 = self.topc4_bootstrap_data[6.2]["y"]

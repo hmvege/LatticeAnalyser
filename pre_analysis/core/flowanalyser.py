@@ -26,7 +26,7 @@ class FlowAnalyser(object):
 	autocorrelations_limits = 1
 	figures_folder = "figures"
 	fname_addon = ""
-	lattice_sizes = {6.0: 24**3*48, 6.1: 28**3*56, 6.2: 32**3*64, 6.45: 48**3*96}
+	# lattice_sizes = {6.0: 24**3*48, 6.1: 28**3*56, 6.2: 32**3*64, 6.45: 48**3*96}
 	hbarc = 0.19732697 #eV micro m
 
 	# Function derivative to be used in the autocorrelation class
@@ -40,7 +40,7 @@ class FlowAnalyser(object):
 	plot_vline_at = None
 
 	def __init__(self, data, dryrun=False, parallel=False, numprocs=4,
-		verbose=False, figures_folder=False):
+		verbose=False, figures_folder=False, lattice_size=None):
 		"""
 		Parent class for analyzing flowed observables.
 
@@ -73,6 +73,9 @@ class FlowAnalyser(object):
 		self.beta = data["beta"]
 		self.a = get_lattice_spacing(self.beta)
 		self.r0 = 0.5 # Sommer Parameters
+
+		# Sets the lattice sizes if one is provided
+		self.lattice_sizes = data["lattice_sizes"]
 
 		# Sets up the function derivative parameters as an empty dictionary
 		self.function_derivative_parameters = {}
