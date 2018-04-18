@@ -115,9 +115,6 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 		x_label_old = self.x_label
 		self.x_label = r"$t_f[fm]$"
 
-		# SET THIS TO ZERO IF NO Y-AXIS SCALING IS TO BE DONE
-		# kwargs["y_limits"] = [-0.1,1]
-
 		# Makes it a global constant so it can be added in plot figure name
 		self.plot(**kwargs)
 

@@ -8,10 +8,10 @@ import os
 
 class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 	"""Post-analysis of the effective mass."""
-	observable_name = r""
+	observable_name = r"Effective mass $am_{eff} = \log \frac{C(t_e)}{C(t_e+1)}$"
 	observable_name_compact = "qtq0eff"
 	x_label = r"$t_e[fm]$"
-	y_label = r"$\log \frac{\langle Q_{t_e} \rangle}{\langle Q_{t_e+1} \rangle}$"
+	y_label = r"$am_{eff}$"
 	sub_obs = True
 	hbarc = 0.19732697 #eV micro m
 
@@ -28,23 +28,35 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 	def _convert_label(self, lab):
 		return int(lab[-4:])
 
-	def C(self, Q):
+	def effMass(self, Q, axis=0):
 		"""Correlator for qtq0."""
-		return np.log(Q/np.roll(Q, -1, axis=0))
+		return np.log(Q/np.roll(Q, -1, axis=axis))
 
-	def C_std(self, Q, dQ):
+	def effMass_err(self, Q, dQ, axis=0):
 		"""Correlator for qtq0 with error propagation."""
-		q = np.roll(Q, -1, axis=0)
-		dq = np.roll(dQ, -1, axis=0)
+		q = np.roll(Q, -1, axis=axis)
+		dq = np.roll(dQ, -1, axis=axis)
+		return np.sqrt((dQ/Q)**2 + (dq/q)**2 - 2*dq*dQ/(q*Q))
 
-		return 1/(Q/q)*dQ + 1/(Q/q)*(-1)/q**2*dq*Q
+	def analyse_raw(self, data_raw):
+		_y_temp = self.effMass(data_raw, axis=0)
+		y = np.mean(_y_temp, axis=1)
+		y_err = np.std(_y_temp, axis=1)
 
-	def _initiate_plot_values(self, data, flow_index=None):
+		# C = np.mean(data_raw, axis=1)
+		# C_err = np.std(data_raw, axis=1)
+		# y = self.effMass(C, axis=0)
+		# y_err = self.effMass_err(C, C_err, axis=0)
+
+		return y, y_err
+
+	def _initiate_plot_values(self, data, data_raw, flow_index=None):
 		"""interval_index: int, should be in euclidean time."""
 
 		# Sorts data into a format specific for the plotting method
 		for beta in sorted(data.keys()):
 			values = {}
+
 			if flow_index == None:
 				# Case where we have sub sections of observables, e.g. in euclidean time
 				for sub_obs in self.observable_intervals[beta]:
@@ -53,9 +65,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 					sub_values["x"] = np.linspace(0, 
 						self.lattice_sizes[beta][1] * sub_values["a"], 
 						self.lattice_sizes[beta][1])
-					sub_values["y"] = self.C(data[beta][sub_obs]["y"])
-					sub_values["y_err"] = self.C_std(data[beta][sub_obs]["y"], data[beta][sub_obs]["y_error"])
-					sub_values["bs"] = self.bs_raw[beta][self.observable_name_compact][sub_obs]
+					sub_values["y"], sub_values["y_err"] = self.analyse_raw(data_raw[beta][self.observable_name_compact][sub_obs])
 					sub_values["label"] = r"%s, $\beta=%2.2f$, $t_f=%d$" % (
 						self.size_labels[beta], beta, self._convert_label(sub_obs))
 					sub_values["color"] = self.colors[beta]
@@ -64,7 +74,6 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 
 			else:
 				tf_index = "tflow%04d" % flow_index
-				values = {}
 				values["a"] = get_lattice_spacing(beta)
 				
 				# For exact box sizes
@@ -72,9 +81,9 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 					self.lattice_sizes[beta][1] * values["a"],
 					self.lattice_sizes[beta][1])
 
-				values["y"] = self.C(data[beta][tf_index]["y"])
-				values["y_err"] = self.C_std(data[beta][tf_index]["y"], data[beta][tf_index]["y_error"])
-				values["bs"] = self.bs_raw[beta][self.observable_name_compact][tf_index]
+				# values["y"] = self.C(data[beta][tf_index]["y"])
+				# values["y_err"] = self.C_std(data[beta][tf_index]["y"], data[beta][tf_index]["y_error"])
+				values["y"], values["y_err"] = self.analyse_raw(data_raw[beta][self.observable_name_compact][tf_index])
 				values["label"] = r"%s $\beta=%2.2f$, $t_f=%d$" % (
 					self.size_labels[beta], beta, flow_index)
 				values["color"] = self.colors[beta]
@@ -90,8 +99,8 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 		"""
 		self.plot_values = {}
 		self.interval_index = flow_index
-		data = self._get_analysis_data(self.analysis_data_type)
-		self._initiate_plot_values(data, flow_index=flow_index)
+		data, data_raw = self._get_analysis_data(self.analysis_data_type)
+		self._initiate_plot_values(data, data_raw, flow_index=flow_index)
 
 		# Sets the x-label to proper units
 		x_label_old = self.x_label
@@ -99,6 +108,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 
 		# SET THIS TO ZERO IF NO Y-AXIS SCALING IS TO BE DONE
 		# kwargs["y_limits"] = [-0.1,1]
+		kwargs["error_shape"] = "bars"
 
 		# Makes it a global constant so it can be added in plot figure name
 		self.plot(**kwargs)
@@ -108,6 +118,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 	def plot(self, *args, **kwargs):
 		"""Ensuring I am plotting with formule in title."""
 		kwargs["plot_with_formula"] = True
+		kwargs["y_limits"] = [-2,2]
 		super(QtQ0EffectiveMassPostAnalysis, self).plot(*args, **kwargs)
 
 	def plot_series(self, indexes, beta="all", x_limits=False, 
@@ -125,8 +136,8 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 				formula for the y-value to plot in title.
 		"""
 		self.plot_values = {}
-		data = self._get_analysis_data(self.analysis_data_type)
-		self._initiate_plot_values(data)
+		data, data_raw = self._get_analysis_data(self.analysis_data_type)
+		self._initiate_plot_values(data, data_raw)
 
 		old_rc_paramx = plt.rcParams['xtick.labelsize']
 		old_rc_paramy = plt.rcParams['ytick.labelsize']
@@ -158,7 +169,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 				# ax.plot(x, y, "o", label=value["label"], color=value["color"])
 				# ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, edgecolor='',
 				# 	facecolor=value["color"])
-				ax.errorbar(x, y, yerr=y_std, fmt=".", color=value["color"], ecolor=value["color"],
+				ax.errorbar(x, y, yerr=y_err, fmt=".", color=value["color"], ecolor=value["color"],
 					label=value["label"])
 				
 				# Basic plotting commands

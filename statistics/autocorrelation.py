@@ -37,7 +37,7 @@ class _AutocorrelationCore(object):
 	def __init__(self, data, function_derivative=lambda x: x, function_parameters=None, method="correlate", time_autocorrelation=False):
 		"""
 		Args:
-			data 					 (numpy array): dataset to get autocorrelation for
+			data 					 (numpy array): dataset to get autocorrelation for, replicum R=1
 			function_derivative			(function): the derivative of function to propagate data through
 			function_parameters		  (dictionary): dictionary of function derivative parameters
 			[optional] method				 (str): method of performing autocorrelation: "corroeff", "correlate", "manual"
@@ -204,7 +204,7 @@ class Autocorrelation(_AutocorrelationCore):
 		"""
 		Equation E.13 in Luscher(2004)
 		"""
-		for t in xrange(1,self.N/2):
+		for t in xrange(1, self.N/2):
 			if np.abs(self.R[t]) <= self.R_error[t]:
 				self.W = t
 				break
@@ -231,12 +231,12 @@ class Autocorrelation(_AutocorrelationCore):
 
 		# Plots cutoff if prompted
 		if plot_cutoff:
-			tau = np.zeros(len(self.R)-1)
+			tau = np.zeros(len(self.R) - 1)
 			for iW in xrange(1, len(self.R)):
 				tau[iW] = (0.5 + np.sum(self.R[1:iW]))
 
 			plt.figure()
-			plt.plot(range(1,len(self.R)),tau)
+			plt.plot(range(1, len(self.R)), tau)
 			plt.title(r"Cutoff $W = %d$" % (self.W))
 			plt.xlabel(r"$W$")
 			plt.ylabel(r"$\tau_{int}(W)$")
@@ -256,7 +256,7 @@ class Autocorrelation(_AutocorrelationCore):
 
 class PropagatedAutocorrelation(_AutocorrelationCore):
 	"""
-	Class for performing a general autocorrelation analysis according to 2006 paper by Wolff.
+	Class for performing a semi-generall autocorrelation analysis according to 2006 paper by Wolff.
 
 	Assumptions throughout the program:
 	- only have 1 alpha, that is only one observable. This simplifies quite alot.
@@ -432,6 +432,154 @@ def testFullAC(data,N_bins,store_plots,time_ac_functions):
 	print ac.integrated_autocorrelation_time()
 	print ac.integrated_autocorrelation_time_error()
 	print ac.W
+
+class FullAutocorrelation(_AutocorrelationCore):
+	"""
+	Class for performing a general autocorrelation analysis according to 2006 
+	paper by Wolff.
+
+	Include average of several replicums, many observables given by greek 
+	indices, as well as propagated errors.
+	"""
+
+	def __init__(self, data, function_derivative=[lambda x: x], 
+		function_parameters=None, time_autocorrelation=False):
+		"""
+		Args:
+			data 					 (numpy array): dataset(s) to get autocorrelation for. Shape: (data points, replicums)
+			function_derivative(list of functions): the derivative of function to propagate data through
+			function_parameters		  (dictionary): dictionary of function derivative parameters
+			[optional] time_autocorrealtion	(bool): times the autocorrelation function
+		Returns:
+			Object containing the autocorrelation values
+		"""
+		assert isinstance(data, list), "data is not a list of replicums."
+		for d in data:
+			assert isinstance(data, np.ndarray), "replicum is not of type numpy ndarray."
+		assert isinstance(function_derivative, list), "a list of function derivatives not provided."
+
+		# Retrieves relevant functions for later
+		self.function_derivative = function_derivative
+		self.function_parameters = function_parameters
+
+		# Timer variables
+		self.time_autocorrelation = time_autocorrelation
+		self.time_used = 0.0
+
+		# Autocorrelation variables
+		self.data = data
+		self.R = len(self.data) # N Replicums
+		assert self.R != 0, """No replicums provided."""
+
+		# Sets up data set lengths
+		self.NR = [np.len(_replicum) for _replicum in self.data]
+		self.N = np.sum(self.NR)
+
+		# Gets the average of each replicum
+
+		# Gets the total average
+
+		# Gets the deviations per replicum
+
+		# Gets the total deviations
+
+		self.C0 = np.var(self.data)
+		self.R = np.zeros(self.N/2)
+		self.G = np.zeros(self.N/2)
+		self.R_error = np.zeros(self.N/2)
+		self.tau_int = 0
+		self.tau_int_error = 0
+
+		# Gets the autocorrelations
+		self._numpy2_autocorrelation(self.data, self.data)
+
+		# Gets the autocorrelation errors
+		self._autocorrelation_error();
+
+	def _autocorrelation_error(self, SParam=1.11):
+		# Eq. 6, 7
+		avg_data = np.mean(self.data)
+
+		# Eq. 14
+		derfun_avg = self.function_derivative(avg_data, **self.function_parameters)
+
+		# Eq. 33
+		self.G *= derfun_avg**2
+
+		# Eq. 35, array with different integration cutoffs
+		CfW = np.array([self.G[0]] + [self.G[0] + 2.0*np.sum(self.G[1:W+1]) for W in xrange(1, self.N/2)])
+		# CfW = np.array([0.5 + np.sum(self.R[1:iW]) for iW in xrange(1,self.N/2)])
+
+		# Eq. 49, bias correction
+		CfW = self._correct_bias(CfW)
+		
+		# Eq. 34
+		sigma0 = CfW[0]
+
+		# Eq. 41
+		self.tau_int = CfW / (2*sigma0)
+
+		if SParam == False:
+			for S in np.linspace(1.0, 2.0, 20):
+				self.W = self._automatic_windowing_procedure(S)
+
+				plt.figure()
+				plt.plot(range(len(self.tau_int)/2), self.tau_int[:len(self.tau_int)/2])
+				plt.title(r"$W = %d$, $S_{param} = %.2f$" % (self.W,S))
+				plt.ylim(0,1.25*np.max(self.tau_int[:len(self.tau_int)/4]))
+				plt.xlabel(r"$W$")
+				plt.ylabel(r"$\tau_{int}(W)$")
+				plt.axvline(self.W)
+				plt.show()
+		else:
+			self.W = self._automatic_windowing_procedure(SParam)
+
+		self.tau_int_optimal = self.tau_int[self.W]
+
+	def _correct_bias(self, CfW):
+		"""
+		Eq. 49, bias correction
+		"""
+		return CfW*((2*np.arange(len(CfW)) + 1.0)/float(self.N) + 1.0)
+
+	def _gW(self, tau):
+		"""
+		Eq. 52, getting optimal W
+		"""
+		for iW, itau in enumerate(tau):
+			if iW == 0: continue
+			if np.exp(-iW/itau) - itau/np.sqrt(iW*float(self.N)) < 0.0:
+				return iW
+		else:
+			return float('NaN')
+
+	def _automatic_windowing_procedure(self, S):
+		"""
+		Automatic windowing as described in Wolff paper, section 3.3 
+		"""
+		tau = []
+		for it, itauint, in enumerate(self.tau_int):
+			if itauint <= 0.5:
+				tau.append(0.00000001)
+			else:
+				# Eq. 51
+				tau.append(S/np.log((2*itauint + 1) / (2*itauint - 1)))
+		tau = np.asarray(tau)
+
+		return self._gW(tau)
+
+	def integrated_autocorrelation_time_error(self):
+		"""
+		Eq. 42, standard deviation of tau_int
+		"""
+		self.tau_int_error = np.asarray([np.sqrt(4/float(self.N)*(float(iW) + 0.5 - itau)*itau**2) for iW, itau in enumerate(self.tau_int)])
+		# self.tau_int_error = np.sqrt((4*self.W + 2)/float(self.N) * self.tau_int**2)
+		self.tau_int_optimal_error = self.tau_int_error[self.W]
+		return self.tau_int_optimal_error
+
+	def integrated_autocorrelation_time(self):
+		return self.tau_int_optimal
+
 
 def main():
 	# Data to load and analyse

@@ -25,33 +25,33 @@ class TopcrAnalyser(FlowAnalyser):
 		super(TopcrAnalyser, self).__init__(*args, **kwargs)
 		self.y = (self.y**4 - 3*self.y**2) / self.y**2
 
-	def C(self, qtq0):
-		"""Correlator for qtq0."""
-		return self.const*qtq0
+	# def C(self, qtq0):
+	# 	"""Correlator for qtq0."""
+	# 	return self.const*qtq0
 
-	def C_std(self, qtq0, qtq0_std):
-		"""Correlator for qtq0 with error propagation."""
-		return self.const*qtq0_std
+	# def C_std(self, qtq0, qtq0_std):
+	# 	"""Correlator for qtq0 with error propagation."""
+	# 	return self.const*qtq0_std
 
-	def jackknife(self, F=None, F_error=None, store_raw_jk_values=True):
-		"""Overriding the jackknife class by adding the Correaltor function"""
-		super(TopcrAnalyser, self).jackknife(F=self.C,
-			F_error=self.C_std, store_raw_jk_values=store_raw_jk_values)
+	# def jackknife(self, F=None, F_error=None, store_raw_jk_values=True):
+	# 	"""Overriding the jackknife class by adding the Correaltor function"""
+	# 	super(TopcrAnalyser, self).jackknife(F=self.C,
+	# 		F_error=self.C_std, store_raw_jk_values=store_raw_jk_values)
 
-	def boot(self, N_bs, F=None, F_error=None, store_raw_bs_values=True):
-		"""Overriding the bootstrap class by adding the Correaltor function"""
-		super(TopcrAnalyser, self).boot(N_bs, F=self.C,
-			F_error=self.C_std, store_raw_bs_values=store_raw_bs_values)
+	# def boot(self, N_bs, F=None, F_error=None, store_raw_bs_values=True):
+	# 	"""Overriding the bootstrap class by adding the Correaltor function"""
+	# 	super(TopcrAnalyser, self).boot(N_bs, F=self.C,
+	# 		F_error=self.C_std, store_raw_bs_values=store_raw_bs_values)
 
-	def plot_jackknife(self, *args, **kwargs):
-		"""Making sure we are plotting with in euclidean time."""
-		kwargs["x"] = self.x
-		super(TopcrAnalyser, self).plot_jackknife(*args, **kwargs)
+	# def plot_jackknife(self, *args, **kwargs):
+	# 	"""Making sure we are plotting with in euclidean time."""
+	# 	kwargs["x"] = self.x
+	# 	super(TopcrAnalyser, self).plot_jackknife(*args, **kwargs)
 
-	def plot_boot(self, *args, **kwargs):
-		"""Making sure we are plotting with in euclidean time."""
-		kwargs["x"] = self.x
-		super(TopcrAnalyser, self).plot_boot(*args, **kwargs)
+	# def plot_boot(self, *args, **kwargs):
+	# 	"""Making sure we are plotting with in euclidean time."""
+	# 	kwargs["x"] = self.x
+	# 	super(TopcrAnalyser, self).plot_boot(*args, **kwargs)
 
 	def __str__(self):
 		info_string = lambda s1, s2: "\n{0:<20s}: {1:<20s}".format(s1, s2)

@@ -92,25 +92,25 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 		self.jackknife_performed = False
 		self.autocorrelation_performed = False
 
-	def C(self, Q):
-		"""Correlator for qtq0."""
-		return np.log(Q/np.roll(Q, -1, axis=0))
+	# def C(self, Q):
+	# 	"""Correlator for qtq0."""
+	# 	return np.log(Q/np.roll(Q, -1, axis=0))
 
-	def C_std(self, Q, dQ):
-		"""Correlator for qtq0 with error propagation."""
-		q = np.roll(Q, -1, axis=0)
-		dq = np.roll(dQ, -1, axis=0)
-		return np.sqrt((dQ/Q)**2 + (dq/q)**2 - dQ*dq/(Q*q))
+	# def C_std(self, Q, dQ):
+	# 	"""Correlator for qtq0 with error propagation."""
+	# 	q = np.roll(Q, -1, axis=0)
+	# 	dq = np.roll(dQ, -1, axis=0)
+	# 	return np.sqrt((dQ/Q)**2 + (dq/q)**2 - dQ*dq/(Q*q))
 
-	def jackknife(self, F=None, F_error=None, store_raw_jk_values=True):
-		"""Overriding the jackknife class by adding the Correaltor function"""
-		super(QtQ0EffectiveMassAnalyser, self).jackknife(F=self.C,
-			F_error=self.C_std, store_raw_jk_values=store_raw_jk_values)
+	# def jackknife(self, F=None, F_error=None, store_raw_jk_values=True):
+	# 	"""Overriding the jackknife class by adding the Correaltor function"""
+	# 	super(QtQ0EffectiveMassAnalyser, self).jackknife(F=self.C,
+	# 		F_error=self.C_std, store_raw_jk_values=store_raw_jk_values)
 
-	def boot(self, N_bs, F=None, F_error=None, store_raw_bs_values=True):
-		"""Overriding the bootstrap class by adding the Correaltor function"""
-		super(QtQ0EffectiveMassAnalyser, self).boot(N_bs, F=self.C,
-			F_error=self.C_std, store_raw_bs_values=store_raw_bs_values)
+	# def boot(self, N_bs, F=None, F_error=None, store_raw_bs_values=True):
+	# 	"""Overriding the bootstrap class by adding the Correaltor function"""
+	# 	super(QtQ0EffectiveMassAnalyser, self).boot(N_bs, F=self.C,
+	# 		F_error=self.C_std, store_raw_bs_values=store_raw_bs_values)
 
 	def plot_jackknife(self, *args, **kwargs):
 		"""Making sure we are plotting with in euclidean time."""

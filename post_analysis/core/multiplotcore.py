@@ -61,7 +61,7 @@ class MultiPlotCore(PostCore):
 		"""Sets and plots only one interval."""
 		self.interval_index = interval_index
 		self.plot_values = {}
-		data = self._get_analysis_data(self.analysis_data_type)
+		data, _ = self._get_analysis_data(self.analysis_data_type)
 		self._initiate_plot_values(data, interval_index=interval_index)
 		# Makes it a global constant so it can be added in plot figure name
 		self.plot(**kwargs)
@@ -98,7 +98,7 @@ class MultiPlotCore(PostCore):
 				formula for the y-value to plot in title.
 		"""
 		self.plot_values = {}
-		data = self._get_analysis_data(self.analysis_data_type)
+		data, _ = self._get_analysis_data(self.analysis_data_type)
 		self._initiate_plot_values(data)
 
 		old_rc_paramx = plt.rcParams['xtick.labelsize']

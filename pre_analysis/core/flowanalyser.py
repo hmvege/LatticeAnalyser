@@ -94,24 +94,30 @@ class FlowAnalyser(object):
 		# Checks that a figures folder exists
 		check_folder(self.figures_folder, self.dryrun, verbose=self.verbose)
 
-		# Check that a data run folder exist, so one data anlysis performed on different data sets do not mix
-		self.data_batch_folder_path = os.path.join(self.figures_folder,os.path.split(self.batch_data_folder)[-1])
+		# Check that a data run folder exist, so one data anlysis performed on
+		# different data sets do not mix
+		self.data_batch_folder_path = os.path.join(self.figures_folder,
+			os.path.split(self.batch_data_folder)[-1])
 		check_folder(self.data_batch_folder_path, self.dryrun, verbose=self.verbose)
 
 		# Checks that a batch folder exists
-		self.batch_name_folder_path = os.path.join(self.data_batch_folder_path, self.batch_name)
+		self.batch_name_folder_path = os.path.join(self.data_batch_folder_path,
+			self.batch_name)
 		check_folder(self.batch_name_folder_path, self.dryrun, verbose=self.verbose)
 
 		# Checks that observable output folder exist, and if not will create it
-		self.observable_output_folder_path = os.path.join(self.batch_name_folder_path, self.observable_name_compact)
+		self.observable_output_folder_path = os.path.join(self.batch_name_folder_path, 
+			self.observable_name_compact)
 		check_folder(self.observable_output_folder_path, self.dryrun, verbose=self.verbose)
 
 		# Sets up the post analysis folder, but do not create it till its needed
-		self.post_analysis_folder_base = os.path.join(self.batch_data_folder, self.batch_name, "post_analysis_data")
+		self.post_analysis_folder_base = os.path.join(self.batch_data_folder, 
+			self.batch_name, "post_analysis_data")
 		check_folder(self.post_analysis_folder_base, self.dryrun, verbose=self.verbose)
 
 		# Checks that {post_analysis_folder}/{observable_name} exists
-		self.post_analysis_folder = os.path.join(self.post_analysis_folder_base, self.observable_name_compact)
+		self.post_analysis_folder = os.path.join(self.post_analysis_folder_base, 
+			self.observable_name_compact)
 		check_folder(self.post_analysis_folder, self.dryrun, verbose=self.verbose)
 
 		# Makes a backup, for later use
@@ -173,7 +179,7 @@ class FlowAnalyser(object):
 			self.observable_name_compact, self.post_analysis_folder,
 			dryrun=self.dryrun, verbose=self.verbose)
 
-	def boot(self, N_bs, F=None, F_error=None, store_raw_bs_values=True):
+	def boot(self, N_bs, F=None, F_error=None, store_raw_bs_values=True, index_lists=None):
 		"""
 		Bootstrap caller for the flow analysis.
 
@@ -201,7 +207,9 @@ class FlowAnalyser(object):
 		self.unanalyzed_y_data = np.zeros((self.NFlows, self.N_configurations))
 	
 		# Generates random lists to use in resampling
-		index_lists = np.random.randint(self.N_configurations, size=(self.N_bs, self.N_configurations))
+		if isinstance(index_lists, types.NoneType):
+			index_lists = np.random.randint(self.N_configurations,
+				size=(self.N_bs, self.N_configurations))
 
 		if self.parallel:
 			# Sets up jobs for parallel processing
@@ -257,6 +265,7 @@ class FlowAnalyser(object):
 
 		if store_raw_bs_values:
 			self.save_raw_analysis_data(self.bs_y_data, "bootstrap")
+			self.save_raw_analysis_data(self.unanalyzed_y_data, "unanalyzed")
 
 		# Sets performed flag to true
 		self.bootstrap_performed = True
@@ -395,8 +404,7 @@ class FlowAnalyser(object):
 
 		# Stores the ac error correction
 		if store_raw_ac_error_correction:
-			self.save_raw_analysis_data(self.autocorrelation_error_correction,
-				"autocorrelation")
+			self.save_raw_analysis_data(self.autocorrelation_error_correction, "autocorrelation")
 
 		# Sets performed flag to true
 		self.autocorrelation_performed = True
@@ -474,8 +482,11 @@ class FlowAnalyser(object):
 
 		# Sets up the title and filename strings
 		if _plot_bs:
-			title_string = r"%s, $N_{bootstraps}=%d$" % (self.observable_name,
-				self.N_bs)
+			title_string = ""
+			if len(self.observable_name)!=0:
+				title_string = r"%s, " % self.observable_name
+			title_string += r"$N_{bootstraps}=%d$" % self.N_bs
+
 			fname_path = os.path.join(self.observable_output_folder_path,
 				"{0:<s}_bootstrap_Nbs{2:<d}_beta{1:<s}{3:<s}.png".format(
 					self.observable_name_compact,
@@ -766,7 +777,7 @@ class FlowAnalyser(object):
 		fig, axes = plt.subplots(3, 1, sharey=True, sharex=True)
 		for iHist, ax in zip(histogram_slices, axes):
 			ax.hist(self.unanalyzed_y_data[iHist], 
-				bins=NBins, label="t=%d" % iHist)
+				bins=NBins, label="t=%d" % iHist, normed=True)
 			ax.grid("on")
 			ax.legend()
 			if iHist == histogram_slices[1]:

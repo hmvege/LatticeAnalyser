@@ -2,11 +2,10 @@ from core.flowanalyser import FlowAnalyser
 
 class Topc2Analyser(FlowAnalyser):
 	"""Class for topological charge with quartic topological charge."""
-	observable_name = ""
+	observable_name = r"$\langle Q^2 \rangle$"
 	observable_name_compact = "topq2"
 	x_label = r"$\sqrt{8t_{flow}}[fm]$"
-	# y_label = r"$\chi(\langle Q^4 \rangle)^{1/8} = \frac{\hbar}{aV^{1/4}} \langle Q^4 \rangle^{1/8} [GeV]$" # 1/8 correct?
-	y_label = r"$\langle Q^2 \rangle$" # 1/8 correct?
+	y_label = r"$\langle Q^2 \rangle$"
 
 	def __init__(self, *args, **kwargs):
 		super(Topc2Analyser, self).__init__(*args, **kwargs)

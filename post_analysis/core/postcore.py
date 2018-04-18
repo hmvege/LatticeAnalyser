@@ -98,6 +98,7 @@ class PostCore(object):
 				self.bootstrap_data[beta] = data.data_observables[observable][beta][self.ac]["bootstrap"]
 				self.jackknife_data[beta] = data.data_observables[observable][beta][self.ac]["jackknife"]
 
+		self.unanalyzed_raw = data.raw_analysis["unanalyzed"]
 		self.bs_raw = data.raw_analysis["bootstrap"]
 		self.jk_raw = data.raw_analysis["jackknife"]
 		self.ac_corrections	= data.raw_analysis["autocorrelation"]
@@ -134,26 +135,24 @@ class PostCore(object):
 	def _get_analysis_data(self, analysis_data_type):
 		"""Retrieving data depending on analysis type we are choosing"""
 		if analysis_data_type == "bootstrap":
-			return self.bootstrap_data
+			return self.bootstrap_data, self.bs_raw
 		elif analysis_data_type == "jackknife":
-			return self.jackknife_data
+			return self.jackknife_data, self.jk_raw
 		elif analysis_data_type == "unanalyzed":
-			return self.unanalyzed_data
+			return self.unanalyzed_data, self.unanalyzed_raw
 		else:
 			raise KeyError("Analysis %s not recognized" % analysis_data_type)
 
 	def set_analysis_data_type(self, analysis_data_type="bootstrap"):
-		self.plot_values = {}
-
-		data = self._get_analysis_data(analysis_data_type)
+		"""Sets the analysis type and retrieves correct analysis data."""
+		self.plot_values = {} # Clears old plot values
+		data, data_raw = self._get_analysis_data(analysis_data_type)
+		self._initiate_plot_values(data, data_raw)
 
 		# Makes it a global constant so it can be added in plot figure name
 		self.analysis_data_type = analysis_data_type
 
-		# Initiates plot values
-		self._initiate_plot_values(data)
-
-	def _initiate_plot_values(self, data):
+	def _initiate_plot_values(self, data, data_raw):
 		"""Sorts data into a format specific for the plotting method."""
 		for beta in sorted(data.keys()):
 			if beta == 6.45: self.flow_time *= 2
@@ -167,7 +166,7 @@ class PostCore(object):
 			values["color"] = self.colors[beta]
 			self.plot_values[beta] = values
 
-	def plot(self, x_limits=False, y_limits=False, plot_with_formula=False):
+	def plot(self, x_limits=False, y_limits=False, plot_with_formula=False, error_shape="band"):
 		"""
 		Function for making a basic plot of all the different beta values together.
 
@@ -193,8 +192,13 @@ class PostCore(object):
 			x = value["x"]
 			y = value["y"]
 			y_err = value["y_err"]
-			ax.plot(x, y, "-", label=value["label"], color=value["color"])
-			ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, edgecolor='', facecolor=value["color"])
+			if error_shape == "band":
+				ax.plot(x, y, "-", label=value["label"], color=value["color"])
+				ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, edgecolor='', facecolor=value["color"])
+			elif error_shape == "bars":
+				ax.errorbar(x, y, yerr=y_err, capsize=5, fmt="_", ls=":", label=value["label"], color=value["color"], ecolor=value["color"])
+			else:
+				raise KeyError("%s not a recognized plot type" % error_shape)
 
 		# print self.flow_time[1:]**2*self._energy_continuum(self.flow_time[1:])[0]
 		# ax.plot(self.flow_time[1:]/self.r0**2,self.flow_time[1:]**2*self._energy_continuum(self.flow_time[1:])[0],color="b")
@@ -217,7 +221,7 @@ class PostCore(object):
 		if y_limits != False:
 			ax.set_ylim(y_limits)
 
-		plt.tight_layout()
+		# plt.tight_layout()
 
 		# Saves and closes figure
 		fname = self._get_plot_figure_name()
@@ -277,9 +281,11 @@ class PostCore(object):
 		return os.path.join(output_folder, fname)
 
 	def __str__(self):
+		"""Class string representation method."""
 		msg = "\n" +"="*100
 		msg += "\nPost analaysis for:        " + self.observable_name_compact
 		msg += "\n" + self.__doc__
+		msg += "\nAnalysis-type:             " + self.analysis_data_type
 		msg += "\nIncluding autocorrelation: " + self.ac
 		msg += "\nOutput folder:             " + self.output_folder_path
 		msg += "\n" + "="*100
