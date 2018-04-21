@@ -256,18 +256,25 @@ class LineFit:
 		plt.show()
 		plt.close(fig1)
 
-def main():
+def _fit_var_printer(var_name, var, var_error, w=16):
+	return "{0:<s} = {1:<.{w}f} +/- {2:<.{w}f}".format(var_name, var, 
+		var_error, w=w)
+
+
+def _test_simple_line_fit():
+	"""
+	Function for testing the case where one compares the curve_fit module in
+	scipy.optimize with what I have created.
+
+	SciPy and LineFit should fit exact down to around 8th digit.
+	"""
 	import random
 	import scipy.optimize as sciopt
-
-	def fit_var_printer(var_name, var, var_error, w=16):
-		return "{0:<s} = {1:<.{w}f} +/- {2:<.{w}f}".format(var_name, var, 
-			var_error, w=w)
 
 	# Generates signal with noise
 	a = 0.65
 	b = 1.1
-	N = 4
+	N = 10
 	x = np.linspace(0, 5, N)
 	signal_spread = 0.5
 	signal = a*x + b + np.random.uniform(-signal_spread, signal_spread, N)
@@ -287,14 +294,24 @@ def main():
 	fit_target = 2.5
 	x_fit, x_fit_err = fit.inverse_fit(fit_target)
 
+	# Numpy polyfit
+	# polyfit1, polyfitcov1 = np.polyfit(x, signal, 1, cov=True)
+	# polyfit_err = np.sqrt(np.diag(polyfitcov1))
+	polyfit1, polyfitcov1 = np.polyfit(x, signal, 1, cov=True)
+	polyfit_err = np.sqrt(np.diag(polyfitcov1))
+
 	print "UNWEIGTHED LINE FIT"
+	print "Numpy polyfit:"
+	print _fit_var_printer("a", polyfit1[0], polyfit_err[0])
+	print _fit_var_printer("b", polyfit1[1], polyfit_err[1])
+
 	print "SciPy curve_fit:"
-	print fit_var_printer("a", pol1[0], polcov1[0,0])
-	print fit_var_printer("b", pol1[1], polcov1[1,1])
+	print _fit_var_printer("a", pol1[0], polcov1[0,0])
+	print _fit_var_printer("b", pol1[1], polcov1[1,1])
 
 	print "LineFit:"
-	print fit_var_printer("a", b1, b1_err)
-	print fit_var_printer("b", b0, b0_err)
+	print _fit_var_printer("a", b1, b1_err)
+	print _fit_var_printer("b", b0, b0_err)
 	print "Goodness of fit: %f" % chi_unweigthed
 	# print "b = {0:<.10f} +/- {1:<.10f}".format(b0, self.b0_err)
 
@@ -311,11 +328,20 @@ def main():
 	ax1.set_title("Fit test - unweigthed")
 
 	# Weighted curve_fit
-	polw, polcovw = sciopt.curve_fit(lambda x, a, b : x*a + b, x, signal, sigma=1/signal_err)
 	print "WEIGTHED LINE FIT"
+
+	# Numpy polyfit
+	polyfit1, polyfitcov1 = np.polyfit(x, signal, 1, cov=True, w=1/signal_err)
+	polyfit_err = np.sqrt(np.diag(polyfitcov1))
+	print "Numpy polyfit:"
+	print _fit_var_printer("a", polyfit1[0], polyfit_err[0])
+	print _fit_var_printer("b", polyfit1[1], polyfit_err[1])
+
+	# SciPy curve fit
+	polw, polcovw = sciopt.curve_fit(lambda x, a, b : x*a + b, x, signal, sigma=signal_err)
 	print "SciPy curve_fit:"
-	print fit_var_printer("a", polw[0], polcovw[0,0])
-	print fit_var_printer("b", polw[1], polcovw[1,1])
+	print _fit_var_printer("a", polw[0], polcovw[0,0])
+	print _fit_var_printer("b", polw[1], polcovw[1,1])
 
 	# Weighted LineFit
 	yw_hat, yw_hat_err, f_params_weigthed, chi_weigthed = fit.fit_weighted(x_hat)
@@ -323,8 +349,8 @@ def main():
 	xw_fit, xw_fit_error = fit.inverse_fit(fit_target, weigthed=True)
 
 	print "LineFit:"
-	print fit_var_printer("a", b1, b1_err)
-	print fit_var_printer("b", b0, b0_err)
+	print _fit_var_printer("a", b1, b1_err)
+	print _fit_var_printer("b", b0, b0_err)
 	print "Goodness of fit: %f" % chi_weigthed
 
 	ax2 = fig1.add_subplot(212)
@@ -339,6 +365,56 @@ def main():
 	plt.show()
 
 	# fit.plot(True)
+
+def _test_inverse_line_fit():
+	"""
+	Function for testing the inverse line fit.
+	"""
+	import random
+	import scipy.optimize as sciopt
+
+	# Generates signal with noise
+	a = 0.65
+	b = 1.1
+	N = 4
+	M = 100 # Number of data points at each point
+	x = np.linspace(0, 5, N)
+	x_matrix = (np.ones((M, N)) * x).T
+	signal_spread = 0.5
+	signal = np.random.uniform(-signal_spread, signal_spread, (N, M)) + a*x_matrix + b
+	signal_err = np.std(signal, axis=1)
+	signal_mean = np.mean(signal, axis=1)
+	# signal = a*x + b + np.random.uniform(-signal_spread, signal_spread, N)
+	# signal_err = np.random.uniform(0.1, 0.3, N)
+
+	# My line fit
+	x_hat = np.linspace(0, 5, 100)
+
+	# Unweigthed fit
+	pol1, polcov1 = sciopt.curve_fit(lambda _x, a, b : _x*a + b, x, signal_mean, sigma=np.cov(signal))
+	print np.cov(signal)
+	print pol1
+	print polcov1
+
+
+	fig1 = plt.figure()
+	ax1 = fig1.add_subplot(111)
+	ax1.plot(x_hat, y_hat, label="Unweigthed fit", color="tab:blue")
+	ax1.fill_between(x_hat, y_hat_err[0], y_hat_err[1], alpha=0.5, color="tab:blue")
+	ax1.errorbar(x, signal_mean, yerr=signal_err, marker="o", label="Signal", linestyle="none", color="tab:orange")
+	ax1.set_ylim(0.5, 5)
+	# ax1.axvline(x_fit, color="tab:orange")
+	# ax1.fill_betweenx(np.linspace(0,6,100), x_fit_err[0], x_fit_err[1], label=r"$x_0\pm\sigma_{x_0}$", alpha=0.5, color="tab:orange")
+	ax1.legend(loc="best", prop={"size":8})
+	ax1.set_title("Fit test - unweigthed")
+
+	plt.show()
+	# fit = LineFit(x, signal, signal_err)
+	# x_hat = np.linspace(0, 5, 100)
+
+def main():
+	# _test_simple_line_fit()
+	_test_inverse_line_fit()
 
 if __name__ == '__main__':
 	main()
