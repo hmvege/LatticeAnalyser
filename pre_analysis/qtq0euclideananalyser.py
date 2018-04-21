@@ -118,10 +118,12 @@ class QtQ0EuclideanAnalyser(FlowAnalyser):
 		super(QtQ0EuclideanAnalyser, self).jackknife(F=self.C,
 			F_error=self.C_std, store_raw_jk_values=store_raw_jk_values)
 
-	def boot(self, N_bs, F=None, F_error=None, store_raw_bs_values=True):
+	def boot(self, N_bs, F=None, F_error=None, store_raw_bs_values=True, 
+		index_lists=None):
 		"""Overriding the bootstrap class by adding the Correaltor function"""
 		super(QtQ0EuclideanAnalyser, self).boot(N_bs, F=self.C,
-			F_error=self.C_std, store_raw_bs_values=store_raw_bs_values)
+			F_error=self.C_std, store_raw_bs_values=store_raw_bs_values,
+			index_lists=index_lists)
 
 	def plot_jackknife(self, *args, **kwargs):
 		"""Making sure we are plotting with in euclidean time."""

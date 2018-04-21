@@ -14,7 +14,7 @@ class MultiPlotCore(PostCore):
 	sub_obs = True
 	analysis_data_type = "bootstrap"
 
-	def _initiate_plot_values(self, data, interval_index=None):
+	def _initiate_plot_values(self, data, data_raw, interval_index=None):
 		# Sorts data into a format specific for the plotting method
 		for beta in sorted(data.keys()):
 			values = {}
@@ -27,7 +27,7 @@ class MultiPlotCore(PostCore):
 					sub_values["x"] = sub_values["a"]* np.sqrt(8*self.flow_time)
 					sub_values["y"] = data[beta][sub_obs]["y"]
 					sub_values["y_err"] = data[beta][sub_obs]["y_error"]
-					sub_values["bs"] = self.bs_raw[beta][self.observable_name_compact][sub_obs]
+					sub_values["bs"] = data_raw[beta][self.observable_name_compact][sub_obs]
 					sub_values["label"] = r"%s $\beta=%2.2f$ %s" % (
 						self.size_labels[beta], beta, self._convert_label(sub_obs))
 					sub_values["color"] = self.colors[beta]
@@ -38,7 +38,7 @@ class MultiPlotCore(PostCore):
 				values["x"] = values["a"]* np.sqrt(8*self.flow_time)
 				values["y"] = data[beta][sorted_intervals[interval_index]]["y"]
 				values["y_err"] = data[beta][sorted_intervals[interval_index]]["y_error"]
-				values["bs"] = self.bs_raw[beta][self.observable_name_compact] \
+				values["bs"] = data_raw[beta][self.observable_name_compact] \
 					[sorted_intervals[interval_index]]
 				values["label"] = r"%s $\beta=%2.2f$ %s" % (self.size_labels[beta], 
 					beta, self._convert_label(sorted_intervals[interval_index]))
@@ -61,8 +61,10 @@ class MultiPlotCore(PostCore):
 		"""Sets and plots only one interval."""
 		self.interval_index = interval_index
 		self.plot_values = {}
-		data, _ = self._get_analysis_data(self.analysis_data_type)
-		self._initiate_plot_values(data, interval_index=interval_index)
+		# data, _ = self._get_analysis_data(self.analysis_data_type)
+		self._initiate_plot_values(self.data[self.analysis_data_type],
+			self.data_raw[self.analysis_data_type],
+			interval_index=interval_index)
 		# Makes it a global constant so it can be added in plot figure name
 		self.plot(**kwargs)
 
@@ -98,8 +100,8 @@ class MultiPlotCore(PostCore):
 				formula for the y-value to plot in title.
 		"""
 		self.plot_values = {}
-		data, _ = self._get_analysis_data(self.analysis_data_type)
-		self._initiate_plot_values(data)
+		self._initiate_plot_values(self.data[self.analysis_data_type],
+			self.data_raw[self.analysis_data_type])
 
 		old_rc_paramx = plt.rcParams['xtick.labelsize']
 		old_rc_paramy = plt.rcParams['ytick.labelsize']

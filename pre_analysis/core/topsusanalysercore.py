@@ -35,10 +35,12 @@ class TopsusAnalyserCore(FlowAnalyser):
 		super(TopsusAnalyserCore, self).jackknife(F=self.chi,
 			F_error=self.chi_std, store_raw_jk_values=store_raw_jk_values)
 
-	def boot(self, N_bs, F=None, F_error=None, store_raw_bs_values=True):
+	def boot(self, N_bs, F=None, F_error=None, store_raw_bs_values=True, 
+		index_lists=None):
 		"""Overriding the bootstrap class by adding the chi-function"""
 		super(TopsusAnalyserCore, self).boot(N_bs, F=self.chi,
-			F_error=self.chi_std, store_raw_bs_values=store_raw_bs_values)
+			F_error=self.chi_std, store_raw_bs_values=store_raw_bs_values,
+			index_lists=index_lists)
 
 # def main():
 # 	exit("Module TopSusAnalyser not intended for standalone usage.")

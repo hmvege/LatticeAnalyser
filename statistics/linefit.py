@@ -273,10 +273,6 @@ def main():
 	signal = a*x + b + np.random.uniform(-signal_spread, signal_spread, N)
 	signal_err = np.random.uniform(0.1, 0.3, N)
 
-	# x = np.append(x, 2.5)
-	# signal = np.append(signal_err, 3.5)
-	# signal_err = np.append(signal_err, 5.0)
-
 	fit = LineFit(x, signal, signal_err)
 	x_hat = np.linspace(0, 5, 100)
 
@@ -296,7 +292,6 @@ def main():
 	print fit_var_printer("a", pol1[0], polcov1[0,0])
 	print fit_var_printer("b", pol1[1], polcov1[1,1])
 
-
 	print "LineFit:"
 	print fit_var_printer("a", b1, b1_err)
 	print fit_var_printer("b", b0, b0_err)
@@ -308,40 +303,42 @@ def main():
 	ax1.axhline(fit_target, linestyle="dashed", color="tab:grey")
 	ax1.plot(x_hat, y_hat, label="Unweigthed fit", color="tab:blue")
 	ax1.fill_between(x_hat, y_hat_err[0], y_hat_err[1], alpha=0.5, color="tab:blue")
-	ax1.plot(x, signal, marker="o", label="Signal", linestyle="none", color="tab:orange")
-
-	ax1.set_ylim(0.9, 4.5)
+	ax1.errorbar(x, signal, yerr=signal_err, marker="o", label="Signal", linestyle="none", color="tab:orange")
+	ax1.set_ylim(0.5, 5)
 	ax1.axvline(x_fit, color="tab:orange")
 	ax1.fill_betweenx(np.linspace(0,6,100), x_fit_err[0], x_fit_err[1], label=r"$x_0\pm\sigma_{x_0}$", alpha=0.5, color="tab:orange")
 	ax1.legend(loc="best", prop={"size":8})
 	ax1.set_title("Fit test - unweigthed")
 
-	# Weighted fit
+	# Weighted curve_fit
+	polw, polcovw = sciopt.curve_fit(lambda x, a, b : x*a + b, x, signal, sigma=1/signal_err)
+	print "WEIGTHED LINE FIT"
+	print "SciPy curve_fit:"
+	print fit_var_printer("a", polw[0], polcovw[0,0])
+	print fit_var_printer("b", polw[1], polcovw[1,1])
+
+	# Weighted LineFit
 	yw_hat, yw_hat_err, f_params_weigthed, chi_weigthed = fit.fit_weighted(x_hat)
 	b0, b0_err, b1, b1_err = f_params_weigthed
 	xw_fit, xw_fit_error = fit.inverse_fit(fit_target, weigthed=True)
 
-	print "WEIGTHED LINE FIT"
+	print "LineFit:"
 	print fit_var_printer("a", b1, b1_err)
 	print fit_var_printer("b", b0, b0_err)
 	print "Goodness of fit: %f" % chi_weigthed
 
 	ax2 = fig1.add_subplot(212)
 	ax2.axhline(fit_target, linestyle="dashed", color="tab:grey")
-	ax2.errorbar(x, signal, yerr=signal_err, fmt="o", label="Signal", color="tab:orange")
+	ax2.errorbar(x, signal, yerr=signal_err, marker="o", label="Signal", linestyle="none", color="tab:orange")
 	ax2.plot(x_hat, yw_hat, label="Weighted fit", color="tab:blue")
 	ax2.fill_between(x_hat, yw_hat_err[0], yw_hat_err[1], alpha=0.5, color="tab:blue")
-
-	print xw_fit_error[0], xw_fit_error[1]
-
-	ax2.set_ylim(0.6, 5)
+	ax2.set_ylim(0.5, 5)
 	ax2.axvline(xw_fit, color="tab:orange")
 	ax2.fill_betweenx(np.linspace(0,6,100), xw_fit_error[0], xw_fit_error[1], label=r"$x_{0,w}\pm\sigma_{x_0,w}$", alpha=0.5, color="tab:orange")
-
 	ax2.legend(loc="best", prop={"size":8})
 	plt.show()
 
-	fit.plot(True)
+	# fit.plot(True)
 
 if __name__ == '__main__':
 	main()

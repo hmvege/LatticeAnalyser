@@ -68,10 +68,12 @@ class TopsusQtQ0Analyser(TopsusAnalyserCore):
 		super(TopsusQtQ0Analyser, self).jackknife(F=self.chi,
 			F_error=self.chi_std, store_raw_jk_values=store_raw_jk_values)
 
-	def boot(self, N_bs, F=None, F_error=None, store_raw_bs_values=True):
+	def boot(self, N_bs, F=None, F_error=None, store_raw_bs_values=True, 
+		index_lists=None):
 		"""Overriding the bootstrap class by adding the Correaltor function"""
 		super(TopsusQtQ0Analyser, self).boot(N_bs, F=self.chi,
-			F_error=self.chi_std, store_raw_bs_values=store_raw_bs_values)
+			F_error=self.chi_std, store_raw_bs_values=store_raw_bs_values, 
+			index_lists=index_lists)
 
 	def __str__(self):
 		info_string = lambda s1, s2: "\n{0:<20s}: {1:<20s}".format(s1, s2)

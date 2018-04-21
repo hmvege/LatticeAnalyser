@@ -609,20 +609,19 @@ def main():
 	observables = [
 		"plaq", "energy", 
 		# Topological charge definitions
-		"topc", "topc2", "topc4", "topcr", "topct", "topcte", "topcMC", 
+		"topc", "topc2", "topc4", "topcr", "topct", "topcte", "topcMC",
 		# Topological susceptibility definitions
-		# "topsus", "topsus4", "topsust", "topsuste", "topsusMC", "topsusqtq0",
+		# "topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0",
 		# Other quantities 
 		"topcr",
 		"qtq0e",
 		"qtq0eff",
 	]
 
-	# observables = ["topsus", "qtq0e", "topcr", "qtq0eff"]
 	# observables = ["topsus"]
-	observables = ["topcr", "qtq0eff"]
+	# observables = ["topcr", "qtq0eff"]
 	observables = ["qtq0eff"]
-	observables = ["topcr"]
+	# observables = ["topcr"]
 
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
 	print 100*"=" + "\n"

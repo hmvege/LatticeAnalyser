@@ -23,7 +23,7 @@ class TopcrAnalyser(FlowAnalyser):
 
 	def __init__(self, *args, **kwargs):
 		super(TopcrAnalyser, self).__init__(*args, **kwargs)
-		self.y = (self.y**4 - 3*self.y**2) / self.y**2
+		self.y = (self.y**4 - 3*self.y**2) / self.y
 
 	# def C(self, qtq0):
 	# 	"""Correlator for qtq0."""

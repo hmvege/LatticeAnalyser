@@ -29,7 +29,7 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 	def _convert_label(self, lab):
 		return int(lab[-4:])
 
-	def _initiate_plot_values(self, data, euclidean_percent, flow_index=None):
+	def _initiate_plot_values(self, data, data_raw, euclidean_percent, flow_index=None):
 		"""interval_index: int, should be in euclidean time."""
 
 		# Sorts data into a format specific for the plotting method
@@ -47,7 +47,7 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 						self.lattice_sizes[beta][1])
 					sub_values["y"] = data[beta][sub_obs][te_index]["y"]
 					sub_values["y_err"] = data[beta][sub_obs][te_index]["y_error"]
-					sub_values["bs"] = self.bs_raw[beta][self.observable_name_compact][sub_obs][te_index]
+					sub_values["bs"] = data_raw[beta][self.observable_name_compact][sub_obs][te_index]
 					sub_values["label"] = r"%s, $\beta=%2.2f$, $t_f=%d$" % (
 						self.size_labels[beta], beta, self._convert_label(sub_obs))
 					sub_values["color"] = self.colors[beta]
@@ -67,7 +67,7 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 
 				values["y"] = data[beta][tf_index][te_index]["y"]
 				values["y_err"] = data[beta][tf_index][te_index]["y_error"]
-				values["bs"] = self.bs_raw[beta][self.observable_name_compact][tf_index][te_index]
+				values["bs"] = data_raw[beta][self.observable_name_compact][tf_index][te_index]
 				values["label"] = r"%s $\beta=%2.2f$, $t_f=%d$, $t_e=%d$" % (
 					self.size_labels[beta], beta, flow_index, euclidean_index)
 				values["color"] = self.colors[beta]
@@ -76,13 +76,13 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 	def set_analysis_data_type(self, euclidean_percent, analysis_data_type="bootstrap"):
 		self.plot_values = {}
 
-		data = self._get_analysis_data(analysis_data_type)
-
 		# Makes it a global constant so it can be added in plot figure name
 		self.analysis_data_type = analysis_data_type
 
 		# Initiates plot values
-		self._initiate_plot_values(data, euclidean_percent=euclidean_percent)
+		self._initiate_plot_values(self.data[self.analysis_data_type],
+			self.data_raw[self.analysis_data_type],
+			euclidean_percent=euclidean_percent)
 
 	def _get_plot_figure_name(self):
 		"""Retrieves appropriate figure file name."""
@@ -108,8 +108,9 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 		"""
 		self.interval_index = [flow_index, euclidean_percent]
 		self.plot_values = {}
-		data = self._get_analysis_data(self.analysis_data_type)
-		self._initiate_plot_values(data, euclidean_percent=euclidean_percent, flow_index=flow_index)
+		self._initiate_plot_values(self.data[self.analysis_data_type],
+			self.data_raw[self.analysis_data_type],
+			euclidean_percent=euclidean_percent, flow_index=flow_index)
 
 		# Sets the x-label to proper units
 		x_label_old = self.x_label
@@ -135,8 +136,9 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 				formula for the y-value to plot in title.
 		"""
 		self.plot_values = {}
-		data = self._get_analysis_data(self.analysis_data_type)
-		self._initiate_plot_values(data, euclidean_percent)
+		self._initiate_plot_values(self.data[self.analysis_data_type],
+			self.data_raw[self.analysis_data_type],
+			euclidean_percent=euclidean_percent)
 
 		old_rc_paramx = plt.rcParams['xtick.labelsize']
 		old_rc_paramy = plt.rcParams['ytick.labelsize']

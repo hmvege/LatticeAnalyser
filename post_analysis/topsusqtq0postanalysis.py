@@ -19,10 +19,10 @@ class TopsusQtQ0PostAnalysis(MultiPlotCore, TopsusCore):
 		self.plot_values_old = self.plot_values
 		self.output_folder_path_old = self.output_folder_path
 
-		# Sets plot values
-		data = self._get_analysis_data(self.analysis_data_type)
 		# All flow times should be the same for every beta
-		self._initiate_plot_values(data, interval_index=interval_index)
+		self._initiate_plot_values(self.data[self.analysis_data_type],
+			self.data_raw[self.analysis_data_type],
+			interval_index=interval_index)
 
 		# Gets the exact interval
 		interval = sorted(self.plot_values.values())[0]["interval"]

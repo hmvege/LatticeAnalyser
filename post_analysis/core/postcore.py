@@ -28,8 +28,12 @@ class PostCore(object):
 	r0 = 0.5
 	sub_obs = False
 	sub_sub_obs = False
-	# blue, green, red purple
-	beta_colors = ["#5cbde0", "#6fb718", "#bc232e", "#8519b7"]
+	colors = {
+		6.0: "#5cbde0", # blue
+		6.1: "#6fb718", # green
+		6.2: "#bc232e", # red
+		6.45: "#8519b7" # purple
+	}
 
 	def __init__(self, data, with_autocorr=True, figures_folder="../figures", verbose=False, dryrun=False):
 		if with_autocorr:
@@ -44,70 +48,70 @@ class PostCore(object):
 
 		# Retrieves relevant data values and sorts them by beta values
 		self.flow_time = data.flow_time
-		self.unanalyzed_data = {}
-		self.bootstrap_data	= {}
-		self.jackknife_data = {}
 
+		self.data = {}
+		# self.unanalyzed_data = {}
+		# self.bootstrap_data	= {}
+		# self.jackknife_data = {}
+
+		self.beta_values = sorted(data.beta_values)
+
+		self.analysis_types = data.analysis_types
+		if "autocorrelation" in self.analysis_types:
+			self.analysis_types.remove("autocorrelation")
+		for atype in self.analysis_types:
+			self.data[atype] = {beta: {} for beta in self.beta_values}
+		
 		# Only sets this variable if we have sub-intervals in order to avoid bugs.
 		if self.sub_obs:
 			self.observable_intervals = {}
+			for beta in self.beta_values:
+				self.observable_intervals[beta] = {}
 
 		# Checks that the observable is among the available data
 		assert_msg = ("%s is not among current data(%s). Have the pre analysis"
 			" been performed?" % (observable, ", ".join(data.observable_list)))
 		assert observable in data.observable_list, assert_msg
 
-		for beta in sorted(data.beta_values):
-			# Ensures we have dictionaries available.
-			if not beta in self.unanalyzed_data:
-				self.unanalyzed_data[beta] = {}
-				self.bootstrap_data[beta] = {}
-				self.jackknife_data[beta] = {}
-			
-			if self.sub_obs:
-				# Checks that we have beta in the observable_intervals
-				if not beta in self.observable_intervals:
-					self.observable_intervals[beta] = {}
+		for atype in self.analysis_types:
+			for beta in self.beta_values:
+				if self.sub_obs:
+					if self.sub_sub_obs:
+						for subobs in data.data_observables[observable][beta]:
+							# Sets sub-sub intervals
+							self.observable_intervals[beta][subobs] = data.data_observables[observable][beta][subobs].keys()
+							
+							# Sets up additional subsub-dictionaries
+							self.data[atype][beta][subobs] = {}
 
-				if self.sub_sub_obs:
-					for subobs in data.data_observables[observable][beta]:
-						# Sets sub-sub intervals
-						self.observable_intervals[beta][subobs] = data.data_observables[observable][beta][subobs].keys()
-						
-						# Sets up additional subsub-dictionaries
-						self.unanalyzed_data[beta][subobs] = {}
-						self.bootstrap_data[beta][subobs] = {}
-						self.jackknife_data[beta][subobs] = {}
+							for subsubobs in data.data_observables[observable][beta][subobs]:
+								self.data[atype][beta][subobs][subsubobs] = data.data_observables[observable][beta][subobs][subsubobs][self.ac][atype]
+					else:
+						# Fills up observable intervals
+						self.observable_intervals[beta] = data.data_observables[observable][beta].keys()
 
-
-						for subsubobs in data.data_observables[observable][beta][subobs]:
-							print data.data_observables[observable][beta][subobs][subsubobs].keys(), self.observable_name_compact
-							self.unanalyzed_data[beta][subobs][subsubobs] = data.data_observables[observable][beta][subobs][subsubobs][self.ac]["unanalyzed"]
-							self.bootstrap_data[beta][subobs][subsubobs] = data.data_observables[observable][beta][subobs][subsubobs][self.ac]["bootstrap"]
-							self.jackknife_data[beta][subobs][subsubobs] = data.data_observables[observable][beta][subobs][subsubobs][self.ac]["jackknife"]
+						for subobs in data.data_observables[observable][beta]:
+							self.data[atype][beta][subobs] = data.data_observables[observable][beta][subobs][self.ac][atype]
 				else:
-					# Fills up observable intervals
-					self.observable_intervals[beta] = data.data_observables[observable][beta].keys()
+					self.data[atype][beta] = data.data_observables[observable][beta][self.ac][atype]
 
-					for subobs in data.data_observables[observable][beta]:
-						self.unanalyzed_data[beta][subobs] = data.data_observables[observable][beta][subobs][self.ac]["unanalyzed"]
-						self.bootstrap_data[beta][subobs] = data.data_observables[observable][beta][subobs][self.ac]["bootstrap"]
-						self.jackknife_data[beta][subobs] = data.data_observables[observable][beta][subobs][self.ac]["jackknife"]
+		self.data_raw = {}
+		for key in data.raw_analysis:
+			if key == "autocorrelation":
+				self.ac_raw = data.raw_analysis[key]
 			else:
-				self.unanalyzed_data[beta] = data.data_observables[observable][beta][self.ac]["unanalyzed"]
-				self.bootstrap_data[beta] = data.data_observables[observable][beta][self.ac]["bootstrap"]
-				self.jackknife_data[beta] = data.data_observables[observable][beta][self.ac]["jackknife"]
+				self.data_raw[key] = data.raw_analysis[key]
 
-		self.unanalyzed_raw = data.raw_analysis["unanalyzed"]
-		self.bs_raw = data.raw_analysis["bootstrap"]
-		self.jk_raw = data.raw_analysis["jackknife"]
-		self.ac_corrections	= data.raw_analysis["autocorrelation"]
+		# self.unanalyzed_raw = data.raw_analysis["unanalyzed"]
+		# self.bs_raw = data.raw_analysis["bootstrap"]
+		# self.jk_raw = data.raw_analysis["jackknife"]
+		# self.ac_corrections	= data.raw_analysis["autocorrelation"]
 
 		# Small test to ensure that the number of bootstraps and number of different beta batches match
 		err_msg = "Number of bootstraps do not match number of different beta values"
-		assert np.asarray([get_NBoots(self.bs_raw[i]) for i in self.bs_raw.keys()]).all(), err_msg
+		assert np.asarray([get_NBoots(self.data_raw["bootstrap"][i]) for i in self.data_raw["bootstrap"].keys()]).all(), err_msg
 
-		self.NBoots = get_NBoots(self.bs_raw)
+		self.NBoots = get_NBoots(self.data_raw["bootstrap"])
 
 		# Creates base output folder for post analysis figures
 		self.figures_folder = figures_folder
@@ -122,33 +126,15 @@ class PostCore(object):
 		self.output_folder_path = os.path.join(self.post_anlaysis_folder, self.observable_name_compact)
 		check_folder(self.output_folder_path, dryrun=self.dryrun, verbose=self.verbose)
 
-		# Creates colors to use
-		self.colors = {}
-		for color, beta in zip(self.beta_colors, sorted(data.data_observables[observable].keys())):
-			self.colors[beta] = color
-
 	def _check_plot_values(self):
 		"""Checks if we have set the analysis data type yet."""
 		if not hasattr(self, "plot_values"):
 			raise AttributeError("set_analysis_data_type() has not been set yet.")
 
-	def _get_analysis_data(self, analysis_data_type):
-		"""Retrieving data depending on analysis type we are choosing"""
-		if analysis_data_type == "bootstrap":
-			return self.bootstrap_data, self.bs_raw
-		elif analysis_data_type == "jackknife":
-			return self.jackknife_data, self.jk_raw
-		elif analysis_data_type == "unanalyzed":
-			return self.unanalyzed_data, self.unanalyzed_raw
-		else:
-			raise KeyError("Analysis %s not recognized" % analysis_data_type)
-
 	def set_analysis_data_type(self, analysis_data_type="bootstrap"):
 		"""Sets the analysis type and retrieves correct analysis data."""
 		self.plot_values = {} # Clears old plot values
-		data, data_raw = self._get_analysis_data(analysis_data_type)
-		self._initiate_plot_values(data, data_raw)
-
+		self._initiate_plot_values(self.data[analysis_data_type], self.data_raw[analysis_data_type])
 		# Makes it a global constant so it can be added in plot figure name
 		self.analysis_data_type = analysis_data_type
 
@@ -160,7 +146,7 @@ class PostCore(object):
 			values["a"] = get_lattice_spacing(beta)
 			values["x"] = values["a"]* np.sqrt(8*self.flow_time)
 			values["y"] = data[beta]["y"]
-			values["bs"] = self.bs_raw[beta][self.observable_name_compact]
+			values["bs"] = data_raw[beta][self.observable_name_compact]
 			values["y_err"] = data[beta]["y_error"]
 			values["label"] = r"%s $\beta=%2.2f$" % (self.size_labels[beta], beta)
 			values["color"] = self.colors[beta]
@@ -179,7 +165,7 @@ class PostCore(object):
 		if self.verbose:
 			print "Plotting %s for betas %s together" % (
 				self.observable_name_compact,
-				", ".join([str(b) for b in sorted(self.unanalyzed_data.keys())]))
+				", ".join([str(b) for b in self.beta_values]))
 
 		fig = plt.figure(dpi=self.dpi)
 		ax = fig.add_subplot(111)

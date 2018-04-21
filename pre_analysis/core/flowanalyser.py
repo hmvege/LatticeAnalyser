@@ -216,7 +216,7 @@ class FlowAnalyser(object):
 			input_values = zip(	[self.y[:,i] for i in xrange(self.NFlows)],
 								[N_bs for i in xrange(self.NFlows)],
 								[index_lists for i in xrange(self.NFlows)])
-			
+
 			# Initializes multiprocessing
 			pool = multiprocessing.Pool(processes=self.numprocs)								
 
