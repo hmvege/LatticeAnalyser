@@ -16,6 +16,9 @@ class LineFit:
 		self.x_lower = np.min(self.x)
 		self.x_upper = np.max(self.x)
 
+		# Sets weigths regardless if they are to be used or not.
+		self.w = self._get_weights(self.y_err)
+
 		self.inverse_fit_performed = False
 
 	def fit(self, x_arr=None):
@@ -37,20 +40,23 @@ class LineFit:
 		if isinstance(x_arr, types.NoneType):
 			x_arr = np.linspace(self.x[self.x_lower], self.x[self.x_upper], 100)
 
-		self.x_mean = np.mean(self.x)
-		self.y_mean = np.mean(self.y)
+		# self.x_mean = np.mean(self.x)
+		# self.y_mean = np.mean(self.y)
 
-		# Temporary som contained in both eq. 4, eq. 6 and eq. 7
-		self.xi_xmean_sum = np.sum((self.x - self.x_mean)**2)
+		# # Temporary sum contained in both eq. 4, eq. 6 and eq. 7
+		# self.xi_xmean_sum = np.sum((self.x - self.x_mean)**2)
+		
+		self.x_mean, self.y_mean, self.xi_xmean_sum = self._get_means()
+
+		# Eq. 5
+		self.s_xy_err = self._get_s_xy()
+		# self.s_xy_err = np.sum((self.y - self._y_hat(self.x))**2) / (self.n - 2)
 
 		# Eq. 4
 		self.b1 = np.sum((self.x - self.x_mean) * self.y) / self.xi_xmean_sum
 
 		# Eq. 3
 		self.b0 = self.y_mean - self.b1 * self.x_mean
-
-		# Eq. 5
-		self.s_xy_err = np.sum((self.y - self._y_hat(self.x))**2) / (self.n - 2)
 
 		# Eq. 6
 		self.b0_err = self.s_xy_err
@@ -101,14 +107,18 @@ class LineFit:
 
 		assert not isinstance(self.y_err, types.NoneType), "Missing y_err."
 
-		# w = self.n * 1.0/self.y_err**2 * 1.0/np.sum(self.y_err**2)
-		self.w = 1.0/self.y_err**2
+		# self.xw_mean = np.sum(self.w * self.x) / np.sum(self.w)
+		# self.yw_mean = np.sum(self.w * self.y) / np.sum(self.w)
 
-		self.xw_mean = np.sum(self.w * self.x) / np.sum(self.w)
-		self.yw_mean = np.sum(self.w * self.y) / np.sum(self.w)
+		# # Temporary som contained in both eq. 4, eq. 6 and eq. 7
+		# self.xwi_xmean_sum = np.sum(self.w * (self.x - self.xw_mean)**2)
+		self.xw_mean, self.yw_mean, self.xwi_xmean_sum = self._get_means_weigthed()
 
-		# Temporary som contained in both eq. 4, eq. 6 and eq. 7
-		self.xwi_xmean_sum = np.sum(self.w * (self.x - self.xw_mean)**2)
+		# # Eq. 21
+		# self.s_xyw_err = np.sum(self.w * (self.y - self._yw_hat(self.x))**2)
+		# self.s_xyw_err /= (self.n - 2.0) 
+
+		self.s_xyw_err = self._get_s_xyw()
 
 		# Eq. 18
 		self.b1w = np.sum(self.w * (self.x - self.xw_mean) * self.y)
@@ -116,10 +126,6 @@ class LineFit:
 
 		# Eq. 17
 		self.b0w = self.yw_mean - self.b1w * self.xw_mean
-
-		# Eq. 21
-		self.s_xyw_err = np.sum(self.w * (self.y - self._yw_hat(self.x))**2)
-		self.s_xyw_err /= (self.n - 2.0) 
 
 		# Eq. 19
 		self.b0w_err = (1.0/np.sum(self.w) + self.xw_mean**2 / self.xwi_xmean_sum) 
@@ -153,6 +159,76 @@ class LineFit:
 		# print [_pt1 - _pt2, _pt1 + _pt2]
 
 		return [_pt1 - _pt2, _pt1 + _pt2]
+
+	def _get_s_xy(self):
+		"""Eq. 5."""
+		return np.sum((self.y - self._y_hat(self.x))**2) / (self.n - 2)
+
+	def _get_s_xyw(self):
+		"""Eq. 21."""
+		s_xyw_err = np.sum(self.w * (self.y - self._yw_hat(self.x))**2)
+		return s_xyw_err/(self.n - 2.0)
+
+	def _get_means(self):
+		""" Returns non-weigthed means."""
+		# Eq. 4, eq. 6 and eq. 7
+		x_mean = np.mean(self.x)
+		xi_xmean_sum = np.sum((self.x - x_mean)**2)
+		return x_mean, np.mean(self.y), xi_xmean_sum
+
+	def _get_means_weigthed(self):
+		"""Sets weighted means."""
+		xw_mean = np.sum(self.w * self.x) / np.sum(self.w)
+		yw_mean = np.sum(self.w * self.y) / np.sum(self.w)
+
+		# Temporary som contained in both eq. 4, eq. 6 and eq. 7
+		xwi_xmean_sum = np.sum(self.w * (self.x - xw_mean)**2)
+		return xw_mean, yw_mean, xwi_xmean_sum
+
+	def _get_weights(self, y_err):
+		"""Sets weights based on error in fit."""
+		return 1.0/y_err**2
+
+	def set_fit_parameters(self, b0, b0_err, b1, b1_err, weighted=False):
+		"""
+		Method for setting fit parameters if they have been retrieved by 
+		another method, such as scipy.optimize.curve_fit.
+
+		Args:
+			b0: constant term in line fit.
+			b0: error of constant term in line fit.
+			b1: slope term in line fit.
+			b1: error of slope term in line fit.
+		"""
+		if weighted:
+			self.b0w = b0
+			self.b0w_err = b0_err
+			self.b1w = b1
+			self.b1w_err = b1_err
+			self.xw_mean, self.yw_mean, self.xwi_xmean_sum \
+				= self._get_means_weigthed()
+			self.s_xyw_err = self._get_s_xyw()
+		else:
+			self.b0 = b0
+			self.b0_err = b0_err
+			self.b1 = b1
+			self.b1_err = b1_err
+
+			self.x_mean, self.y_mean, self.xi_xmean_sum \
+				= self._get_means()
+			self.s_xy_err = self._get_s_xy()
+
+	def __call__(self, x, weighted=False):
+		"""Returns the fitted function at x."""
+		if weighted:
+			y_fit, y_fit_err = self._yw_hat(x), self._yw_hat_err(x)
+			return y_fit, y_fit_err, self._chi_squared(self.y, self.y_err, 
+				self._yw_hat(self.x))
+		else:
+			y_fit, y_fit_err = self._y_hat(x), self._y_hat_err(x)
+			return y_fit, y_fit_err, self._chi_squared(self.y, self.y_err, 
+				self._y_hat(self.x))
+
 
 	def inverse_fit(self, y0, weigthed=False):
 		"""
@@ -374,39 +450,61 @@ def _test_inverse_line_fit():
 	import scipy.optimize as sciopt
 
 	# Generates signal with noise
+	x_start = 0
+	x_end = 5
 	a = 0.65
 	b = 1.1
-	N = 4
-	M = 100 # Number of data points at each point
-	x = np.linspace(0, 5, N)
-	x_matrix = (np.ones((M, N)) * x).T
+	N = 50
+	M = 10 # Number of data points at each point
+	x = np.linspace(x_start, x_end, N)
+	x_matrix = (np.ones((M, N)) * x)
 	signal_spread = 0.5
-	signal = np.random.uniform(-signal_spread, signal_spread, (N, M)) + a*x_matrix + b
-	signal_err = np.std(signal, axis=1)
-	signal_mean = np.mean(signal, axis=1)
+	signal = np.random.uniform(-signal_spread, signal_spread, (M, N)) + a*x_matrix + b
+	signal_err = np.std(signal, axis=0)
+	signal_mean = np.mean(signal, axis=0)
 	# signal = a*x + b + np.random.uniform(-signal_spread, signal_spread, N)
 	# signal_err = np.random.uniform(0.1, 0.3, N)
 
 	# My line fit
-	x_hat = np.linspace(0, 5, 100)
+	x_hat = np.linspace(x_start, x_end, 100)
 
+	print signal.shape, x.shape, x_matrix.shape, np.cov(signal.T).shape
+
+	def _f(_x, a, b):
+		# print (_x*a + b).shape
+		return _x*a + b
+
+	print sciopt.least_squares.__doc__
 	# Unweigthed fit
-	pol1, polcov1 = sciopt.curve_fit(lambda _x, a, b : _x*a + b, x, signal_mean, sigma=np.cov(signal))
-	print np.cov(signal)
-	print pol1
-	print polcov1
+	# pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=signal_err)
+	pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=np.cov(signal.T))
 
+
+	# pol1, polcov1 = np.polyfit(x, signal.T, 1, cov=True)
+	# print pol1.shape
+	# print polcov1.shape
+
+	# fit_par = np.mean(pol1, axis=1)
+	# fit_cov = np.mean(polcov1, axis=2)
+	fit_par = pol1
+	fit_cov = polcov1
+
+	# print np.cov(signal_mean.T)
+	lfit = LineFit(x, signal_mean, signal_err)
+	# lfit.set_fit_parameters(pol1[1], np.sqrt(polcov1[1,1]), pol1[0], np.sqrt(polcov1[0,0]), weighted=True)
+	lfit.set_fit_parameters(fit_par[1], np.sqrt(fit_cov[1,1]), fit_par[0], np.sqrt(fit_cov[0,0]), weighted=True)
+	y_hat, y_hat_err, chi_squared = lfit(x_hat, weighted=True)
 
 	fig1 = plt.figure()
 	ax1 = fig1.add_subplot(111)
-	ax1.plot(x_hat, y_hat, label="Unweigthed fit", color="tab:blue")
+	ax1.plot(x_hat, y_hat, label="Numpy curve fit", color="tab:blue")
 	ax1.fill_between(x_hat, y_hat_err[0], y_hat_err[1], alpha=0.5, color="tab:blue")
-	ax1.errorbar(x, signal_mean, yerr=signal_err, marker="o", label="Signal", linestyle="none", color="tab:orange")
+	ax1.errorbar(x, signal_mean, yerr=signal_err, marker="o", label=r"Signal $\chi=%.2f$" % chi_squared, linestyle="none", color="tab:orange")
 	ax1.set_ylim(0.5, 5)
 	# ax1.axvline(x_fit, color="tab:orange")
 	# ax1.fill_betweenx(np.linspace(0,6,100), x_fit_err[0], x_fit_err[1], label=r"$x_0\pm\sigma_{x_0}$", alpha=0.5, color="tab:orange")
 	ax1.legend(loc="best", prop={"size":8})
-	ax1.set_title("Fit test - unweigthed")
+	ax1.set_title("Fit test with curve_fit parameters")
 
 	plt.show()
 	# fit = LineFit(x, signal, signal_err)
