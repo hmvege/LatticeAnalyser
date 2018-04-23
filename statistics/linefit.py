@@ -48,8 +48,6 @@ class LineFit:
 		
 		self.x_mean, self.y_mean, self.xi_xmean_sum = self._get_means()
 
-		# Eq. 5
-		self.s_xy_err = self._get_s_xy()
 		# self.s_xy_err = np.sum((self.y - self._y_hat(self.x))**2) / (self.n - 2)
 
 		# Eq. 4
@@ -57,6 +55,9 @@ class LineFit:
 
 		# Eq. 3
 		self.b0 = self.y_mean - self.b1 * self.x_mean
+
+		# Eq. 5
+		self.s_xy_err = self._get_s_xy()
 
 		# Eq. 6
 		self.b0_err = self.s_xy_err
@@ -114,11 +115,6 @@ class LineFit:
 		# self.xwi_xmean_sum = np.sum(self.w * (self.x - self.xw_mean)**2)
 		self.xw_mean, self.yw_mean, self.xwi_xmean_sum = self._get_means_weigthed()
 
-		# # Eq. 21
-		# self.s_xyw_err = np.sum(self.w * (self.y - self._yw_hat(self.x))**2)
-		# self.s_xyw_err /= (self.n - 2.0) 
-
-		self.s_xyw_err = self._get_s_xyw()
 
 		# Eq. 18
 		self.b1w = np.sum(self.w * (self.x - self.xw_mean) * self.y)
@@ -126,6 +122,11 @@ class LineFit:
 
 		# Eq. 17
 		self.b0w = self.yw_mean - self.b1w * self.xw_mean
+
+		# # Eq. 21
+		# self.s_xyw_err = np.sum(self.w * (self.y - self._yw_hat(self.x))**2)
+		# self.s_xyw_err /= (self.n - 2.0) 
+		self.s_xyw_err = self._get_s_xyw()
 
 		# Eq. 19
 		self.b0w_err = (1.0/np.sum(self.w) + self.xw_mean**2 / self.xwi_xmean_sum) 
@@ -350,31 +351,33 @@ def _test_simple_line_fit():
 	# Generates signal with noise
 	a = 0.65
 	b = 1.1
-	N = 10
+	N = 5
 	x = np.linspace(0, 5, N)
 	signal_spread = 0.5
 	signal = a*x + b + np.random.uniform(-signal_spread, signal_spread, N)
 	signal_err = np.random.uniform(0.1, 0.3, N)
 
-	fit = LineFit(x, signal, signal_err)
-	x_hat = np.linspace(0, 5, 100)
-
-	# Unweigthed fit
-	y_hat, y_hat_err, f_params, chi_unweigthed = fit.fit(x_hat)
-	b0, b0_err, b1, b1_err = f_params
-
 	# Fits without any weights first
 	pol1, polcov1 = sciopt.curve_fit(lambda x, a, b : x*a + b, x, signal)
-
-	# Fit target
-	fit_target = 2.5
-	x_fit, x_fit_err = fit.inverse_fit(fit_target)
 
 	# Numpy polyfit
 	# polyfit1, polyfitcov1 = np.polyfit(x, signal, 1, cov=True)
 	# polyfit_err = np.sqrt(np.diag(polyfitcov1))
 	polyfit1, polyfitcov1 = np.polyfit(x, signal, 1, cov=True)
 	polyfit_err = np.sqrt(np.diag(polyfitcov1))
+
+	fit = LineFit(x, signal, signal_err)
+	x_hat = np.linspace(0, 5, 100)
+
+	# fit.set_fit_parameters(polyfit1[0], polyfit_err[0], polyfit1[1], polyfit_err[1], weighted=False)
+
+	# Unweigthed fit
+	y_hat, y_hat_err, f_params, chi_unweigthed = fit.fit(x_hat)
+	b0, b0_err, b1, b1_err = f_params
+
+	# Fit target
+	fit_target = 2.5
+	x_fit, x_fit_err = fit.inverse_fit(fit_target)
 
 	print "UNWEIGTHED LINE FIT"
 	print "Numpy polyfit:"
@@ -419,6 +422,8 @@ def _test_simple_line_fit():
 	print _fit_var_printer("a", polw[0], polcovw[0,0])
 	print _fit_var_printer("b", polw[1], polcovw[1,1])
 
+	# fit.set_fit_parameters(polyfit1[0], polyfit_err[0], polyfit1[1], polyfit_err[1], weighted=True)
+
 	# Weighted LineFit
 	yw_hat, yw_hat_err, f_params_weigthed, chi_weigthed = fit.fit_weighted(x_hat)
 	b0, b0_err, b1, b1_err = f_params_weigthed
@@ -446,41 +451,76 @@ def _test_inverse_line_fit():
 	"""
 	Function for testing the inverse line fit.
 	"""
-	import random
 	import scipy.optimize as sciopt
+
+	np.random.seed(1)
 
 	# Generates signal with noise
 	x_start = 0
 	x_end = 5
 	a = 0.65
 	b = 1.1
-	N = 50
+	N = 10
 	M = 10 # Number of data points at each point
 	x = np.linspace(x_start, x_end, N)
 	x_matrix = (np.ones((M, N)) * x)
-	signal_spread = 0.5
-	signal = np.random.uniform(-signal_spread, signal_spread, (M, N)) + a*x_matrix + b
+	signal_spread = 5
+	signal = np.cos(np.random.uniform(-signal_spread, signal_spread, (M, N))) + a*x_matrix + b
 	signal_err = np.std(signal, axis=0)
 	signal_mean = np.mean(signal, axis=0)
-	# signal = a*x + b + np.random.uniform(-signal_spread, signal_spread, N)
-	# signal_err = np.random.uniform(0.1, 0.3, N)
 
 	# My line fit
 	x_hat = np.linspace(x_start, x_end, 100)
 
 	print signal.shape, x.shape, x_matrix.shape, np.cov(signal.T).shape
 
+	# print np.cov(signal.T, bias=True)
+
+	# w = signal_err
+	# v1 = np.sum(w)
+	# v2 = np.sum(w**2)
+	# m = signal - np.sum(signal*w, axis=1, keepdims=True) / v1
+	# cov = np.dot(m*w, m.T) * v1 / (v1**2 - M * v2)
+	# print cov
+
+	def covariance(M, bias=False):
+		"""
+		Method for determining coveriance.
+
+		Equivalent to:
+			np.cov(M.T, bias=True)
+		"""
+		_bias_correction = 0
+		if bias: _bias_correction = 1
+		NObs, NVar = M.shape
+		sigma_matrix = np.zeros((N, N))
+		M_mean = np.mean(M, axis=0)
+		for i in range(NVar):
+			v1 = M.T[i] - M_mean[i]
+			for j in range(NVar):
+				v2 = M.T[j] - M_mean[j]				
+				sigma_matrix[i,j] = np.sum(v1*v2)/(NObs - _bias_correction)
+		return sigma_matrix
+
+	if not (np.abs(covariance(signal) - np.cov(signal.T, bias=True)) < 1e-16).all(): print "covariances not equivalent"
+
 	def _f(_x, a, b):
 		# print (_x*a + b).shape
 		return _x*a + b
 
-	print sciopt.least_squares.__doc__
+	import symfit as sf
+
+
 	# Unweigthed fit
-	# pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=signal_err)
-	pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=np.cov(signal.T))
+	_a, _b = sf.parameters('a,b')
+	_x, _y = sf.variables('x,y')
+	res = sf.Fit({_y: _a * _x + _b}, x=x, y=signal_mean, sigma_y=signal_err)
+	print res
+	# pol1, polcov1 = sciopt.curve_fit(_f, x, signal, sigma=np.cov(signal))
+	# pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=np.cov(signal.T))
 
 
-	# pol1, polcov1 = np.polyfit(x, signal.T, 1, cov=True)
+	pol1, polcov1 = np.polyfit(x, signal_mean, 1, cov=True, w=1/signal_err)
 	# print pol1.shape
 	# print polcov1.shape
 

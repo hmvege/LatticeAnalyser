@@ -35,11 +35,13 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 	def effMass(self, Q, axis=0):
 		"""Correlator for qtq0."""
 		return np.log(Q/np.roll(Q, -1, axis=axis))
+		# return np.log(np.roll(Q, -1, axis=axis)/Q)
 
 	def effMass_err(self, Q, dQ, axis=0):
 		"""Correlator for qtq0 with error propagation."""
 		q = np.roll(Q, -1, axis=axis)
 		dq = np.roll(dQ, -1, axis=axis)
+		# return np.sqrt((dQ/Q)**2 + (dq/q)**2 - 2*dq*dQ/(q*Q))
 		return np.sqrt((dQ/Q)**2 + (dq/q)**2 - 2*dq*dQ/(q*Q))
 
 	def analyse_raw(self, data_raw):
