@@ -19,8 +19,15 @@ class TopsusCore(PostCore):
 	x_label_continuum = r"$a^2/t_0$"
 
 	def plot_continuum(self, fit_target, title_addendum=""):
-		# Gets the beta values
+		"""
+		Method for plotting the continuum limit of topsus at a given 
+		fit_target.
 
+		Args:
+			fit_target: float, value of where we extrapolate from.
+			title_addendum: str, optional, default is an empty string, ''. 
+				Adds string to end of title.
+		"""
 		if fit_target == -1:
 			fit_target = self.plot_values[max(self.plot_values)]["x"][-1]
 
@@ -49,6 +56,9 @@ class TopsusCore(PostCore):
 		continuum_fit = LineFit(a_squared, obs, obs_err)
 
 		y_cont, y_cont_err, fit_params, chi_squared = continuum_fit.fit_weighted(a_squared_cont)
+		self.chi_squared = chi_squared
+		self.fit_params = fit_params
+		self.fit_target = fit_target
 
 		# continuum_fit.plot(True)
 
@@ -98,7 +108,8 @@ class TopsusCore(PostCore):
 		ax.legend()
 		ax.grid(True)
 
-		# print "Target: %.16f +/- %.16f" % (c[0], y0_err[0])
+		if self.verbose:
+			print "Target: %.16f +/- %.16f" % (y0[0], (y0_err_lower + y0_err_upper)/2.0)
 
 		# Saves figure
 		fname = os.path.join(self.output_folder_path, 
@@ -106,19 +117,26 @@ class TopsusCore(PostCore):
 				str(fit_target).replace(".",""), self.analysis_data_type))
 		fig.savefig(fname, dpi=self.dpi)
 
-		print "Continuum plot of %s created in %s" % (self.observable_name.lower(), fname)
-		# plt.show()
+		if self.verbose:
+			print "Continuum plot of %s created in %s" % (self.observable_name.lower(), fname)
 		plt.close(fig)
 
 		self.print_continuum_estimate()
 
+	def get_linefit_parameters(self):
+		"""Returns the chi^2, a, a_err, b, b_err."""
+		return self.chi_squared, self.fit_params, self.chi_continuum, \
+			self.chi_continuum_error[0], self.NF, self.NF_error, \
+			self.fit_target, None
+
 	def print_continuum_estimate(self):
 		"""Prints the NF from the Witten-Veneziano formula."""
-		NF, NF_error = witten_veneziano(self.chi_continuum, self.chi_continuum_error[0])
-		msg = "\n    Chi = %.16f" % self.chi_continuum
-		msg += "\n    Chi_error = %.16f" % self.chi_continuum_error[0]
-		msg += "\n    N_f = %.16f" % NF
-		msg += "\n    N_f_error = %.16f" % NF_error
+		self.NF, self.NF_error = witten_veneziano(self.chi_continuum, self.chi_continuum_error[0])
+		msg =  "\n    Topsus = %.16f" % self.chi_continuum
+		msg += "\n    Topsus_error = %.16f" % self.chi_continuum_error[0]
+		msg += "\n    N_f = %.16f" % self.NF
+		msg += "\n    N_f_error = %.16f" % self.NF_error
+		msg += "\n    Chi^2 = %.16f" % self.chi_squared
 		msg += "\n"
 		print msg 
 

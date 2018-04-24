@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.stats
@@ -17,7 +19,8 @@ class LineFit:
 		self.x_upper = np.max(self.x)
 
 		# Sets weigths regardless if they are to be used or not.
-		self.w = self._get_weights(self.y_err)
+		if not isinstance(y_err, types.NoneType):
+			self.w = self._get_weights(self.y_err)
 
 		self.inverse_fit_performed = False
 
@@ -69,7 +72,7 @@ class LineFit:
 		fit_params = [self.b0, self.b0_err, self.b1, self.b1_err]
 
 		# Goodness of fit
-		self.chi = self._chi_squared(self.y, self.y_err, self._y_hat(self.x))
+		self.chi = self.chi_squared(self.y, self.y_err, self._y_hat(self.x))
 
 		self.x_fit = x_arr
 		self.y_fit = self._y_hat(x_arr)
@@ -138,7 +141,7 @@ class LineFit:
 		fit_params = [self.b0w, self.b0w_err, self.b1w, self.b1w_err]
 
 		# Goodness of fit
-		self.chi_w = self._chi_squared(self.y, self.y_err, self._yw_hat(self.x))
+		self.chi_w = self.chi_squared(self.y, self.y_err, self._yw_hat(self.x))
 
 		# Stores variables for later possible use
 		self.xw_fit = x_arr
@@ -223,12 +226,11 @@ class LineFit:
 		"""Returns the fitted function at x."""
 		if weighted:
 			y_fit, y_fit_err = self._yw_hat(x), self._yw_hat_err(x)
-			return y_fit, y_fit_err, self._chi_squared(self.y, self.y_err, 
+			return y_fit, y_fit_err, self.chi_squared(self.y, self.y_err, 
 				self._yw_hat(self.x))
 		else:
 			y_fit, y_fit_err = self._y_hat(x), self._y_hat_err(x)
-			return y_fit, y_fit_err, self._chi_squared(self.y, self.y_err, 
-				self._y_hat(self.x))
+			return y_fit, y_fit_err
 
 
 	def inverse_fit(self, y0, weigthed=False):
@@ -276,9 +278,11 @@ class LineFit:
 
 		return x0, x0_err
 
-	def _chi_squared(self, y, y_err, y_fit):
+	def chi_squared(self, y, y_err, y_fit, n=None):
 		"""Goodness test of fit."""
-		return np.sum((y - y_fit)**2 / y_err**2) / (self.n - 2.0)
+		if isinstance(n, types.NoneType):
+			n = self.n
+		return np.sum((y - y_fit)**2 / y_err**2) / (n - 2.0)
 
 	def plot(self, weighted=False):
 		"""Use full function for quickly checking the fit."""
@@ -460,91 +464,137 @@ def _test_inverse_line_fit():
 	x_end = 5
 	a = 0.65
 	b = 1.1
-	N = 10
-	M = 10 # Number of data points at each point
+	N = 10 # Number of data points
+	M = 40 # Number of observations at each data point
 	x = np.linspace(x_start, x_end, N)
-	x_matrix = (np.ones((M, N)) * x)
+	x_matrix = np.ones((M, N)) * x
 	signal_spread = 5
 	signal = np.cos(np.random.uniform(-signal_spread, signal_spread, (M, N))) + a*x_matrix + b
 	signal_err = np.std(signal, axis=0)
 	signal_mean = np.mean(signal, axis=0)
 
 	# My line fit
-	x_hat = np.linspace(x_start, x_end, 100)
+	x_hat = np.linspace(x_start, x_end, 10)
 
-	print signal.shape, x.shape, x_matrix.shape, np.cov(signal.T).shape
+	# def covariance(M, bias=False):
+	# 	"""
+	# 	Method for determining coveriance.
 
-	# print np.cov(signal.T, bias=True)
-
-	# w = signal_err
-	# v1 = np.sum(w)
-	# v2 = np.sum(w**2)
-	# m = signal - np.sum(signal*w, axis=1, keepdims=True) / v1
-	# cov = np.dot(m*w, m.T) * v1 / (v1**2 - M * v2)
-	# print cov
-
-	def covariance(M, bias=False):
-		"""
-		Method for determining coveriance.
-
-		Equivalent to:
-			np.cov(M.T, bias=True)
-		"""
-		_bias_correction = 0
-		if bias: _bias_correction = 1
-		NObs, NVar = M.shape
-		sigma_matrix = np.zeros((N, N))
-		M_mean = np.mean(M, axis=0)
-		for i in range(NVar):
-			v1 = M.T[i] - M_mean[i]
-			for j in range(NVar):
-				v2 = M.T[j] - M_mean[j]				
-				sigma_matrix[i,j] = np.sum(v1*v2)/(NObs - _bias_correction)
-		return sigma_matrix
-
-	if not (np.abs(covariance(signal) - np.cov(signal.T, bias=True)) < 1e-16).all(): print "covariances not equivalent"
+	# 	Equivalent to:
+	# 		np.cov(M.T, bias=True)
+	# 	"""
+	# 	_bias_correction = 0
+	# 	if bias: _bias_correction = 1
+	# 	NObs, NVar = M.shape
+	# 	sigma_matrix = np.zeros((N, N))
+	# 	M_mean = np.mean(M, axis=0)
+	# 	for i in range(NVar):
+	# 		v1 = M.T[i] - M_mean[i]
+	# 		for j in range(NVar):
+	# 			v2 = M.T[j] - M_mean[j]				
+	# 			sigma_matrix[i,j] = np.sum(v1*v2)/(NObs - _bias_correction)
+	# 	return sigma_matrix
+	# if not (np.abs(covariance(signal) - np.cov(signal.T, bias=True)) < 1e-16).all(): print "covariances not equivalent"
 
 	def _f(_x, a, b):
-		# print (_x*a + b).shape
 		return _x*a + b
 
-	import symfit as sf
+	###############################
+	######## Bootstrap fit ########
+	###############################
+	N_bs = 50
+	random_fit_indexes = np.random.randint(0, M, size=(N_bs, M, N))
+
+	print "random_fit_indexes.shape: ", random_fit_indexes.shape
+	print "signal.shape: ", signal.shape
+	bs_signals = np.zeros((N_bs, N))
+	for i_bs in xrange(N_bs):
+		for j in xrange(N):
+			bs_signals[i_bs,j] = signal[random_fit_indexes[i_bs,:,j], j].mean()
+
+	bs_vals = []
+	bs_vals_err = []
+
+	fig_bs = plt.figure()
+	ax_bs = fig_bs.add_subplot(111)
+	for bs_signal in bs_signals:
+		p, pcov = sciopt.curve_fit(_f, x, bs_signal)#, sigma=np.cov(bs_signals.T))
+		_fit_err = np.sqrt(np.diag(pcov))
+		_lfit = LineFit(x, bs_signal)
+		_lfit.set_fit_parameters(p[1], _fit_err[0], p[0], _fit_err[0], weighted=False)
+		_y_hat, _y_hat_err = _lfit(x_hat, weighted=False)
+
+		bs_vals.append(_y_hat)
+		bs_vals_err.append(_y_hat_err)
+
+		ax_bs.fill_between(x_hat, _y_hat_err[0], _y_hat_err[1], alpha=0.01, color="tab:red")
+		ax_bs.plot(x_hat, _y_hat, label="Numpy curve fit", color="tab:red", alpha=0.1)
+
+	bs_mean = np.asarray(bs_vals).mean(axis=0)
+	bs_std = np.asarray(bs_vals_err).mean(axis=0)
+
+	lf = LineFit(x, signal_mean, signal_err)
+	print "Bootstrap Chi^2: ", lf.chi_squared(signal_mean, signal_err, bs_mean, n=N)
+
+	# Sets up bs std edges
+	ax_bs.plot(x_hat, bs_std[0], x_hat, bs_std[1], color="tab:blue", alpha=0.6)
+
+	# Plots bs mean
+	ax_bs.plot(x_hat, bs_mean, label="Averaged bootstrap fit", color="tab:blue")
+
+	# Plots original data with error bars
+	ax_bs.errorbar(x, signal_mean, yerr=signal_err, marker=".", linestyle="none", color="tab:orange")
+
+	# plt.show()
+
+	# exit(1)
 
 
-	# Unweigthed fit
-	_a, _b = sf.parameters('a,b')
-	_x, _y = sf.variables('x,y')
-	res = sf.Fit({_y: _a * _x + _b}, x=x, y=signal_mean, sigma_y=signal_err)
-	print res
-	# pol1, polcov1 = sciopt.curve_fit(_f, x, signal, sigma=np.cov(signal))
+	# import symfit as sf
+	# _a, _b = sf.parameters('a,b')
+	# _x, _y = sf.variables('x,y')
+	# res = sf.Fit({_y: _a * _x + _b}, x=x, y=signal_mean, sigma_y=signal_err)
+	# print res
+
+	## Unweigthed fit
+	# print help(sciopt.curve_fit)
 	# pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=np.cov(signal.T))
+	# pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=np.cov(signal.T))
+	# print scipy.optimize.__all__
 
+	# pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=signal_err, absolute_sigma=True)
+	pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=signal_err, absolute_sigma=True)
+	# pol1, polcov1 = scipy.optimize.curve_fit(_f, x, signal_mean)
 
-	pol1, polcov1 = np.polyfit(x, signal_mean, 1, cov=True, w=1/signal_err)
-	# print pol1.shape
-	# print polcov1.shape
+	# pol1, polcov1 = np.polyfit(x, signal_mean, 1, cov=True, w=1/signal_err)
+	print pol1
+	print polcov1
 
 	# fit_par = np.mean(pol1, axis=1)
-	# fit_cov = np.mean(polcov1, axis=2)
+	# fit_err = np.mean(polcov1, axis=2)
 	fit_par = pol1
-	fit_cov = polcov1
+	fit_err = np.sqrt(np.diag(polcov1))
 
 	# print np.cov(signal_mean.T)
-	lfit = LineFit(x, signal_mean, signal_err)
+	lfit = LineFit(x, signal_mean, y_err=signal_err)
 	# lfit.set_fit_parameters(pol1[1], np.sqrt(polcov1[1,1]), pol1[0], np.sqrt(polcov1[0,0]), weighted=True)
-	lfit.set_fit_parameters(fit_par[1], np.sqrt(fit_cov[1,1]), fit_par[0], np.sqrt(fit_cov[0,0]), weighted=True)
+	# lfit.set_fit_parameters(fit_par[1], fit_err[1], fit_par[0], fit_err[0], weighted=True)
+	lfit.fit_weighted(x_arr=x_hat)
 	y_hat, y_hat_err, chi_squared = lfit(x_hat, weighted=True)
+	print "Regular weighted fit Chi^2: ", chi_squared
 
 	fig1 = plt.figure()
 	ax1 = fig1.add_subplot(111)
 	ax1.plot(x_hat, y_hat, label="Numpy curve fit", color="tab:blue")
 	ax1.fill_between(x_hat, y_hat_err[0], y_hat_err[1], alpha=0.5, color="tab:blue")
-	ax1.errorbar(x, signal_mean, yerr=signal_err, marker="o", label=r"Signal $\chi=%.2f$" % chi_squared, linestyle="none", color="tab:orange")
+	ax1.errorbar(x, signal_mean, yerr=signal_err, marker=".",
+		label=r"Signal $\chi=%.2f$" % chi_squared, linestyle="none", 
+		color="tab:orange")
 	ax1.set_ylim(0.5, 5)
 	# ax1.axvline(x_fit, color="tab:orange")
 	# ax1.fill_betweenx(np.linspace(0,6,100), x_fit_err[0], x_fit_err[1], label=r"$x_0\pm\sigma_{x_0}$", alpha=0.5, color="tab:orange")
 	ax1.legend(loc="best", prop={"size":8})
-	ax1.set_title("Fit test with curve_fit parameters")
+	ax1.set_title(r"Fit test: $a=%.2f\pm%.4f, b=%.2f\pm%.4f$" % (fit_par[0], fit_err[0], fit_par[1], fit_err[1]))
 
 	plt.show()
 	# fit = LineFit(x, signal, signal_err)

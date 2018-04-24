@@ -34,6 +34,7 @@ class PostCore(object):
 		6.2: "#bc232e", # red
 		6.45: "#8519b7" # purple
 	}
+	interval = None
 
 	def __init__(self, data, with_autocorr=True, figures_folder="../figures", verbose=False, dryrun=False):
 		if with_autocorr:
@@ -50,9 +51,6 @@ class PostCore(object):
 		self.flow_time = data.flow_time
 
 		self.data = {}
-		# self.unanalyzed_data = {}
-		# self.bootstrap_data	= {}
-		# self.jackknife_data = {}
 
 		self.beta_values = sorted(data.beta_values)
 
@@ -102,11 +100,6 @@ class PostCore(object):
 			else:
 				self.data_raw[key] = data.raw_analysis[key]
 
-		# self.unanalyzed_raw = data.raw_analysis["unanalyzed"]
-		# self.bs_raw = data.raw_analysis["bootstrap"]
-		# self.jk_raw = data.raw_analysis["jackknife"]
-		# self.ac_corrections	= data.raw_analysis["autocorrelation"]
-
 		# Small test to ensure that the number of bootstraps and number of different beta batches match
 		err_msg = "Number of bootstraps do not match number of different beta values"
 		assert np.asarray([get_NBoots(self.data_raw["bootstrap"][i]) for i in self.data_raw["bootstrap"].keys()]).all(), err_msg
@@ -146,7 +139,7 @@ class PostCore(object):
 			values["a"] = get_lattice_spacing(beta)
 			values["x"] = values["a"]* np.sqrt(8*self.flow_time)
 			values["y"] = data[beta]["y"]
-			values["bs"] = data_raw[beta][self.observable_name_compact]
+			# values["bs"] = data_raw[beta][self.observable_name_compact]
 			values["y_err"] = data[beta]["y_error"]
 			values["label"] = r"%s $\beta=%2.2f$" % (self.size_labels[beta], beta)
 			values["color"] = self.colors[beta]

@@ -1,606 +1,705 @@
-from pre_analysis import *
-from post_analysis import *
-from tools.folderreadingtools import DataReader
-from tools.postanalysisdatareader import PostAnalysisDataReader
-import statistics.parallel_tools as ptools
-import os
-import numpy as np
+#!/usr/bin/env python2
+
+from pre_analysis.pre_analyser import pre_analysis
+from post_analysis.post_analyser import post_analysis
 import copy
-import sys
-import time
+# from tools.folderreadingtools import DataReader
+# from tools.postanalysisdatareader import PostAnalysisDataReader
+# import os
+# import numpy as np
+# import sys
+# import time
+# import types
+# from collections import OrderedDict
 
 # import pre_analyser as pa
 # print help(pa), dir(pa)
 
-def analyse_default(analysis_object, N_bs, NBins=30, skip_histogram=False,
-	bs_index_lists=None):
-	"""Default analysis method for pre-analysis."""
-	print analysis_object
-	analysis_object.boot(N_bs, index_lists=bs_index_lists)
-	analysis_object.jackknife()
-	analysis_object.save_post_analysis_data()
-	analysis_object.plot_original()
-	analysis_object.plot_boot()
-	analysis_object.plot_jackknife()
-	analysis_object.autocorrelation()
-	analysis_object.plot_autocorrelation(0)
-	analysis_object.plot_autocorrelation(-1)
-	analysis_object.plot_mc_history(0)
-	analysis_object.plot_mc_history(int(analysis_object.NFlows * 0.25))
-	analysis_object.plot_mc_history(int(analysis_object.NFlows * 0.50))
-	analysis_object.plot_mc_history(int(analysis_object.NFlows * 0.75))
-	analysis_object.plot_mc_history(-1)
-	analysis_object.plot_original()
-	analysis_object.plot_boot()
-	analysis_object.plot_jackknife()
-	if not skip_histogram:
-		# Plots histogram at the beginning, during and end.
-		hist_pts = [0, 
-			int(analysis_object.NFlows * 0.25), 
-			int(analysis_object.NFlows * 0.50), 
-			int(analysis_object.NFlows * 0.75), -1
-		]
-		for iHist in hist_pts:
-			analysis_object.plot_histogram(iHist, NBins=NBins)
-		analysis_object.plot_multihist([hist_pts[0], hist_pts[2], hist_pts[-1]],
-			NBins=NBins)
-	analysis_object.plot_integrated_correlation_time()
-	analysis_object.plot_integrated_correlation_time()
-	analysis_object.save_post_analysis_data() # save_as_txt=False
-
-def analyse_plaq(params):
-	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params 
-	plaq_analysis = PlaquetteAnalyser(obs_data("plaq"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
-	analyse_default(plaq_analysis, N_bs)
-
-def analyse_energy(params):
-	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params 
-	energy_analysis = EnergyAnalyser(obs_data("energy"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
-	analyse_default(energy_analysis, N_bs)
-
-def analyse_topsus(params):
-	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params 
-	topsus_analysis = TopsusAnalyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
-	analyse_default(topsus_analysis, N_bs)
-
-def analyse_topc(params):
-	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params 
-	topc_analysis = TopcAnalyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
-
-	if topc_analysis.beta == 6.0:
-		topc_analysis.y_limits = [-9, 9]
-	elif topc_analysis.beta == 6.1:
-		topc_analysis.y_limits = [-12, 12]
-	elif topc_analysis.beta == 6.2:
-		topc_analysis.y_limits = [-12, 12]
-	else:
-		topc_analysis.y_limits = [None, None]
-
-	analyse_default(topc_analysis, N_bs, NBins=150)
-
-def analyse_topc2(params):
-	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params 
-	topc2_analysis = Topc2Analyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
-
-	if topc2_analysis.beta == 6.0:
-		topc2_analysis.y_limits = [-81, 81]
-	elif topc2_analysis.beta == 6.1:
-		topc2_analysis.y_limits = [-144, 144]
-	elif topc2_analysis.beta == 6.2:
-		topc2_analysis.y_limits = [-196, 196]
-	else:
-		topc2_analysis.y_limits = [None, None]
-
-	analyse_default(topc2_analysis, N_bs, NBins=150)
-
-def analyse_topc4(params):
-	"""Analysis the topological chage with q^4."""
-	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
-	topc4_analysis = Topc4Analyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
-	analyse_default(topc4_analysis, N_bs)
-
-def analyse_topcr(params):
-	"""
-	Analysis of the ratio with R=q4c/q2 of the topological charge. Performs an
-	analysis on Q^2 and Q^4 with the same bootstrap samples, such that an post
-	analysis can be performed on these explisitly.
-	"""
-	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
-	# topcr_analysis = TopcrAnalyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
-
-	topc2_analysis = Topc2Analyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
-	topc4_analysis = Topc4Analyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
-
-	N_cfgs_topc2 = topc2_analysis.N_configurations
-	N_cfgs_topc4 = topc4_analysis.N_configurations
-	assert N_cfgs_topc2 == N_cfgs_topc4, "NCfgs differ in topc2 and topc4."
-	bs_index_lists = np.random.randint(N_cfgs_topc2,
-		size=(N_bs, N_cfgs_topc2))
-
-	analyse_default(topc2_analysis, N_bs, NBins=150, bs_index_lists=bs_index_lists)
-	analyse_default(topc4_analysis, N_bs, bs_index_lists=bs_index_lists)
-
-def analyse_topsus4(params):
-	"""Analysis topological susceptiblity with q^4."""
-	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
-	topsus4_analysis = Topsus4Analyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
-	analyse_default(topsus4_analysis, N_bs)
-
-def analyse_topsus_qtq0(params, q0_flow_times):
-	"""
-	Analysis the topological susceptiblity with one charge q0 set a given 
-	flow time.
-	"""
-	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
-
-	qtq0_analysis = TopsusQtQ0Analyser(obs_data("topc"), dryrun=dryrun,
-		parallel=parallel, numprocs=numprocs, verbose=verbose)
-
-	for q0_flow_time_percent in q0_flow_times:
-		qtq0_analysis.setQ0(q0_flow_time_percent) 
-		analyse_default(qtq0_analysis, N_bs, skip_histogram=True)
-
-def analyse_qtq0e(params, flow_time_indexes, euclidean_time_percents):
-	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
-
-	qtq0_analysis = QtQ0EuclideanAnalyser(obs_data("topct"), dryrun=dryrun,
-		parallel=parallel, numprocs=numprocs, verbose=verbose)
-
-	for flow_time_index in flow_time_indexes:
-		for euclidean_percent in euclidean_time_percents:
-			qtq0_analysis.set_time(flow_time_index, euclidean_percent)
-			analyse_default(qtq0_analysis, N_bs)
-
-def analyse_qtq0_effective_mass(params, flow_time_indexes):
-	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
-
-	qtq0eff_analysis = QtQ0EffectiveMassAnalyser(obs_data("topct"), dryrun=dryrun,
-		parallel=parallel, numprocs=numprocs, verbose=verbose)
-
-	for flow_time_index in flow_time_indexes:
-		qtq0eff_analysis.set_time(flow_time_index)
-		analyse_default(qtq0eff_analysis, N_bs)
-
-def analyse_topct(params, numsplits):
-	"""Analyses topological charge at a specific euclidean time."""
-	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
-
-	topct_analysis = TopctAnalyser(obs_data("topct"),
-		dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
-
-	indexes = np.linspace(0, topct_analysis.NT, numsplits, dtype=int) - 1
-	indexes[0] += 1
-	for ie in indexes:
-		topct_analysis.setEQ0(ie)
-		analyse_default(topct_analysis, N_bs)
-
-def analyse_topsust(params, numsplits):
-	"""Analyses topological susceptibility at a specific euclidean time."""
-	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
-
-	topct_analysis = TopsustAnalyser(obs_data("topct"),
-		dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
-
-	indexes = np.linspace(0, topct_analysis.NT, numsplits, dtype=int) - 1
-	indexes[0] += 1
-	for ie in indexes:
-		topct_analysis.setEQ0(ie)
-		analyse_default(topct_analysis, N_bs, skip_histogram=True)
-
-def analyse_topcte_intervals(params, numsplits=None, intervals=None):
-	"""
-	Analysis function for the topological charge in euclidean time intervals. 
-	Requires either numsplits or intervals.
-
-	Args:
-		params: list of default parameters containing obs_data, dryrun, 
-			parallel, numprocs, verbose, N_bs.
-		numsplits: number of splits to make in the dataset. Default is None.
-		intervals: intervals to plot in. Default is none.
-	"""
-	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
-
-	analyse_topcte = TopcteIntervalAnalyser(obs_data("topct"),
-		dryrun=dryrun, parallel=parallel, 
-		numprocs=numprocs, verbose=verbose)
-
-	# Sets up the intervals
-	if (intervals == numsplits == None) or (intervals != None and numsplits != None):
-		raise KeyError("Either provide intervals to plot for or the number of intervals to split into.")
-
-	NT = analyse_topcte.NT
-	if intervals == None:
-		split_interval = NT/numsplits
-		intervals = zip(
-			range(0, NT+1, split_interval), 
-			range(split_interval, NT+1, split_interval)
-		)
-		assert NT % numsplits == 0, "Bad number of splits: NT % numplits = %d " % (NT % numsplits)
-
-	t_interval = iter(intervals)
-
-	for t_int in t_interval:
-		analyse_topcte.set_t_interval(t_int)
-		analyse_default(analyse_topcte, N_bs)
-
-def analyse_topsuste_intervals(params, numsplits=None, intervals=None):
-	"""
-	Analysis function for the topological susceptibility in euclidean time. 
-	Requires either numsplits or intervals.
-
-	Args:
-		params: list of default parameters containing obs_data, dryrun, 
-			parallel, numprocs, verbose, N_bs.
-		numsplits: number of splits to make in the dataset. Default is None.
-		intervals: intervals to plot in. Default is none.
-	"""
-	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
-
-	analyse_topsuste = TopsusteIntervalAnalyser(obs_data("topct"),
-		dryrun=dryrun, parallel=parallel, 
-		numprocs=numprocs, verbose=verbose)
-
-	# Sets up the intervals
-	if (intervals == numsplits == None) or (intervals != None and numsplits != None):
-		raise KeyError("Either provide intervals to plot for or the number of intervals to split into.")
-
-	NT = analyse_topsuste.NT
-	if intervals == None:
-		split_interval = NT/numsplits
-		intervals = zip(
-			range(0, NT+1, split_interval), 
-			range(split_interval, NT+1, split_interval)
-		)
-		assert NT % numsplits == 0, "Bad number of splits: NT % numplits = %d " % (NT % numsplits)
-
-	t_interval = iter(intervals)
-
-	for t_int in t_interval:
-		analyse_topsuste.set_t_interval(t_int)
-		analyse_default(analyse_topsuste, N_bs)
-
-
-def analyse_topcMCTime(params, numsplits=None, intervals=None):
-	"""Analysis the topological charge in monte carlo time slices."""
-	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
-
-	analyse_topcMC = TopcMCIntervalAnalyser(obs_data("topc"),
-		dryrun=dryrun, parallel=parallel,
-		numprocs=numprocs, verbose=verbose)
-
-	# Sets up the intervals
-	if (intervals == numsplits == None) or (intervals != None and numsplits != None):
-		raise KeyError("Either provide MC intervals to plot for or the number of MC intervals to split into.")
-
-	NCfgs = analyse_topcMC.N_configurations
-	if intervals == None:
-		split_interval = NCfgs/numsplits
-		intervals = zip(
-			range(0, NCfgs+1, split_interval), 
-			range(split_interval, NCfgs+1, split_interval)
-		)
-		assert NCfgs % numsplits == 0, "Bad number of splits: NCfgs % numplits = %d " % (NCfgs % numsplits)
-
-	MC_interval = iter(intervals)
-
-	for MC_int in MC_interval:
-		analyse_topcMC.set_MC_interval(MC_int)
-		analyse_default(analyse_topcMC, N_bs)
-
-def analyse_topsusMCTime(params, numsplits=None, intervals=None):
-	"""Analysis the topological susceptibility in monte carlo time slices."""
-	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
-
-	analyse_topcMC = TopsusMCIntervalAnalyser(obs_data("topc"),
-		dryrun=dryrun, parallel=parallel,
-		numprocs=numprocs, verbose=verbose)
-
-	# Sets up the intervals
-	if (intervals == numsplits == None) or (intervals != None and numsplits != None):
-		raise KeyError("Either provide MC intervals to plot for or the number of MC intervals to split into.")
-
-	NCfgs = analyse_topcMC.N_configurations
-	if intervals == None:
-		split_interval = NCfgs/numsplits
-		intervals = zip(
-			range(0, NCfgs+1, split_interval), 
-			range(split_interval, NCfgs+1, split_interval)
-		)
-		assert NCfgs % numsplits == 0, "Bad number of splits: NCfgs % numplits = %d " % (NCfgs % numsplits)
-
-	MC_interval = iter(intervals)
-
-	for MC_int in MC_interval:
-		analyse_topcMC.set_MC_interval(MC_int)
-		analyse_default(analyse_topcMC, N_bs)
-
-def analyse(parameters):
-	"""
-	Function for starting flow analyses.
-
-	Args:
-		parameters: dictionary containing following elements: batch_name, 
-			batch_folder, observables, NCfgs, obs_file, load_file, 
-			save_to_binary, base_parameters, flow_epsilon, NFlows,
-			create_perflow_data, correct_energy
-	"""
-
-	# Analysis timers
-	pre_time = time.clock()
-	observable_strings = []
-
-	# Retrieves analysis parameters
-	batch_name = parameters["batch_name"]
-	batch_folder = parameters["batch_folder"]
-	figures_folder = parameters["figures_folder"]
-
-	_bp = parameters["base_parameters"]
-	_latsize = parameters["lattice_size"].items()[0]
-	parameters["lattice_sizes"][_latsize[0]] = _latsize[1]
-
-	# Retrieves data
-	obs_data = DataReader(batch_name, batch_folder, figures_folder, 
-		load_file=parameters["load_file"],
-		flow_epsilon=parameters["flow_epsilon"], NCfgs=parameters["NCfgs"],
-		create_perflow_data=parameters["create_perflow_data"],
-		verbose=_bp["verbose"], dryrun=_bp["dryrun"],
-		correct_energy=parameters["correct_energy"],
-		lattice_sizes=parameters["lattice_sizes"])
-
-	# Writes a parameters file for the post analysis
-	obs_data.write_parameter_file()
-
-	# Writes raw observable data to a single binary file
-	if parameters["save_to_binary"] and not parameters["load_file"]:
-		obs_data.write_single_file()
-	print "="*100
-
-	# Builds parameters list to be passed to analyser
-	params = [obs_data, _bp["dryrun"], _bp["parallel"], _bp["numprocs"], 
-		_bp["verbose"], _bp["N_bs"]]
-
-	# Runs through the different observables and analyses each one
-	if "plaq" in parameters["observables"]:
-		analyse_plaq(params)
-	if "energy" in parameters["observables"]:
-		analyse_energy(params)
-
-	# Topological charge definitions
-	if "topc" in parameters["observables"]:
-		analyse_topc(params)
-	if "topc2" in parameters["observables"]:
-		analyse_topc2(params)
-	if "topc4" in parameters["observables"]:
-		analyse_topc4(params)
-	if "topcr" in parameters["observables"]:
-		analyse_topcr(params)
-	if "topct" in parameters["observables"]:
-		analyse_topct(params, parameters["num_t_euclidean_indexes"])
-	if "topcte" in parameters["observables"]:
-		analyse_topcte_intervals(params, parameters["numsplits_eucl"], parameters["intervals_eucl"])
-	if "topcMC" in parameters["observables"]:
-		analyse_topcMCTime(params, parameters["MC_time_splits"])
-
-	# Topological susceptibility definitions
-	if "topsus" in parameters["observables"]:
-		analyse_topsus(params)
-	# if "topsus4" in parameters["observables"]:
-	# 	analyse_topsus4(params)
-	if "topsust" in parameters["observables"]:
-		analyse_topsust(params, parameters["num_t_euclidean_indexes"])
-	if "topsuste" in parameters["observables"]:
-		analyse_topsuste_intervals(params, parameters["numsplits_eucl"], parameters["intervals_eucl"])
-	if "topsusMC" in parameters["observables"]:
-		analyse_topsusMCTime(params, parameters["MC_time_splits"])
-	if "topsusqtq0" in parameters["observables"]:
-		analyse_topsus_qtq0(params, parameters["q0_flow_times"])
-
-	# Other definitions
-	if "qtq0e" in parameters["observables"]:
-		analyse_qtq0e(params, parameters["flow_time_indexes"], parameters["euclidean_time_percents"])
-	if "qtq0eff" in parameters["observables"]:
-		analyse_qtq0_effective_mass(params, parameters["eff_mass_flow_times"])
+# def analyse_default(analysis_object, N_bs, NBins=30, skip_histogram=False,
+# 	bs_index_lists=None):
+# 	"""Default analysis method for pre-analysis."""
+# 	print analysis_object
+# 	analysis_object.boot(N_bs, index_lists=bs_index_lists)
+# 	analysis_object.jackknife()
+# 	analysis_object.save_post_analysis_data()
+# 	analysis_object.plot_original()
+# 	analysis_object.plot_boot()
+# 	analysis_object.plot_jackknife()
+# 	analysis_object.autocorrelation()
+# 	analysis_object.plot_autocorrelation(0)
+# 	analysis_object.plot_autocorrelation(-1)
+# 	analysis_object.plot_mc_history(0)
+# 	analysis_object.plot_mc_history(int(analysis_object.NFlows * 0.25))
+# 	analysis_object.plot_mc_history(int(analysis_object.NFlows * 0.50))
+# 	analysis_object.plot_mc_history(int(analysis_object.NFlows * 0.75))
+# 	analysis_object.plot_mc_history(-1)
+# 	analysis_object.plot_original()
+# 	analysis_object.plot_boot()
+# 	analysis_object.plot_jackknife()
+# 	if not skip_histogram:
+# 		# Plots histogram at the beginning, during and end.
+# 		hist_pts = [0, 
+# 			int(analysis_object.NFlows * 0.25), 
+# 			int(analysis_object.NFlows * 0.50), 
+# 			int(analysis_object.NFlows * 0.75), -1
+# 		]
+# 		for iHist in hist_pts:
+# 			analysis_object.plot_histogram(iHist, NBins=NBins)
+# 		analysis_object.plot_multihist([hist_pts[0], hist_pts[2], hist_pts[-1]],
+# 			NBins=NBins)
+# 	analysis_object.plot_integrated_correlation_time()
+# 	analysis_object.plot_integrated_correlation_time()
+# 	analysis_object.save_post_analysis_data() # save_as_txt=False
+
+# def analyse_plaq(params):
+# 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params 
+# 	plaq_analysis = PlaquetteAnalyser(obs_data("plaq"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+# 	analyse_default(plaq_analysis, N_bs)
+
+# def analyse_energy(params):
+# 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params 
+# 	energy_analysis = EnergyAnalyser(obs_data("energy"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+# 	analyse_default(energy_analysis, N_bs)
+
+# def analyse_topsus(params):
+# 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params 
+# 	topsus_analysis = TopsusAnalyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+# 	analyse_default(topsus_analysis, N_bs)
+
+# def analyse_topc(params):
+# 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params 
+# 	topc_analysis = TopcAnalyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+
+# 	if topc_analysis.beta == 6.0:
+# 		topc_analysis.y_limits = [-9, 9]
+# 	elif topc_analysis.beta == 6.1:
+# 		topc_analysis.y_limits = [-12, 12]
+# 	elif topc_analysis.beta == 6.2:
+# 		topc_analysis.y_limits = [-12, 12]
+# 	else:
+# 		topc_analysis.y_limits = [None, None]
+
+# 	analyse_default(topc_analysis, N_bs, NBins=150)
+
+# def analyse_topc2(params):
+# 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params 
+# 	topc2_analysis = Topc2Analyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+
+# 	if topc2_analysis.beta == 6.0:
+# 		topc2_analysis.y_limits = [-81, 81]
+# 	elif topc2_analysis.beta == 6.1:
+# 		topc2_analysis.y_limits = [-144, 144]
+# 	elif topc2_analysis.beta == 6.2:
+# 		topc2_analysis.y_limits = [-196, 196]
+# 	else:
+# 		topc2_analysis.y_limits = [None, None]
+
+# 	analyse_default(topc2_analysis, N_bs, NBins=150)
+
+# def analyse_topc4(params):
+# 	"""Analysis the topological chage with q^4."""
+# 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
+# 	topc4_analysis = Topc4Analyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+# 	analyse_default(topc4_analysis, N_bs)
+
+# def analyse_topcr(params):
+# 	"""
+# 	Analysis of the ratio with R=q4c/q2 of the topological charge. Performs an
+# 	analysis on Q^2 and Q^4 with the same bootstrap samples, such that an post
+# 	analysis can be performed on these explisitly.
+# 	"""
+# 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
+# 	# topcr_analysis = TopcrAnalyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+
+# 	topc2_analysis = Topc2Analyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+# 	topc4_analysis = Topc4Analyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+
+# 	N_cfgs_topc2 = topc2_analysis.N_configurations
+# 	N_cfgs_topc4 = topc4_analysis.N_configurations
+# 	assert N_cfgs_topc2 == N_cfgs_topc4, "NCfgs differ in topc2 and topc4."
+# 	bs_index_lists = np.random.randint(N_cfgs_topc2,
+# 		size=(N_bs, N_cfgs_topc2))
+
+# 	analyse_default(topc2_analysis, N_bs, NBins=150, bs_index_lists=bs_index_lists)
+# 	analyse_default(topc4_analysis, N_bs, bs_index_lists=bs_index_lists)
+
+# def analyse_topsus4(params):
+# 	"""Analysis topological susceptiblity with q^4."""
+# 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
+# 	topsus4_analysis = Topsus4Analyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+# 	analyse_default(topsus4_analysis, N_bs)
+
+# def analyse_topsus_qtq0(params, q0_flow_times):
+# 	"""
+# 	Analysis the topological susceptiblity with one charge q0 set a given 
+# 	flow time.
+# 	"""
+# 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
+
+# 	qtq0_analysis = TopsusQtQ0Analyser(obs_data("topc"), dryrun=dryrun,
+# 		parallel=parallel, numprocs=numprocs, verbose=verbose)
+
+# 	for q0_flow_time_percent in q0_flow_times:
+# 		qtq0_analysis.setQ0(q0_flow_time_percent) 
+# 		analyse_default(qtq0_analysis, N_bs, skip_histogram=True)
+
+# def analyse_qtq0e(params, flow_time_indexes, euclidean_time_percents):
+# 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
+
+# 	qtq0_analysis = QtQ0EuclideanAnalyser(obs_data("topct"), dryrun=dryrun,
+# 		parallel=parallel, numprocs=numprocs, verbose=verbose)
+
+# 	for flow_time_index in flow_time_indexes:
+# 		for euclidean_percent in euclidean_time_percents:
+# 			qtq0_analysis.set_time(flow_time_index, euclidean_percent)
+# 			analyse_default(qtq0_analysis, N_bs)
+
+# def analyse_qtq0_effective_mass(params, flow_time_indexes):
+# 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
+
+# 	qtq0eff_analysis = QtQ0EffectiveMassAnalyser(obs_data("topct"), dryrun=dryrun,
+# 		parallel=parallel, numprocs=numprocs, verbose=verbose)
+
+# 	for flow_time_index in flow_time_indexes:
+# 		qtq0eff_analysis.set_time(flow_time_index)
+# 		analyse_default(qtq0eff_analysis, N_bs)
+
+# def analyse_topct(params, numsplits):
+# 	"""Analyses topological charge at a specific euclidean time."""
+# 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
+
+# 	topct_analysis = TopctAnalyser(obs_data("topct"),
+# 		dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+
+# 	indexes = np.linspace(0, topct_analysis.NT, numsplits, dtype=int) - 1
+# 	indexes[0] += 1
+# 	for ie in indexes:
+# 		topct_analysis.setEQ0(ie)
+# 		analyse_default(topct_analysis, N_bs)
+
+# def analyse_topsust(params, numsplits):
+# 	"""Analyses topological susceptibility at a specific euclidean time."""
+# 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
+
+# 	topct_analysis = TopsustAnalyser(obs_data("topct"),
+# 		dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+
+# 	indexes = np.linspace(0, topct_analysis.NT, numsplits, dtype=int) - 1
+# 	indexes[0] += 1
+# 	for ie in indexes:
+# 		topct_analysis.setEQ0(ie)
+# 		analyse_default(topct_analysis, N_bs, skip_histogram=True)
+
+# def analyse_topcte_intervals(params, numsplits=None, intervals=None):
+# 	"""
+# 	Analysis function for the topological charge in euclidean time intervals. 
+# 	Requires either numsplits or intervals.
+
+# 	Args:
+# 		params: list of default parameters containing obs_data, dryrun, 
+# 			parallel, numprocs, verbose, N_bs.
+# 		numsplits: number of splits to make in the dataset. Default is None.
+# 		intervals: intervals to plot in. Default is none.
+# 	"""
+# 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
+
+# 	analyse_topcte = TopcteIntervalAnalyser(obs_data("topct"),
+# 		dryrun=dryrun, parallel=parallel, 
+# 		numprocs=numprocs, verbose=verbose)
+
+# 	# Sets up the intervals
+# 	if (intervals == numsplits == None) or (intervals != None and numsplits != None):
+# 		raise KeyError("Either provide intervals to plot for or the number of intervals to split into.")
+
+# 	NT = analyse_topcte.NT
+# 	if intervals == None:
+# 		split_interval = NT/numsplits
+# 		intervals = zip(
+# 			range(0, NT+1, split_interval), 
+# 			range(split_interval, NT+1, split_interval)
+# 		)
+# 		assert NT % numsplits == 0, "Bad number of splits: NT % numplits = %d " % (NT % numsplits)
+
+# 	t_interval = iter(intervals)
+
+# 	for t_int in t_interval:
+# 		analyse_topcte.set_t_interval(t_int)
+# 		analyse_default(analyse_topcte, N_bs)
+
+# def analyse_topsuste_intervals(params, numsplits=None, intervals=None):
+# 	"""
+# 	Analysis function for the topological susceptibility in euclidean time. 
+# 	Requires either numsplits or intervals.
+
+# 	Args:
+# 		params: list of default parameters containing obs_data, dryrun, 
+# 			parallel, numprocs, verbose, N_bs.
+# 		numsplits: number of splits to make in the dataset. Default is None.
+# 		intervals: intervals to plot in. Default is none.
+# 	"""
+# 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
+
+# 	analyse_topsuste = TopsusteIntervalAnalyser(obs_data("topct"),
+# 		dryrun=dryrun, parallel=parallel, 
+# 		numprocs=numprocs, verbose=verbose)
+
+# 	# Sets up the intervals
+# 	if (intervals == numsplits == None) or (intervals != None and numsplits != None):
+# 		raise KeyError("Either provide intervals to plot for or the number of intervals to split into.")
+
+# 	NT = analyse_topsuste.NT
+# 	if intervals == None:
+# 		split_interval = NT/numsplits
+# 		intervals = zip(
+# 			range(0, NT+1, split_interval), 
+# 			range(split_interval, NT+1, split_interval)
+# 		)
+# 		assert NT % numsplits == 0, "Bad number of splits: NT % numplits = %d " % (NT % numsplits)
+
+# 	t_interval = iter(intervals)
+
+# 	for t_int in t_interval:
+# 		analyse_topsuste.set_t_interval(t_int)
+# 		analyse_default(analyse_topsuste, N_bs)
+
+
+# def analyse_topcMCTime(params, numsplits=None, intervals=None):
+# 	"""Analysis the topological charge in monte carlo time slices."""
+# 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
+
+# 	analyse_topcMC = TopcMCIntervalAnalyser(obs_data("topc"),
+# 		dryrun=dryrun, parallel=parallel,
+# 		numprocs=numprocs, verbose=verbose)
+
+# 	# Sets up the intervals
+# 	if (intervals == numsplits == None) or (intervals != None and numsplits != None):
+# 		raise KeyError("Either provide MC intervals to plot for or the number of MC intervals to split into.")
+
+# 	NCfgs = analyse_topcMC.N_configurations
+# 	if intervals == None:
+# 		split_interval = NCfgs/numsplits
+# 		intervals = zip(
+# 			range(0, NCfgs+1, split_interval), 
+# 			range(split_interval, NCfgs+1, split_interval)
+# 		)
+# 		assert NCfgs % numsplits == 0, "Bad number of splits: NCfgs % numplits = %d " % (NCfgs % numsplits)
+
+# 	MC_interval = iter(intervals)
+
+# 	for MC_int in MC_interval:
+# 		analyse_topcMC.set_MC_interval(MC_int)
+# 		analyse_default(analyse_topcMC, N_bs)
+
+# def analyse_topsusMCTime(params, numsplits=None, intervals=None):
+# 	"""Analysis the topological susceptibility in monte carlo time slices."""
+# 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
+
+# 	analyse_topcMC = TopsusMCIntervalAnalyser(obs_data("topc"),
+# 		dryrun=dryrun, parallel=parallel,
+# 		numprocs=numprocs, verbose=verbose)
+
+# 	# Sets up the intervals
+# 	if (intervals == numsplits == None) or \
+# 		(intervals != None and numsplits != None):
+
+# 		raise KeyError(("Either provide MC intervals to plot for or the number"
+# 			" of MC intervals to split into."))
+
+# 	NCfgs = analyse_topcMC.N_configurations
+# 	if intervals == None:
+# 		split_interval = NCfgs/numsplits
+# 		intervals = zip(
+# 			range(0, NCfgs+1, split_interval), 
+# 			range(split_interval, NCfgs+1, split_interval)
+# 		)
+# 		assert NCfgs % numsplits == 0, ("Bad number of splits: "
+# 			"NCfgs % numplits = %d " % (NCfgs % numsplits))
+
+# 	MC_interval = iter(intervals)
+
+# 	for MC_int in MC_interval:
+# 		analyse_topcMC.set_MC_interval(MC_int)
+# 		analyse_default(analyse_topcMC, N_bs)
+
+# def analyse(parameters):
+# 	"""
+# 	Function for starting flow analyses.
+
+# 	Args:
+# 		parameters: dictionary containing following elements: batch_name, 
+# 			batch_folder, observables, NCfgs, obs_file, load_file, 
+# 			save_to_binary, base_parameters, flow_epsilon, NFlows,
+# 			create_perflow_data, correct_energy
+# 	"""
+
+# 	# Analysis timers
+# 	pre_time = time.clock()
+# 	observable_strings = []
+
+# 	# Retrieves analysis parameters
+# 	batch_name = parameters["batch_name"]
+# 	batch_folder = parameters["batch_folder"]
+# 	figures_folder = parameters["figures_folder"]
+
+# 	_bp = parameters["base_parameters"]
+# 	_latsize = parameters["lattice_size"].items()[0]
+# 	parameters["lattice_sizes"][_latsize[0]] = _latsize[1]
+
+# 	# Retrieves data
+# 	obs_data = DataReader(batch_name, batch_folder, figures_folder, 
+# 		load_file=parameters["load_file"],
+# 		flow_epsilon=parameters["flow_epsilon"], NCfgs=parameters["NCfgs"],
+# 		create_perflow_data=parameters["create_perflow_data"],
+# 		verbose=_bp["verbose"], dryrun=_bp["dryrun"],
+# 		correct_energy=parameters["correct_energy"],
+# 		lattice_sizes=parameters["lattice_sizes"])
+
+# 	# Writes a parameters file for the post analysis
+# 	obs_data.write_parameter_file()
+
+# 	# Writes raw observable data to a single binary file
+# 	if parameters["save_to_binary"] and not parameters["load_file"]:
+# 		obs_data.write_single_file()
+# 	print "="*100
+
+# 	# Builds parameters list to be passed to analyser
+# 	params = [obs_data, _bp["dryrun"], _bp["parallel"], _bp["numprocs"], 
+# 		_bp["verbose"], _bp["N_bs"]]
+
+# 	# Runs through the different observables and analyses each one
+# 	if "plaq" in parameters["observables"]:
+# 		analyse_plaq(params)
+# 	if "energy" in parameters["observables"]:
+# 		analyse_energy(params)
+
+# 	# Topological charge definitions
+# 	if "topc" in parameters["observables"]:
+# 		analyse_topc(params)
+# 	if "topc2" in parameters["observables"]:
+# 		analyse_topc2(params)
+# 	if "topc4" in parameters["observables"]:
+# 		analyse_topc4(params)
+# 	if "topcr" in parameters["observables"]:
+# 		analyse_topcr(params)
+# 	if "topct" in parameters["observables"]:
+# 		analyse_topct(params, parameters["num_t_euclidean_indexes"])
+# 	if "topcte" in parameters["observables"]:
+# 		analyse_topcte_intervals(params, parameters["numsplits_eucl"], 
+# 			parameters["intervals_eucl"])
+# 	if "topcMC" in parameters["observables"]:
+# 		analyse_topcMCTime(params, parameters["MC_time_splits"])
+
+# 	# Topological susceptibility definitions
+# 	if "topsus" in parameters["observables"]:
+# 		analyse_topsus(params)
+# 	# if "topsus4" in parameters["observables"]:
+# 	# 	analyse_topsus4(params)
+# 	if "topsust" in parameters["observables"]:
+# 		analyse_topsust(params, parameters["num_t_euclidean_indexes"])
+# 	if "topsuste" in parameters["observables"]:
+# 		analyse_topsuste_intervals(params, parameters["numsplits_eucl"], 
+# 			parameters["intervals_eucl"])
+# 	if "topsusMC" in parameters["observables"]:
+# 		analyse_topsusMCTime(params, parameters["MC_time_splits"])
+# 	if "topsusqtq0" in parameters["observables"]:
+# 		analyse_topsus_qtq0(params, parameters["q0_flow_times"])
+
+# 	# Other definitions
+# 	if "qtq0e" in parameters["observables"]:
+# 		analyse_qtq0e(params, parameters["flow_time_indexes"],
+# 			parameters["euclidean_time_percents"])
+# 	if "qtq0eff" in parameters["observables"]:
+# 		analyse_qtq0_effective_mass(params, parameters["eff_mass_flow_times"])
 	
 
-	post_time = time.clock()
-	print "="*100
-	print "Analysis of batch %s observables %s in %.2f seconds" % (batch_name,
-		", ".join([i.lower() for i in parameters["observables"]]), (post_time-pre_time))
-	print "="*100
+# 	post_time = time.clock()
+# 	print "="*100
+# 	print "Analysis of batch %s observables %s in %.2f seconds" % (batch_name,
+# 		", ".join([i.lower() for i in parameters["observables"]]),
+# 		(post_time-pre_time))
+# 	print "="*100
 
-def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target,
-	line_fit_interval, energy_fit_target, flow_time_indexes, euclidean_time_percents,
-	figures_folder="figures", post_analysis_data_type=None, bval_to_plot="all",
-	verbose=False):
-	"""
-	Post analysis of the flow observables.
+# def post_analysis(batch_folder, batch_beta_names, observables, topsus_fit_target,
+# 	line_fit_interval, energy_fit_target, flow_time_indexes, 
+# 	euclidean_time_percents, figures_folder="figures", post_analysis_data_type=None, 
+# 	bval_to_plot="all", verbose=False):
+# 	"""
+# 	Post analysis of the flow observables.
 
-	Args: 
-		batch_folder: string, folder containing all the beta data.
-		batch_beta_names: list of the beta folder names.
-		topsus_fit_target: list of x-axis points to line fit at.
-		line_fit_interval: float, extension of the area around the fit target 
-			that will be used for the line fit.
-		energy_fit_target: point of which we will perform a line fit at.
-		flow_time_indexes: points where we perform qtq0e at
-		euclidean_time_percents: points where we perform qtq0e at
-	"""
+# 	Args: 
+# 		batch_folder: string, folder containing all the beta data.
+# 		batch_beta_names: list of the beta folder names.
+# 		topsus_fit_target: list of x-axis points to line fit at.
+# 		line_fit_interval: float, extension of the area around the fit target 
+# 			that will be used for the line fit.
+# 		energy_fit_target: point of which we will perform a line fit at.
+# 		flow_time_indexes: points where we perform qtq0e at
+# 		euclidean_time_percents: points where we perform qtq0e at
+# 	"""
 
-	print "="*100 + "\nPost-analysis: retrieving data from: %s" % batch_folder
+# 	print "="*100 + "\nPost-analysis: retrieving data from: %s" % batch_folder
 
-	if post_analysis_data_type == None:
-		post_analysis_data_type = ["bootstrap", "jackknife", "unanalyzed"]
+# 	if post_analysis_data_type == None:
+# 		post_analysis_data_type = ["bootstrap", "jackknife", "unanalyzed"]
 
-	# Loads data from post analysis folder
-	data = PostAnalysisDataReader(batch_folder)
+# 	# Loads data from post analysis folder
+# 	data = PostAnalysisDataReader(batch_folder)
 
-	continuum_targets = [0.3, 0.4, 0.5, -1]
+# 	continuum_targets = topsus_fit_target
 
-	for analysis_type in post_analysis_data_type:
-		if "plaq" in observables:
-			plaq_analysis = PlaqPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
-			plaq_analysis.set_analysis_data_type(analysis_type)
-			print plaq_analysis
-			plaq_analysis.plot()
+# 	fit_parameters = []
+# 	def append_fit_params(fplist, obs_name, analysis_name, fparams):
+# 		"""Function for appending fit parameters."""
+# 		chi_squared, fit_params, topsus, topsus_err, N_F, N_F_err, \
+# 			fit_target, interval = fparams
+# 		fplist.append({
+# 			"observable_type": obs_name,
+# 			"analysis_type": analysis_name,
+# 			"fit_target": fit_target,
+# 			"chi_squared": chi_squared,
+# 			"a": fit_params[0],
+# 			"a_err": fit_params[1],
+# 			"b": fit_params[2],
+# 			"b_err": fit_params[3],
+# 			"topsus": topsus,
+# 			"topsus_err": topsus_err,
+# 			"N_F": N_F,
+# 			"N_F_err": N_F_err,
+# 			"interval": interval,
+# 		})
+# 		return fplist
 
-		if "energy" in observables:
-			# Plots energy
-			energy_analysis = EnergyPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
-			energy_analysis.set_analysis_data_type(analysis_type)
-			print energy_analysis
-			energy_analysis.plot()
+# 	def write_fit_parameters_to_file(fparams, fname):
+# 		"""Function for writing fit parameters to file."""
+# 		with open(fname, "w") as f:
+# 			sorted_parameter_list = sorted(fparams, key=lambda d: \
+# 				(d["fit_target"], d["interval"], d["analysis_type"]))
 
-			# # Retrofits the energy for continiuum limit
-			# energy_analysis.plot_continuum(0.3, 0.015, "bootstrap_fit")
+# 			# Default float width
+# 			fw = 14
+# 			dict_keys = OrderedDict([
+# 				("observable_type", {"name": "obs", "w": 14, "type": "s"}),
+# 				("fit_target", {"name": "f_t", "w": 5, "type": ".2f"}),
+# 				("interval", {"name": "int", "w": 12, "type": "s"}),
+# 				("analysis_type", {"name": "atype", "w": 14, "type": "s"}),
+# 				("chi_squared", {"name": "Chi^2", "w": fw, "type": ".8f"}),
+# 				("a", {"name": "a", "w": fw, "type": ".8f"}),
+# 				("a_err", {"name": "aerr", "w": fw, "type": ".8f"}),
+# 				("b", {"name": "b", "w": fw, "type": ".8f"}),
+# 				("b_err", {"name": "berr", "w": fw, "type": ".8f"}),
+# 				("topsus", {"name": "topsus", "w": fw, "type": ".8f"}),
+# 				("topsus_err", {"name": "topsuserr", "w": fw, "type": ".8f"}),
+# 				("N_F", {"name": "N_F", "w": fw, "type": ".8f"}),
+# 				("N_F_err", {"name": "N_F_err", "w": fw, "type": ".8f"}),
+# 			])
 
-			# # Plot running coupling
-			# energy_analysis.coupling_fit()
+# 			# Sets header in text file
+# 			header_string = ""
+# 			create_str = lambda _val, _width, _fcode: "{0:<{w}{t}}".format(
+# 				_val, w=_width, t=_fcode)
+# 			for k in dict_keys.items():
+# 				header_string += create_str(k[-1]["name"], k[-1]["w"], "s")
+# 			if verbose: print header_string
+# 			f.write(header_string)
 
-		if "topc" in observables:
-			topc_analysis = TopcPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
-			topc_analysis.set_analysis_data_type(analysis_type)
-			print topc_analysis
-			topc_analysis.plot(y_limits=[-5,5])
+# 			# Writes out analysis values to text file
+# 			for fp in sorted_parameter_list:
+# 				line_values = ""
+# 				for k in dict_keys.items():
+# 					line_values += create_str(fp[k[0]], k[-1]["w"],
+# 						k[-1]["type"])
+# 				if verbose: print line_values
+# 				f.write(line_values)
 
-		if "topc2" in observables:
-			topc2_analysis = Topc2PostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
-			topc2_analysis.set_analysis_data_type(analysis_type)
-			print topc2_analysis
-			topc2_analysis.plot()
 
-		if "topc4" in observables:
-			topc4_analysis = Topc4PostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
-			topc4_analysis.set_analysis_data_type(analysis_type)
-			print topc4_analysis
-			topc4_analysis.plot()
+# 	for analysis_type in post_analysis_data_type:
+# 		if "plaq" in observables:
+# 			plaq_analysis = PlaqPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
+# 			plaq_analysis.set_analysis_data_type(analysis_type)
+# 			print plaq_analysis
+# 			plaq_analysis.plot()
 
-		if "topcr" in observables:
-			topcr_analysis = TopcRPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
-			topcr_analysis.set_analysis_data_type(analysis_type)
-			print topcr_analysis
-			topcr_analysis.plot()
+# 		if "energy" in observables:
+# 			# Plots energy
+# 			energy_analysis = EnergyPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
+# 			energy_analysis.set_analysis_data_type(analysis_type)
+# 			print energy_analysis
+# 			energy_analysis.plot()
 
-		if "topct" in observables:
-			topct_analysis = TopctPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
-			topct_analysis.set_analysis_data_type(analysis_type)
-			print topct_analysis
-			N_int, intervals = topct_analysis.get_N_intervals()
-			for i in range(N_int):
-				topct_analysis.plot_interval(i)
-			topct_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+# 			# # Retrofits the energy for continiuum limit
+# 			# energy_analysis.plot_continuum(0.3, 0.015, "bootstrap_fit")
 
-		if "topcte" in observables:
-			topcte_analysis = TopcteIntervalPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
-			topcte_analysis.set_analysis_data_type(analysis_type)
-			print topcte_analysis
-			N_int, intervals = topcte_analysis.get_N_intervals()
-			for i in range(N_int):
-				topcte_analysis.plot_interval(i)
-			topcte_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+# 			# # Plot running coupling
+# 			# energy_analysis.coupling_fit()
 
-		if "topcMC" in observables:
-			topcmc_analysis = TopcMCIntervalPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
-			topcmc_analysis.set_analysis_data_type(analysis_type)
-			print topcmc_analysis
-			N_int, intervals = topcmc_analysis.get_N_intervals()
-			for i in range(N_int):
-				topcmc_analysis.plot_interval(i)
-			topcmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+# 		if "topc" in observables:
+# 			topc_analysis = TopcPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
+# 			topc_analysis.set_analysis_data_type(analysis_type)
+# 			print topc_analysis
+# 			topc_analysis.plot(y_limits=[-5,5])
 
-		if "topsus" in observables:
-			# Plots topsusprint analysis
-			topsus_analysis = TopsusPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
-			topsus_analysis.set_analysis_data_type(analysis_type)
-			print topsus_analysis
-			topsus_analysis.plot()
-			for cont_target in continuum_targets:
-				topsus_analysis.plot_continuum(cont_target)
+# 		if "topc2" in observables:
+# 			topc2_analysis = Topc2PostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
+# 			topc2_analysis.set_analysis_data_type(analysis_type)
+# 			print topc2_analysis
+# 			topc2_analysis.plot()
 
-		if "topsus4" in observables:
-			topsus4_analysis = Topsus4PostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
-			topsus4_analysis.set_analysis_data_type(analysis_type)
-			print topsus4_analysis
-			topsus4_analysis.plot()
+# 		if "topc4" in observables:
+# 			topc4_analysis = Topc4PostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
+# 			topc4_analysis.set_analysis_data_type(analysis_type)
+# 			print topc4_analysis
+# 			topc4_analysis.plot()
 
-		if "topsusqtq0" in observables:
-			topsusqtq0_analysis = TopsusQtQ0PostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
-			topsusqtq0_analysis.set_analysis_data_type(analysis_type)
-			print topsusqtq0_analysis
-			N_int, intervals = topsusqtq0_analysis.get_N_intervals()
-			for i in range(N_int):
-				topsusqtq0_analysis.plot_interval(i)
-				for cont_target in continuum_targets:
-					topsusqtq0_analysis.plot_continuum(cont_target, i)
+# 		if "topcr" in observables:
+# 			topcr_analysis = TopcRPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
+# 			topcr_analysis.set_analysis_data_type(analysis_type)
+# 			print topcr_analysis
+# 			topcr_analysis.plot()
 
-			topsusqtq0_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
-			topsusqtq0_analysis.plot_series([4,5,6,7], beta=bval_to_plot)
+# 		if "topct" in observables:
+# 			topct_analysis = TopctPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
+# 			topct_analysis.set_analysis_data_type(analysis_type)
+# 			print topct_analysis
+# 			N_int, intervals = topct_analysis.get_N_intervals()
+# 			for i in range(N_int):
+# 				topct_analysis.plot_interval(i)
+# 			topct_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
-		if "topsust" in observables:
-			topsust_analysis = TopsustPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
-			topsust_analysis.set_analysis_data_type(analysis_type)
-			print topsust_analysis
-			N_int, intervals = topsust_analysis.get_N_intervals()
-			for i in range(N_int):
-				topsust_analysis.plot_interval(i)
-				for cont_target in continuum_targets:
-					topsust_analysis.plot_continuum(cont_target, i)
+# 		if "topcte" in observables:
+# 			topcte_analysis = TopcteIntervalPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
+# 			topcte_analysis.set_analysis_data_type(analysis_type)
+# 			print topcte_analysis
+# 			N_int, intervals = topcte_analysis.get_N_intervals()
+# 			for i in range(N_int):
+# 				topcte_analysis.plot_interval(i)
+# 			topcte_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
-			topsust_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+# 		if "topcMC" in observables:
+# 			topcmc_analysis = TopcMCIntervalPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
+# 			topcmc_analysis.set_analysis_data_type(analysis_type)
+# 			print topcmc_analysis
+# 			N_int, intervals = topcmc_analysis.get_N_intervals()
+# 			for i in range(N_int):
+# 				topcmc_analysis.plot_interval(i)
+# 			topcmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
-		if "topsuste" in observables:
-			topsuste_analysis = TopsusteIntervalPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
-			topsuste_analysis.set_analysis_data_type(analysis_type)
-			print topsuste_analysis
-			N_int, intervals = topsuste_analysis.get_N_intervals()
-			for i in range(N_int):
-				topsuste_analysis.plot_interval(i)
-				for cont_target in continuum_targets:
-					topsuste_analysis.plot_continuum(cont_target, i)
-			topsuste_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+# 		if "topsus" in observables:
+# 			# Plots topsusprint analysis
+# 			topsus_analysis = TopsusPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
+# 			topsus_analysis.set_analysis_data_type(analysis_type)
+# 			print topsus_analysis
+# 			topsus_analysis.plot()
+# 			for cont_target in continuum_targets:
+# 				topsus_analysis.plot_continuum(cont_target)
 
-		if "topsusMC" in observables:
-			topsusmc_analysis = TopsusMCIntervalPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
-			topsusmc_analysis.set_analysis_data_type(analysis_type)
-			print topsusmc_analysis
-			N_int, intervals = topsusmc_analysis.get_N_intervals()
-			for i in range(N_int):
-				topsusmc_analysis.plot_interval(i)
-				for cont_target in continuum_targets:
-					topsusmc_analysis.plot_continuum(cont_target, i)
+# 				fit_parameters = append_fit_params(fit_parameters, 
+# 					topsus_analysis.observable_name_compact, analysis_type,
+# 					topsus_analysis.get_linefit_parameters())
 
-			topsusmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+# 		if "topsus4" in observables:
+# 			topsus4_analysis = Topsus4PostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
+# 			topsus4_analysis.set_analysis_data_type(analysis_type)
+# 			print topsus4_analysis
+# 			topsus4_analysis.plot()
 
-		if "qtq0e" in observables:
-			qtq0e_analysis = QtQ0EuclideanPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
+# 		if "topsusqtq0" in observables:
+# 			topsusqtq0_analysis = TopsusQtQ0PostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
+# 			topsusqtq0_analysis.set_analysis_data_type(analysis_type)
+# 			print topsusqtq0_analysis
+# 			N_int, intervals = topsusqtq0_analysis.get_N_intervals()
+# 			for i in range(N_int):
+# 				topsusqtq0_analysis.plot_interval(i)
+# 				for cont_target in continuum_targets:
+# 					topsusqtq0_analysis.plot_continuum(cont_target, i)
 
-			# Checks that we have similar flow times
-			N_tf, flow_intervals = qtq0e_analysis.get_N_intervals()
-			clean_string = lambda s: int(s[-4:])
-			flow_times = np.asarray([b[1].keys() for b in flow_intervals.items()]).T
-			# +1 in order to ensure the zeroth flow time does not count as false.
-			assert np.all([np.all([clean_string(i)+1 for i in ft]) for ft in flow_times]), "flow times differ."
+# 					fit_parameters = append_fit_params(fit_parameters, 
+# 						topsusqtq0_analysis.observable_name_compact, analysis_type,
+# 						topsusqtq0_analysis.get_linefit_parameters())
 
-			for te in euclidean_time_percents[:1]:
-				qtq0e_analysis.set_analysis_data_type(te, analysis_type)
-				print qtq0e_analysis
-				# print "flow_intervals: ", flow_intervals
-				for tf in flow_time_indexes: # Flow times
-					qtq0e_analysis.plot_interval(tf, te)
-					# for cont_target in continuum_targets:
-					# 	qtq0e_analysis.plot_continuum(cont_target, i)
+# 			topsusqtq0_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+# 			topsusqtq0_analysis.plot_series([4,5,6,7], beta=bval_to_plot)
+
+# 		if "topsust" in observables:
+# 			topsust_analysis = TopsustPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
+# 			topsust_analysis.set_analysis_data_type(analysis_type)
+# 			print topsust_analysis
+# 			N_int, intervals = topsust_analysis.get_N_intervals()
+# 			for i in range(N_int):
+# 				topsust_analysis.plot_interval(i)
+# 				for cont_target in continuum_targets:
+# 					topsust_analysis.plot_continuum(cont_target, i)
+
+# 					fit_parameters = append_fit_params(fit_parameters, 
+# 						topsust_analysis.observable_name_compact, analysis_type,
+# 						topsust_analysis.get_linefit_parameters())
+
+# 			topsust_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+
+# 		if "topsuste" in observables:
+# 			topsuste_analysis = TopsusteIntervalPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
+# 			topsuste_analysis.set_analysis_data_type(analysis_type)
+# 			print topsuste_analysis
+# 			N_int, intervals = topsuste_analysis.get_N_intervals()
+# 			for i in range(N_int):
+# 				topsuste_analysis.plot_interval(i)
+# 				for cont_target in continuum_targets:
+# 					topsuste_analysis.plot_continuum(cont_target, i)
+
+# 					fit_parameters = append_fit_params(fit_parameters, 
+# 						topsust_analysis.observable_name_compact, analysis_type,
+# 						topsust_analysis.get_linefit_parameters())
+
+# 			topsuste_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+
+# 		if "topsusMC" in observables:
+# 			topsusmc_analysis = TopsusMCIntervalPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
+# 			topsusmc_analysis.set_analysis_data_type(analysis_type)
+# 			print topsusmc_analysis
+# 			N_int, intervals = topsusmc_analysis.get_N_intervals()
+# 			for i in range(N_int):
+# 				topsusmc_analysis.plot_interval(i)
+# 				for cont_target in continuum_targets:
+# 					topsusmc_analysis.plot_continuum(cont_target, i)
+
+# 					fit_parameters = append_fit_params(fit_parameters, 
+# 						topsusmc_analysis.observable_name_compact, analysis_type,
+# 						topsusmc_analysis.get_linefit_parameters())
+
+# 			topsusmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+
+# 		if "qtq0e" in observables:
+# 			qtq0e_analysis = QtQ0EuclideanPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
+
+# 			# Checks that we have similar flow times
+# 			N_tf, flow_intervals = qtq0e_analysis.get_N_intervals()
+# 			clean_string = lambda s: int(s[-4:])
+# 			flow_times = np.asarray([b[1].keys() for b in flow_intervals.items()]).T
+# 			# +1 in order to ensure the zeroth flow time does not count as false.
+# 			assert np.all([np.all([clean_string(i)+1 for i in ft]) for ft in flow_times]), "flow times differ."
+
+# 			for te in euclidean_time_percents[:1]:
+# 				qtq0e_analysis.set_analysis_data_type(te, analysis_type)
+# 				print qtq0e_analysis
+# 				# print "flow_intervals: ", flow_intervals
+# 				for tf in flow_time_indexes: # Flow times
+# 					qtq0e_analysis.plot_interval(tf, te)
+# 					# for cont_target in continuum_targets:
+# 					# 	qtq0e_analysis.plot_continuum(cont_target, i)
 				
-				qtq0e_analysis.plot_series(te, [0,1,2,3], beta=bval_to_plot)
-				qtq0e_analysis.plot_series(te, [0,2,3,4], beta=bval_to_plot)
+# 				qtq0e_analysis.plot_series(te, [0,1,2,3], beta=bval_to_plot)
+# 				qtq0e_analysis.plot_series(te, [0,2,3,4], beta=bval_to_plot)
 
-		if "qtq0eff" in observables:
-			qtq0e_analysis = QtQ0EffectiveMassPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
-			qtq0e_analysis.set_analysis_data_type(analysis_type)
-			print qtq0e_analysis
+# 		if "qtq0eff" in observables:
+# 			qtq0e_analysis = QtQ0EffectiveMassPostAnalysis(data, figures_folder=figures_folder, verbose=verbose)
+# 			qtq0e_analysis.set_analysis_data_type(analysis_type)
+# 			print qtq0e_analysis
 
-			for tf in flow_time_indexes: # Flow times
-				qtq0e_analysis.plot_interval(tf)
-			qtq0e_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
-			qtq0e_analysis.plot_series([0,2,3,4], beta=bval_to_plot)
+# 			for tf in flow_time_indexes: # Flow times
+# 				qtq0e_analysis.plot_interval(tf)
+# 			qtq0e_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+# 			qtq0e_analysis.plot_series([0,2,3,4], beta=bval_to_plot)
+
+# 	write_fit_parameters_to_file(fit_parameters, os.path.join("param_file.txt"))
 
 
 
@@ -618,9 +717,9 @@ def main():
 		"qtq0eff",
 	]
 
-	# observables = ["topsus"]
+	observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["topcr", "qtq0eff"]
-	observables = ["qtq0eff"]
+	# observables = ["qtq0eff"]
 	# observables = ["topcr"]
 
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
@@ -651,7 +750,8 @@ def main():
 	#### Post analysis parameters
 	run_post_analysis = True
 	line_fit_interval = 0.015
-	topsus_fit_targets = [0.3,0.4,0.5,0.58]
+	# topsus_fit_targets = [0.3,0.4,0.5,0.58]
+	topsus_fit_targets = [0.5, -1]
 	energy_fit_target = 0.3
 
 	#### Different batches
@@ -765,7 +865,7 @@ def main():
 	if len(analysis_parameter_list) >= 2:
 		post_analysis(data_batch_folder, beta_folders, observables, 
 			topsus_fit_targets, line_fit_interval, energy_fit_target,
-			flow_time_indexes, euclidean_time_percents, 
+			flow_time_indexes, euclidean_time_percents,
 			figures_folder=figures_folder, verbose=verbose)
 
 if __name__ == '__main__':
