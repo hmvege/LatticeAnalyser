@@ -21,7 +21,7 @@ class TopsusteIntervalPostAnalysis(MultiPlotCore, TopsusCore):
 			self.data_raw[self.analysis_data_type], interval_index=interval_index)
 		self.output_folder_path = os.path.join(self.output_folder_path, "int%d" % interval_index)
 		check_folder(self.output_folder_path, False, self.verbose)
-		self.interval = sorted(self.plot_values.values())[0]["interval"]
+		self.interval = str(sorted(self.plot_values.values())[0]["interval"])
 		title_addendum = r", $t_{e}$-interval: $[%s)$" % self.interval
 		super(TopsusteIntervalPostAnalysis, self).plot_continuum(fit_target, title_addendum=title_addendum)
 

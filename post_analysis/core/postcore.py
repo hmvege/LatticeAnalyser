@@ -36,11 +36,14 @@ class PostCore(object):
 	}
 	interval = None
 
-	def __init__(self, data, with_autocorr=True, figures_folder="../figures", verbose=False, dryrun=False):
+	def __init__(self, data, with_autocorr=True, figures_folder="../figures",
+		verbose=False, dryrun=False):
+		
 		if with_autocorr:
 			self.ac = "with_autocorr"
 		else:
 			self.ac = "without_autocorr"
+		
 		self.with_autocorr = with_autocorr
 		observable = self.observable_name_compact
 
@@ -77,21 +80,31 @@ class PostCore(object):
 					if self.sub_sub_obs:
 						for subobs in data.data_observables[observable][beta]:
 							# Sets sub-sub intervals
-							self.observable_intervals[beta][subobs] = data.data_observables[observable][beta][subobs].keys()
+							self.observable_intervals[beta][subobs] = \
+								data.data_observables[observable] \
+								[beta][subobs].keys()
 							
 							# Sets up additional subsub-dictionaries
 							self.data[atype][beta][subobs] = {}
 
-							for subsubobs in data.data_observables[observable][beta][subobs]:
-								self.data[atype][beta][subobs][subsubobs] = data.data_observables[observable][beta][subobs][subsubobs][self.ac][atype]
+							for subsubobs in data.data_observables \
+								[observable][beta][subobs]:
+
+								self.data[atype][beta][subobs][subsubobs] = \
+									data.data_observables[observable][beta] \
+									[subobs][subsubobs][self.ac][atype]
 					else:
 						# Fills up observable intervals
-						self.observable_intervals[beta] = data.data_observables[observable][beta].keys()
+						self.observable_intervals[beta] = \
+							data.data_observables[observable][beta].keys()
 
 						for subobs in data.data_observables[observable][beta]:
-							self.data[atype][beta][subobs] = data.data_observables[observable][beta][subobs][self.ac][atype]
+							self.data[atype][beta][subobs] = \
+								data.data_observables[observable][beta] \
+								[subobs][self.ac][atype]
 				else:
-					self.data[atype][beta] = data.data_observables[observable][beta][self.ac][atype]
+					self.data[atype][beta] = data.data_observables \
+						[observable][beta][self.ac][atype]
 
 		self.data_raw = {}
 		for key in data.raw_analysis:
@@ -100,24 +113,33 @@ class PostCore(object):
 			else:
 				self.data_raw[key] = data.raw_analysis[key]
 
-		# Small test to ensure that the number of bootstraps and number of different beta batches match
-		err_msg = "Number of bootstraps do not match number of different beta values"
-		assert np.asarray([get_NBoots(self.data_raw["bootstrap"][i]) for i in self.data_raw["bootstrap"].keys()]).all(), err_msg
+		# Small test to ensure that the number of bootstraps and number of 
+		# different beta batches match
+		err_msg = ("Number of bootstraps do not match number "
+			"of different beta values")
+		assert np.asarray([get_NBoots(self.data_raw["bootstrap"][i]) \
+			for i in self.data_raw["bootstrap"].keys()]).all(), err_msg
 
 		self.NBoots = get_NBoots(self.data_raw["bootstrap"])
 
 		# Creates base output folder for post analysis figures
 		self.figures_folder = figures_folder
-		check_folder(self.figures_folder, dryrun=self.dryrun, verbose=self.verbose)
-		check_folder(os.path.join(self.figures_folder, data.batch_name), dryrun=self.dryrun, verbose=self.verbose)
+		check_folder(self.figures_folder, dryrun=self.dryrun, 
+			verbose=self.verbose)
+		check_folder(os.path.join(self.figures_folder, data.batch_name),
+			dryrun=self.dryrun, verbose=self.verbose)
 
 		# Creates output folder
-		self.post_anlaysis_folder = os.path.join(self.figures_folder, data.batch_name, "post_analysis")
-		check_folder(self.post_anlaysis_folder, dryrun=self.dryrun, verbose=self.verbose)
+		self.post_anlaysis_folder = os.path.join(self.figures_folder, 
+			data.batch_name, "post_analysis")
+		check_folder(self.post_anlaysis_folder, dryrun=self.dryrun,
+			verbose=self.verbose)
 
 		# Creates observable output folder
-		self.output_folder_path = os.path.join(self.post_anlaysis_folder, self.observable_name_compact)
-		check_folder(self.output_folder_path, dryrun=self.dryrun, verbose=self.verbose)
+		self.output_folder_path = os.path.join(self.post_anlaysis_folder,
+			self.observable_name_compact)
+		check_folder(self.output_folder_path, dryrun=self.dryrun, 
+			verbose=self.verbose)
 
 	def _check_plot_values(self):
 		"""Checks if we have set the analysis data type yet."""
@@ -127,7 +149,8 @@ class PostCore(object):
 	def set_analysis_data_type(self, analysis_data_type="bootstrap"):
 		"""Sets the analysis type and retrieves correct analysis data."""
 		self.plot_values = {} # Clears old plot values
-		self._initiate_plot_values(self.data[analysis_data_type], self.data_raw[analysis_data_type])
+		self._initiate_plot_values(self.data[analysis_data_type], 
+			self.data_raw[analysis_data_type])
 		# Makes it a global constant so it can be added in plot figure name
 		self.analysis_data_type = analysis_data_type
 
@@ -145,9 +168,11 @@ class PostCore(object):
 			values["color"] = self.colors[beta]
 			self.plot_values[beta] = values
 
-	def plot(self, x_limits=False, y_limits=False, plot_with_formula=False, error_shape="band"):
+	def plot(self, x_limits=False, y_limits=False, plot_with_formula=False,
+		error_shape="band"):
 		"""
-		Function for making a basic plot of all the different beta values together.
+		Function for making a basic plot of all the different beta values
+		together.
 
 		Args:
 			x_limits: limits of the x-axis. Default is False.
@@ -173,14 +198,14 @@ class PostCore(object):
 			y_err = value["y_err"]
 			if error_shape == "band":
 				ax.plot(x, y, "-", label=value["label"], color=value["color"])
-				ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, edgecolor='', facecolor=value["color"])
+				ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, 
+					edgecolor='', facecolor=value["color"])
 			elif error_shape == "bars":
-				ax.errorbar(x, y, yerr=y_err, capsize=5, fmt="_", ls=":", label=value["label"], color=value["color"], ecolor=value["color"])
+				ax.errorbar(x, y, yerr=y_err, capsize=5, fmt="_", ls=":", 
+					label=value["label"], color=value["color"], 
+					ecolor=value["color"])
 			else:
 				raise KeyError("%s not a recognized plot type" % error_shape)
-
-		# print self.flow_time[1:]**2*self._energy_continuum(self.flow_time[1:])[0]
-		# ax.plot(self.flow_time[1:]/self.r0**2,self.flow_time[1:]**2*self._energy_continuum(self.flow_time[1:])[0],color="b")
 
 		# Sets the title string
 		title_string = r"%s" % self.observable_name
@@ -232,20 +257,26 @@ class PostCore(object):
 
 			# Retrieves fit value as well as its error
 			if fit_type == "bootstrap_fit":
-				bfit["t0"], bfit["t0_err"] = fit_line_from_bootstrap(	values["x"], values["bs"], self.observable_name_compact,
-																		beta, fit_target, fit_interval, axis=axis,
-																		fit_function_modifier=fit_function_modifier,
-																		plot_fit_window=plot_fit_window)
+				bfit["t0"], bfit["t0_err"] = fit_line_from_bootstrap(	
+					values["x"], values["bs"], self.observable_name_compact,
+					beta, fit_target, fit_interval, axis=axis,
+					fit_function_modifier=fit_function_modifier,
+					plot_fit_window=plot_fit_window)
 			elif fit_type == "data_line_fit":
-				bfit["t0"], bfit["t0_err"] = fit_line(	values["x"], values["y"], values["y_err"],
-														self.observable_name_compact, beta,
-														fit_target, fit_interval, axis=axis,
-														fit_function_modifier=fit_function_modifier,
-														plot_fit_window=plot_fit_window)
+				bfit["t0"], bfit["t0_err"] = fit_line(	
+					values["x"], values["y"], values["y_err"],
+					self.observable_name_compact, beta,
+					fit_target, fit_interval, axis=axis,
+					fit_function_modifier=fit_function_modifier,
+					plot_fit_window=plot_fit_window)
 			elif fit_type == "nearest_val_fit":
-				raise NotImplementedError("'nearest_val_fit' not implemented as a fit type yet.")
+				raise NotImplementedError(
+					("'nearest_val_fit' not implemented "
+					"as a fit type yet."))
 			else:
-				raise KeyError("No fit_type named %s. Options: 'bootstrap_fit', 'data_line_fit' or 'nearest_val_fit'" % fit_type)
+				raise KeyError(
+					("No fit_type named %s. Options: 'bootstrap_fit', "
+					"'data_line_fit' or 'nearest_val_fit'" % fit_type))
 
 			# Adds lattice spacing to fit
 			bfit["a"] = getLatticeSpacing(bfit["beta"])
@@ -256,7 +287,8 @@ class PostCore(object):
 	def _get_plot_figure_name(self):
 		"""Retrieves appropriate figure file name."""
 		output_folder = self.output_folder_path
-		fname = "post_analysis_%s_%s.png" % (self.observable_name_compact, self.analysis_data_type)
+		fname = "post_analysis_%s_%s.png" % (self.observable_name_compact,
+			self.analysis_data_type)
 		return os.path.join(output_folder, fname)
 
 	def __str__(self):

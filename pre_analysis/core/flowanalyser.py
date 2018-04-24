@@ -153,14 +153,19 @@ class FlowAnalyser(object):
 
 		# Autocorrelation data
 		self.autocorrelation_performed = False
-		self.autocorrelations = np.zeros((self.NFlows, self.N_configurations/2))
-		self.autocorrelations_errors = np.zeros((self.NFlows, self.N_configurations/2))
+		self.autocorrelations = np.zeros(
+			(self.NFlows, self.N_configurations/2))
+		self.autocorrelations_errors = np.zeros(
+			(self.NFlows, self.N_configurations/2))
 		self.integrated_autocorrelation_time = np.ones(self.NFlows)
 		self.integrated_autocorrelation_time_error = np.zeros(self.NFlows)
 		self.autocorrelation_error_correction = np.ones(self.NFlows)
 
 	def __check_ac(self, fname):
-		"""If autocorrelation has been performed it will add "_noErrorCorrection" to the filename"""
+		"""
+		If autocorrelation has been performed it will add "_noErrorCorrection"
+		to the filename.
+		"""
 		head, ext = os.path.splitext(fname)
 		fname_addon = "_noErrorCorrection"
 		if not self.autocorrelation_performed:
@@ -179,7 +184,8 @@ class FlowAnalyser(object):
 			self.observable_name_compact, self.post_analysis_folder,
 			dryrun=self.dryrun, verbose=self.verbose)
 
-	def boot(self, N_bs, F=None, F_error=None, store_raw_bs_values=True, index_lists=None):
+	def boot(self, N_bs, F=None, F_error=None, store_raw_bs_values=True,
+		index_lists=None):
 		"""
 		Bootstrap caller for the flow analysis.
 
@@ -272,15 +278,20 @@ class FlowAnalyser(object):
 
 	def jackknife(self, F=None, F_error=None, store_raw_jk_values=True):
 		"""
-		When called, performs either a parallel or non-parallel jackknife, using the Jackknife class.
+		When called, performs either a parallel or non-parallel jackknife, 
+		using the Jackknife class.
 		
 		Args:
-			F: optional argument for function that will modify data. Default is None.
-			F_error: optional argument for F function for propagating error. Default is None.
-			store_raw_jk_values: optional argument for storing raw jackknifed datasets, default is True.
+			F: optional argument for function that will modify data. Default 
+				is None.
+			F_error: optional argument for F function for propagating error. 
+				Default is None.
+			store_raw_jk_values: optional argument for storing raw jackknifed
+				.datasets. Default is True.
 
 		Raises:
-			AssertError will be made if F and F_error are not None or of types.FunctionType.
+			AssertError will be made if F and F_error are not None or 
+				of types.FunctionType.
 		"""
 
 		# Sets default parameters

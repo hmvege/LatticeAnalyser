@@ -55,14 +55,16 @@ class TopsusCore(PostCore):
 		# Fits to continuum and retrieves values to be plotted
 		continuum_fit = LineFit(a_squared, obs, obs_err)
 
-		y_cont, y_cont_err, fit_params, chi_squared = continuum_fit.fit_weighted(a_squared_cont)
+		y_cont, y_cont_err, fit_params, chi_squared = \
+			continuum_fit.fit_weighted(a_squared_cont)
 		self.chi_squared = chi_squared
 		self.fit_params = fit_params
 		self.fit_target = fit_target
 
 		# continuum_fit.plot(True)
 
-		title_string = r"$\sqrt{8t_{flow,0}} = %.2f[fm], \chi^2 = %.2g$" % (fit_target, chi_squared)
+		title_string = r"$\sqrt{8t_{flow,0}} = %.2f[fm], \chi^2 = %.2g$" % (
+			fit_target, chi_squared)
 		title_string += title_addendum
 		
 		# Gets the continium value and its error
@@ -96,10 +98,11 @@ class TopsusCore(PostCore):
 		ax.errorbar(a_squared, obs, yerr=obs_err, fmt="o",
 			color="tab:orange", ecolor="tab:orange")
 
-		# plots continuum limit
-		ax.errorbar(a0_squared, y0, yerr=y0_err, fmt="o", capsize=None, # 5 is a good value for cap size
+		# plots continuum limit, 5 is a good value for cap size
+		ax.errorbar(a0_squared, y0, yerr=y0_err, fmt="o", capsize=None,
 			capthick=1, color="tab:red", ecolor="tab:red",
-			label=r"$\chi^{1/4}=%.3f\pm%.3f$" % (y0[0], (y0_err_lower + y0_err_upper)/2.0))
+			label=r"$\chi^{1/4}=%.3f\pm%.3f$" % (y0[0],
+				(y0_err_lower + y0_err_upper)/2.0))
 
 		ax.set_ylabel(self.y_label_continuum)
 		ax.set_xlabel(self.x_label_continuum)
@@ -109,16 +112,18 @@ class TopsusCore(PostCore):
 		ax.grid(True)
 
 		if self.verbose:
-			print "Target: %.16f +/- %.16f" % (y0[0], (y0_err_lower + y0_err_upper)/2.0)
+			print "Target: %.16f +/- %.16f" % (y0[0],
+				(y0_err_lower + y0_err_upper)/2.0)
 
 		# Saves figure
 		fname = os.path.join(self.output_folder_path, 
-			"post_analysis_%s_continuum%s_%s.png" % (self.observable_name_compact, 
+			"post_analysis_%s_continuum%s_%s.png" % (self.observable_name_compact,
 				str(fit_target).replace(".",""), self.analysis_data_type))
 		fig.savefig(fname, dpi=self.dpi)
 
 		if self.verbose:
-			print "Continuum plot of %s created in %s" % (self.observable_name.lower(), fname)
+			print "Continuum plot of %s created in %s" % (
+				self.observable_name.lower(), fname)
 		plt.close(fig)
 
 		self.print_continuum_estimate()
@@ -127,11 +132,12 @@ class TopsusCore(PostCore):
 		"""Returns the chi^2, a, a_err, b, b_err."""
 		return self.chi_squared, self.fit_params, self.chi_continuum, \
 			self.chi_continuum_error[0], self.NF, self.NF_error, \
-			self.fit_target, None
+			self.fit_target, self.interval
 
 	def print_continuum_estimate(self):
 		"""Prints the NF from the Witten-Veneziano formula."""
-		self.NF, self.NF_error = witten_veneziano(self.chi_continuum, self.chi_continuum_error[0])
+		self.NF, self.NF_error = witten_veneziano(self.chi_continuum, 
+			self.chi_continuum_error[0])
 		msg =  "\n    Topsus = %.16f" % self.chi_continuum
 		msg += "\n    Topsus_error = %.16f" % self.chi_continuum_error[0]
 		msg += "\n    N_f = %.16f" % self.NF

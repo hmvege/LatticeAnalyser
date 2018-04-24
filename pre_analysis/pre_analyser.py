@@ -1,5 +1,18 @@
 from observable_analysis import *
 
+def _check_splits(NT, numsplits):
+	"""Checks if the temporal dimension has been split into good .intervals"""
+	assert NT % numsplits == 0, ("Bad number of splits: NT % "
+			"numplits = %d " % (NT % numsplits))
+
+def _check_intervals(intervals, numsplits):
+	"""Sets up the intervals"""
+	if (intervals == numsplits == None) or \
+		(intervals != None and numsplits != None):
+
+		raise KeyError(("Either provide MC intervals to plot for or the "
+			"number of MC intervals to split into."))
+
 def analyse_default(analysis_object, N_bs, NBins=30, skip_histogram=False,
 	bs_index_lists=None):
 	"""Default analysis method for pre-analysis."""
@@ -38,22 +51,26 @@ def analyse_default(analysis_object, N_bs, NBins=30, skip_histogram=False,
 
 def analyse_plaq(params):
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params 
-	plaq_analysis = PlaquetteAnalyser(obs_data("plaq"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+	plaq_analysis = PlaquetteAnalyser(obs_data("plaq"), dryrun=dryrun, 
+		parallel=parallel, numprocs=numprocs, verbose=verbose)
 	analyse_default(plaq_analysis, N_bs)
 
 def analyse_energy(params):
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params 
-	energy_analysis = EnergyAnalyser(obs_data("energy"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+	energy_analysis = EnergyAnalyser(obs_data("energy"), dryrun=dryrun, 
+		parallel=parallel, numprocs=numprocs, verbose=verbose)
 	analyse_default(energy_analysis, N_bs)
 
 def analyse_topsus(params):
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params 
-	topsus_analysis = TopsusAnalyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+	topsus_analysis = TopsusAnalyser(obs_data("topc"), dryrun=dryrun, 
+		parallel=parallel, numprocs=numprocs, verbose=verbose)
 	analyse_default(topsus_analysis, N_bs)
 
 def analyse_topc(params):
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params 
-	topc_analysis = TopcAnalyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+	topc_analysis = TopcAnalyser(obs_data("topc"), dryrun=dryrun, 
+		parallel=parallel, numprocs=numprocs, verbose=verbose)
 
 	if topc_analysis.beta == 6.0:
 		topc_analysis.y_limits = [-9, 9]
@@ -68,7 +85,8 @@ def analyse_topc(params):
 
 def analyse_topc2(params):
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params 
-	topc2_analysis = Topc2Analyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+	topc2_analysis = Topc2Analyser(obs_data("topc"), dryrun=dryrun, 
+		parallel=parallel, numprocs=numprocs, verbose=verbose)
 
 	if topc2_analysis.beta == 6.0:
 		topc2_analysis.y_limits = [-81, 81]
@@ -84,7 +102,8 @@ def analyse_topc2(params):
 def analyse_topc4(params):
 	"""Analysis the topological chage with q^4."""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
-	topc4_analysis = Topc4Analyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+	topc4_analysis = Topc4Analyser(obs_data("topc"), dryrun=dryrun, 
+		parallel=parallel, numprocs=numprocs, verbose=verbose)
 	analyse_default(topc4_analysis, N_bs)
 
 def analyse_topcr(params):
@@ -94,10 +113,11 @@ def analyse_topcr(params):
 	analysis can be performed on these explisitly.
 	"""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
-	# topcr_analysis = TopcrAnalyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
 
-	topc2_analysis = Topc2Analyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
-	topc4_analysis = Topc4Analyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+	topc2_analysis = Topc2Analyser(obs_data("topc"), dryrun=dryrun, 
+		parallel=parallel, numprocs=numprocs, verbose=verbose)
+	topc4_analysis = Topc4Analyser(obs_data("topc"), dryrun=dryrun, 
+		parallel=parallel, numprocs=numprocs, verbose=verbose)
 
 	N_cfgs_topc2 = topc2_analysis.N_configurations
 	N_cfgs_topc4 = topc4_analysis.N_configurations
@@ -111,7 +131,8 @@ def analyse_topcr(params):
 def analyse_topsus4(params):
 	"""Analysis topological susceptiblity with q^4."""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
-	topsus4_analysis = Topsus4Analyser(obs_data("topc"), dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
+	topsus4_analysis = Topsus4Analyser(obs_data("topc"), dryrun=dryrun, 
+		parallel=parallel, numprocs=numprocs, verbose=verbose)
 	analyse_default(topsus4_analysis, N_bs)
 
 def analyse_topsus_qtq0(params, q0_flow_times):
@@ -192,9 +213,7 @@ def analyse_topcte_intervals(params, numsplits=None, intervals=None):
 		dryrun=dryrun, parallel=parallel, 
 		numprocs=numprocs, verbose=verbose)
 
-	# Sets up the intervals
-	if (intervals == numsplits == None) or (intervals != None and numsplits != None):
-		raise KeyError("Either provide intervals to plot for or the number of intervals to split into.")
+	_check_intervals(intervals, numsplits)
 
 	NT = analyse_topcte.NT
 	if intervals == None:
@@ -203,7 +222,7 @@ def analyse_topcte_intervals(params, numsplits=None, intervals=None):
 			range(0, NT+1, split_interval), 
 			range(split_interval, NT+1, split_interval)
 		)
-		assert NT % numsplits == 0, "Bad number of splits: NT % numplits = %d " % (NT % numsplits)
+		_check_splits(NT, numsplits)
 
 	t_interval = iter(intervals)
 
@@ -228,9 +247,7 @@ def analyse_topsuste_intervals(params, numsplits=None, intervals=None):
 		dryrun=dryrun, parallel=parallel, 
 		numprocs=numprocs, verbose=verbose)
 
-	# Sets up the intervals
-	if (intervals == numsplits == None) or (intervals != None and numsplits != None):
-		raise KeyError("Either provide intervals to plot for or the number of intervals to split into.")
+	_check_intervals(intervals, numsplits)
 
 	NT = analyse_topsuste.NT
 	if intervals == None:
@@ -239,7 +256,7 @@ def analyse_topsuste_intervals(params, numsplits=None, intervals=None):
 			range(0, NT+1, split_interval), 
 			range(split_interval, NT+1, split_interval)
 		)
-		assert NT % numsplits == 0, "Bad number of splits: NT % numplits = %d " % (NT % numsplits)
+		_check_splits(NT, numsplits)
 
 	t_interval = iter(intervals)
 
@@ -256,9 +273,7 @@ def analyse_topcMCTime(params, numsplits=None, intervals=None):
 		dryrun=dryrun, parallel=parallel,
 		numprocs=numprocs, verbose=verbose)
 
-	# Sets up the intervals
-	if (intervals == numsplits == None) or (intervals != None and numsplits != None):
-		raise KeyError("Either provide MC intervals to plot for or the number of MC intervals to split into.")
+	_check_intervals(intervals, numsplits)
 
 	NCfgs = analyse_topcMC.N_configurations
 	if intervals == None:
@@ -267,7 +282,7 @@ def analyse_topcMCTime(params, numsplits=None, intervals=None):
 			range(0, NCfgs+1, split_interval), 
 			range(split_interval, NCfgs+1, split_interval)
 		)
-		assert NCfgs % numsplits == 0, "Bad number of splits: NCfgs % numplits = %d " % (NCfgs % numsplits)
+		_check_splits(NT, numsplits)
 
 	MC_interval = iter(intervals)
 
@@ -283,12 +298,7 @@ def analyse_topsusMCTime(params, numsplits=None, intervals=None):
 		dryrun=dryrun, parallel=parallel,
 		numprocs=numprocs, verbose=verbose)
 
-	# Sets up the intervals
-	if (intervals == numsplits == None) or \
-		(intervals != None and numsplits != None):
-
-		raise KeyError(("Either provide MC intervals to plot for or the number"
-			" of MC intervals to split into."))
+	_check_intervals(intervals, numsplits)
 
 	NCfgs = analyse_topcMC.N_configurations
 	if intervals == None:
@@ -297,8 +307,7 @@ def analyse_topsusMCTime(params, numsplits=None, intervals=None):
 			range(0, NCfgs+1, split_interval), 
 			range(split_interval, NCfgs+1, split_interval)
 		)
-		assert NCfgs % numsplits == 0, ("Bad number of splits: "
-			"NCfgs % numplits = %d " % (NCfgs % numsplits))
+		_check_splits(NT, numsplits)
 
 	MC_interval = iter(intervals)
 

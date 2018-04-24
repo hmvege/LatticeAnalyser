@@ -18,11 +18,17 @@ class EuclideanIntervalAnalyser(FlowAnalyser):
 		self.t_interval = t_interval
 
 		# Creates a new folder to store t0 results in
-		self.observable_output_folder_path = os.path.join(self.observable_output_folder_path_old, "int%03d-%03d" % t_interval)
-		check_folder(self.observable_output_folder_path, self.dryrun, self.verbose)
+		self.observable_output_folder_path = os.path.join(
+			self.observable_output_folder_path_old, 
+			"int%03d-%03d" % t_interval)
+		check_folder(self.observable_output_folder_path, 
+			self.dryrun, self.verbose)
 
-		# Checks that {post_analysis_folder}/{observable_name}/{time interval} exist
-		self.post_analysis_folder = os.path.join(self.post_analysis_folder_old, "%03d-%03d" % self.t_interval)
+		# Checks that {post_analysis_folder}/{observable_name}/{time interval}
+		# exist.
+		self.post_analysis_folder = os.path.join(
+			self.post_analysis_folder_old,
+			"%03d-%03d" % self.t_interval)
 		check_folder(self.post_analysis_folder, self.dryrun, self.verbose)
 
 		# Resets some of the ac, jk and bs variable

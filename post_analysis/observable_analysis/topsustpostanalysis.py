@@ -25,7 +25,7 @@ class TopsustPostAnalysis(MultiPlotCore, TopsusCore):
 			interval_index=interval_index)
 
 		t_euclidean = int(sorted(self.plot_values.values())[0]["interval"])
-		self.interval = t_euclidean
+		self.interval = str(t_euclidean)
 
 		self.output_folder_path = os.path.join(self.output_folder_path, "int%d" % t_euclidean)
 		check_folder(self.output_folder_path, False, self.verbose)

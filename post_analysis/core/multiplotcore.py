@@ -19,29 +19,35 @@ class MultiPlotCore(PostCore):
 		for beta in sorted(data.keys()):
 			values = {}
 			if interval_index == None:
-				# Case where we have sub sections of observables, e.g. in euclidean time
+				# Case where we have sub sections of observables, e.g. in 
+				# euclidean time.
 				for sub_obs in self.observable_intervals[beta]:
 					if beta == 6.45: self.flow_time *= 2
 					sub_values = {}
 					sub_values["a"] = get_lattice_spacing(beta)
-					sub_values["x"] = sub_values["a"]* np.sqrt(8*self.flow_time)
+					sub_values["x"] = sub_values["a"]*np.sqrt(8*self.flow_time)
 					sub_values["y"] = data[beta][sub_obs]["y"]
 					sub_values["y_err"] = data[beta][sub_obs]["y_error"]
-					sub_values["bs"] = data_raw[beta][self.observable_name_compact][sub_obs]
+					sub_values["bs"] = data_raw[beta]\
+						[self.observable_name_compact][sub_obs]
 					sub_values["label"] = r"%s $\beta=%2.2f$ %s" % (
-						self.size_labels[beta], beta, self._convert_label(sub_obs))
+						self.size_labels[beta], beta, 
+						self._convert_label(sub_obs))
 					sub_values["color"] = self.colors[beta]
 					values[sub_obs] = sub_values
 			else:
 				sorted_intervals = sorted(data[beta].keys())
 				values["a"] = get_lattice_spacing(beta)
 				values["x"] = values["a"]* np.sqrt(8*self.flow_time)
-				values["y"] = data[beta][sorted_intervals[interval_index]]["y"]
-				values["y_err"] = data[beta][sorted_intervals[interval_index]]["y_error"]
+				values["y"] = data[beta] \
+					[sorted_intervals[interval_index]]["y"]
+				values["y_err"] = data[beta] \
+					[sorted_intervals[interval_index]]["y_error"]
 				values["bs"] = data_raw[beta][self.observable_name_compact] \
 					[sorted_intervals[interval_index]]
-				values["label"] = r"%s $\beta=%2.2f$ %s" % (self.size_labels[beta], 
-					beta, self._convert_label(sorted_intervals[interval_index]))
+				values["label"] = r"%s $\beta=%2.2f$ %s" % (
+					self.size_labels[beta], beta, 
+					self._convert_label(sorted_intervals[interval_index]))
 				values["color"] = self.colors[beta]
 				values["interval"] = sorted_intervals[interval_index]
 			self.plot_values[beta] = values
@@ -79,11 +85,14 @@ class MultiPlotCore(PostCore):
 	def get_N_intervals(self):
 		"""Returns possible intervals for us to plot."""
 		if self.verbose:
-			print "Intervals N=%d, possible for %s: " % (len(self.observable_intervals), 
+			print "Intervals N=%d, possible for %s: " % (
+				len(self.observable_intervals),
 				self.observable_name_compact),
+
 			print self.observable_intervals
-		# print self.observable_intervals
-		return len(self.observable_intervals.values()[0]), self.observable_intervals
+
+		return (len(self.observable_intervals.values()[0]), 
+			self.observable_intervals)
 
 	def plot_series(self, indexes, beta="all", x_limits=False, 
 		y_limits=False, plot_with_formula=False):
@@ -125,8 +134,11 @@ class MultiPlotCore(PostCore):
 		# print axes
 		for ax, i in zip(list(itertools.chain(*axes)), indexes):
 			for ibeta in bvalues:
-				# Retrieves the values deepending on the indexes provided and beta values
-				value = self.plot_values[ibeta][sorted(self.observable_intervals[ibeta])[i]]
+				# Retrieves the values deepending on the indexes provided and
+				# beta values.
+				value = self.plot_values[ibeta] \
+					[sorted(self.observable_intervals[ibeta])[i]]
+
 				x = value["x"]
 				y = value["y"]
 				y_err = value["y_err"]

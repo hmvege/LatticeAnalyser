@@ -25,7 +25,7 @@ class TopsusQtQ0PostAnalysis(MultiPlotCore, TopsusCore):
 			interval_index=interval_index)
 
 		# Gets the exact interval
-		self.interval = sorted(self.plot_values.values())[0]["interval"]
+		self.interval = str(sorted(self.plot_values.values())[0]["interval"])
 
 		# Sets up interval folder 
 		self.output_folder_path = os.path.join(self.output_folder_path, "tf%s" % self.interval)
