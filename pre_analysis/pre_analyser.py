@@ -1,4 +1,7 @@
 from observable_analysis import *
+from tools.folderreadingtools import DataReader
+import time
+import numpy as np
 
 def _check_splits(NT, numsplits):
 	"""Checks if the temporal dimension has been split into good .intervals"""
@@ -282,7 +285,7 @@ def analyse_topcMCTime(params, numsplits=None, intervals=None):
 			range(0, NCfgs+1, split_interval), 
 			range(split_interval, NCfgs+1, split_interval)
 		)
-		_check_splits(NT, numsplits)
+		_check_splits(NCfgs, numsplits)
 
 	MC_interval = iter(intervals)
 
@@ -307,7 +310,7 @@ def analyse_topsusMCTime(params, numsplits=None, intervals=None):
 			range(0, NCfgs+1, split_interval), 
 			range(split_interval, NCfgs+1, split_interval)
 		)
-		_check_splits(NT, numsplits)
+		_check_splits(NCfgs, numsplits)
 
 	MC_interval = iter(intervals)
 

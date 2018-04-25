@@ -9,6 +9,12 @@ def get_num_observables(batch_folder, beta_folder):
 	"""Gets the number of observable in a folder."""
 	flow_path = os.path.join(batch_folder, beta_folder, "flow_observables")
 	num_obs = []
+
+	# If flow path do not exist, then we return
+	if not os.path.isdir(flow_path):
+		return 0
+
+	# Loops over flow obs folders
 	for flow_obs in os.listdir(flow_path):
 		# Skips all hidden files, e.g. .DS_Store
 		if flow_obs.startswith("."): continue
@@ -41,7 +47,7 @@ def main():
 		"qtq0eff",
 	]
 
-	observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
+	# observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["topcr", "qtq0eff"]
 	# observables = ["qtq0eff"]
 	# observables = ["topcr"]
@@ -196,9 +202,9 @@ def main():
 	# analysis_parameter_list = [databeta61, databeta62]
 	# analysis_parameter_list = [smaug_data_beta61_analysis]
 
-	# #### Submitting observable-batches
-	# for analysis_parameters in analysis_parameter_list:
-	# 	analyse(analysis_parameters)
+	#### Submitting observable-batches
+	for analysis_parameters in analysis_parameter_list:
+		pre_analysis(analysis_parameters)
 
 	#### Submitting post-analysis data
 	if len(analysis_parameter_list) >= 2:
