@@ -14,14 +14,14 @@ class TopsustAnalyser(TopsusAnalyserCore):
 	def __init__(self, *args, **kwargs):
 		super(TopsustAnalyser, self).__init__(*args, **kwargs)
 		self.y_original = copy.deepcopy(self.y)
-		self.observable_output_folder_path_old = self.observable_output_folder_path
+		self.observable_output_folder_path_old = \
+			self.observable_output_folder_path
 		self.NT = self.y_original.shape[-1]
 
 	def setEQ0(self, t_euclidean_index):
 		"""
-		Sets the Euclidean time we are to analyse for. Q_{t_E=}
-		q_flow_time_zero_percent: float between 0.0 and 1.0, in which we choose what percentage point of the data we set as q0.
-		E.g. if it is 0.9, it will be the Q that is closest to 90% of the whole flowed time.
+		Sets the Euclidean time we are to analyse for. E.g. if it is 0.9, it 
+		will be the Q that is closest to 90% of the total flowed time.
 
 		Args:
 			t_euclidean_index: integer of what time point we will look at
@@ -35,7 +35,8 @@ class TopsustAnalyser(TopsusAnalyserCore):
 		self.function_derivative_parameters = {"const": self.const}
 
 		# Sets file name
-		self.observable_name = r"$\chi(\langle Q_t Q_{t_{euclidean}} \rangle)^{1/4}$ at $i_{euclidean}=%d$" % self.t_euclidean_index
+		self.observable_name = (r"$\chi(\langle Q_t Q_{t_{euclidean}} "
+			"\rangle)^{1/4}$ at $i_{euclidean}=%d$" % self.t_euclidean_index)
 
 		# Manual method for multiplying the matrices
 		y_qe0 = copy.deepcopy(self.y_original[:,:,self.t_euclidean_index])
@@ -49,11 +50,16 @@ class TopsustAnalyser(TopsusAnalyserCore):
 		# self.y = np.abs(self.y) # If not absolute value, will get error!
 
 		# Creates a new folder to store t0 results in
-		self.observable_output_folder_path = os.path.join(self.observable_output_folder_path_old, "%04d" % self.t_euclidean_index)
-		check_folder(self.observable_output_folder_path, self.dryrun, self.verbose)
+		self.observable_output_folder_path = os.path.join(
+			self.observable_output_folder_path_old, 
+			"%04d" % self.t_euclidean_index)
+		check_folder(self.observable_output_folder_path, 
+			self.dryrun, self.verbose)
 
-		# Checks that {post_analysis_folder}/{observable_name}/{time interval} exist
-		self.post_analysis_folder = os.path.join(self.post_analysis_folder_old, "%04d" % self.t_euclidean_index)
+		# Checks that {post_analysis_folder}/{observable_name}/{time interval}
+		# exist.
+		self.post_analysis_folder = os.path.join(
+			self.post_analysis_folder_old, "%04d" % self.t_euclidean_index)
 		check_folder(self.post_analysis_folder, self.dryrun, self.verbose)
 
 		# Resets some of the ac, jk and bs variable

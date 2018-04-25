@@ -247,9 +247,9 @@ def post_analysis(batch_folder, batch_beta_names, observables,
 					topsuste_analysis.plot_continuum(cont_target, i)
 
 					fit_parameters = append_fit_params(fit_parameters, 
-						topsust_analysis.observable_name_compact, 
+						topsuste_analysis.observable_name_compact, 
 						analysis_type,
-						topsust_analysis.get_linefit_parameters())
+						topsuste_analysis.get_linefit_parameters())
 
 			topsuste_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 

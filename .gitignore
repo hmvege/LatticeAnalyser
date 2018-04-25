@@ -1,6 +1,14 @@
+# Data files
 *.png
-*.DS_Store
-*.pyc
 *.txt
+*.dat
 
+# Binary files
+*.pyc
+*.bin
+
+# OS Junk files
+*.DS_Store
+
+# Folders not needed
 figures/

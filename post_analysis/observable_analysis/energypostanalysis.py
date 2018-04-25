@@ -98,27 +98,35 @@ class EnergyPostAnalysis(PostCore):
 			values["x"] = self.flow_time/self.r0**2*get_lattice_spacing(beta)**2
 			values["y"] = self._function_correction(data[beta]["y"])
 			values["bs"] = np.asarray([self._function_correction(self.data_raw["bootstrap"][beta][self.observable_name_compact][:,iBoot]) for iBoot in xrange(self.NBoots)]).T
-			values["y_err"] = - self._function_correction(data[beta]["y_error"]) # negative since the minus sign will go away during linear error propagation
-			values["label"] = r"%s $\beta=%2.2f$" % (self.size_labels[beta], beta)
+			
+			# Negative since the minus sign will go away during linear 
+			# error propagation.
+			values["y_err"] = - self._function_correction(data[beta]["y_error"])
+			values["label"] = (r"%s $\beta=%2.2f$" %
+				(self.size_labels[beta], beta))
 			values["color"] = self.colors[beta]
 
 			self.plot_values[beta] = values
 
-	def _linefit_to_continuum(self, x_points, y_points, y_points_error, fit_type="least_squares"):
+	def _linefit_to_continuum(self, x_points, y_points, y_points_error,
+		fit_type="least_squares"):
 		"""
 		Fits a a set of values to continuum.
 		Args:
 			x_points (numpy float array) : x points to data fit
 			y_points (numpy float array) : y points to data fit
 			y_points_error (numpy float array) : error of y points to data fit
-			[optional] fit_type (str) : type of fit to perform. Options: 'curve_fit' (default), 'polyfit'
+			[optional] fit_type (str) : type of fit to perform.
+				Options: 'curve_fit' (default), 'polyfit'
 		"""
 
 		# Fitting data
 		if fit_type == "least_squares":
-			pol, polcov = sciopt.curve_fit(lambda x, a, b: x*a + b, x_points, y_points, sigma=y_points_error)
+			pol, polcov = sciopt.curve_fit(lambda x, a, b: x*a + b, x_points,
+				y_points, sigma=y_points_error)
 		elif fit_type == "polynomial":
-			pol, polcov = np.polyfit(x_points, y_points, 1, rcond=None, full=False, w=1.0/y_points_error, cov=True)
+			pol, polcov = np.polyfit(x_points, y_points, 1, rcond=None, 
+				full=False, w=1.0/y_points_error, cov=True)
 		else:
 			raise KeyError("fit_type '%s' not recognized." % fit_type)
 
@@ -134,16 +142,21 @@ class EnergyPostAnalysis(PostCore):
 
 		return x, y, y_std, a, b, a_err, b_err
 
-	def plot_continuum(self, fit_target, fit_interval, fit_type, plot_arrows=[0.05, 0.07, 0.1], legend_location="best", line_fit_type="least_squares"):
+	def plot_continuum(self, fit_target, fit_interval, fit_type, 
+			plot_arrows=[0.05, 0.07, 0.1], legend_location="best",
+			line_fit_type="least_squares"):
 		# Retrieves t0 values used to be used for continium fitting
-		self._get_beta_values_to_fit(fit_target, fit_interval, axis="y",
-									fit_type=fit_type, 
-									fit_function_modifier=lambda x: x*self.r0**2,
-									plot_fit_window=False)
+		self._get_beta_values_to_fit(
+			fit_target, fit_interval, axis="y",
+			fit_type=fit_type, 
+			fit_function_modifier=lambda x: x*self.r0**2,
+			plot_fit_window=False)
 
-		a_lattice_spacings = np.asarray([val["a"] for val in self.beta_fit])[::-1]
+		a_lattice_spacings = \
+			np.asarray([val["a"] for val in self.beta_fit])[::-1]
 		t_fit_points = np.asarray([val["t0"] for val in self.beta_fit])[::-1]
-		t_fit_points_errors = np.asarray([val["t0_err"] for val in self.beta_fit])[::-1]
+		t_fit_points_errors = \
+			np.asarray([val["t0_err"] for val in self.beta_fit])[::-1]
 
 		# Initiates empty arrays for
 		x_points = np.zeros(len(a_lattice_spacings) + 1)
@@ -153,10 +166,13 @@ class EnergyPostAnalysis(PostCore):
 		# Populates with fit data
 		x_points[1:] = (a_lattice_spacings / self.r0)**2 
 		y_points[1:] = np.sqrt(8*(t_fit_points)) / self.r0
-		y_points_err[1:] = (8*t_fit_points_errors) / (np.sqrt(8*t_fit_points)) / self.r0
+		y_points_err[1:] = \
+			(8*t_fit_points_errors) / (np.sqrt(8*t_fit_points)) / self.r0
 
 		# Fits to continuum and retrieves values to be plotted
-		x_line, y_line, y_line_std, a, b, a_err, b_err = self._linefit_to_continuum(x_points[1:], y_points[1:], y_points_err[1:], fit_type=line_fit_type)
+		x_line, y_line, y_line_std, a, b, a_err, b_err = \
+			self._linefit_to_continuum(x_points[1:], y_points[1:], 
+				y_points_err[1:], fit_type=line_fit_type)
 
 		# Populates arrays with first fitted element
 		x_points[0] = x_line[0]
@@ -169,14 +185,19 @@ class EnergyPostAnalysis(PostCore):
 
 		# ax.axvline(0,linestyle="--",color="0",alpha=0.5)
 
-		ax.errorbar(x_points[1:], y_points[1:], yerr=y_points_err[1:], fmt="o", color="0", ecolor="0")
-		ax.errorbar(x_points[0], y_points[0], yerr=y_points_err[0], fmt="o", capthick=4, color="r", ecolor="r")
-		ax.plot(x_line, y_line, color="0", label=r"$y=(%.3f\pm%.3f)x + %.4f\pm%.4f$" % (a, a_err, b, b_err))
-		ax.fill_between(x_line, y_line-y_line_std, y_line + y_line_std, alpha=0.2, edgecolor='', facecolor="0")
+		ax.errorbar(x_points[1:], y_points[1:], yerr=y_points_err[1:],
+			fmt="o", color="0", ecolor="0")
+		ax.errorbar(x_points[0], y_points[0], yerr=y_points_err[0], fmt="o",
+			capthick=4, color="r", ecolor="r")
+		ax.plot(x_line, y_line, color="0", 
+			label=r"$y=(%.3f\pm%.3f)x + %.4f\pm%.4f$" % (a, a_err, b, b_err))
+		ax.fill_between(x_line, y_line-y_line_std, y_line + y_line_std, 
+			alpha=0.2, edgecolor='', facecolor="0")
 		ax.set_ylabel(self.y_label_continuum)
 		ax.set_xlabel(self.x_label_continuum)
 
-		# ax.set_title(r"Continuum limit reference scale: $t_{0,cont}=%2.4f\pm%g$" % ((self.r0*y_points[0])**2/8,(self.r0*y_points_err[0])**2/8))
+		ax.set_title((r"Continuum limit reference scale: $t_{0,cont}=%2.4f\pm%g$"
+			% ((self.r0*y_points[0])**2/8,(self.r0*y_points_err[0])**2/8)))
 
 		ax.set_xlim(-0.005, 0.045)
 		ax.set_ylim(0.92, 0.98)
@@ -189,15 +210,23 @@ class EnergyPostAnalysis(PostCore):
 
 		# Puts on some arrows at relevant points
 		for arrow in plot_arrows:
-			ax.annotate(r"$a=%.2g$fm" % arrow, xy=((arrow/self.r0)**2, end), xytext=((arrow/self.r0)**2, end+0.005), arrowprops=dict(arrowstyle="->"), ha="center")
+			ax.annotate(r"$a=%.2g$fm" % arrow, xy=((arrow/self.r0)**2, end), 
+				xytext=((arrow/self.r0)**2, end+0.005), 
+				arrowprops=dict(arrowstyle="->"), ha="center")
 		
 		ax.legend(loc=legend_location) # "lower left"
 
 		# Saves figure
-		fname = os.path.join(self.output_folder_path, "post_analysis_%s_continuum%s_%s.png" % (self.observable_name_compact, str(fit_target).replace(".",""), fit_type.strip("_")))
+		fname = os.path.join(self.output_folder_path, 
+			("post_analysis_%s_continuum%s_%s.png" % 
+				(self.observable_name_compact, str(fit_target).replace(".",""),
+					fit_type.strip("_"))))
+
 		fig.savefig(fname, dpi=self.dpi)
 
-		print "Continuum plot of %s created in %s" % (self.observable_name.lower(), fname)
+		print ("Continuum plot of %s created in %s" 
+			% (self.observable_name.lower(), fname))
+
 		plt.close(fig)
 
 	def coupling_fit(self):

@@ -8,21 +8,28 @@ Functions that can be pickled by the multiprocessing module
 """
 
 def _autocorrelation_parallel_core(input_values):
+	"""Autocorrelation function that works with GIL and multiprocessing."""
 	ac = Autocorrelation(input_values[0])
-	return ac.R, ac.R_error, ac.integrated_autocorrelation_time(), ac.integrated_autocorrelation_time_error()
+
+	return ac.R, ac.R_error, ac.integrated_autocorrelation_time(), \
+		ac.integrated_autocorrelation_time_error()
 
 def _autocorrelation_propagated_parallel_core(input_values):
 	data, funder, funder_params = input_values
 	if funder == None:
 		funder = lambda x: x
-	assert isinstance(funder_params, dict), "function parameters is not a dictionary."
-	ac = PropagatedAutocorrelation(data, function_derivative=funder, function_parameters=funder_params)
-	return ac.R, ac.R_error, ac.integrated_autocorrelation_time(), ac.integrated_autocorrelation_time_error()
+	assert isinstance(funder_params, dict), (
+		"function parameters is not a dictionary.")
+	ac = PropagatedAutocorrelation(data, function_derivative=funder, 
+		function_parameters=funder_params)
+	return ac.R, ac.R_error, ac.integrated_autocorrelation_time(), \
+		ac.integrated_autocorrelation_time_error()
 
 def _bootstrap_parallel_core(input_values):
 	data, N_bs, index_lists = input_values
 	bs = Bootstrap(data, N_bs, index_lists=index_lists)
-	return bs.bs_avg, bs.bs_std, bs.avg_original, bs.std_original, bs.bs_data, bs.data_original
+	return bs.bs_avg, bs.bs_std, bs.avg_original, bs.std_original, bs.bs_data,\
+		bs.data_original
 
 def _jackknife_parallel_core(input_values):
 	jk = Jackknife(input_values)
@@ -72,4 +79,5 @@ def _C_derivative(QtQ0, const=None):
 
 
 if __name__ == '__main__':
-	exit("Exit: %s to be imported as module in other programs." % __file__.split("/")[-1])
+	exit(("Exit: %s to be imported as module in other programs." %
+		__file__.split("/")[-1]))

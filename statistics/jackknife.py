@@ -18,7 +18,8 @@ def timing_function(func):
 			time_used = t2-t1
 			args[0].time_used = time_used
 			
-			print "Autocorrelation: time used with function %s: %.10f secs/ %.10f minutes" % (func.__name__, time_used, time_used/60.)
+			print ("Autocorrelation: time used with function %s: %.10f secs/ "
+				"%.10f minutes" % (func.__name__, time_used, time_used/60.))
 		
 		return val
 
@@ -41,26 +42,28 @@ class Jackknife:
 		# Sets some global class variables
 		if len(data.shape) == 2:
 			self.N, self.N_array_points = data.shape
-			self.jk_data_raw = np.zeros((self.N, self.N-1, self.N_array_points)) # Jack knifed data
+			self.jk_data_raw = np.zeros((self.N, self.N-1, self.N_array_points))
 		else:
 			self.N = len(data)
-			self.jk_data_raw = np.zeros((self.N, self.N-1)) # Jack knifed data
+			self.jk_data_raw = np.zeros((self.N, self.N-1))
 
 		# Performs jackknife and sets variables
 		self._perform_jk(data)
 
-		# Performing statistics on jackknife samples
-		self.jk_var = np.var(self.jk_data, axis=axis)*(self.N - 1) # Estimates variance according to new MHJ book
-		self.jk_std = np.sqrt(self.jk_var) # Ensures that the errors are run through the function F
+		# Performing statistics on jackknife samples, estimates variance 
+		# according to new MHJ book.
+		self.jk_var = np.var(self.jk_data, axis=axis)*(self.N - 1)
+		self.jk_std = np.sqrt(self.jk_var)
 		self.jk_avg_biased = np.average(self.jk_data, axis=axis)
 
 		# Gets and sets non-bootstrapped values
 		self.avg_original = np.average(data, axis=axis)
-		self.var_original = np.var(data, axis=axis) # Ensures that the errors are run through the function F
+		self.var_original = np.var(data, axis=axis)
 		self.std_original = np.sqrt(self.var_original)
 
 		# Returns the unbiased estimator/average
-		self.jk_avg = self.N*self.avg_original - (self.N - 1) * self.jk_avg_biased
+		self.jk_avg = self.N*self.avg_original
+		self.jk_avg -= (self.N - 1) * self.jk_avg_biased
 		self.jk_avg_unbiased = self.jk_avg
 
 	@timing_function
@@ -88,14 +91,24 @@ class Jackknife:
 
 	def __str__(self):
 		"""
-		When object is printed, prints information about the jackknife performed.
+		When object is printed, prints information about the jackknife 
+		performed.
 		"""
-		msg = """
-JACKKNIFE:
-%s
-Non-jackknife: %10.10f %10.10E %10.10E
-Jackknife:     %10.10f %10.10E %10.10E %20.16f (unbiased average)
-		""" % ("="*61, self.avg_original, self.var_original, self.std_original, self.jk_avg, self.jk_var, self.jk_std, self.jk_avg_unbiased)
+		msg = "JACKKNIFE:"
+		
+		msg += "\n" + "="*61
+
+		msg += "\nNon-jackknife: "
+		msg += "%10.10f " % self.avg_original
+		msg += "%10.10E " % self.var_original
+		msg += "%10.10E" % self.std_original
+		
+		msg += "\nJackknife:     "
+		msg += "%10.10f " % self.jk_avg
+		msg += "%10.10E " % self.jk_var
+		msg += "%10.10E " % self.jk_std
+		msg += "%20.16f (unbiased average)" % self.jk_avg_unbiased
+
 		return msg
 
 def main():

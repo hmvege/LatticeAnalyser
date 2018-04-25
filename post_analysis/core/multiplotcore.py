@@ -131,7 +131,6 @@ class MultiPlotCore(PostCore):
 		else:
 			bvalues = beta
 
-		# print axes
 		for ax, i in zip(list(itertools.chain(*axes)), indexes):
 			for ibeta in bvalues:
 				# Retrieves the values deepending on the indexes provided and

@@ -18,19 +18,23 @@ class TopsusteIntervalPostAnalysis(MultiPlotCore, TopsusCore):
 
 		# Sets plot values
 		self._initiate_plot_values(self.data[self.analysis_data_type],
-			self.data_raw[self.analysis_data_type], interval_index=interval_index)
-		self.output_folder_path = os.path.join(self.output_folder_path, "int%d" % interval_index)
+			self.data_raw[self.analysis_data_type],
+			interval_index=interval_index)
+		self.output_folder_path = os.path.join(self.output_folder_path,
+			"int%d" % interval_index)
 		check_folder(self.output_folder_path, False, self.verbose)
 		self.interval = str(sorted(self.plot_values.values())[0]["interval"])
 		title_addendum = r", $t_{e}$-interval: $[%s)$" % self.interval
-		super(TopsusteIntervalPostAnalysis, self).plot_continuum(fit_target, title_addendum=title_addendum)
+		super(TopsusteIntervalPostAnalysis, self).plot_continuum(fit_target,
+			title_addendum=title_addendum)
 
 		# Resets the plot values and output folder path
 		self.plot_values = self.plot_values_old
 		self.output_folder_path = self.output_folder_path_old
 
 def main():
-	exit("Exit: TopsusteIntervalPostAnalysis not intended to be a standalone module.")
+	exit(("Exit: TopsusteIntervalPostAnalysis not intended to be a "
+		"standalone module."))
 
 if __name__ == '__main__':
 	main()

@@ -402,11 +402,14 @@ def _test_simple_line_fit():
 	ax1 = fig1.add_subplot(211)
 	ax1.axhline(fit_target, linestyle="dashed", color="tab:grey")
 	ax1.plot(x_hat, y_hat, label="Unweigthed fit", color="tab:blue")
-	ax1.fill_between(x_hat, y_hat_err[0], y_hat_err[1], alpha=0.5, color="tab:blue")
-	ax1.errorbar(x, signal, yerr=signal_err, marker="o", label="Signal", linestyle="none", color="tab:orange")
+	ax1.fill_between(x_hat, y_hat_err[0], y_hat_err[1], alpha=0.5, 
+		color="tab:blue")
+	ax1.errorbar(x, signal, yerr=signal_err, marker="o", label="Signal", 
+		linestyle="none", color="tab:orange")
 	ax1.set_ylim(0.5, 5)
 	ax1.axvline(x_fit, color="tab:orange")
-	ax1.fill_betweenx(np.linspace(0,6,100), x_fit_err[0], x_fit_err[1], label=r"$x_0\pm\sigma_{x_0}$", alpha=0.5, color="tab:orange")
+	ax1.fill_betweenx(np.linspace(0,6,100), x_fit_err[0], x_fit_err[1], 
+		label=r"$x_0\pm\sigma_{x_0}$", alpha=0.5, color="tab:orange")
 	ax1.legend(loc="best", prop={"size":8})
 	ax1.set_title("Fit test - unweigthed")
 
@@ -421,12 +424,11 @@ def _test_simple_line_fit():
 	print _fit_var_printer("b", polyfit1[1], polyfit_err[1])
 
 	# SciPy curve fit
-	polw, polcovw = sciopt.curve_fit(lambda x, a, b : x*a + b, x, signal, sigma=signal_err)
+	polw, polcovw = sciopt.curve_fit(lambda x, a, b : x*a + b, x, signal, 
+		sigma=signal_err)
 	print "SciPy curve_fit:"
 	print _fit_var_printer("a", polw[0], polcovw[0,0])
 	print _fit_var_printer("b", polw[1], polcovw[1,1])
-
-	# fit.set_fit_parameters(polyfit1[0], polyfit_err[0], polyfit1[1], polyfit_err[1], weighted=True)
 
 	# Weighted LineFit
 	yw_hat, yw_hat_err, f_params_weigthed, chi_weigthed = fit.fit_weighted(x_hat)
@@ -440,12 +442,15 @@ def _test_simple_line_fit():
 
 	ax2 = fig1.add_subplot(212)
 	ax2.axhline(fit_target, linestyle="dashed", color="tab:grey")
-	ax2.errorbar(x, signal, yerr=signal_err, marker="o", label="Signal", linestyle="none", color="tab:orange")
+	ax2.errorbar(x, signal, yerr=signal_err, marker="o", label="Signal", 
+		linestyle="none", color="tab:orange")
 	ax2.plot(x_hat, yw_hat, label="Weighted fit", color="tab:blue")
-	ax2.fill_between(x_hat, yw_hat_err[0], yw_hat_err[1], alpha=0.5, color="tab:blue")
+	ax2.fill_between(x_hat, yw_hat_err[0], yw_hat_err[1], alpha=0.5, 
+		color="tab:blue")
 	ax2.set_ylim(0.5, 5)
 	ax2.axvline(xw_fit, color="tab:orange")
-	ax2.fill_betweenx(np.linspace(0,6,100), xw_fit_error[0], xw_fit_error[1], label=r"$x_{0,w}\pm\sigma_{x_0,w}$", alpha=0.5, color="tab:orange")
+	ax2.fill_betweenx(np.linspace(0,6,100), xw_fit_error[0], xw_fit_error[1], 
+		label=r"$x_{0,w}\pm\sigma_{x_0,w}$", alpha=0.5, color="tab:orange")
 	ax2.legend(loc="best", prop={"size":8})
 	plt.show()
 
@@ -469,7 +474,8 @@ def _test_inverse_line_fit():
 	x = np.linspace(x_start, x_end, N)
 	x_matrix = np.ones((M, N)) * x
 	signal_spread = 5
-	signal = np.cos(np.random.uniform(-signal_spread, signal_spread, (M, N))) + a*x_matrix + b
+	signal = np.cos(np.random.uniform(-signal_spread, signal_spread, (M, N)))
+	signal += a*x_matrix + b
 	signal_err = np.std(signal, axis=0)
 	signal_mean = np.mean(signal, axis=0)
 
@@ -521,20 +527,24 @@ def _test_inverse_line_fit():
 		p, pcov = sciopt.curve_fit(_f, x, bs_signal)#, sigma=np.cov(bs_signals.T))
 		_fit_err = np.sqrt(np.diag(pcov))
 		_lfit = LineFit(x, bs_signal)
-		_lfit.set_fit_parameters(p[1], _fit_err[0], p[0], _fit_err[0], weighted=False)
+		_lfit.set_fit_parameters(p[1], _fit_err[0], p[0], _fit_err[0], 
+			weighted=False)
 		_y_hat, _y_hat_err = _lfit(x_hat, weighted=False)
 
 		bs_vals.append(_y_hat)
 		bs_vals_err.append(_y_hat_err)
 
-		ax_bs.fill_between(x_hat, _y_hat_err[0], _y_hat_err[1], alpha=0.01, color="tab:red")
-		ax_bs.plot(x_hat, _y_hat, label="Numpy curve fit", color="tab:red", alpha=0.1)
+		ax_bs.fill_between(x_hat, _y_hat_err[0], _y_hat_err[1], alpha=0.01, 
+			color="tab:red")
+		ax_bs.plot(x_hat, _y_hat, label="Numpy curve fit", color="tab:red", 
+			alpha=0.1)
 
 	bs_mean = np.asarray(bs_vals).mean(axis=0)
 	bs_std = np.asarray(bs_vals_err).mean(axis=0)
 
 	lf = LineFit(x, signal_mean, signal_err)
-	print "Bootstrap Chi^2: ", lf.chi_squared(signal_mean, signal_err, bs_mean, n=N)
+	print "Bootstrap Chi^2: ", lf.chi_squared(signal_mean, signal_err, 
+		bs_mean, n=N)
 
 	# Sets up bs std edges
 	ax_bs.plot(x_hat, bs_std[0], x_hat, bs_std[1], color="tab:blue", alpha=0.6)
@@ -543,7 +553,8 @@ def _test_inverse_line_fit():
 	ax_bs.plot(x_hat, bs_mean, label="Averaged bootstrap fit", color="tab:blue")
 
 	# Plots original data with error bars
-	ax_bs.errorbar(x, signal_mean, yerr=signal_err, marker=".", linestyle="none", color="tab:orange")
+	ax_bs.errorbar(x, signal_mean, yerr=signal_err, marker=".", linestyle="none", 
+		color="tab:orange")
 
 	# plt.show()
 
@@ -563,7 +574,8 @@ def _test_inverse_line_fit():
 	# print scipy.optimize.__all__
 
 	# pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=signal_err, absolute_sigma=True)
-	pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=signal_err, absolute_sigma=True)
+	pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=signal_err,
+		absolute_sigma=True)
 	# pol1, polcov1 = scipy.optimize.curve_fit(_f, x, signal_mean)
 
 	# pol1, polcov1 = np.polyfit(x, signal_mean, 1, cov=True, w=1/signal_err)
@@ -586,7 +598,8 @@ def _test_inverse_line_fit():
 	fig1 = plt.figure()
 	ax1 = fig1.add_subplot(111)
 	ax1.plot(x_hat, y_hat, label="Numpy curve fit", color="tab:blue")
-	ax1.fill_between(x_hat, y_hat_err[0], y_hat_err[1], alpha=0.5, color="tab:blue")
+	ax1.fill_between(x_hat, y_hat_err[0], y_hat_err[1], alpha=0.5,
+		color="tab:blue")
 	ax1.errorbar(x, signal_mean, yerr=signal_err, marker=".",
 		label=r"Signal $\chi=%.2f$" % chi_squared, linestyle="none", 
 		color="tab:orange")
@@ -594,7 +607,8 @@ def _test_inverse_line_fit():
 	# ax1.axvline(x_fit, color="tab:orange")
 	# ax1.fill_betweenx(np.linspace(0,6,100), x_fit_err[0], x_fit_err[1], label=r"$x_0\pm\sigma_{x_0}$", alpha=0.5, color="tab:orange")
 	ax1.legend(loc="best", prop={"size":8})
-	ax1.set_title(r"Fit test: $a=%.2f\pm%.4f, b=%.2f\pm%.4f$" % (fit_par[0], fit_err[0], fit_par[1], fit_err[1]))
+	ax1.set_title((r"Fit test: $a=%.2f\pm%.4f, b=%.2f\pm%.4f$" %
+		(fit_par[0], fit_err[0], fit_par[1], fit_err[1])))
 
 	plt.show()
 	# fit = LineFit(x, signal, signal_err)

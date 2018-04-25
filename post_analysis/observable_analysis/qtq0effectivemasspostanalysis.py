@@ -113,16 +113,22 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 			values = {}
 
 			if flow_index == None:
-				# Case where we have sub sections of observables, e.g. in euclidean time
+				# Case where we have sub sections of observables, e.g. in 
+				# euclidean time.
 				for sub_obs in self.observable_intervals[beta]:
 					sub_values = {}
 					sub_values["a"] = get_lattice_spacing(beta)
 					sub_values["x"] = np.linspace(0, 
 						self.lattice_sizes[beta][1] * sub_values["a"], 
 						self.lattice_sizes[beta][1])
-					sub_values["y"], sub_values["y_err"] = self.analyse_raw(data_raw[beta][self.observable_name_compact][sub_obs])
+
+					sub_values["y"], sub_values["y_err"] = self.analyse_raw(
+						data_raw[beta][self.observable_name_compact][sub_obs])
+
 					sub_values["label"] = r"%s, $\beta=%2.2f$, $t_f=%d$" % (
-						self.size_labels[beta], beta, self._convert_label(sub_obs))
+						self.size_labels[beta], beta, 
+						self._convert_label(sub_obs))
+
 					sub_values["color"] = self.colors[beta]
 					values[sub_obs] = sub_values
 				self.plot_values[beta] = values
@@ -139,9 +145,13 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 				# values["y"] = self.C(data[beta][tf_index]["y"])
 				# values["y_err"] = self.C_std(data[beta][tf_index]["y"], data[beta][tf_index]["y_error"])
 				# values["y"], values["y_err"] = self.analyse_raw(data_raw[beta][self.observable_name_compact][tf_index])
-				values["y"], values["y_err"] = self.analyse_data(data[beta][tf_index])
+
+				values["y"], values["y_err"] = \
+					self.analyse_data(data[beta][tf_index])
+
 				values["label"] = r"%s $\beta=%2.2f$, $t_f=%d$" % (
 					self.size_labels[beta], beta, flow_index)
+
 				values["color"] = self.colors[beta]
 				self.plot_values[beta] = values
 
@@ -188,7 +198,8 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 		Method for plotting 4 axes together.
 
 		Args:
-			indexes: list containing integers of which intervals to plot together.
+			indexes: list containing integers of which intervals to plot 
+				together.
 			beta: beta values to plot. Default is "all". Otherwise, 
 				a list of numbers or a single beta value is provided.
 			x_limits: limits of the x-axis. Default is False.
@@ -223,16 +234,18 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 		# print axes
 		for ax, i in zip(list(itertools.chain(*axes)), indexes):
 			for ibeta in bvalues:
-				# Retrieves the values deepending on the indexes provided and beta values
-				value = self.plot_values[ibeta][sorted(self.observable_intervals[ibeta])[i]]
+				# Retrieves the values deepending on the indexes provided and 
+				# beta values.
+				value = self.plot_values[ibeta] \
+					[sorted(self.observable_intervals[ibeta])[i]]
 				x = value["x"]
 				y = value["y"]
 				y_err = value["y_err"]
 				# ax.plot(x, y, "o", label=value["label"], color=value["color"])
 				# ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, edgecolor='',
 				# 	facecolor=value["color"])
-				ax.errorbar(x, y, yerr=y_err, fmt=".", color=value["color"], ecolor=value["color"],
-					label=value["label"])
+				ax.errorbar(x, y, yerr=y_err, fmt=".", color=value["color"],
+					ecolor=value["color"], label=value["label"])
 				
 				# Basic plotting commands
 				ax.grid(True)
@@ -278,7 +291,8 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 		plt.rcParams['ytick.labelsize'] = old_rc_paramy
 
 def main():
-	exit("Exit: QtQ0EffectiveMassPostAnalysis not intended to be a standalone module.")
+	exit(("Exit: QtQ0EffectiveMassPostAnalysis not intended to be a "
+		"standalone module."))
 
 if __name__ == '__main__':
 	main()

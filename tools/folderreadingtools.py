@@ -6,7 +6,8 @@ import re
 import pandas as pd
 import json
 
-__all__ = ["DataReader", "check_folder", "get_NBoots", "write_data_to_file", "write_raw_analysis_to_file"]
+__all__ = ["DataReader", "check_folder", "get_NBoots", "write_data_to_file",
+	"write_raw_analysis_to_file"]
 
 class _DirectoryTree:
 	def __init__(self, batch_name, batch_folder, dryrun=False, verbose=True):
@@ -24,17 +25,20 @@ class _DirectoryTree:
 		# Checks that the output folder actually exist
 		print self.CURRENT_FOLDER
 		if not os.path.isdir(self.data_batch_folder):
-			raise IOError("No folder name output at location %s" % self.data_batch_folder)
+			raise IOError(("No folder name output at location %s"
+				% self.data_batch_folder))
 
 		# Retrieves folders and subfolders
-		self.batch_name_folder = os.path.join(self.data_batch_folder, batch_name)
+		self.batch_name_folder = os.path.join(self.data_batch_folder, 
+			batch_name)
 
 		# Retrieves potential .npy files
 		self.observables_binary_files = {}
 		for file in os.listdir(self.batch_name_folder):
 			head, ext = os.path.splitext(file)
 			if ext == ".npy":
-				self.observables_binary_files[head] = os.path.join(self.batch_name_folder, file)
+				self.observables_binary_files[head] = os.path.join(
+					self.batch_name_folder, file)
 
 		# Gets the regular configuration observables
 		self.observables_folders = False
@@ -44,7 +48,8 @@ class _DirectoryTree:
 			self.observables_folders = True
 
 
-			for obs, file_name in zip(self.observables_list, os.listdir(self.observables_folder)):
+			for obs, file_name in zip(self.observables_list, 
+				os.listdir(self.observables_folder)):
 
 				# Removes .DS_Store
 				if obs.startswith("."):
@@ -57,7 +62,8 @@ class _DirectoryTree:
 
 		## Gets paths to flow observable
 		# Creates the flow observables path
-		self.flow_path = os.path.join(self.batch_name_folder, "flow_observables")
+		self.flow_path = os.path.join(self.batch_name_folder,
+			"flow_observables")
 
 		# Checks that there exists a flow observable folder
 		if os.path.isdir(self.flow_path):
@@ -81,10 +87,12 @@ class _DirectoryTree:
 						if obs_file.startswith("."):
 							continue
 
-						flow_obs_dir_list.append(os.path.join(obs_path, obs_file))
+						flow_obs_dir_list.append(
+							os.path.join(obs_path, obs_file))
 
 					# Sorts list by natural sorting
-					self.flow_tree[flow_obs] = self.natural_sort(flow_obs_dir_list)
+					self.flow_tree[flow_obs] = \
+						self.natural_sort(flow_obs_dir_list)
 
 					self.found_flow_observables.append(flow_obs)
 
@@ -102,7 +110,8 @@ class _DirectoryTree:
 		if obs in self.flow_tree:
 			return self.flow_tree[obs]
 		else:
-			raise Warning("Flow observable \"%s\" was not found in possible observables: %s" % (obs, ", ".join(self.flow_tree.keys())))
+			raise Warning(("Flow observable \"%s\" was not found in possible "
+				"observables: %s" % (obs, ", ".join(self.flow_tree.keys()))))
 
 	def getObs(self, obs):
 		"""
@@ -111,7 +120,8 @@ class _DirectoryTree:
 		if obs in self.obs_tree:
 			return self.obs_tree[obs]
 		else:
-			raise Warning("Observable \"%s\" was not found in possible observables: %s" % (obs, ", ".join(self.flow_tree.keys())))
+			raise Warning(("Observable \"%s\" was not found in possible "
+				"observables: %s" % (obs, ", ".join(self.flow_tree.keys()))))
 
 	def getFoundFlowObservables(self):
 		"""
@@ -132,22 +142,33 @@ class _DirectoryTree:
 
 		# Builds the non-flow observable file paths
 		if self.observables_folders:
-			return_string += "\n  {0:<s}/{1:<s}".format(self.data_batch_folder, "observables")
-			for obs,file_name in zip(self.observables_list, os.listdir(self.observables_folder)):
-				return_string += "\n    {0:<s}".format(os.path.join(self.observables_folder, file_name))
+
+			return_string += "\n  {0:<s}/{1:<s}".format(
+				self.data_batch_folder, "observables")
+
+			for obs,file_name in zip(self.observables_list, 
+				os.listdir(self.observables_folder)):
+
+				return_string += "\n    {0:<s}".format(
+					os.path.join(self.observables_folder, file_name))
 		
 		if len(self.observables_binary_files) != 0:
+
 			for head in self.observables_binary_files:
-				return_string += "\n  {0:<s}".format(self.observables_binary_files[head].split("/")[-1])
+				return_string += "\n  {0:<s}".format(
+					self.observables_binary_files[head].split("/")[-1])
 
 		# Builds the flow observable file paths
 		if os.path.isdir(self.flow_path):
 			return_string += "\n  {0:<s}".format(self.flow_path)
+
 			for flow_obs in self.observables_list:
 				obs_path = os.path.join(self.flow_path, flow_obs)
 				return_string += "\n    {0:<s}".format(obs_path)
+
 				for obs_file in os.listdir(obs_path):
-					return_string += "\n      {0:<s}".format(os.path.join(obs_path, obs_file))
+					return_string += "\n      {0:<s}".format(
+						os.path.join(obs_path, obs_file))
 		return return_string
 
 class _FolderData:
@@ -170,14 +191,16 @@ class _FolderData:
 		# Retrieves file from file tree
 		files = file_tree.getFlow(observable)
 
-		# Stores the file tree as a global constant for later use by settings and perflow creator
+		# Stores the file tree as a global constant for later use by settings
+		# and perflow creator.
 		self.file_tree = file_tree
 
 		# Stores the observable name
 		self.observable = observable
 
 		if files == None:
-			print "No observables of type %s found in folder: %s" % (observable, folder)
+			print ("No observables of type %s found in folder: %s" 
+				% (observable, folder))
 			return
 
 		# Booleans to ensure certain actions are only done once
@@ -205,14 +228,16 @@ class _FolderData:
 		for i, file in enumerate(self.files):
 			# Gets the metadata
 			with open(file) as f:
-				# Reads in meta data as long as the first element on the line is a string
+				# Reads in meta data as long as the first element on the 
+				# line is a string.
 				while read_meta_data:
 					line = f.readline().split(" ")
 					if line[0].isalpha():
 						self.meta_data[str(line[0])] = float(line[-1])
 						N_rows_to_skip += 1
 					else:
-						# Stores number of rows(if we are on old or new data reading)
+						# Stores number of rows(if we are on old or new 
+						# data reading).
 						N_rows = len(line)
 
 						# Exits while loop
@@ -221,22 +246,34 @@ class _FolderData:
 			# Loads the data and places it in a list
 			if N_rows == 3:
 				# Uses pandas to read data (quick!)
-				data_frame = pd.read_csv(file, skiprows=N_rows_to_skip, sep=" ", names=["t", "sqrt8t", self.observable], header=None)
+				data_frame = pd.read_csv(file, skiprows=N_rows_to_skip, 
+					sep=" ", names=["t", "sqrt8t", self.observable], 
+					header=None)
 
 				# Only retrieves flow once
 				if not retrieved_sqrt8_flow_time:
-					# self.data_flow_time = _x # This is the a*sqrt(8*t), kinda useless
-					self.data_flow_time = data_frame["sqrt8t"].values[:flow_cutoff] # Pandas
+					
+					# This is the a*sqrt(8*t), kinda useless
+					# self.data_flow_time = _x
+					
+					# Pandas, much faster than numpy for some reason
+					self.data_flow_time = \
+						data_frame["sqrt8t"].values[:flow_cutoff]
+
 					retrieved_sqrt8_flow_time = True
+
 			elif N_rows == 2:
 				# If it is new observables with no sqrt(8*t)
 				# Uses pandas to read data (quick!)
-				data_frame = pd.read_csv(file, skiprows=N_rows_to_skip, sep=" ", names=["t", self.observable], header=None)
+				data_frame = pd.read_csv(file, skiprows=N_rows_to_skip, 
+					sep=" ", names=["t", self.observable], header=None)
+
 			else:
-				# If we have a topct-like variable, we will read in NT rows as well.
-				# Sets up header names
+				# If we have a topct-like variable, we will read in 
+				# NT rows as well. Sets up header names
 				header_names = ["t"] + ["t%d" % j for j in range(N_rows-1)]
-				data_frame = pd.read_csv(file, skiprows=N_rows_to_skip, sep=" ", names=header_names, header=None)
+				data_frame = pd.read_csv(file, skiprows=N_rows_to_skip, 
+					sep=" ", names=header_names, header=None)
 
 			# Only retrieves indexes/flow-time*1000 once
 			if not retrieved_flow_time:
@@ -246,9 +283,12 @@ class _FolderData:
 			# Appends observables
 			if N_rows > 3:
 				# Appends an array if we have data in more than one dimension
-				self.data_y.append(np.asarray([data_frame[iname].values[:flow_cutoff] for iname in header_names[1:]]).T)
+				self.data_y.append(
+					np.asarray([data_frame[iname].values[:flow_cutoff] \
+						for iname in header_names[1:]]).T)
 			else:
-				self.data_y.append(data_frame[self.observable].values[:flow_cutoff])
+				self.data_y.append(
+					data_frame[self.observable].values[:flow_cutoff])
 
 
 		self.data_y = np.asarray(self.data_y)
@@ -258,12 +298,14 @@ class _FolderData:
 		Function for storing run info.
 		"""		
 		# Checking that settings file does not already exist
-		setting_file_path = os.path.join(self.file_tree.batch_folder, "run_settings_%s.txt" % self.observable)
+		setting_file_path = os.path.join(self.file_tree.batch_folder,
+			"run_settings_%s.txt" % self.observable)
 
 		# Creating string to be passed to info file
 		info_string = ""
 		info_string += "Batch %s" % self.file_tree.batch_name
-		info_string += "\nObservables %s" % " ".join(self.file_tree.getFoundObservables())
+		info_string += "\nObservables %s" % " ".join(
+			self.file_tree.getFoundObservables())
 		info_string += "\nNConfigs %d" % self.data_y.shape[0]
 		for key in self.meta_data:
 			info_string += "\n%s %s" % (key, self.meta_data[key])
@@ -330,14 +372,17 @@ class DataReader:
 		if lattice_sizes != None:
 			self.lattice_sizes = lattice_sizes
 		else:
-			self.lattice_sizes = {6.0: 24**3*48, 6.1: 28**3*56, 6.2: 32**3*64, 6.45: 48**3*96}
+			self.lattice_sizes = {
+				6.0: 24**3*48, 6.1: 28**3*56, 6.2: 32**3*64, 6.45: 48**3*96}
 
 		self.__print_load_info()
 
-		self.file_tree = _DirectoryTree(self.batch_name, self.batch_folder, dryrun=dryrun, verbose=verbose)
+		self.file_tree = _DirectoryTree(self.batch_name, self.batch_folder, 
+			dryrun=dryrun, verbose=verbose)
 
 		if NCfgs == None:
-			raise ValueError("missing number of observables associated with batch.")
+			raise ValueError(
+				"missing number of observables associated with batch.")
 		else:
 			self.NCfgs = NCfgs
 
@@ -346,7 +391,8 @@ class DataReader:
 			# try to locate files in the batch_folder. If the observables or 
 			# topct cant be found, will load them in a regular way
 
-			print "Retrieving data for batch %s from folder %s" % (self.batch_name, self.batch_folder)
+			print ("Retrieving data for batch %s from folder %s" %
+				(self.batch_name, self.batch_folder))
 
 			observables_to_retrieve = self.file_tree.flow_tree
 			self.__retrieve_observable_data(observables_to_retrieve,
@@ -367,7 +413,9 @@ class DataReader:
 				self.__load_files(topct_fp, ["topct"],
 					flow_epsilon=flow_epsilon)
 			else:
-				if os.path.isdir(self.file_tree.flow_path) and "topct" in self.file_tree.found_flow_observables:
+				if os.path.isdir(self.file_tree.flow_path) and \
+					"topct" in self.file_tree.found_flow_observables:
+
 					# Loads in file from non binary
 					print "No binary file found for topct. Loads from .dat files."
 					self.__retrieve_observable_data(["topct"],
@@ -402,7 +450,8 @@ class DataReader:
 	def write_parameter_file(self):
 		"""Writes a parameter file for the analysis of a given batch."""
 
-		post_analysis_path = os.path.join(self.batch_folder, self.batch_name, "post_analysis_data")
+		post_analysis_path = os.path.join(self.batch_folder, self.batch_name,
+			"post_analysis_data")
 		param_file_path = os.path.join(post_analysis_path, "params.json")
 		json_dict = {}
 
@@ -412,7 +461,8 @@ class DataReader:
 
 		# Prints configuration file content if verbose or dryrun is true
 		if self.dryrun or self.verbose:
-			print "Writing json parameter file at location {0:<s}:".format(param_file_path)
+			print "Writing json parameter file at location {0:<s}:".format(
+				param_file_path)
 			print json.dumps(json_dict, indent=4, separators=(", ", ": "))
 
 		# Checks if the post analysis folder exists.
@@ -426,12 +476,18 @@ class DataReader:
 	def __print_load_info(self):
 		load_job_info = "="*100
 		load_job_info += "\n" + "Data loader"
-		load_job_info += "\n{0:<20s}: {1:<20s}".format("Batch name", self.batch_name)
-		load_job_info += "\n{0:<20s}: {1:<20s}".format("Batch folder", self.batch_folder)
+		load_job_info += "\n{0:<20s}: {1:<20s}".format("Batch name",
+			self.batch_name)
+		load_job_info += "\n{0:<20s}: {1:<20s}".format("Batch folder",
+			self.batch_folder)
 		print load_job_info
 
-	def __retrieve_observable_data(self, observables_to_retrieve, create_perflow_data=False):
-		"""Retrieves observable data when there is no binary file to retrieve from."""
+	def __retrieve_observable_data(self, observables_to_retrieve, 
+		create_perflow_data=False):
+		"""
+		Retrieves observable data when there is no binary file to retrieve from.
+		"""
+
 		_NFlows = []
 		_beta_values = []
 		for obs in observables_to_retrieve:
@@ -462,10 +518,12 @@ class DataReader:
 
 			del _data_obj
 
-			print "Retrieved %s. Size: %.2f MB" % (obs, sys.getsizeof(self.data[obs]["obs"])/1024.0/1024.0)
+			print "Retrieved %s. Size: %.2f MB" % (obs,
+				sys.getsizeof(self.data[obs]["obs"])/1024.0/1024.0)
 
 		# Checks that all values have been flowed for an equal amount of time
-		assert len(set(_NFlows)) == 1, "flow times differ for the different observables: %s" % (", ".join(_NFlows))
+		assert len(set(_NFlows)) == 1, ("flow times differ for the different "
+			"observables: %s" % (", ".join(_NFlows)))
 		self.NFlows = int(_NFlows[0])
 
 		# Sets a global beta value for the batch
@@ -487,13 +545,15 @@ class DataReader:
 		N, beta = self.__get_size_and_beta(input_file)
 
 		if "topct" in obs_list:
-			# Since there is only one observable, we split into number of configs we have
+			# Since there is only one observable, we split into number of 
+			# configs we have.
 			num_splits = self.NCfgs
 		else:
 			# Only splits data into the number of observables we have
 			num_splits = len(obs_list)
 
-		raw_data_splitted = np.array(np.split(raw_data[:,1:], num_splits, axis=1))
+		raw_data_splitted = \
+			np.array(np.split(raw_data[:,1:], num_splits, axis=1))
 
 		_NFlows = []
 		_betas = []
@@ -523,14 +583,16 @@ class DataReader:
 			_betas.append(beta)
 
 		# Checks that all values have been flowed for an equal amount of time
-		assert len(set(_NFlows)) == 1, "flow times differ for the different observables: %s" % (", ".join(_NFlows))
+		assert len(set(_NFlows)) == 1, ("flow times differ for the different "
+			"observables: %s" % (", ".join(_NFlows)))
 		self.NFlows = int(_NFlows[0])
 
 		# Sets a global beta value for the batch
 		assert np.asarray(_betas).all(), "beta values are not equal."
 		self.beta = _betas[0]
 
-		print "Loaded %s from file %s. Size: %.2f MB" % (", ".join(obs_list), input_file, raw_data.nbytes/1024.0/1024.0)
+		print "Loaded %s from file %s. Size: %.2f MB" % (", ".join(obs_list),
+			input_file, raw_data.nbytes/1024.0/1024.0)
 
 	def write_single_file(self):
 		self.__write_file(["plaq", "energy", "topc"])
@@ -551,7 +613,8 @@ class DataReader:
 
 				# Gets the axis shape in order to then flatten the data
 				_shape = _temp_rolled_data.shape
-				_temp_rolled_data = _temp_rolled_data.reshape(_shape[0], _shape[1]*_shape[2])
+				_temp_rolled_data = _temp_rolled_data.reshape(
+					_shape[0], _shape[1]*_shape[2])
 
 				raw_data = np.column_stack((raw_data, _temp_rolled_data))
 			else:
@@ -571,7 +634,8 @@ class DataReader:
 		# Saves as binary
 		np.save(file_path, raw_data)
 		
-		print "%s written to a single file at location %s.npy." % (", ".join(observables_to_write), file_path)
+		print "%s written to a single file at location %s.npy." % (
+			", ".join(observables_to_write), file_path)
 
 		return file_path + ".npy"
 
@@ -582,12 +646,15 @@ class DataReader:
 			obs_data = self.data[observable]
 
 			# Creating per flow folder
-			per_flow_folder = os.path.join("..",  obs_data["batch_data_folder"], obs_data["batch_name"], "perflow")
+			per_flow_folder = os.path.join("..", obs_data["batch_data_folder"],
+				obs_data["batch_name"], "perflow")
 			check_folder(per_flow_folder, self.dryrun, verbose=self.verbose)
 
 			# Creates observable per flow folder
-			per_flow_observable_folder = os.path.join(per_flow_folder, observable)
-			check_folder(per_flow_observable_folder, self.dryrun, verbose=self.verbose)
+			per_flow_observable_folder = os.path.join(
+				per_flow_folder, observable)
+			check_folder(per_flow_observable_folder, self.dryrun, 
+				verbose=self.verbose)
 
 			# Retrieving number of configs and number of flows
 			NConfigs = len(obs_data["obs"])
@@ -596,11 +663,15 @@ class DataReader:
 			# Re-storing files in a per flow format
 			for iFlow in xrange(NFlows):
 				# Setting up new per-flow file
-				flow_file = os.path.join(per_flow_folder, observable, obs_data["batch_name"] + "_flow%05d.dat" % iFlow)
+				flow_file = os.path.join(per_flow_folder, observable, 
+					obs_data["batch_name"] + "_flow%05d.dat" % iFlow)
 
 				# Saving re-organized data to file
 				if not self.dryrun:
-					np.savetxt(flow_file, obs_data["obs"][:,iFlow], fmt="%.16f", header="t %f \n%s" % (iFlow*obs_data["FlowEpsilon"], observable))
+					np.savetxt(flow_file, obs_data["obs"][:,iFlow],
+						fmt="%.16f", 
+						header="t %f \n%s" % (
+							iFlow*obs_data["FlowEpsilon"], observable))
 
 				# Prints message regardless of dryrun and iff
 				if self.verbose:
@@ -629,7 +700,8 @@ def write_data_to_file(analysis_object, save_as_txt=False):
 
 	Args:
 		analysis_object: object of FlowAnalyser class
-		post_analysis_folder: optional string output folder, default is ../output/analyzed_data
+		post_analysis_folder: optional string output folder, default 
+			is ../output/analyzed_data
 	"""
 
 	dryrun = analysis_object.dryrun
@@ -645,20 +717,26 @@ def write_data_to_file(analysis_object, save_as_txt=False):
 	# Retrieves analyzed data
 	x = copy.deepcopy(analysis_object.x)
 	y_org = copy.deepcopy(analysis_object.unanalyzed_y)
-	y_err_org = copy.deepcopy(analysis_object.unanalyzed_y_std*analysis_object.autocorrelation_error_correction)
+	y_err_org = copy.deepcopy(analysis_object.unanalyzed_y_std * \
+		analysis_object.autocorrelation_error_correction)
 	y_bs = copy.deepcopy(analysis_object.bs_y)
-	y_err_bs = copy.deepcopy(analysis_object.bs_y_std*analysis_object.autocorrelation_error_correction)
+	y_err_bs = copy.deepcopy(analysis_object.bs_y_std * \
+		analysis_object.autocorrelation_error_correction)
 	y_jk = copy.deepcopy(analysis_object.jk_y)
-	y_err_jk = copy.deepcopy(analysis_object.jk_y_std*analysis_object.autocorrelation_error_correction)
+	y_err_jk = copy.deepcopy(analysis_object.jk_y_std * \
+		analysis_object.autocorrelation_error_correction)
 
 	# Stacks data to be written to file together
 	if not analysis_object.autocorrelation_performed:
 		data = np.stack((x, y_org, y_err_org, y_bs, y_err_bs, 
 			y_jk, y_err_jk), axis=1)
 	else:
-		tau_int = copy.deepcopy(analysis_object.integrated_autocorrelation_time) # tau_int
-		tau_int_err = copy.deepcopy(analysis_object.integrated_autocorrelation_time_error) # tau_int_err
-		sqrt2tau_int = copy.deepcopy(analysis_object.autocorrelation_error_correction) # sqrt(2*tau_int)
+		tau_int = copy.deepcopy(
+			analysis_object.integrated_autocorrelation_time) # tau_int
+		tau_int_err = copy.deepcopy(
+			analysis_object.integrated_autocorrelation_time_error) # tau_int_err
+		sqrt2tau_int = copy.deepcopy(
+			analysis_object.autocorrelation_error_correction) # sqrt(2*tau_int)
 		data = np.stack((x, y_org, y_err_org, y_bs, y_err_bs, 
 			y_jk, y_err_jk, tau_int, tau_int_err, sqrt2tau_int), axis=1)
 
@@ -669,23 +747,28 @@ def write_data_to_file(analysis_object, save_as_txt=False):
 	# Sets up file name and file path
 	if not analysis_object.autocorrelation_performed:
 		fname = "%s_no_autocorr" % observable
-		header_string = "observable %s beta %s\nt original original_error bs bs_error jk jk_error" % (observable, beta_string)
+		header_string = ("observable %s beta %s\nt original original_error bs"
+			" bs_error jk jk_error" % (observable, beta_string))
 	else:
 		fname = "%s" % observable
-		header_string = "observable %s beta %s\nt original original_error bs bs_error jk jk_error tau_int tau_int_err sqrt2tau_int" % (observable, beta_string)
+		header_string = ("observable %s beta %s\nt original original_error bs "
+					"bs_error jk jk_error tau_int tau_int_err sqrt2tau_int"
+					% (observable, beta_string))
 
 	fname_path = os.path.join(post_analysis_folder, fname)
 
 	# Saves data to file
 	if not dryrun:
 		if save_as_txt:
-			np.savetxt(fname_path + ".txt", data, fmt="%.16f", header=header_string)
+			np.savetxt(fname_path + ".txt", data, fmt="%.16f", 
+				header=header_string)
 		else:
 			np.save(fname_path, data)
 
 	print "Data for the post analysis written to %s" % fname_path
 
-def write_raw_analysis_to_file(raw_data, analysis_type, observable, post_analysis_folder, dryrun=False, verbose=False):
+def write_raw_analysis_to_file(raw_data, analysis_type, observable, 
+	post_analysis_folder, dryrun=False, verbose=False):
 	"""
 	Function that writes raw analysis data to file, either bootstrapped or
 		jackknifed data.
@@ -717,7 +800,9 @@ def write_raw_analysis_to_file(raw_data, analysis_type, observable, post_analysi
 	if not dryrun:
 		np.save(file_name_path, raw_data)
 	if verbose:
-		print "Analysis %s for observable %s stored as binary data at %s.npy" % (analysis_type, observable, file_name_path)
+		print ("Analysis %s for observable %s stored as binary data at %s.npy" 
+			% (analysis_type, observable, file_name_path))
 
 if __name__ == '__main__':
-	exit("Exiting: folderreadingtools not intended to be run as a standalone module.")
+	exit("Exiting: folderreadingtools not intended to be run as a standalone"
+		" module.")

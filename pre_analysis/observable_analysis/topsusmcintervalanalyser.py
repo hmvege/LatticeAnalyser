@@ -18,9 +18,11 @@ class TopsusMCIntervalAnalyser(MCIntervalAnalyser, TopsusAnalyserCore):
 		# Squares the values
 		self.y_original **= 2
 
-		self.observable_output_folder_path_old = self.observable_output_folder_path
+		self.observable_output_folder_path_old = \
+			self.observable_output_folder_path
 
 	def set_MC_interval(self, *args):
 		"""Runs first the inherited time setter function, then its own."""
 		super(TopsusMCIntervalAnalyser, self).set_MC_interval(*args)
-		self.observable_name = r"$\chi(\langle Q^2 \rangle)^{1/4}$ in MC interval $[%d,%d)$" % self.MC_interval
+		self.observable_name = (r"$\chi(\langle Q^2 \rangle)^{1/4}$ in MC "
+			"interval $[%d,%d)$" % self.MC_interval)

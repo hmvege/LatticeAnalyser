@@ -9,20 +9,26 @@ class Bootstrap:
 	def __init__(self, data, N_BS, index_lists=[], seed=None, axis=None):
 		"""
 		Args:
-			data 					(numpy array): 	dataset to give
-			N_BS					(int): 			number of bootstrap-samples to create
-			*bootstrap_statistics	(function):		statistics to run on bootstrap sample, default is numpy.mean()
-			*index_lists			(numpy array): 	randomly generated lists that can be provided
-			*seed 					(int/float):	seeding the random list generation
+			data 					(numpy array): 	dataset to give.
+			N_BS					(int): 			number of bootstrap-samples.
+			*bootstrap_statistics	(function):		statistics to run on 
+				bootstrap sample, default is numpy.mean().
+			*index_lists			(numpy array): 	randomly generated lists
+				that can be provided.
+			*seed 					(int/float):	random seed
 		Returns:
 			Object containing bootstrapped values
 		"""
 		N = len(data)
+
 		if seed != None: # Generates a seed if it is provided
 			np.random.seed(seed=seed)
 			self.seed = seed
-		if len(index_lists) == 0: # Allows user to send in a predefined list if needed
+
+		# Allows user to send in a predefined list if needed
+		if len(index_lists) == 0:
 			index_lists = np.random.randint(N, size=(N_BS, N))
+
 		self.bs_data_raw = data[index_lists]
 		self.bs_data = np.mean(self.bs_data_raw, axis=1)
 
@@ -69,13 +75,22 @@ class Bootstrap:
 		"""
 		When object is printed, prints information about the bootstrap performed.
 		"""
-		msg = """
-BOOTSTRAP:
-%s
-Non-bootstrap: %10.10f %10.10E %10.10E
-Bootstrap:     %10.10f %10.10E %10.10E
-N boostraps:   %d
-		""" % ("="*61, self.avg_original, self.var_original, self.std_original, self.bs_avg, self.bs_var, self.bs_std, self.N_BS)
+		msg = "BOOTSTRAP:"
+		
+		msg += "\n" + "="*61
+
+		msg += "\nNon-bootstrap: "
+		msg += "%10.10f " % self.avg_original
+		msg += "%10.10E " % self.var_original
+		msg += "%10.10E" % self.std_original
+		
+		msg += "\nBootstrap:     "
+		msg += "%10.10f " % self.bs_avg
+		msg += "%10.10E " % self.bs_var
+		msg += "%10.10E " % self.bs_std
+
+		msg += "\nN bootstraps   %d" % self.N_BS
+
 		return msg
 
 def main():

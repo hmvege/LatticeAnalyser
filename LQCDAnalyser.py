@@ -47,10 +47,12 @@ def main():
 		"qtq0eff",
 	]
 
-	# observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
+	observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["topcr", "qtq0eff"]
 	# observables = ["qtq0eff"]
 	# observables = ["topcr"]
+	observables = ["topsust", "topsuste"]
+	# observables = ["topsuste"]
 
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
 	print 100*"=" + "\n"
@@ -71,7 +73,7 @@ def main():
 	create_perflow_data = False
 
 	#### Save binary file
-	save_to_binary = True
+	save_to_binary = False
 
 	#### Load specific parameters
 	NFlows = 1000
@@ -123,7 +125,7 @@ def main():
 
 	# Percents of data where we do qtq0
 	q0_flow_times = [0.0, 0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.0]
-	q0_flow_times = [0]
+	# q0_flow_times = [0]
 
 	# Flow time indexes to plot qtq0 in euclidean time at
 	flow_time_indexes = [0, 100, 400, 700, 999]
@@ -166,8 +168,8 @@ def main():
 	databeta60["batch_name"] = beta_folders[0]
 	databeta60["NCfgs"] = get_num_observables(data_batch_folder,
 		beta_folders[0])
-	databeta60["obs_file"] = "8_6.00"
-	databeta60["lattice_size"] = {6.0: 8**3*16}
+	databeta60["obs_file"] = "24_6.00"
+	databeta60["lattice_size"] = {6.0: 24**3*48}
 
 	databeta61 = copy.deepcopy(default_params)
 	databeta61["batch_name"] = beta_folders[1]
@@ -194,6 +196,8 @@ def main():
 	# smaug_data_beta60_analysis["batch_name"] = beta_folders[0]
 	# smaug_data_beta60_analysis["NCfgs"] = get_num_observables(data_batch_folder,
 	# 	beta_folders[0])
+	# smaug_data_beta60_analysis["obs_file"] = "8_6.00"
+	# smaug_data_beta60_analysis["lattice_size"] = {6.0: 8**3*16}
 
 	#### Adding relevant batches to args
 	# analysis_parameter_list = [databeta60, databeta61, databeta62, databeta645]
@@ -202,9 +206,9 @@ def main():
 	# analysis_parameter_list = [databeta61, databeta62]
 	# analysis_parameter_list = [smaug_data_beta61_analysis]
 
-	#### Submitting observable-batches
-	for analysis_parameters in analysis_parameter_list:
-		pre_analysis(analysis_parameters)
+	# #### Submitting observable-batches
+	# for analysis_parameters in analysis_parameter_list:
+	# 	pre_analysis(analysis_parameters)
 
 	#### Submitting post-analysis data
 	if len(analysis_parameter_list) >= 2:

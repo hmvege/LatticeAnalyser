@@ -7,6 +7,7 @@ class TopsusAnalyserCore(FlowAnalyser):
 	observable_name_compact = "topsus"
 	x_label = r"$\sqrt{8t_{flow}}[fm]$"
 	y_label = r"$\chi_t^{1/4}[GeV]$"
+	NTemporal = {6.0: 48, 6.1: 56, 6.2: 64, 6.45: 96}
 
 	def __init__(self, *args, **kwargs):
 		super(TopsusAnalyserCore, self).__init__(*args, **kwargs)
@@ -22,10 +23,8 @@ class TopsusAnalyserCore(FlowAnalyser):
 
 	def __set_size(self):
 		"""Function that sets the lattice size deepending on the beta value."""
-		# Retrieves lattice spacing
+		# Sets up constants used in the chi function for topsus
 		self.function_derivative = ptools._chi_derivative
-
-		# Sets up constants used in the chi function for topological susceptibility
 		self.V = self.lattice_sizes[self.beta]
 		self.const = self.hbarc/self.a/self.V**(1./4)
 		self.function_derivative_parameters = {"const": self.const}

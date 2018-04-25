@@ -29,7 +29,8 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 	def _convert_label(self, lab):
 		return int(lab[-4:])
 
-	def _initiate_plot_values(self, data, data_raw, euclidean_percent, flow_index=None):
+	def _initiate_plot_values(self, data, data_raw, euclidean_percent, 
+		flow_index=None):
 		"""interval_index: int, should be in euclidean time."""
 
 		# Sorts data into a format specific for the plotting method
@@ -45,11 +46,15 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 					sub_values["x"] = np.linspace(0, 
 						self.lattice_sizes[beta][1] * sub_values["a"], 
 						self.lattice_sizes[beta][1])
+
 					sub_values["y"] = data[beta][sub_obs][te_index]["y"]
 					sub_values["y_err"] = data[beta][sub_obs][te_index]["y_error"]
-					sub_values["bs"] = data_raw[beta][self.observable_name_compact][sub_obs][te_index]
+					sub_values["bs"] = data_raw[beta] \
+						[self.observable_name_compact][sub_obs][te_index]
+
 					sub_values["label"] = r"%s, $\beta=%2.2f$, $t_f=%d$" % (
 						self.size_labels[beta], beta, self._convert_label(sub_obs))
+
 					sub_values["color"] = self.colors[beta]
 					values[sub_obs] = sub_values
 				self.plot_values[beta] = values
@@ -64,12 +69,14 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 					self.lattice_sizes[beta][1] * values["a"],
 					self.lattice_sizes[beta][1])
 
-
 				values["y"] = data[beta][tf_index][te_index]["y"]
 				values["y_err"] = data[beta][tf_index][te_index]["y_error"]
-				values["bs"] = data_raw[beta][self.observable_name_compact][tf_index][te_index]
+				values["bs"] = data_raw[beta][self.observable_name_compact] \
+					[tf_index][te_index]
+
 				values["label"] = r"%s $\beta=%2.2f$, $t_f=%d$, $t_e=%d$" % (
 					self.size_labels[beta], beta, flow_index, euclidean_index)
+
 				values["color"] = self.colors[beta]
 				self.plot_values[beta] = values
 
@@ -163,7 +170,9 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 		for ax, i in zip(list(itertools.chain(*axes)), indexes):
 			for ibeta in bvalues:
 				# Retrieves the values deepending on the indexes provided and beta values
-				value = self.plot_values[ibeta][sorted(self.observable_intervals[ibeta])[i]]
+				value = self.plot_values[ibeta] \
+					[sorted(self.observable_intervals[ibeta])[i]]
+
 				x = value["x"]
 				y = value["y"]
 				y_err = value["y_err"]
@@ -205,7 +214,8 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 		check_folder(folder_path, False, True)
 
 		fname = os.path.join(folder_path, "post_analysis_%s_%s_te%.2f.png" % (
-			self.observable_name_compact, self.analysis_data_type, euclidean_percent))
+			self.observable_name_compact,
+			self.analysis_data_type, euclidean_percent))
 		plt.savefig(fname, dpi=400)
 		print "Figure saved in %s" % fname
 		# plt.show()

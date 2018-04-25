@@ -9,7 +9,8 @@ class TopcteIntervalPostAnalysis(MultiPlotCore):
 	sub_obs = True
 
 def main():
-	exit("Exit: TopcteIntervalPostAnalysis not intended to be a standalone module.")
+	exit(("Exit: TopcteIntervalPostAnalysis not intended to be a standalone "
+		"module."))
 
 if __name__ == '__main__':
 	main()

@@ -350,8 +350,10 @@ class PostAnalysisDataReader:
 
 	def _get_bin(self, folder):
 		"""Gets binary data."""
-		assert len(os.listdir(folder)) == 1, "multiple files in binary folder %s: %s" % (folder, ", ".join(os.listdir(folder)))
-		return np.load(os.path.join(folder, self._get_dir_content(folder)[0]))
+		assert len(os.listdir(folder)) == 1, ("multiple files in binary "
+			"folder %s: %s" % (folder, ", ".join(os.listdir(folder))))
+		return np.load(os.path.join(folder,
+			self._get_dir_content(folder)[0]))
 
 	@staticmethod
 	def _get_parameter_data(file):
@@ -368,7 +370,8 @@ class PostAnalysisDataReader:
 		with open(file) as f:
 			header_content = f.readline().split(" ")[1:]
 			meta_data[header_content[0]] = header_content[1]
-			meta_data[header_content[2]] = float(header_content[3].replace("_", "."))
+			meta_data[header_content[2]] = \
+				float(header_content[3].replace("_", "."))
 		return meta_data
 
 	def _reorganize_data(self):
@@ -387,11 +390,13 @@ class PostAnalysisDataReader:
 			# Loops over the batch observable
 			for observable_name in self.data_batches[beta]:
 				# Stores the batch data in a sub-dictionary
-				self.data_observables[observable_name][beta] = self.data_batches[beta][observable_name]
+				self.data_observables[observable_name][beta] = \
+					self.data_batches[beta][observable_name]
 
 	def _reorganize_raw_data(self):
 		"""Reorganizes the data into beta-values and observables sorting."""
-		self.raw_analysis = {analysis_type: {} for analysis_type in self.analysis_types}
+		self.raw_analysis = \
+			{analysis_type: {} for analysis_type in self.analysis_types}
 
 		# Sets up new beta value dictionaries
 		for beta in self.data_raw:
@@ -405,10 +410,11 @@ class PostAnalysisDataReader:
 
 					if not sub_elem in self.analysis_types:
 						for analysis_type in self.analysis_types:
-							self._check_raw_bin_dict_keys(analysis_type, beta, observable_name, sub_elem)
-						# for sub_obs_name in self.data_raw[beta][observable_name]:
+							self._check_raw_bin_dict_keys(
+								analysis_type, beta, observable_name, sub_elem)
 					else:
-						self._check_raw_bin_dict_keys(sub_elem, beta, observable_name)
+						self._check_raw_bin_dict_keys(
+							sub_elem, beta, observable_name)
 
 		# Populates dictionaries
 		for beta in self.data_raw:
@@ -419,36 +425,39 @@ class PostAnalysisDataReader:
 				for sub_elem in self.data_raw[beta][observable_name]:
 					if sub_elem in self.analysis_types:
 						atype = sub_elem
-						self.raw_analysis[atype][beta][observable_name] = self.data_raw[beta][observable_name][atype]
+						self.raw_analysis[atype][beta][observable_name] = \
+							self.data_raw[beta][observable_name][atype]
 
 					else:
-						for sub_sub_elem in self.data_raw[beta][observable_name][sub_elem]:
-							# Checks if we have an raw analysis dictionary
-							if sub_sub_elem in self.analysis_types:
-								atype = sub_sub_elem
-								self.raw_analysis[atype][beta][observable_name][sub_elem] = self.data_raw[beta][observable_name][sub_elem][atype]
+						self._reorganize_raw_sub_sub(beta, 
+							sub_elem, observable_name)
 
-							else:
-								for atype in self.data_raw[beta][observable_name][sub_elem][sub_sub_elem]:
-									self.raw_analysis[atype][beta][observable_name][sub_elem][sub_sub_elem] = self.data_raw[beta][observable_name][sub_elem][sub_sub_elem][atype]
+	def _reorganize_raw_sub_sub(self, beta, sub_elem, obs_name):
+		"""Internal method for re-organizing the raw data."""
 
-		# print self.raw_analysis.keys()
-		# for k in self.raw_analysis:
-		# 	print " "*4, self.raw_analysis[k].keys()
-		# 	for kk in self.raw_analysis[k]:
-		# 		print " "*8, self.raw_analysis[k][kk].keys()
-		# 		for kkk in self.raw_analysis[k][kk]:
-		# 			if isinstance(self.raw_analysis[k][kk][kkk], dict):
-		# 				print " "*12, self.raw_analysis[k][kk][kkk].keys()
-		# 				for kkkk in self.raw_analysis[k][kk][kkk]:
-		# 					print " "*16, kkkk
-		# 			else:
-		# 				print " "*12, kkk
-		# 		# if type(self.raw_analysis[k][kk]) == dict:
+		# Loops over sub-sub element
+		for ss in self.data_raw[beta] \
+			[obs_name][sub_elem]: 
+
+			# Checks if we have an raw analysis dictionary
+			if ss in self.analysis_types:
+				atype = ss
+				self.raw_analysis[atype][beta][obs_name][sub_elem] = \
+					self.data_raw[beta][obs_name][sub_elem][atype]
+
+			else:
+				for atype in self.data_raw[beta][obs_name][sub_elem][ss]:
+					self.raw_analysis[atype][beta][obs_name][sub_elem][ss] = \
+						self.data_raw[beta][obs_name][sub_elem][ss][atype]
 
 
-	def _check_raw_bin_dict_keys(self, analysis_type, beta, observable_name, sub_obs=None):
-		"""Internal method for setting up dictionaries in case they do not exist."""
+
+	def _check_raw_bin_dict_keys(self, analysis_type, beta, observable_name,
+		sub_obs=None):
+		"""
+		Internal method for setting up dictionaries in case they do not exist.
+		"""
+
 		if beta not in self.raw_analysis[analysis_type]:
 			self.raw_analysis[analysis_type][beta] = {}
 
@@ -462,16 +471,19 @@ class PostAnalysisDataReader:
 
 	def _retrieve_sub_sub(self, obs_dir_path):
 		"""
-		Internal method for retrieving observable qtq0e, as that it contains nested folders.
+		Internal method for retrieving observable qtq0e, as that it contains 
+		nested folders.
 		"""
+
+		print "subsub is used!"
 
 		# print obs_dir_path
 		for flow_folder in self._get_dir_content(obs_dir_path):
 			flow_folder_path = os.path.join(obs_dir_path, flow_folder)
+
 			for eucl_folder in self._get_dir_content(flow_folder_path):
-				eucl_folder_path = os.path.join(flow_folder_path, eucl_folder)
-				# print self._get_dir_content(eucl_folder_path)
-				
+				eucl_folder_path = os.path.join(flow_folder_path,
+					eucl_folder)
 
 			exit(1)
 		raise NotImplementedError("qtq0e not completely implemented")

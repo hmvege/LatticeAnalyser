@@ -8,13 +8,22 @@ class TopsusQtQ0PostAnalysis(MultiPlotCore, TopsusCore):
 	observable_name = r"$\chi(\langle Q_t Q_{t_0} \rangle)^{1/4}$"
 	observable_name_compact = "topsusqtq0"
 	x_label = r"$\sqrt{8t_{flow}}[fm]$"
-	y_label = r"$\chi(\langle Q_{t} Q_{t_0} \rangle)^{1/4} [GeV]$" # $\chi_t^{1/4}[GeV]$
+	y_label = r"$\chi(\langle Q_{t} Q_{t_0} \rangle)^{1/4} [GeV]$"
 	sub_obs = True
 
 	# Continuum plot variables
 	y_label_continuum = r"$\chi^{1/4}(\langle Q_{t} Q_{t_0} \rangle)[GeV]$"
 
-	def plot_continuum(self, fit_target, interval_index, title_addendum=""):
+	def plot_continuum(self, fit_target, interval_index):
+		"""
+		Continuum plotter for topsus qtq0 in fixed flow time.
+
+		Args:
+			fit_target: float value at which we extrapolate to continuum from.
+			interval_index: int for a given interval euclidean specified from  
+				set_interval().
+		"""
+
 		# Backs up old variables
 		self.plot_values_old = self.plot_values
 		self.output_folder_path_old = self.output_folder_path
@@ -28,18 +37,21 @@ class TopsusQtQ0PostAnalysis(MultiPlotCore, TopsusCore):
 		self.interval = str(sorted(self.plot_values.values())[0]["interval"])
 
 		# Sets up interval folder 
-		self.output_folder_path = os.path.join(self.output_folder_path, "tf%s" % self.interval)
+		self.output_folder_path = os.path.join(self.output_folder_path,
+			"tf%s" % self.interval)
 		check_folder(self.output_folder_path, False, self.verbose)
 
 		# Sets up fit target folder target folder
 		if fit_target == -1:
 			fit_target = self.plot_values[max(self.plot_values)]["x"][-1]
-		self.output_folder_path = os.path.join(self.output_folder_path, "%02.2f" % fit_target)
+		self.output_folder_path = os.path.join(self.output_folder_path,
+			"%02.2f" % fit_target)
 		check_folder(self.output_folder_path, False, self.verbose)
 
 		t_flow = float(self.interval)/100.0 # To normalize the flow
 		title_addendum = r", $t_{0=%.2f}$" % t_flow
-		super(TopsusQtQ0PostAnalysis, self).plot_continuum(fit_target, title_addendum=title_addendum)
+		super(TopsusQtQ0PostAnalysis, self).plot_continuum(fit_target,
+			title_addendum=title_addendum)
 
 		# Resets the plot values and output folder path
 		self.plot_values = self.plot_values_old

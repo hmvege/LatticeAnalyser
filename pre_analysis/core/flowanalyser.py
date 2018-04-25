@@ -98,27 +98,32 @@ class FlowAnalyser(object):
 		# different data sets do not mix
 		self.data_batch_folder_path = os.path.join(self.figures_folder,
 			os.path.split(self.batch_data_folder)[-1])
-		check_folder(self.data_batch_folder_path, self.dryrun, verbose=self.verbose)
+		check_folder(self.data_batch_folder_path, self.dryrun, 
+			verbose=self.verbose)
 
 		# Checks that a batch folder exists
 		self.batch_name_folder_path = os.path.join(self.data_batch_folder_path,
 			self.batch_name)
-		check_folder(self.batch_name_folder_path, self.dryrun, verbose=self.verbose)
+		check_folder(self.batch_name_folder_path, self.dryrun, 
+			verbose=self.verbose)
 
 		# Checks that observable output folder exist, and if not will create it
-		self.observable_output_folder_path = os.path.join(self.batch_name_folder_path, 
-			self.observable_name_compact)
-		check_folder(self.observable_output_folder_path, self.dryrun, verbose=self.verbose)
+		self.observable_output_folder_path = os.path.join(
+			self.batch_name_folder_path, self.observable_name_compact)
+		check_folder(self.observable_output_folder_path, self.dryrun, 
+			verbose=self.verbose)
 
 		# Sets up the post analysis folder, but do not create it till its needed
 		self.post_analysis_folder_base = os.path.join(self.batch_data_folder, 
 			self.batch_name, "post_analysis_data")
-		check_folder(self.post_analysis_folder_base, self.dryrun, verbose=self.verbose)
+		check_folder(self.post_analysis_folder_base, self.dryrun, 
+			verbose=self.verbose)
 
 		# Checks that {post_analysis_folder}/{observable_name} exists
 		self.post_analysis_folder = os.path.join(self.post_analysis_folder_base, 
 			self.observable_name_compact)
-		check_folder(self.post_analysis_folder, self.dryrun, verbose=self.verbose)
+		check_folder(self.post_analysis_folder, self.dryrun, 
+			verbose=self.verbose)
 
 		# Makes a backup, for later use
 		self.post_analysis_folder_old = self.post_analysis_folder
@@ -239,12 +244,13 @@ class FlowAnalyser(object):
 				self.unanalyzed_y[i] = results[i][2]
 				self.unanalyzed_y_std[i] = results[i][3]
 
-				# Stores last data for plotting in histogram later and post analysis
+				# Stores last data for histogram and post analysis
 				self.bs_y_data[i] = results[i][4]
 				self.unanalyzed_y_data[i] = results[i][5]
 		else:
 			if self.verbose:
-				print "Not running parallel bootstrap for %s!" % self.observable_name
+				print ("Not running parallel bootstrap "
+					"for %s!" % self.observable_name)
 
 			# Non-parallel method for calculating bootstrap
 			for i in xrange(self.NFlows):
@@ -323,7 +329,8 @@ class FlowAnalyser(object):
 				self.jk_y_data[i] = results[i][2]
 		else:
 			if self.verbose:
-				print "Not running parallel jackknife for %s!" % self.observable_name
+				print ("Not running parallel jackknife "
+					"for %s!" % self.observable_name)
 
 			# Non-parallel method for calculating jackknife
 			for i in xrange(self.NFlows):
@@ -343,7 +350,8 @@ class FlowAnalyser(object):
 		# Sets performed flag to true
 		self.jackknife_performed = True
 
-	def autocorrelation(self, store_raw_ac_error_correction=True, method="wolff"):
+	def autocorrelation(self, store_raw_ac_error_correction=True, 
+		method="wolff"):
 		"""
 		Function for running the autocorrelation routine.
 
@@ -371,18 +379,23 @@ class FlowAnalyser(object):
 			
 			if method == "wolff":
 				# Sets up jobs for parallel processing
-				input_values = zip(	[self.y[:,i] for i in xrange(self.NFlows)],
-									[self.function_derivative for i in xrange(self.NFlows)],
-									[self.function_derivative_parameters for i in xrange(self.NFlows)])
+				input_values = zip(	
+					[self.y[:,i] for i in xrange(self.NFlows)],
+					[self.function_derivative for i in xrange(self.NFlows)],
+					[self.function_derivative_parameters \
+						for i in xrange(self.NFlows)])
 
 				# Initiates parallel jobs
-				results = pool.map(ptools._autocorrelation_propagated_parallel_core, input_values)
+				results = pool.map(
+					ptools._autocorrelation_propagated_parallel_core, 
+					input_values)
 			else:
 				# Sets up jobs for parallel processing
 				input_values = zip([self.y[:,i] for i in xrange(self.NFlows)])
 				
 				# Initiates parallel jobs
-				results = pool.map(ptools._autocorrelation_parallel_core, input_values)
+				results = pool.map(ptools._autocorrelation_parallel_core,
+					input_values)
 
 			# Closes multiprocessing instance for garbage collection
 			pool.close()
@@ -393,11 +406,13 @@ class FlowAnalyser(object):
 				self.autocorrelations_errors[i] = results[i][1]
 				self.integrated_autocorrelation_time[i] = results[i][2]
 				self.integrated_autocorrelation_time_error[i] = results[i][3]
-				self.autocorrelation_error_correction[i] = np.sqrt(2*self.integrated_autocorrelation_time[i])
+				self.autocorrelation_error_correction[i] = \
+					np.sqrt(2*self.integrated_autocorrelation_time[i])
 
 		else:
 			if self.verbose:
-				print "Not running parallel autocorrelation for %s!" % self.observable_name
+				print ("Not running parallel autocorrelation "
+					"for %s!" % self.observable_name)
 
 			# Non-parallel method for calculating autocorrelation
 			for i in xrange(self.NFlows):
@@ -409,13 +424,17 @@ class FlowAnalyser(object):
 					ac = Autocorrelation(self.y[:,i])
 				self.autocorrelations[i] = ac.R
 				self.autocorrelations_errors[i] = ac.R_error
-				self.integrated_autocorrelation_time[i] = ac.integrated_autocorrelation_time()
-				self.integrated_autocorrelation_time_error[i] = ac.integrated_autocorrelation_time_error()
-				self.autocorrelation_error_correction[i] = np.sqrt(2*self.integrated_autocorrelation_time[i])
+				self.integrated_autocorrelation_time[i] = \
+					ac.integrated_autocorrelation_time()
+				self.integrated_autocorrelation_time_error[i] = \
+					ac.integrated_autocorrelation_time_error()
+				self.autocorrelation_error_correction[i] = \
+					np.sqrt(2*self.integrated_autocorrelation_time[i])
 
 		# Stores the ac error correction
 		if store_raw_ac_error_correction:
-			self.save_raw_analysis_data(self.autocorrelation_error_correction, "autocorrelation")
+			self.save_raw_analysis_data(self.autocorrelation_error_correction, 
+				"autocorrelation")
 
 		# Sets performed flag to true
 		self.autocorrelation_performed = True
@@ -501,7 +520,8 @@ class FlowAnalyser(object):
 			fname_path = os.path.join(self.observable_output_folder_path,
 				"{0:<s}_bootstrap_Nbs{2:<d}_beta{1:<s}{3:<s}.png".format(
 					self.observable_name_compact,
-					str(self.beta).replace('.','_'), self.N_bs, self.fname_addon))
+					str(self.beta).replace('.','_'), 
+					self.N_bs, self.fname_addon))
 		else:
 			title_string = r"%s" % self.observable_name
 			fname_path = os.path.join(self.observable_output_folder_path,
@@ -524,7 +544,8 @@ class FlowAnalyser(object):
 				Default is to leave them unmodified.
 
 		"""
-		self.plot_boot(x=x, correction_function=correction_function, _plot_bs=False)
+		self.plot_boot(x=x, correction_function=correction_function, 
+			_plot_bs=False)
 
 	def __plot_error_core(self, x, y, y_std, title_string, fname):
 		"""
@@ -589,7 +610,8 @@ class FlowAnalyser(object):
 			flow_time_index = self.NFlows - 1
 
 		# Ensures flow time is within bounds.
-		assert flow_time_index < self.NFlows, "Flow time %d is out of bounds." % flow_time_index
+		assert flow_time_index < self.NFlows, ("Flow time %d is out of "
+			"bounds." % flow_time_index)
 
 		# Finds the maximum value at each MC time and sets up the y array
 		x = range(N_autocorr)
@@ -608,7 +630,7 @@ class FlowAnalyser(object):
 		fig = plt.figure()
 		ax = fig.add_subplot(111)
 		# ax.plot(x,y,color="0",label=self.observable_name)
-		ax.errorbar(x, y, yerr=y_std, color="0", ecolor="r")#,label=self.observable_name)
+		ax.errorbar(x, y, yerr=y_std, color="0", ecolor="r")
 		ax.set_ylim(-self.autocorrelations_limits, self.autocorrelations_limits)
 		ax.set_xlim(0, N_autocorr)
 		ax.set_xlabel(r"Lag $h$")
@@ -657,24 +679,31 @@ class FlowAnalyser(object):
 		print "Figure created in %s" % fname_path
 		plt.close(fig)
 
-	def plot_histogram(self, flow_time_index, x_label=None, NBins=30, x_limits="equal"):
+	def plot_histogram(self, flow_time_index, x_label=None, NBins=30,
+			x_limits="equal"):
 		"""
-		Function for creating histograms of the original, bootstrapped and jackknifed datasets together.
+		Function for creating histograms of the original, bootstrapped and 
+		jackknifed datasets together.
+
 		Args:
 			flow_time_index		(int): flow time to plot.
 			x_label				(str): x-axis label for plot.
 			[optional] NBins	(int): number of histogram bins.
-			[optional] x_limits	(str): type of x-axis limits. Default: 'auto'. Choices: 'equal','auto','analysis'
+			[optional] x_limits	(str): type of x-axis limits. Default: 'auto'.
+				Choices: 'equal','auto','analysis'
 
 		Raises:
 			AssertionError: if the lengths of the different analyzed data sets 
 				differ.
 			AssertionError: if the flow
 		"""
+		N_unanalyzed = len(self.unanalyzed_y_data)
+
 		# Setting proper flow-time 
 		if flow_time_index < 0:
-			flow_time_index = len(self.unanalyzed_y_data) - abs(flow_time_index)
-			assert len(self.unanalyzed_y_data) == len(self.bs_y_data) == len(self.jk_y_data), "Flow lengths of data sets is not equal!"
+			flow_time_index = N_unanalyzed - abs(flow_time_index)
+			assert N_unanalyzed == len(self.bs_y_data) == len(self.jk_y_data),\
+				"Flow lengths of data sets is not equal!"
 
 		# X-label set as the default y-label
 		if isinstance(x_label, types.NoneType):
@@ -682,7 +711,7 @@ class FlowAnalyser(object):
 
 		# Ensures flow time is within bounds.
 		assertion_str = "Flow time %d is out of bounds." % flow_time_index
-		assert flow_time_index < len(self.unanalyzed_y_data), assertion_str
+		assert flow_time_index < N_unanalyzed, assertion_str
 
 		# Sets up title and file name strings
 		title_string = r"Spread of %s, $t_{flow}=%.2f$" % (self.observable_name,
@@ -735,7 +764,8 @@ class FlowAnalyser(object):
 			xlim_positive = np.max([y2, y3])
 			xlim_negative = np.min([y2, y3])
 		else:
-			raise KeyError(("%s not recognized.\nOptions: 'equal', 'auto', 'analysis'." % x_limits))
+			raise KeyError(("%s not recognized.\nOptions: 'equal', 'auto', "
+				"'analysis'." % x_limits))
 
 		# Sets the axes limits
 		ax2.set_xlim(xlim_negative, xlim_positive)
@@ -811,8 +841,8 @@ class FlowAnalyser(object):
 		Plots the Monte Carlo history at a given flow time .
 
 		Args:
-			flow_time_index: index of the flow-time we are to plot for. -1 gives the
-				last flow time element.
+			flow_time_index: index of the flow-time we are to plot for. -1 
+				gives the last flow time element.
 		
 		Raises:
 			AssertionError: if the flow_time_index is out of bounds.

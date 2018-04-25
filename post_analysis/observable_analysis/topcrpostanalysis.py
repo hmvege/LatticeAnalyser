@@ -5,19 +5,28 @@ import numpy as np
 import os
 
 class TopcRPostAnalysis(PostCore):
-	"""Post-analysis of the topc ratio with Q^4_C/Q^2. Requires that Q4 and Q2 has been imported."""
+	"""
+	Post-analysis of the topc ratio with Q^4_C/Q^2. Requires that Q4 and Q2 
+	has been imported.
+	"""
+
 	observable_name = r"$R=\frac{\langle Q^4 \rangle_C}{\langle Q^2 \rangle}$"
 	observable_name_compact = "topcr"
 	x_label = r"$\sqrt{8t_{flow}}[fm]$"
 	y_label = r"$R$"
 
-	formula = r", $R = \langle Q^4_C \rangle = \langle Q^4 \rangle - 3 \langle Q^2 \rangle^2$"
+	formula = (r", $R = \langle Q^4_C \rangle = \langle Q^4 \rangle - "
+		"3 \langle Q^2 \rangle^2$")
 
-	lattice_sizes = {6.0: 24**3*48, 6.1: 28**3*56, 6.2: 32**3*64, 6.45: 48**3*96}
+	lattice_sizes = {
+		6.0: 24**3*48, 6.1: 28**3*56, 6.2: 32**3*64, 6.45: 48**3*96
+	}
 
-	def __init__(self, data, with_autocorr=True, figures_folder="../figures", verbose=False, dryrun=False):
+	def __init__(self, data, with_autocorr=True, figures_folder="../figures", 
+		verbose=False, dryrun=False):
 		"""
-		Initializes this specialized form of finding the ratio of different topological charge definitions
+		Initializes this specialized form of finding the ratio of different 
+		topological charge definitions.
 		"""
 		if with_autocorr:
 			self.ac = "with_autocorr"
@@ -62,19 +71,30 @@ class TopcRPostAnalysis(PostCore):
 		# First, gets the topc2, then topc4
 		for beta in self.beta_values:
 			# Q^2
-			self.topc2[beta] = {k: data.data_observables["topq2"][beta][self.ac][k] for k in self.analysis_types}
+			self.topc2[beta] = {
+				k: data.data_observables["topq2"][beta][self.ac][k] \
+					for k in self.analysis_types
+			}
 
 			# Q^4
-			self.topc4[beta] = {k: data.data_observables["topq4"][beta][self.ac][k] for k in self.analysis_types}
+			self.topc4[beta] = {
+				k: data.data_observables["topq4"][beta][self.ac][k] \
+					for k in self.analysis_types
+			}
 
 			# Q^4_C
 			self.topc4C[beta] = {}
 
 			# R = Q^4_C / Q^2
 			self.topcR[beta] = {}
-
-			self.topc2_raw[beta] = {k: data.raw_analysis[k][beta]["topq2"] for k in self.analysis_types}
-			self.topc4_raw[beta] = {k: data.raw_analysis[k][beta]["topq4"] for k in self.analysis_types}
+			self.topc2_raw[beta] = {
+			k: data.raw_analysis[k][beta]["topq2"] \
+				for k in self.analysis_types
+			}
+			self.topc4_raw[beta] = {
+				k: data.raw_analysis[k][beta]["topq4"] \
+				for k in self.analysis_types
+			}
 			self.topc4c_raw[beta] = {}
 			self.topcR_raw[beta] = {}
 
@@ -214,7 +234,8 @@ class TopcRPostAnalysis(PostCore):
 			values["x"] = values["a"]* np.sqrt(8*self.flow_time)
 			values["y"] = data[beta]["y"]
 			values["y_err"] = data[beta]["y_error"]
-			values["label"] = r"%s $\beta=%2.2f$" % (self.size_labels[beta], beta)
+			values["label"] = r"%s $\beta=%2.2f$" % (
+				self.size_labels[beta], beta)
 			values["color"] = self.colors[beta]
 			self.plot_values[beta] = values
 
