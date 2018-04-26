@@ -171,8 +171,18 @@ class Autocorrelation(_AutocorrelationCore):
 	"""
 	Class for performing an autocorrelation analysis based on Luscher
 	"""
-	# def __init__(self, data, use_numpy = False, data_statistic = lambda x : x, time_autocorrelation = False):
 	def __init__(self, *args, **kwargs):
+		"""
+		Args:
+			data 					 (numpy array): dataset to get autocorrelation for, replicum R=1
+			function_derivative			(function): the derivative of function to propagate data through
+			function_parameters		  (dictionary): dictionary of function derivative parameters
+			[optional] method				 (str): method of performing autocorrelation: "corroeff", "correlate", "manual"
+			[optional] time_autocorrealtion	(bool): times the autocorrelation function
+		Returns:
+			Object containing the autocorrelation values
+		"""
+
 		# Calls parent
 		super(Autocorrelation, self).__init__(*args, **kwargs)
 

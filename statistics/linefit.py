@@ -473,7 +473,7 @@ def _test_inverse_line_fit():
 	M = 40 # Number of observations at each data point
 	x = np.linspace(x_start, x_end, N)
 	x_matrix = np.ones((M, N)) * x
-	signal_spread = 5
+	signal_spread = 2
 	signal = np.cos(np.random.uniform(-signal_spread, signal_spread, (M, N)))
 	signal += a*x_matrix + b
 	signal_err = np.std(signal, axis=0)
@@ -481,6 +481,7 @@ def _test_inverse_line_fit():
 
 	# My line fit
 	x_hat = np.linspace(x_start, x_end, 10)
+	X_values = np.linspace(x_start, x_end, 50)
 
 	# def covariance(M, bias=False):
 	# 	"""
@@ -556,7 +557,7 @@ def _test_inverse_line_fit():
 	ax_bs.errorbar(x, signal_mean, yerr=signal_err, marker=".", linestyle="none", 
 		color="tab:orange")
 
-	# plt.show()
+	plt.close(fig_bs)
 
 	# exit(1)
 
@@ -569,27 +570,118 @@ def _test_inverse_line_fit():
 
 	## Unweigthed fit
 	# print help(sciopt.curve_fit)
-	# pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=np.cov(signal.T))
+
 	# pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=np.cov(signal.T))
 	# print scipy.optimize.__all__
 
 	# pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=signal_err, absolute_sigma=True)
-	pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=signal_err,
-		absolute_sigma=True)
-	# pol1, polcov1 = scipy.optimize.curve_fit(_f, x, signal_mean)
 
-	# pol1, polcov1 = np.polyfit(x, signal_mean, 1, cov=True, w=1/signal_err)
-	print pol1
-	print polcov1
+	from autocorrelation import Autocorrelation
 
-	# fit_par = np.mean(pol1, axis=1)
-	# fit_err = np.mean(polcov1, axis=2)
+	# print help(Autocorrelation)
+
+	_ac_array = np.zeros((N,20))
+	_tau_ints = np.zeros(N)
+
+	print signal.shape, M
+
+	for i in xrange(N):
+		ac = Autocorrelation(signal[:,i])
+		_ac_array[i] = ac.R
+		_tau_ints[i] = ac.integrated_autocorrelation_time()
+
+
+	def autocov(x, y): 
+		n = len(x)
+		# variance = x.var()
+		x = x-x.mean()
+		y = y-y.mean()
+		G = np.correlate(x, y, mode="full")[-n:]
+		G /= np.arange(n, 0, -1)
+		return G
+
+	# autocov_mat = np.zeros((N,N))
+	# for i in xrange(N):
+	# 	for j in xrange(N):
+	# 		autocov_mat[i,j] = autocov(signal[:,i], signal[:,j])
+	# print autocov
+	# print G_matrix.shape
+
+	cov_mat = np.cov(signal.T)
+	print cov_mat.shape
+
+	for i in xrange(N):
+		cov_mat[i,i] *= 2*_tau_ints[i]
+
+	lfit = LineFit(x, signal_mean, y_err=signal_err)
+
+	
+	# exit(1)
+	# pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=signal_err, absolute_sigma=True)
+
+	signal_err_corrected = np.sqrt(np.diag(cov_mat))
+	print "signal_err_corrected: ", signal_err_corrected[:5]
+
+	get_err = lambda _err: (_err[1] - _err[0])/2
+
+	pol1, polcov1 = np.polyfit(x, signal_mean, 1, w=1/np.diag(cov_mat), cov=True)
+	lfit.set_fit_parameters(pol1[1], np.sqrt(polcov1[1,1]), pol1[0], np.sqrt(polcov1[0,0]), weighted=True)
+	y_hat, y_hat_err, chi_squared = lfit(X_values, weighted=True)
+	print "With polyfit:            ", np.sqrt(np.diag(polcov1)), get_err(y_hat_err)[:5]
+	
+	pol1, polcov1 = scipy.optimize.curve_fit(_f, x, signal_mean, sigma=np.sqrt(np.diag(cov_mat)))
+	lfit.set_fit_parameters(pol1[1], np.sqrt(polcov1[1,1]), pol1[0], np.sqrt(polcov1[0,0]), weighted=True)
+	y_hat, y_hat_err, chi_squared = lfit(X_values, weighted=True)
+	print "With naive autocorr:     ", np.sqrt(np.diag(polcov1)), get_err(y_hat_err)[:5]
+	
+	pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=np.cov(signal.T))
+	lfit.set_fit_parameters(pol1[1], np.sqrt(polcov1[1,1]), pol1[0], np.sqrt(polcov1[0,0]), weighted=True)
+	y_hat, y_hat_err, chi_squared = lfit(X_values, weighted=True)
+	print "With cov(signal.T):      ", np.sqrt(np.diag(polcov1)), get_err(y_hat_err)[:5]
+	
+	pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=signal_err)
+	lfit.set_fit_parameters(pol1[1], np.sqrt(polcov1[1,1]), pol1[0], np.sqrt(polcov1[0,0]), weighted=True)
+	y_hat, y_hat_err, chi_squared = lfit(X_values, weighted=True)
+	print "With only signal errors: ", np.sqrt(np.diag(polcov1)), get_err(y_hat_err)[:5]
+
+	#INTERPOLATION
+	from scipy.interpolate import InterpolatedUnivariateSpline as spline
+	# print help(interpolate.InterpolatedUnivariateSpline)
+	s = spline(x, signal_mean, w=1/signal_err, k=1)
+	# print s(X_values)
+
+	class ErrorPropagationSpline(object):
+		"""
+		Does a spline fit, but returns both the spline value and associated uncertainty.
+		"""
+		def __init__(self, x, y, yerr, N=1000, *args, **kwargs):
+			"""
+			See docstring for InterpolatedUnivariateSpline
+			"""
+			yy = np.vstack([y + np.random.normal(loc=0, scale=yerr) for i in range(N)]).T
+			self._splines = [spline(x, yy[:, i], *args, **kwargs) for i in range(N)]
+
+		def __call__(self, x, *args, **kwargs):
+			"""
+			Get the spline value and uncertainty at point(s) x. args and kwargs are passed to spline.__call__
+			:param x:
+			:return: a tuple with the mean value at x and the standard deviation
+			"""
+			x = np.atleast_1d(x)
+			s = np.vstack([curve(x, *args, **kwargs) for curve in self._splines])
+			return (np.mean(s, axis=0), np.std(s, axis=0))
+
+	spl = ErrorPropagationSpline(x,signal_mean,signal_err)
+	spline_mean, spline_err = spl(X_values)
+	print spline_mean[:5]
+	print spline_err[:5]
+
+
+
 	fit_par = pol1
 	fit_err = np.sqrt(np.diag(polcov1))
 
 	# print np.cov(signal_mean.T)
-	lfit = LineFit(x, signal_mean, y_err=signal_err)
-	# lfit.set_fit_parameters(pol1[1], np.sqrt(polcov1[1,1]), pol1[0], np.sqrt(polcov1[0,0]), weighted=True)
 	# lfit.set_fit_parameters(fit_par[1], fit_err[1], fit_par[0], fit_err[0], weighted=True)
 	lfit.fit_weighted(x_arr=x_hat)
 	y_hat, y_hat_err, chi_squared = lfit(x_hat, weighted=True)
@@ -597,8 +689,15 @@ def _test_inverse_line_fit():
 
 	fig1 = plt.figure()
 	ax1 = fig1.add_subplot(111)
-	ax1.plot(x_hat, y_hat, label="Numpy curve fit", color="tab:blue")
-	ax1.fill_between(x_hat, y_hat_err[0], y_hat_err[1], alpha=0.5,
+
+	# REGULAR LINE FIT
+	# ax1.plot(x_hat, y_hat, label="Numpy curve fit", color="tab:blue")
+	# ax1.fill_between(x_hat, y_hat_err[0], y_hat_err[1], alpha=0.5,
+	# 	color="tab:blue")
+
+	# SPLINE FIT
+	ax1.plot(X_values, spline_mean, label="Numpy curve fit", color="tab:blue")
+	ax1.fill_between(X_values, spline_mean-spline_err, spline_mean+spline_err, alpha=0.5,
 		color="tab:blue")
 	ax1.errorbar(x, signal_mean, yerr=signal_err, marker=".",
 		label=r"Signal $\chi=%.2f$" % chi_squared, linestyle="none", 

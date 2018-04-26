@@ -128,7 +128,7 @@ def main():
 	# q0_flow_times = [0]
 
 	# Flow time indexes to plot qtq0 in euclidean time at
-	flow_time_indexes = [0, 100, 400, 700, 999]
+	flow_time_indexes = [0, 100, 400, 700, 999] # SHOULD BE IN PHYSICAL UNITS SUCH THAT IT IS EQUAL FOR EACH BETA VALUE!!!
 	euclidean_time_percents = [0, 0.25, 0.50, 0.75, 1.00]
 	
 	# Data types to be looked at in the post-analysis.
