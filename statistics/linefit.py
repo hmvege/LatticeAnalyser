@@ -653,12 +653,15 @@ def _test_inverse_line_fit():
 	class ErrorPropagationSpline(object):
 		"""
 		Does a spline fit, but returns both the spline value and associated uncertainty.
+
+		https://gist.github.com/kgullikson88/147f6beb6256307d1360
 		"""
 		def __init__(self, x, y, yerr, N=1000, *args, **kwargs):
 			"""
 			See docstring for InterpolatedUnivariateSpline
 			"""
 			yy = np.vstack([y + np.random.normal(loc=0, scale=yerr) for i in range(N)]).T
+			print yy
 			self._splines = [spline(x, yy[:, i], *args, **kwargs) for i in range(N)]
 
 		def __call__(self, x, *args, **kwargs):
@@ -667,7 +670,7 @@ def _test_inverse_line_fit():
 			:param x:
 			:return: a tuple with the mean value at x and the standard deviation
 			"""
-			x = np.atleast_1d(x)
+			x = np.atleast_1d(x) # Converts to at least one dimension
 			s = np.vstack([curve(x, *args, **kwargs) for curve in self._splines])
 			return (np.mean(s, axis=0), np.std(s, axis=0))
 
