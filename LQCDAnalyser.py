@@ -51,8 +51,8 @@ def main():
 	# observables = ["topcr", "qtq0eff"]
 	# observables = ["qtq0eff"]
 	# observables = ["topcr"]
-	observables = ["topsust", "topsuste"]
-	# observables = ["topsuste"]
+	observables = ["topsust", "topsuste", "topsusqtq0"]
+	observables = ["qtq0e", "qtq0eff", "topsusqtq0"]
 
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
 	print 100*"=" + "\n"
@@ -122,19 +122,21 @@ def main():
 
 	# Number of different sectors we will analyse in monte carlo time
 	MC_time_splits = 4
-
+ 
 	# Percents of data where we do qtq0
-	q0_flow_times = [0.0, 0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.0]
-	# q0_flow_times = [0]
+	# q0_flow_times = [0.0, 0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.0]
+
+	# Extraction point in sqrt(8*t) for q0 in qtq0
+	q0_flow_times = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
 
 	# Flow time indexes to plot qtq0 in euclidean time at
-	flow_time_indexes = [0, 100, 400, 700, 999] # SHOULD BE IN PHYSICAL UNITS SUCH THAT IT IS EQUAL FOR EACH BETA VALUE!!!
+	# flow_time_indexes = [0, 100, 400, 700, 999] # SHOULD BE IN PHYSICAL UNITS SUCH THAT IT IS EQUAL FOR EACH BETA VALUE!!!
 	euclidean_time_percents = [0, 0.25, 0.50, 0.75, 1.00]
 	
 	# Data types to be looked at in the post-analysis.
 	post_analysis_data_type = ["bootstrap"]
 
-	eff_mass_flow_times = [0, 100, 400, 700, 999]
+	# eff_mass_flow_times = [0, 100, 400, 700, 999]
 
 	#### Analysis batch setups
 	default_params = {
@@ -150,12 +152,12 @@ def main():
 		"correct_energy": correct_energy,
 		"num_t_euclidean_indexes": num_t_euclidean_indexes,
 		"q0_flow_times": q0_flow_times,
-		"flow_time_indexes": flow_time_indexes,
+		# "flow_time_indexes": flow_time_indexes,
 		"euclidean_time_percents": euclidean_time_percents,
 		"numsplits_eucl": numsplits_eucl,
 		"intervals_eucl": intervals_eucl,
 		"MC_time_splits": MC_time_splits,
-		"eff_mass_flow_times": eff_mass_flow_times,
+		# "eff_mass_flow_times": eff_mass_flow_times,
 		"lattice_sizes": {
 			6.0: 24**3*48,
 			6.1: 28**3*56,
@@ -206,17 +208,17 @@ def main():
 	# analysis_parameter_list = [databeta61, databeta62]
 	# analysis_parameter_list = [smaug_data_beta61_analysis]
 
-	# #### Submitting observable-batches
-	# for analysis_parameters in analysis_parameter_list:
-	# 	pre_analysis(analysis_parameters)
+	#### Submitting observable-batches
+	for analysis_parameters in analysis_parameter_list:
+		pre_analysis(analysis_parameters)
 
-	#### Submitting post-analysis data
-	if len(analysis_parameter_list) >= 2:
-		post_analysis(data_batch_folder, beta_folders, observables, 
-			topsus_fit_targets, line_fit_interval, energy_fit_target,
-			flow_time_indexes, euclidean_time_percents,
-			post_analysis_data_type=post_analysis_data_type,
-			figures_folder=figures_folder, verbose=verbose)
+	# #### Submitting post-analysis data
+	# if len(analysis_parameter_list) >= 2:
+	# 	post_analysis(data_batch_folder, beta_folders, observables, 
+	# 		topsus_fit_targets, line_fit_interval, energy_fit_target,
+	# 		flow_time_indexes, euclidean_time_percents,
+	# 		post_analysis_data_type=post_analysis_data_type,
+	# 		figures_folder=figures_folder, verbose=verbose)
 
 if __name__ == '__main__':
 	main()

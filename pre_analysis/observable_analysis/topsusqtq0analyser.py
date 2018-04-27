@@ -18,30 +18,33 @@ class TopsusQtQ0Analyser(TopsusAnalyserCore):
 		self.post_analysis_folder_old = self.post_analysis_folder
 		self.y_original = copy.deepcopy(self.y)
 
-	def setQ0(self, q_flow_time_zero_percent, y_label=None):
+	def setQ0(self, q0_flow_time, y_label=None):
 		"""
 		Sets the flow time we are to analyse for. E.g. if it is 0.9, it will 
 		be the Q that is closest to 90% of the total flowed time.
 
 		Args:
-			q_flow_time_zero_percent: float between 0.0 and 1.0, in which we 
+			q0_flow_time: float between 0.0 and 1.0, in which we 
 			choose what percentage point of the data we set as q0.
 		
 		"""
 
-		# Finds the q flow time zero value
-		self.q_flow_time_zero = q_flow_time_zero_percent * \
-			(self.a * np.sqrt(8*self.x))[-1]
+		# assert q0_flow_time < (self.a * np.sqrt(8*self.x))[-1], \
+		# 	"q0_flow_time exceed maximum flow time value."
 
-		self.plot_vline_at = self.q_flow_time_zero
-		
-		# Finds the flow time zero index
-		self.flow_time_zero_index = np.argmin(
-			np.abs(self.a * np.sqrt(8*self.x) - self.q_flow_time_zero))
+		# self.q0_flow_time = q0_flow_time
+
+		# # Selects index closest to q0_flow_time
+		# self.q0_flow_time_index = np.argmin(
+		# 	np.abs(self.a * np.sqrt(8*self.x) - self.q0_flow_time))
+
+		self._set_q0_time_and_index(q0_flow_time)
+
+		self.plot_vline_at = self.q0_flow_time
 
 		# Sets file name
 		self.observable_name = (r"$\chi(\langle Q_t Q_{t_0} \rangle)^{1/4}$"
-			" at $t=%.2f$" % (self.q_flow_time_zero))
+			" at $t=%.2f$" % (self.q0_flow_time))
 
 		# Corrects the volume, since we now only have a single time slice
 		self.V = self.lattice_sizes[self.beta] * \
@@ -50,7 +53,7 @@ class TopsusQtQ0Analyser(TopsusAnalyserCore):
 		self.function_derivative_parameters = {"const": self.const}
 
 		# Manual method for multiplying the matrices
-		y_q0 = copy.deepcopy(self.y_original[:,self.flow_time_zero_index])
+		y_q0 = copy.deepcopy(self.y_original[:,self.q0_flow_time_index])
 		self.y = copy.deepcopy(self.y_original)
 
 		# Multiplying QtQ0
@@ -63,17 +66,15 @@ class TopsusQtQ0Analyser(TopsusAnalyserCore):
 		# Creates a new folder to store t0 results in
 		self.observable_output_folder_path = os.path.join(
 			self.observable_output_folder_path_old,
-			"%04d" % self.flow_time_zero_index)
-		check_folder(self.observable_output_folder_path, 
-			self.dryrun, self.verbose)
+			"%04.2f" % self.q0_flow_time)
+		check_folder(self.observable_output_folder_path, self.dryrun, 
+			self.verbose)
 
 		# Checks if {post_analysis_folder}/{observable_name}/{time interval}
 		# exists.
-		self.post_analysis_folder = os.path.join(
-			self.post_analysis_folder_old,
-			"%04d" % self.flow_time_zero_index)
-		check_folder(self.post_analysis_folder, 
-			self.dryrun, self.verbose)
+		self.post_analysis_folder = os.path.join(self.post_analysis_folder_old,
+			"%04.2f" % self.q0_flow_time)
+		check_folder(self.post_analysis_folder, self.dryrun, self.verbose)
 
 		# Resets some of the ac, jk and bs variable
 		self.bootstrap_performed = False
@@ -100,6 +101,6 @@ class TopsusQtQ0Analyser(TopsusAnalyserCore):
 		return_string += info_string("Batch name", self.batch_name)
 		return_string += info_string("Observable", self.observable_name_compact)
 		return_string += info_string("Beta", "%.2f" % self.beta)
-		return_string += info_string("Flow time t0", "%.2f" % self.q_flow_time_zero)
+		return_string += info_string("Flow time t0", "%.2f" % self.q0_flow_time)
 		return_string += "\n" + "="*100
 		return return_string

@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import scipy.stats
 import types
 
+from scipy.interpolate import InterpolatedUnivariateSpline as spline
+
 class LineFit:
 	"""
 	Line fit based on article by Lavagini et al (2007).
@@ -337,6 +339,30 @@ class LineFit:
 		plt.show()
 		plt.close(fig1)
 
+class ErrorPropagationSpline(object):
+	"""
+	Does a spline fit, but returns both the spline value and associated uncertainty.
+
+	https://gist.github.com/kgullikson88/147f6beb6256307d1360
+	"""
+	def __init__(self, x, y, yerr, N=10000, *args, **kwargs):
+		"""
+		See docstring for InterpolatedUnivariateSpline
+		"""
+		yy = np.vstack([y + np.random.normal(loc=0, scale=yerr) for i in range(N)]).T
+		print yy
+		self._splines = [spline(x, yy[:, i], *args, **kwargs) for i in range(N)]
+
+	def __call__(self, x, *args, **kwargs):
+		"""
+		Get the spline value and uncertainty at point(s) x. args and kwargs are passed to spline.__call__
+		:param x:
+		:return: a tuple with the mean value at x and the standard deviation
+		"""
+		x = np.atleast_1d(x) # Converts to at least one dimension
+		s = np.vstack([curve(x, *args, **kwargs) for curve in self._splines])
+		return (np.mean(s, axis=0), np.std(s, axis=0))
+
 def _fit_var_printer(var_name, var, var_error, w=16):
 	return "{0:<s} = {1:<.{w}f} +/- {2:<.{w}f}".format(var_name, var, 
 		var_error, w=w)
@@ -473,15 +499,16 @@ def _test_inverse_line_fit():
 	M = 40 # Number of observations at each data point
 	x = np.linspace(x_start, x_end, N)
 	x_matrix = np.ones((M, N)) * x
-	signal_spread = 2
+	signal_spread = 0.5
 	signal = np.cos(np.random.uniform(-signal_spread, signal_spread, (M, N)))
+	signal = np.random.uniform(-signal_spread, signal_spread, (M, N))
 	signal += a*x_matrix + b
 	signal_err = np.std(signal, axis=0)
 	signal_mean = np.mean(signal, axis=0)
 
 	# My line fit
 	x_hat = np.linspace(x_start, x_end, 10)
-	X_values = np.linspace(x_start, x_end, 50)
+	X_values = np.linspace(x_start, x_end, 1000)
 
 	# def covariance(M, bias=False):
 	# 	"""
@@ -580,7 +607,7 @@ def _test_inverse_line_fit():
 
 	# print help(Autocorrelation)
 
-	_ac_array = np.zeros((N,20))
+	_ac_array = np.zeros((N,M/2))
 	_tau_ints = np.zeros(N)
 
 	print signal.shape, M
@@ -645,36 +672,12 @@ def _test_inverse_line_fit():
 	print "With only signal errors: ", np.sqrt(np.diag(polcov1)), get_err(y_hat_err)[:5]
 
 	#INTERPOLATION
-	from scipy.interpolate import InterpolatedUnivariateSpline as spline
+	
 	# print help(interpolate.InterpolatedUnivariateSpline)
 	s = spline(x, signal_mean, w=1/signal_err, k=1)
 	# print s(X_values)
 
-	class ErrorPropagationSpline(object):
-		"""
-		Does a spline fit, but returns both the spline value and associated uncertainty.
-
-		https://gist.github.com/kgullikson88/147f6beb6256307d1360
-		"""
-		def __init__(self, x, y, yerr, N=1000, *args, **kwargs):
-			"""
-			See docstring for InterpolatedUnivariateSpline
-			"""
-			yy = np.vstack([y + np.random.normal(loc=0, scale=yerr) for i in range(N)]).T
-			print yy
-			self._splines = [spline(x, yy[:, i], *args, **kwargs) for i in range(N)]
-
-		def __call__(self, x, *args, **kwargs):
-			"""
-			Get the spline value and uncertainty at point(s) x. args and kwargs are passed to spline.__call__
-			:param x:
-			:return: a tuple with the mean value at x and the standard deviation
-			"""
-			x = np.atleast_1d(x) # Converts to at least one dimension
-			s = np.vstack([curve(x, *args, **kwargs) for curve in self._splines])
-			return (np.mean(s, axis=0), np.std(s, axis=0))
-
-	spl = ErrorPropagationSpline(x,signal_mean,signal_err)
+	spl = ErrorPropagationSpline(x, signal_mean, signal_err, k=1)
 	spline_mean, spline_err = spl(X_values)
 	print spline_mean[:5]
 	print spline_err[:5]

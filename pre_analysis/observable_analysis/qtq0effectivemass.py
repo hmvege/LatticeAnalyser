@@ -10,7 +10,7 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 	observable_name = r""
 	observable_name_compact = "qtq0eff"
 	x_label = r"$t_e[fm]$"
-	y_label = r"$m_eff = \ln \frac{\langle Q_{t_e} Q_0 \rangle}{\langle Q_{t_e+1} Q_0 \rangle} $"
+	y_label = r"$m_eff = \ln \frac{\langle Q_{t_e} Q_0 \rangle}{\langle Q_{t_e+1} Q_0 \rangle}$"
 	mark_interval = 1
 	error_mark_interval = 1
 
@@ -23,21 +23,35 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 
 		# Stores old variables for resetting at each new flow time
 		self.N_configurations_old = self.N_configurations
-		self.observable_output_folder_path_old = self.observable_output_folder_path
+		self.observable_output_folder_path_old = \
+			self.observable_output_folder_path
 		self.post_analysis_folder_old = self.post_analysis_folder
 		self.NFlows_old = self.NFlows
 		self.x_old = self.x
 
-	def set_time(self, flow_time_index):
-		"""Function for setting the flow time we will plot in euclidean time."""
+	def set_time(self, q0_flow_time):
+		"""
+		Function for setting the flow time we will plot in euclidean time.
 
-		# Finds the q flow time zero value
-		self.flow_time_index = flow_time_index
-		self.flow_time = self.x_old[flow_time_index]
+		Args:
+			q0_flow_time: float, flow time t0 at where to select q0.
+		"""
+
+		# assert q0_flow_time < (self.a * np.sqrt(8*self.x))[-1], \
+		# 	"q0_flow_time exceed maximum flow time value."
+
+		# # Stores the q0 flow time value
+		# self.q0_flow_time = q0_flow_time
+
+		# # Selects index closest to q0_flow_time
+		# self.q0_flow_time_index = np.argmin(
+		# 	np.abs(self.a * np.sqrt(8*self.x) - self.q0_flow_time))
+
+		self._set_q0_time_and_index(q0_flow_time)
 
 		# Restores y from original data
 		self.y = copy.deepcopy(self.y_original)
-		self.y = self.y[:,flow_time_index,:]
+		self.y = self.y[:,self.q0_flow_time_index,:]
 
 		# Sets the number of flows as the number of euclidean time slices,
 		# as that is now what we are plotting in.
@@ -45,18 +59,18 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 		self.NFlows = self.NT
 
 		# Sets file name
-		self.observable_name = r"$t_{flow}=%.2f$" % (self.flow_time)
-		# self.observable_name = r"$\chi(\langle Q_{t_e} Q_{t_{e,0}} \rangle)^{1/4}$ at $t_{flow}=%.2f$" % (self.flow_time)
+		self.observable_name = r"$t_{flow}=%.2f$" % (self.q0_flow_time)
 
 		# Sets a new x-axis
 		self.x = np.linspace(0, self.NFlows - 1, self.NFlows)
 
 		# Multiplies by Q0 to get the correlator
-		y_e0 = copy.deepcopy(self.y_original[:,flow_time_index,0])
+		y_e0 = copy.deepcopy(self.y_original[:,self.q0_flow_time_index,0])
 
 		for iteuclidean in xrange(self.NFlows):
-			# np.log(Q/np.roll(Q, -1, axis=0))
-			# self.y[:,iteuclidean] = np.roll(self.y[:,iteuclidean], -1, axis=1) * y_e0
+			# self.y[:,iteuclidean] = np.roll(self.y[:,iteuclidean], -1, axis=1)
+			# self.y[:,iteuclidean] *= y_e0
+
 			self.y[:,iteuclidean] = self.y[:,iteuclidean] * y_e0
 
 		# Sets up variables deependent on the number of configurations again
@@ -73,18 +87,26 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 		self.jk_y_std = np.zeros(self.NFlows)
 
 		# Resets autocorrelation arrays
-		self.autocorrelations = np.zeros((self.NFlows, self.N_configurations/2))
-		self.autocorrelations_errors = np.zeros((self.NFlows, self.N_configurations/2))
+		self.autocorrelations = np.zeros((self.NFlows, self
+			.N_configurations/2))
+		self.autocorrelations_errors = np.zeros((self.NFlows, 
+			self.N_configurations/2))
 		self.integrated_autocorrelation_time = np.ones(self.NFlows)
 		self.integrated_autocorrelation_time_error = np.zeros(self.NFlows)
 		self.autocorrelation_error_correction = np.ones(self.NFlows)
 
-		# Creates a new folder to store results in {beta}/{observable_name}/{flow time} exist
-		self.observable_output_folder_path = os.path.join(self.observable_output_folder_path_old, "tflow%04d" % self.flow_time_index)
-		check_folder(self.observable_output_folder_path, self.dryrun, self.verbose)
+		# Creates a new folder to store results in {beta}/{observable_name}/
+		# {flow time} exist.
+		self.observable_output_folder_path = os.path.join(
+			self.observable_output_folder_path_old,
+			"tflow%04.2f" % self.q0_flow_time)
+		check_folder(self.observable_output_folder_path, self.dryrun,
+			self.verbose)
 
-		# Checks that {post_analysis_folder}/{observable_name}/{flow time} exist
-		self.post_analysis_folder = os.path.join(self.post_analysis_folder_old, "tflow%04d" % self.flow_time_index)
+		# Checks that {post_analysis_folder}/{observable_name}/{flow time} 
+		# exist.
+		self.post_analysis_folder = os.path.join(self.post_analysis_folder_old,
+			"tflow%04.2f" % self.q0_flow_time)
 		check_folder(self.post_analysis_folder, self.dryrun, self.verbose)
 
 		# Resets some of the ac, jk and bs variable
@@ -134,7 +156,8 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 
 	# def autocorrelation(self, store_raw_ac_error_correction=True, method="wolff"):
 	# 	"""Overriding the ac class."""
-	# 	super(QtQ0EffectiveMassAnalyser, self).autocorrelation(store_raw_ac_error_correction=True, method="luscher")
+	# 	super(QtQ0EffectiveMassAnalyser, self).autocorrelation(
+	# 		store_raw_ac_error_correction=True, method="luscher")
 
 	def __str__(self):
 		info_string = lambda s1, s2: "\n{0:<20s}: {1:<20s}".format(s1, s2)
@@ -144,7 +167,7 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 		return_string += info_string("Batch name", self.batch_name)
 		return_string += info_string("Observable", self.observable_name_compact)
 		return_string += info_string("Beta", "%.2f" % self.beta)
-		return_string += info_string("Flow time:", "%.2f" % self.flow_time)
+		return_string += info_string("Flow time t0", "%.2f" % self.q0_flow_time)
 		return_string += "\n" + "="*100
 		return return_string
 

@@ -166,10 +166,36 @@ class FlowAnalyser(object):
 		self.integrated_autocorrelation_time_error = np.zeros(self.NFlows)
 		self.autocorrelation_error_correction = np.ones(self.NFlows)
 
+	def _set_q0_time_and_index(self, q0_flow_time):
+		"""
+		Internal method for setting q0_flow_time and finding the correct q0 
+		flow index. To be used in conjunction with qtq0-type variables.
+
+		Args:
+			q0_flow_time: float, time at which we set q0 at.
+
+		Raises:
+			AssertionError: if q0_flow_time is less than maximum value of 
+				a*sqrt(8t).
+		"""
+		assert q0_flow_time < (self.a * np.sqrt(8*self.x))[-1], \
+			"q0_flow_time exceed maximum flow time value."
+
+		# Stores the q0 flow time value
+		self.q0_flow_time = q0_flow_time
+
+		# Selects index closest to q0_flow_time
+		self.q0_flow_time_index = np.argmin(
+			np.abs(self.a * np.sqrt(8*self.x) - self.q0_flow_time))
+
+
 	def __check_ac(self, fname):
 		"""
-		If autocorrelation has been performed it will add "_noErrorCorrection"
-		to the filename.
+		Internal method to check if autocorrelation has been performed, if 
+		false it will add "_noErrorCorrection" to the filename.
+
+		Args: 
+			fname: str, filename for autocorrelation.
 		"""
 		head, ext = os.path.splitext(fname)
 		fname_addon = "_noErrorCorrection"

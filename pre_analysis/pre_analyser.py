@@ -53,24 +53,28 @@ def analyse_default(analysis_object, N_bs, NBins=30, skip_histogram=False,
 	analysis_object.save_post_analysis_data() # save_as_txt=False
 
 def analyse_plaq(params):
+	"""Analysis of the plaquette."""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params 
 	plaq_analysis = PlaquetteAnalyser(obs_data("plaq"), dryrun=dryrun, 
 		parallel=parallel, numprocs=numprocs, verbose=verbose)
 	analyse_default(plaq_analysis, N_bs)
 
 def analyse_energy(params):
+	"""Analysis of the energy."""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params 
 	energy_analysis = EnergyAnalyser(obs_data("energy"), dryrun=dryrun, 
 		parallel=parallel, numprocs=numprocs, verbose=verbose)
 	analyse_default(energy_analysis, N_bs)
 
 def analyse_topsus(params):
+	"""Analysis of topsus."""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params 
 	topsus_analysis = TopsusAnalyser(obs_data("topc"), dryrun=dryrun, 
 		parallel=parallel, numprocs=numprocs, verbose=verbose)
 	analyse_default(topsus_analysis, N_bs)
 
 def analyse_topc(params):
+	"""Analysis of Q."""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params 
 	topc_analysis = TopcAnalyser(obs_data("topc"), dryrun=dryrun, 
 		parallel=parallel, numprocs=numprocs, verbose=verbose)
@@ -87,6 +91,7 @@ def analyse_topc(params):
 	analyse_default(topc_analysis, N_bs, NBins=150)
 
 def analyse_topc2(params):
+	"""Analysis of Q^2."""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params 
 	topc2_analysis = Topc2Analyser(obs_data("topc"), dryrun=dryrun, 
 		parallel=parallel, numprocs=numprocs, verbose=verbose)
@@ -148,29 +153,31 @@ def analyse_topsus_qtq0(params, q0_flow_times):
 	qtq0_analysis = TopsusQtQ0Analyser(obs_data("topc"), dryrun=dryrun,
 		parallel=parallel, numprocs=numprocs, verbose=verbose)
 
-	for q0_flow_time_percent in q0_flow_times:
-		qtq0_analysis.setQ0(q0_flow_time_percent) 
+	for q0_flow_time in q0_flow_times:
+		qtq0_analysis.setQ0(q0_flow_time) 
 		analyse_default(qtq0_analysis, N_bs, skip_histogram=True)
 
-def analyse_qtq0e(params, flow_time_indexes, euclidean_time_percents):
+def analyse_qtq0e(params, q0_flow_times, euclidean_time_percents):
+	"""Analysis for the effective mass qtq0 with q0 at a fixed flow time."""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
 
 	qtq0_analysis = QtQ0EuclideanAnalyser(obs_data("topct"), dryrun=dryrun,
 		parallel=parallel, numprocs=numprocs, verbose=verbose)
 
-	for flow_time_index in flow_time_indexes:
+	for q0_flow_time in q0_flow_times:
 		for euclidean_percent in euclidean_time_percents:
-			qtq0_analysis.set_time(flow_time_index, euclidean_percent)
+			qtq0_analysis.set_time(q0_flow_time, euclidean_percent)
 			analyse_default(qtq0_analysis, N_bs)
 
-def analyse_qtq0_effective_mass(params, flow_time_indexes):
+def analyse_qtq0_effective_mass(params, q0_flow_times):
+	"""Pre-analyser for the effective mass qtq0 with q0 at a fixed flow time."""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
 
 	qtq0eff_analysis = QtQ0EffectiveMassAnalyser(obs_data("topct"), dryrun=dryrun,
 		parallel=parallel, numprocs=numprocs, verbose=verbose)
 
-	for flow_time_index in flow_time_indexes:
-		qtq0eff_analysis.set_time(flow_time_index)
+	for q0_flow_time in q0_flow_times:
+		qtq0eff_analysis.set_time(q0_flow_time)
 		analyse_default(qtq0eff_analysis, N_bs)
 
 def analyse_topct(params, numsplits):
@@ -403,10 +410,10 @@ def pre_analysis(parameters):
 
 	# Other definitions
 	if "qtq0e" in parameters["observables"]:
-		analyse_qtq0e(params, parameters["flow_time_indexes"],
+		analyse_qtq0e(params, parameters["q0_flow_times"],
 			parameters["euclidean_time_percents"])
 	if "qtq0eff" in parameters["observables"]:
-		analyse_qtq0_effective_mass(params, parameters["eff_mass_flow_times"])
+		analyse_qtq0_effective_mass(params, parameters["q0_flow_times"])
 	
 
 	post_time = time.clock()
