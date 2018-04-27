@@ -134,7 +134,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 				self.plot_values[beta] = values
 
 			else:
-				tf_index = "tflow%04d" % flow_index
+				tf_index = "tflow%04.2f" % flow_index
 				values["a"] = get_lattice_spacing(beta)
 				
 				# For exact box sizes

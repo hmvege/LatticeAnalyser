@@ -67,9 +67,20 @@ def write_fit_parameters_to_file(fparams, fname, verbose=False):
 			if verbose: print line_values
 			f.write(line_values)
 
+def default_post_analysis(PostAnalysis, data, figures_folder, analysis_type,
+	verbose=False):
+	analysis = PostAnalysis(data, figures_folder=figures_folder, 
+		verbose=verbose)
+	analysis.set_analysis_data_type(analysis_type)
+	print analysis
+	analysis.plot()
+
+def plaq_post_analysis(*args, **kwargs):
+	default_post_analysis(PlaqPostAnalysis, *args, **kwargs)
+
 def post_analysis(batch_folder, batch_beta_names, observables,
-	topsus_fit_target, line_fit_interval, energy_fit_target,
-	flow_time_indexes, euclidean_time_percents, figures_folder="figures", 
+	topsus_fit_targets, line_fit_interval_points, energy_fit_target,
+	q0_flow_times, euclidean_time_percents, figures_folder="figures", 
 	post_analysis_data_type=None, bval_to_plot="all", verbose=False):
 	"""
 	Post analysis of the flow observables.
@@ -77,12 +88,12 @@ def post_analysis(batch_folder, batch_beta_names, observables,
 	Args: 
 		batch_folder: string, folder containing all the beta data.
 		batch_beta_names: list of the beta folder names.
-		topsus_fit_target: list of x-axis points to line fit at.
-		line_fit_interval: float, extension of the area around the fit target 
-			that will be used for the line fit.
+		topsus_fit_targets: list of x-axis points to line fit at.
+		line_fit_interval_points: int, number of points which we will use in 
+			line fit.
 		energy_fit_target: point of which we will perform a line fit at.
-		flow_time_indexes: points where we perform qtq0e at
-		euclidean_time_percents: points where we perform qtq0e at
+		q0_flow_times: points where we perform qtq0 at.
+		euclidean_time_percents: points where we perform qtq0e at.
 	"""
 
 	print "="*100 + "\nPost-analysis: retrieving data from: %s" % batch_folder
@@ -93,7 +104,7 @@ def post_analysis(batch_folder, batch_beta_names, observables,
 	# Loads data from post analysis folder
 	data = PostAnalysisDataReader(batch_folder)
 
-	continuum_targets = topsus_fit_target
+	continuum_targets = topsus_fit_targets
 
 	fit_parameters = []
 
@@ -277,22 +288,22 @@ def post_analysis(batch_folder, batch_beta_names, observables,
 
 			# Checks that we have similar flow times
 			N_tf, flow_intervals = qtq0e_analysis.get_N_intervals()
-			clean_string = lambda s: int(s[-4:])
+			clean_string = lambda s: float(s[-4:])
+
+			# Retrieves flow times for each beta value.
 			flow_times = np.asarray([b[1].keys() \
 				for b in flow_intervals.items()]).T
-			
+
 			# +1 in order to ensure the zeroth flow time does not count as false.
 			assert np.all([np.all([clean_string(i)+1 for i in ft]) \
-				for ft in flow_times]), "flow times differ."
+				for ft in flow_times]), "q0 times differ."
 
 			for te in euclidean_time_percents[:1]:
 				qtq0e_analysis.set_analysis_data_type(te, analysis_type)
 				print qtq0e_analysis
-				# print "flow_intervals: ", flow_intervals
-				for tf in flow_time_indexes: # Flow times
+				for tf in q0_flow_times: # Flow times
+					print "Plotting te: %g and tf: %g" % (te, tf)
 					qtq0e_analysis.plot_interval(tf, te)
-					# for cont_target in continuum_targets:
-					# 	qtq0e_analysis.plot_continuum(cont_target, i)
 				
 				qtq0e_analysis.plot_series(te, [0,1,2,3], beta=bval_to_plot)
 				qtq0e_analysis.plot_series(te, [0,2,3,4], beta=bval_to_plot)

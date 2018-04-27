@@ -46,7 +46,7 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 		# # Selects index closest to q0_flow_time
 		# self.q0_flow_time_index = np.argmin(
 		# 	np.abs(self.a * np.sqrt(8*self.x) - self.q0_flow_time))
-
+		self.x = self.x_old
 		self._set_q0_time_and_index(q0_flow_time)
 
 		# Restores y from original data

@@ -53,6 +53,7 @@ def main():
 	# observables = ["topcr"]
 	observables = ["topsust", "topsuste", "topsusqtq0"]
 	observables = ["qtq0e", "qtq0eff", "topsusqtq0"]
+	observables = ["qtq0e", "qtq0eff"]
 
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
 	print 100*"=" + "\n"
@@ -81,9 +82,9 @@ def main():
 
 	#### Post analysis parameters
 	run_post_analysis = True
-	line_fit_interval = 0.015
+	line_fit_interval_points = 20
 	# topsus_fit_targets = [0.3,0.4,0.5,0.58]
-	topsus_fit_targets = [0.5, -1]
+	topsus_fit_targets = [0.5, 0.6]
 	energy_fit_target = 0.3
 
 	#### Different batches
@@ -123,15 +124,14 @@ def main():
 	# Number of different sectors we will analyse in monte carlo time
 	MC_time_splits = 4
  
-	# Percents of data where we do qtq0
-	# q0_flow_times = [0.0, 0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.0]
-
 	# Extraction point in sqrt(8*t) for q0 in qtq0
 	q0_flow_times = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+	# q0_flow_times = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+	# q0_flow_times = [0.6]
 
 	# Flow time indexes to plot qtq0 in euclidean time at
-	# flow_time_indexes = [0, 100, 400, 700, 999] # SHOULD BE IN PHYSICAL UNITS SUCH THAT IT IS EQUAL FOR EACH BETA VALUE!!!
 	euclidean_time_percents = [0, 0.25, 0.50, 0.75, 1.00]
+	# euclidean_time_percents = [0]
 	
 	# Data types to be looked at in the post-analysis.
 	post_analysis_data_type = ["bootstrap"]
@@ -208,17 +208,19 @@ def main():
 	# analysis_parameter_list = [databeta61, databeta62]
 	# analysis_parameter_list = [smaug_data_beta61_analysis]
 
+	print "ERROR IN FLOW TIME SELECTION!!!"
+
 	#### Submitting observable-batches
 	for analysis_parameters in analysis_parameter_list:
 		pre_analysis(analysis_parameters)
 
-	# #### Submitting post-analysis data
-	# if len(analysis_parameter_list) >= 2:
-	# 	post_analysis(data_batch_folder, beta_folders, observables, 
-	# 		topsus_fit_targets, line_fit_interval, energy_fit_target,
-	# 		flow_time_indexes, euclidean_time_percents,
-	# 		post_analysis_data_type=post_analysis_data_type,
-	# 		figures_folder=figures_folder, verbose=verbose)
+	#### Submitting post-analysis data
+	if len(analysis_parameter_list) >= 3:
+		post_analysis(data_batch_folder, beta_folders, observables, 
+			topsus_fit_targets, line_fit_interval_points, energy_fit_target,
+			q0_flow_times, euclidean_time_percents,
+			post_analysis_data_type=post_analysis_data_type,
+			figures_folder=figures_folder, verbose=verbose)
 
 if __name__ == '__main__':
 	main()

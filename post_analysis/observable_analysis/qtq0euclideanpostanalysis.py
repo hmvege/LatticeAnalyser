@@ -21,16 +21,16 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 
 	def _get_euclidean_index(self, euclidean_percent, beta):
 		"""Internal method for getting the euclidean index."""
-		euclidean_index = self.lattice_sizes[beta][1] * euclidean_percent
+		euclidean_index = int(self.lattice_sizes[beta][1] * euclidean_percent)
 		if euclidean_index != 0:
 		 	euclidean_index -= 1
 		return euclidean_index
 
 	def _convert_label(self, lab):
-		return int(lab[-4:])
+		return float(lab[-4:])
 
 	def _initiate_plot_values(self, data, data_raw, euclidean_percent, 
-		flow_index=None):
+		q0_flow_time=None):
 		"""interval_index: int, should be in euclidean time."""
 
 		# Sorts data into a format specific for the plotting method
@@ -38,7 +38,7 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 			euclidean_index = self._get_euclidean_index(euclidean_percent, beta)
 			te_index = "te%04d" % euclidean_index
 			values = {}
-			if flow_index == None:
+			if q0_flow_time == None:
 				# Case where we have sub sections of observables, e.g. in euclidean time
 				for sub_obs in self.observable_intervals[beta]:
 					sub_values = {}
@@ -52,15 +52,15 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 					sub_values["bs"] = data_raw[beta] \
 						[self.observable_name_compact][sub_obs][te_index]
 
-					sub_values["label"] = r"%s, $\beta=%2.2f$, $t_f=%d$" % (
-						self.size_labels[beta], beta, self._convert_label(sub_obs))
+					sub_values["label"] = r"%s, $\beta=%2.2f$, $\sqrt{8t_{f,0}}=%.2f$" \
+						% (self.size_labels[beta], beta, self._convert_label(sub_obs))
 
 					sub_values["color"] = self.colors[beta]
 					values[sub_obs] = sub_values
 				self.plot_values[beta] = values
 
 			else:
-				tf_index = "tflow%04d" % flow_index
+				tf_index = "tflow%04.2f" % q0_flow_time
 				values = {}
 				values["a"] = get_lattice_spacing(beta)
 				
@@ -74,8 +74,8 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 				values["bs"] = data_raw[beta][self.observable_name_compact] \
 					[tf_index][te_index]
 
-				values["label"] = r"%s $\beta=%2.2f$, $t_f=%d$, $t_e=%d$" % (
-					self.size_labels[beta], beta, flow_index, euclidean_index)
+				values["label"] = r"%s $\beta=%2.2f$, $t_f=%.2f$, $t_e=%d$" % (
+					self.size_labels[beta], beta, q0_flow_time, euclidean_index)
 
 				values["color"] = self.colors[beta]
 				self.plot_values[beta] = values
@@ -98,26 +98,26 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 
 		# Sets up euclidean time folder
 		output_folder = os.path.join(output_folder,
-			"te%.2f" % self.interval_index[1])
+			"te%04d" % self.interval_index[1])
 		check_folder(output_folder, False, True)
 
-		fname = "post_analysis_%s_%s_tf%d.png" % (self.observable_name_compact,
+		fname = "post_analysis_%s_%s_tf%4.2f.png" % (self.observable_name_compact,
 			self.analysis_data_type, self.interval_index[0])
 		return os.path.join(output_folder, fname)
 
-	def plot_interval(self, flow_index, euclidean_percent, **kwargs):
+	def plot_interval(self, q0_flow_time, euclidean_percent, **kwargs):
 		"""
 		Sets and plots only one interval.
 
 		Args:
-			flow_index: flow time integer
+			q0_flow_time: float, flow time
 			euclidean_index: integer for euclidean time
 		"""
-		self.interval_index = [flow_index, euclidean_percent]
+		self.interval_index = [q0_flow_time, euclidean_percent]
 		self.plot_values = {}
 		self._initiate_plot_values(self.data[self.analysis_data_type],
 			self.data_raw[self.analysis_data_type],
-			euclidean_percent=euclidean_percent, flow_index=flow_index)
+			euclidean_percent=euclidean_percent, q0_flow_time=q0_flow_time)
 
 		# Sets the x-label to proper units
 		x_label_old = self.x_label
@@ -213,7 +213,7 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 		folder_path = os.path.join(self.output_folder_path, folder_name)
 		check_folder(folder_path, False, True)
 
-		fname = os.path.join(folder_path, "post_analysis_%s_%s_te%.2f.png" % (
+		fname = os.path.join(folder_path, "post_analysis_%s_%s_te%04d.png" % (
 			self.observable_name_compact,
 			self.analysis_data_type, euclidean_percent))
 		plt.savefig(fname, dpi=400)

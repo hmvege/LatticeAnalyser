@@ -188,6 +188,10 @@ class FlowAnalyser(object):
 		self.q0_flow_time_index = np.argmin(
 			np.abs(self.a * np.sqrt(8*self.x) - self.q0_flow_time))
 
+		if self.verbose:
+			print ("Extracting values at flow time %.2f with index %d for"
+				" observable %s" % (self.q0_flow_time, 
+					self.q0_flow_time_index, self.observable_name_compact))
 
 	def __check_ac(self, fname):
 		"""
