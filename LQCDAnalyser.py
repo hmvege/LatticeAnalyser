@@ -47,13 +47,14 @@ def main():
 		"qtq0eff",
 	]
 
-	observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
+	# observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
+	observables = ["topc", "plaq", "energy", "topsus", "topcr"]
 	# observables = ["topcr", "qtq0eff"]
 	# observables = ["qtq0eff"]
 	# observables = ["topcr"]
-	observables = ["topsust", "topsuste", "topsusqtq0"]
-	observables = ["qtq0e", "qtq0eff", "topsusqtq0"]
-	observables = ["qtq0e", "qtq0eff"]
+	# observables = ["topsust", "topsuste", "topsusqtq0"]
+	# observables = ["qtq0e", "qtq0eff", "topsusqtq0"]
+	# observables = ["qtq0e", "qtq0eff"]
 
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
 	print 100*"=" + "\n"
@@ -203,8 +204,8 @@ def main():
 
 	#### Adding relevant batches to args
 	# analysis_parameter_list = [databeta60, databeta61, databeta62, databeta645]
-	analysis_parameter_list = [databeta60, databeta61, databeta62]
-	# analysis_parameter_list = [databeta60]
+	# analysis_parameter_list = [databeta60, databeta61, databeta62]
+	analysis_parameter_list = [databeta645]
 	# analysis_parameter_list = [databeta61, databeta62]
 	# analysis_parameter_list = [smaug_data_beta61_analysis]
 
