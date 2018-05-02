@@ -341,7 +341,8 @@ class LineFit:
 
 class ErrorPropagationSpline(object):
 	"""
-	Does a spline fit, but returns both the spline value and associated uncertainty.
+	Does a spline fit, but returns both the spline value and associated 
+	uncertainty.
 
 	https://gist.github.com/kgullikson88/147f6beb6256307d1360
 	"""
@@ -349,15 +350,21 @@ class ErrorPropagationSpline(object):
 		"""
 		See docstring for InterpolatedUnivariateSpline
 		"""
-		yy = np.vstack([y + np.random.normal(loc=0, scale=yerr) for i in range(N)]).T
+		yy = np.vstack([y + np.random.normal(loc=0, scale=yerr) \
+			for i in range(N)]).T
 		print yy
-		self._splines = [spline(x, yy[:, i], *args, **kwargs) for i in range(N)]
+		self._splines = [spline(x, yy[:, i], *args, **kwargs) \
+			for i in range(N)]
 
 	def __call__(self, x, *args, **kwargs):
 		"""
-		Get the spline value and uncertainty at point(s) x. args and kwargs are passed to spline.__call__
-		:param x:
-		:return: a tuple with the mean value at x and the standard deviation
+		Get the spline value and uncertainty at point(s) x. args and kwargs 
+		are passed to spline.__call__.
+
+		Args:
+			x: array or float of points to interpolate at.
+		Returns: 
+			a tuple with the mean value at x and the standard deviation.
 		"""
 		x = np.atleast_1d(x) # Converts to at least one dimension
 		s = np.vstack([curve(x, *args, **kwargs) for curve in self._splines])
@@ -398,8 +405,6 @@ def _test_simple_line_fit():
 
 	fit = LineFit(x, signal, signal_err)
 	x_hat = np.linspace(0, 5, 100)
-
-	# fit.set_fit_parameters(polyfit1[0], polyfit_err[0], polyfit1[1], polyfit_err[1], weighted=False)
 
 	# Unweigthed fit
 	y_hat, y_hat_err, f_params, chi_unweigthed = fit.fit(x_hat)
@@ -528,7 +533,8 @@ def _test_inverse_line_fit():
 	# 			v2 = M.T[j] - M_mean[j]				
 	# 			sigma_matrix[i,j] = np.sum(v1*v2)/(NObs - _bias_correction)
 	# 	return sigma_matrix
-	# if not (np.abs(covariance(signal) - np.cov(signal.T, bias=True)) < 1e-16).all(): print "covariances not equivalent"
+	# if not (np.abs(covariance(signal) - np.cov(signal.T, bias=True)) < 1e-16).all(): \
+	# 	print "covariances not equivalent"
 
 	def _f(_x, a, b):
 		return _x*a + b
@@ -601,7 +607,8 @@ def _test_inverse_line_fit():
 	# pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=np.cov(signal.T))
 	# print scipy.optimize.__all__
 
-	# pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=signal_err, absolute_sigma=True)
+	# pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=signal_err, 
+	# 	absolute_sigma=True)
 
 	from autocorrelation import Autocorrelation
 
@@ -644,7 +651,8 @@ def _test_inverse_line_fit():
 
 	
 	# exit(1)
-	# pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=signal_err, absolute_sigma=True)
+	# pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=signal_err, 
+	# 	absolute_sigma=True)
 
 	signal_err_corrected = np.sqrt(np.diag(cov_mat))
 	print "signal_err_corrected: ", signal_err_corrected[:5]
@@ -652,24 +660,33 @@ def _test_inverse_line_fit():
 	get_err = lambda _err: (_err[1] - _err[0])/2
 
 	pol1, polcov1 = np.polyfit(x, signal_mean, 1, w=1/np.diag(cov_mat), cov=True)
-	lfit.set_fit_parameters(pol1[1], np.sqrt(polcov1[1,1]), pol1[0], np.sqrt(polcov1[0,0]), weighted=True)
+	lfit.set_fit_parameters(pol1[1], np.sqrt(polcov1[1,1]), pol1[0], 
+		np.sqrt(polcov1[0,0]), weighted=True)
 	y_hat, y_hat_err, chi_squared = lfit(X_values, weighted=True)
-	print "With polyfit:            ", np.sqrt(np.diag(polcov1)), get_err(y_hat_err)[:5]
+	print "With polyfit:            ", np.sqrt(np.diag(polcov1)), 
+	get_err(y_hat_err)[:5]
 	
-	pol1, polcov1 = scipy.optimize.curve_fit(_f, x, signal_mean, sigma=np.sqrt(np.diag(cov_mat)))
-	lfit.set_fit_parameters(pol1[1], np.sqrt(polcov1[1,1]), pol1[0], np.sqrt(polcov1[0,0]), weighted=True)
+	pol1, polcov1 = scipy.optimize.curve_fit(_f, x, signal_mean, 
+		sigma=np.sqrt(np.diag(cov_mat)))
+	lfit.set_fit_parameters(pol1[1], np.sqrt(polcov1[1,1]), pol1[0],
+		np.sqrt(polcov1[0,0]), weighted=True)
 	y_hat, y_hat_err, chi_squared = lfit(X_values, weighted=True)
-	print "With naive autocorr:     ", np.sqrt(np.diag(polcov1)), get_err(y_hat_err)[:5]
+	print "With naive autocorr:     ", np.sqrt(np.diag(polcov1)), 
+	get_err(y_hat_err)[:5]
 	
 	pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=np.cov(signal.T))
-	lfit.set_fit_parameters(pol1[1], np.sqrt(polcov1[1,1]), pol1[0], np.sqrt(polcov1[0,0]), weighted=True)
+	lfit.set_fit_parameters(pol1[1], np.sqrt(polcov1[1,1]), pol1[0],
+		np.sqrt(polcov1[0,0]), weighted=True)
 	y_hat, y_hat_err, chi_squared = lfit(X_values, weighted=True)
-	print "With cov(signal.T):      ", np.sqrt(np.diag(polcov1)), get_err(y_hat_err)[:5]
+	print "With cov(signal.T):      ", np.sqrt(np.diag(polcov1)), 
+	get_err(y_hat_err)[:5]
 	
 	pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=signal_err)
-	lfit.set_fit_parameters(pol1[1], np.sqrt(polcov1[1,1]), pol1[0], np.sqrt(polcov1[0,0]), weighted=True)
+	lfit.set_fit_parameters(pol1[1], np.sqrt(polcov1[1,1]), pol1[0], 
+		np.sqrt(polcov1[0,0]), weighted=True)
 	y_hat, y_hat_err, chi_squared = lfit(X_values, weighted=True)
-	print "With only signal errors: ", np.sqrt(np.diag(polcov1)), get_err(y_hat_err)[:5]
+	print "With only signal errors: ", np.sqrt(np.diag(polcov1)), 
+	get_err(y_hat_err)[:5]
 
 	#INTERPOLATION
 	

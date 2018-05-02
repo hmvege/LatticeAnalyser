@@ -8,14 +8,17 @@ class Bootstrap:
 	"""
 	def __init__(self, data, N_BS, index_lists=[], seed=None, axis=None):
 		"""
+		Bootstrapping class. Creates N bootstrap samples for a given dataset.
+
 		Args:
-			data 					(numpy array): 	dataset to give.
-			N_BS					(int): 			number of bootstrap-samples.
-			*bootstrap_statistics	(function):		statistics to run on 
-				bootstrap sample, default is numpy.mean().
-			*index_lists			(numpy array): 	randomly generated lists
+			data: numpy array, datasets.
+			N_BS: int, number of bootstrap-samples.
+			bootstrap_statistics: optional, function of statistics to run on 
+				bootstrap samples, default is numpy.mean().
+			index_lists: optional, numpy array, randomly generated lists
 				that can be provided.
-			*seed 					(int/float):	random seed
+			seed: optional, int/float, seed for bootstrap sampling.
+
 		Returns:
 			Object containing bootstrapped values
 		"""
@@ -55,9 +58,6 @@ class Bootstrap:
 			raise TypeError("%s should be of type Bootstrap." % other)
  		new_data = np.concatenate((self.bs_avg, other.bs_avg), axis=0)
 		return new_data
-
-	def __pow__(self, other):
-		return np.power(self.bs_avg, other)
 
 	def __call__(self):
 		"""

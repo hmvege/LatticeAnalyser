@@ -210,6 +210,7 @@ def post_analysis(batch_folder, batch_beta_names, observables,
 			topsus4_analysis.plot()
 
 		if "topsusqtq0" in observables:
+			print "FIX SELECTION @ topsusqtq0"
 			topsusqtq0_analysis = TopsusQtQ0PostAnalysis(data,
 				figures_folder=figures_folder, verbose=verbose)
 			topsusqtq0_analysis.set_analysis_data_type(analysis_type)
@@ -283,6 +284,7 @@ def post_analysis(batch_folder, batch_beta_names, observables,
 			topsusmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
 		if "qtq0e" in observables:
+			print "FIX SELECTION @ qtq0e"
 			qtq0e_analysis = QtQ0EuclideanPostAnalysis(data, 
 				figures_folder=figures_folder, verbose=verbose)
 
@@ -309,6 +311,7 @@ def post_analysis(batch_folder, batch_beta_names, observables,
 				qtq0e_analysis.plot_series(te, [0,2,3,4], beta=bval_to_plot)
 
 		if "qtq0eff" in observables:
+			print "FIX SELECTION @ qtq0eff"
 			qtq0e_analysis = QtQ0EffectiveMassPostAnalysis(data, 
 				figures_folder=figures_folder, verbose=verbose)
 			qtq0e_analysis.set_analysis_data_type(analysis_type)

@@ -35,6 +35,10 @@ class Jackknife:
 
 		Args:
 			data: data containes in a numpy array
+			time_jk: optional, measures time used to perform jackknife. Default
+				is False.
+			axis: optional, axis of the dataset to perform jackknife at. 
+				Default is None, aka a (1D array).
 		"""
 		# Timer variable
 		self.time_jk = time_jk
