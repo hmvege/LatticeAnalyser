@@ -18,8 +18,6 @@ class PostAnalysisDataReader:
 		Args:
 			batch_folder: string name of the data batch folder.
 			verbose: optional more verbose output. Default is False.
-			base_folder_location: full location of the batch folder. Default is
-				one layer above code, "..".
 		"""
 		self.batch_name = os.path.split(batch_folder)[-1]
 		self.batch_folder = batch_folder
@@ -197,10 +195,6 @@ class PostAnalysisDataReader:
 		"""Adds new analysis if we don't have it."""
 		if atype not in self.analysis_types:
 			self.analysis_types.append(atype)
-
-	# convert = lambda text: int(text) if text.isdigit() else text.lower()
- #    alphanum_key = lambda key: [convert(c) for c in re.split('(\d+)', key)]
- #    return sorted(l, key=alphanum_key)
 
 	def _sort_folder_list(self, folder_path):
 		"""

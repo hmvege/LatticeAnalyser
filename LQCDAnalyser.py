@@ -54,7 +54,8 @@ def main():
 	# observables = ["topcr"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
 	observables = ["qtq0e", "qtq0eff", "topsusqtq0"]
-	# observables = ["qtq0e", "qtq0eff"]
+	# observables = ["topsusqtq0"]
+	observables = ["qtq0e", "qtq0eff"]
 
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
 	print 100*"=" + "\n"
@@ -127,8 +128,6 @@ def main():
  
 	# Extraction point in sqrt(8*t) for q0 in qtq0
 	q0_flow_times = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
-	# q0_flow_times = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
-	# q0_flow_times = [0.6]
 
 	# Flow time indexes to plot qtq0 in euclidean time at
 	euclidean_time_percents = [0, 0.25, 0.50, 0.75, 1.00]
@@ -209,11 +208,10 @@ def main():
 	# analysis_parameter_list = [databeta61, databeta62]
 	# analysis_parameter_list = [smaug_data_beta61_analysis]
 
-	print "ERROR IN FLOW TIME SELECTION!!!"
 
-	#### Submitting observable-batches
-	for analysis_parameters in analysis_parameter_list:
-		pre_analysis(analysis_parameters)
+	# #### Submitting observable-batches
+	# for analysis_parameters in analysis_parameter_list:
+	# 	pre_analysis(analysis_parameters)
 
 	#### Submitting post-analysis data
 	if len(analysis_parameter_list) >= 3:

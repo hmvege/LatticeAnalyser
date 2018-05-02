@@ -169,7 +169,7 @@ class PostCore(object):
 			self.plot_values[beta] = values
 
 	def plot(self, x_limits=False, y_limits=False, plot_with_formula=False,
-		error_shape="band"):
+		error_shape="band", figure_folder=None):
 		"""
 		Function for making a basic plot of all the different beta values
 		together.
@@ -179,6 +179,8 @@ class PostCore(object):
 			y_limits: limits of the y-axis. Default is False.
 			plot_with_formula: bool, default is false, is True will look for 
 				formula for the y-value to plot in title.
+			figure_folder: optional, default is None. If default, will place
+				figures in 
 		"""
 		if self.verbose:
 			print "Plotting %s for betas %s together" % (
@@ -284,9 +286,10 @@ class PostCore(object):
 			# Adds to list of batch-values
 			self.beta_fit.append(bfit)
 
-	def _get_plot_figure_name(self):
+	def _get_plot_figure_name(self, output_folder=None):
 		"""Retrieves appropriate figure file name."""
-		output_folder = self.output_folder_path
+		if isinstance(output_folder, types.NoneType):
+			output_folder = self.output_folder_path
 		fname = "post_analysis_%s_%s.png" % (self.observable_name_compact,
 			self.analysis_data_type)
 		return os.path.join(output_folder, fname)

@@ -80,8 +80,8 @@ class TopsusCore(PostCore):
 			y0_err_upper = y_cont_err[1][cont_index] - y0[0]
 
 		# Stores the chi continuum
-		self.chi_continuum = y_cont[cont_index]
-		self.chi_continuum_error = [y0_err_lower, y0_err_upper]
+		self.topsus_continuum = y_cont[cont_index]
+		self.topsus_continuum_error = [y0_err_lower, y0_err_upper]
 
 		y0_err = [[y0_err_lower, 0], [y0_err_upper, 0]]
 
@@ -130,16 +130,16 @@ class TopsusCore(PostCore):
 
 	def get_linefit_parameters(self):
 		"""Returns the chi^2, a, a_err, b, b_err."""
-		return self.chi_squared, self.fit_params, self.chi_continuum, \
-			self.chi_continuum_error[0], self.NF, self.NF_error, \
+		return self.chi_squared, self.fit_params, self.topsus_continuum, \
+			self.topsus_continuum_error[0], self.NF, self.NF_error, \
 			self.fit_target, self.interval
 
 	def print_continuum_estimate(self):
 		"""Prints the NF from the Witten-Veneziano formula."""
-		self.NF, self.NF_error = witten_veneziano(self.chi_continuum, 
-			self.chi_continuum_error[0])
-		msg =  "\n    Topsus = %.16f" % self.chi_continuum
-		msg += "\n    Topsus_error = %.16f" % self.chi_continuum_error[0]
+		self.NF, self.NF_error = witten_veneziano(self.topsus_continuum, 
+			self.topsus_continuum_error[0])
+		msg =  "\n    Topsus = %.16f" % self.topsus_continuum
+		msg += "\n    Topsus_error = %.16f" % self.topsus_continuum_error[0]
 		msg += "\n    N_f = %.16f" % self.NF
 		msg += "\n    N_f_error = %.16f" % self.NF_error
 		msg += "\n    Chi^2 = %.16f" % self.chi_squared

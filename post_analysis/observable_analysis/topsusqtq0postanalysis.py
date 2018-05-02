@@ -20,7 +20,7 @@ class TopsusQtQ0PostAnalysis(MultiPlotCore, TopsusCore):
 
 		Args:
 			fit_target: float value at which we extrapolate to continuum from.
-			interval_index: int for a given interval euclidean specified from  
+			interval_index: int for a given interval euclidean specified from
 				set_interval().
 		"""
 

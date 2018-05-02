@@ -18,6 +18,14 @@ class TopsusQtQ0Analyser(TopsusAnalyserCore):
 		self.post_analysis_folder_old = self.post_analysis_folder
 		self.y_original = copy.deepcopy(self.y)
 
+	def __set_size(self):
+		"""Function that sets the lattice size deepending on the beta value."""
+		# Sets up constants used in the chi function for topsus
+		self.function_derivative = ptools._chi_derivative
+		self.V = self.lattice_sizes[self.beta] / float(self.NTemporal[self.beta])
+		self.const = self.hbarc/self.a/self.V**(1./4)
+		self.function_derivative_parameters = {"const": self.const}
+
 	def setQ0(self, q0_flow_time, y_label=None):
 		"""
 		Sets the flow time we are to analyse for. E.g. if it is 0.9, it will 
@@ -29,15 +37,6 @@ class TopsusQtQ0Analyser(TopsusAnalyserCore):
 		
 		"""
 
-		# assert q0_flow_time < (self.a * np.sqrt(8*self.x))[-1], \
-		# 	"q0_flow_time exceed maximum flow time value."
-
-		# self.q0_flow_time = q0_flow_time
-
-		# # Selects index closest to q0_flow_time
-		# self.q0_flow_time_index = np.argmin(
-		# 	np.abs(self.a * np.sqrt(8*self.x) - self.q0_flow_time))
-
 		self._set_q0_time_and_index(q0_flow_time)
 
 		self.plot_vline_at = self.q0_flow_time
@@ -45,12 +44,6 @@ class TopsusQtQ0Analyser(TopsusAnalyserCore):
 		# Sets file name
 		self.observable_name = (r"$\chi(\langle Q_t Q_{t_0} \rangle)^{1/4}$"
 			" at $t=%.2f$" % (self.q0_flow_time))
-
-		# Corrects the volume, since we now only have a single time slice
-		self.V = self.lattice_sizes[self.beta] * \
-			float(self.NTemporal[self.beta])
-		self.const = self.hbarc/self.a/self.V**(1./4)
-		self.function_derivative_parameters = {"const": self.const}
 
 		# Manual method for multiplying the matrices
 		y_q0 = copy.deepcopy(self.y_original[:,self.q0_flow_time_index])

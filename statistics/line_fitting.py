@@ -2,6 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize as sciopt
 
+#############################################################################
+############## REDUNDANT LINE FIT CLASS - NOW USING LINEFIT.PY ##############
+#############################################################################
+
 def fit_line_form_bootstrap(x, bs_data, observable, beta, fit_target, fit_interval, axis = "y", fit_function_modifier = lambda x : x, fit_method = "curve_fit", plot_fit_window = False):
 	"""
 	Function for creating a line fit using bootstrapped data.

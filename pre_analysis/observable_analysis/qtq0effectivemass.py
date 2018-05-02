@@ -37,15 +37,6 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 			q0_flow_time: float, flow time t0 at where to select q0.
 		"""
 
-		# assert q0_flow_time < (self.a * np.sqrt(8*self.x))[-1], \
-		# 	"q0_flow_time exceed maximum flow time value."
-
-		# # Stores the q0 flow time value
-		# self.q0_flow_time = q0_flow_time
-
-		# # Selects index closest to q0_flow_time
-		# self.q0_flow_time_index = np.argmin(
-		# 	np.abs(self.a * np.sqrt(8*self.x) - self.q0_flow_time))
 		self.x = self.x_old
 		self._set_q0_time_and_index(q0_flow_time)
 

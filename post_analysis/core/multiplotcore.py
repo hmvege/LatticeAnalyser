@@ -74,9 +74,10 @@ class MultiPlotCore(PostCore):
 		# Makes it a global constant so it can be added in plot figure name
 		self.plot(**kwargs)
 
-	def _get_plot_figure_name(self):
+	def _get_plot_figure_name(self, output_folder=None):
 		"""Retrieves appropriate figure file name."""
-		output_folder = os.path.join(self.output_folder_path, "slices")
+		if isinstance(output_folder, types.NoneType):
+			output_folder = os.path.join(self.output_folder_path, "slices")
 		check_folder(output_folder, False, True)
 		fname = "post_analysis_%s_%s_int%d.png" % (self.observable_name_compact,
 			self.analysis_data_type, self.interval_index)
@@ -95,7 +96,7 @@ class MultiPlotCore(PostCore):
 			self.observable_intervals)
 
 	def plot_series(self, indexes, beta="all", x_limits=False, 
-		y_limits=False, plot_with_formula=False):
+		y_limits=False, plot_with_formula=False, error_shape="band"):
 		"""
 		Method for plotting 4 axes together.
 
@@ -107,6 +108,7 @@ class MultiPlotCore(PostCore):
 			y_limits: limits of the y-axis. Default is False.
 			plot_with_formula: bool, default is false, is True will look for 
 				formula for the y-value to plot in title.
+			error_shape: plot with error bands or with error bars.
 		"""
 		self.plot_values = {}
 		self._initiate_plot_values(self.data[self.analysis_data_type],
@@ -141,10 +143,20 @@ class MultiPlotCore(PostCore):
 				x = value["x"]
 				y = value["y"]
 				y_err = value["y_err"]
-				ax.plot(x, y, "-", label=value["label"], color=value["color"])
-				ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, edgecolor='',
-					facecolor=value["color"])
+				# ax.plot(x, y, "-", label=value["label"], color=value["color"])
+				# ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, edgecolor='',
+				# 	facecolor=value["color"])
 				
+				if error_shape == "band":
+					ax.plot(x, y, "-", label=value["label"], color=value["color"])
+					ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, 
+						edgecolor='', facecolor=value["color"])
+				elif error_shape == "bars":
+					ax.errorbar(x, y, yerr=y_err, capsize=5, fmt="_", ls=":", 
+						label=value["label"], color=value["color"], 
+						ecolor=value["color"])
+
+
 				# Basic plotting commands
 				ax.grid(True)
 				ax.legend(loc="best", prop={"size":5})
@@ -187,3 +199,11 @@ class MultiPlotCore(PostCore):
 
 		plt.rcParams['xtick.labelsize'] = old_rc_paramx
 		plt.rcParams['ytick.labelsize'] = old_rc_paramy
+
+	def _series_plot_core(self, indexes, beta="all", x_limits=False, 
+		y_limits=False, plot_with_formula=False, error_shape="band", fname=None):
+		"""
+		Core structure of the series plot, allows to easily be expanded upon 
+		by the needs of the different observables.
+		"""
+		her!!!

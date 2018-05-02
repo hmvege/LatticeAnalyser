@@ -54,8 +54,7 @@ class Jackknife:
 		# Performs jackknife and sets variables
 		self._perform_jk(data)
 
-		# Performing statistics on jackknife samples, estimates variance 
-		# according to new MHJ book.
+		# Performing statistics on jackknife samples
 		self.jk_var = np.var(self.jk_data, axis=axis)*(self.N - 1)
 		self.jk_std = np.sqrt(self.jk_var)
 		self.jk_avg_biased = np.average(self.jk_data, axis=axis)

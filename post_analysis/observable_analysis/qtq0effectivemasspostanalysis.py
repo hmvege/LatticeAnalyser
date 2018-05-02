@@ -5,14 +5,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 import itertools
 import os
+import types
 
+# Temporary needed for assessing the autocorrelation in the eff mass data.
 from statistics.autocorrelation import Autocorrelation
 import multiprocessing
 import statistics.parallel_tools as ptools
 
 class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 	"""Post-analysis of the effective mass."""
-	observable_name = r"Effective mass $am_{eff} = \log \frac{C(t_e)}{C(t_e+1)}$"
+	observable_name = r"Effective mass, "
+	observable_name += r"$am_{eff} = \log \frac{C(t_e)}{C(t_e+1)}$, "
+	observable_name += r"$C(t_e)=\langle q_t q_0\rangle$"
 	observable_name_compact = "qtq0eff"
 	x_label = r"$t_e[fm]$"
 	y_label = r"$am_{eff}$"
@@ -30,7 +34,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 		self.observable_name_compact = self.observable_name_compact_old
 
 	def _convert_label(self, lab):
-		return int(lab[-4:])
+		return float(lab[-4:])
 
 	def effMass(self, Q, axis=0):
 		"""Correlator for qtq0."""
@@ -104,6 +108,15 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 	def analyse_data(self, data):
 		"""Method for analysis <QteQ0>."""
 		return self.effMass(data["y"]), self.effMass_err(data["y"], data["y_error"])
+
+	def _get_plot_figure_name(self, output_folder=None):
+		"""Retrieves appropriate figure file name."""
+		if isinstance(output_folder, types.NoneType):
+			output_folder = os.path.join(self.output_folder_path, "slices")
+		check_folder(output_folder, False, True)
+		fname = "post_analysis_%s_%s_q0_%f.png" % (self.observable_name_compact,
+			self.analysis_data_type, self.interval_index)
+		return os.path.join(output_folder, fname)
 
 	def _initiate_plot_values(self, data, data_raw, flow_index=None):
 		"""interval_index: int, should be in euclidean time."""
@@ -244,8 +257,9 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 				# ax.plot(x, y, "o", label=value["label"], color=value["color"])
 				# ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, edgecolor='',
 				# 	facecolor=value["color"])
-				ax.errorbar(x, y, yerr=y_err, fmt=".", color=value["color"],
-					ecolor=value["color"], label=value["label"])
+				ax.errorbar(x, y, yerr=y_err, capsize=5, fmt="_", ls=":", 
+						label=value["label"], color=value["color"], 
+						ecolor=value["color"])
 				
 				# Basic plotting commands
 				ax.grid(True)
@@ -268,7 +282,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 		title_string = r"%s" % self.observable_name
 		if plot_with_formula:
 			title_string += r" %s" % self.formula
-		plt.suptitle(title_string)
+		plt.suptitle(title_string, fontsize=16)
 		plt.tight_layout(pad=1.7)
 
 		# Saves and closes figure

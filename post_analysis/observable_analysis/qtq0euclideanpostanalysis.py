@@ -6,6 +6,8 @@ import copy
 import os
 import matplotlib.pyplot as plt
 import itertools
+import types
+import subprocess
 
 class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 	"""Class for plotting different QteQte0 a specific flow time together."""
@@ -28,6 +30,41 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 
 	def _convert_label(self, lab):
 		return float(lab[-4:])
+
+	def set_gif_folder(self, gif_euclidean_time, gif_folder=None):
+		"""
+		Creates a folder for storing the smearing gif in.
+
+		Args:
+			gif_euclidean_time: float, what euclidean time percent we are
+				creating the gif at.
+			gif_folder: optional, default is None. will override default
+				location.
+		"""
+
+		self.verbose = False
+		if isinstance(gif_folder, types.NoneType):
+			self.gif_folder = os.path.join(self.output_folder_path, "gif")
+		else:
+			self.gif_folder = gif_folder
+
+	def plot_gif_image(self, q0_flow_time, euclidean_percent, **kwargs):
+		"""Wrapper for plotting gifs."""
+		kwargs["figure_folder"] = self.gif_folder
+		self.plot_interval(q0_flow_time, euclidean_percent, **kwargs)
+
+	def create_gif(self):
+		"""Creates a gif from images in gif the gif folder."""
+		fig_base_name = "post_analysis_%s_%s_tf*.png" % (
+			self.observable_name_compact, self.analysis_data_type)
+
+		input_paths = os.path.join(self.gif_folder, fig_base_name)
+		cmd = ['convert', '-delay', '1', '-loop', '0', input_paths,
+			self.output_folder_path]
+
+		print "> %s" % " ".join(cmd)	
+		proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+		read_out = proc.stdout.read()
 
 	def _initiate_plot_values(self, data, data_raw, euclidean_percent, 
 		q0_flow_time=None):
@@ -91,9 +128,10 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 			self.data_raw[self.analysis_data_type],
 			euclidean_percent=euclidean_percent)
 
-	def _get_plot_figure_name(self):
+	def _get_plot_figure_name(self, output_folder=None):
 		"""Retrieves appropriate figure file name."""
-		output_folder = os.path.join(self.output_folder_path, "slices")
+		if isinstance(output_folder, types.NoneType):
+			output_folder = os.path.join(self.output_folder_path, "slices")
 		check_folder(output_folder, False, True)
 
 		# Sets up euclidean time folder
@@ -176,9 +214,18 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 				x = value["x"]
 				y = value["y"]
 				y_err = value["y_err"]
-				ax.plot(x, y, "-", label=value["label"], color=value["color"])
-				ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, edgecolor='',
-					facecolor=value["color"])
+				# ax.plot(x, y, "-", label=value["label"], color=value["color"])
+				# ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, edgecolor='',
+				# 	facecolor=value["color"])
+				if error_shape == "band":
+					ax.plot(x, y, "-", label=value["label"], color=value["color"])
+					ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, 
+						edgecolor='', facecolor=value["color"])
+				elif error_shape == "bars":
+					ax.errorbar(x, y, yerr=y_err, capsize=5, fmt="_", ls=":", 
+						label=value["label"], color=value["color"], 
+						ecolor=value["color"])
+
 				
 				# Basic plotting commands
 				ax.grid(True)
