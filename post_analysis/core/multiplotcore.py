@@ -205,5 +205,18 @@ class MultiPlotCore(PostCore):
 		"""
 		Core structure of the series plot, allows to easily be expanded upon 
 		by the needs of the different observables.
+
+		Args:
+			indexes: list containing integers of which intervals to plot together.
+			beta: beta values to plot. Default is "all". Otherwise, 
+				a list of numbers or a single beta value is provided.
+			x_limits: limits of the x-axis. Default is False.
+			y_limits: limits of the y-axis. Default is False.
+			plot_with_formula: bool, default is false, is True will look for 
+				formula for the y-value to plot in title.
+			error_shape: plot with error bands or with error bars.
+			fname: str, figure name. Default is 
+				{folder_path}/post_analysis_{obs_name}_{analysis_type}.png
 		"""
+
 		her!!!
