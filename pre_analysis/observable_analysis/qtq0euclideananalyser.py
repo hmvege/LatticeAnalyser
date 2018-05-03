@@ -96,11 +96,15 @@ class QtQ0EuclideanAnalyser(FlowAnalyser):
 		self.integrated_autocorrelation_time_error = np.zeros(self.NFlows)
 		self.autocorrelation_error_correction = np.ones(self.NFlows)
 
+		# Retrieves old path spec
+		self.observable_output_folder_path = self.observable_output_folder_path_old
+		self.post_analysis_folder = self.post_analysis_folder_old
+
 		# Creates a new folder to store results in {beta}/{observable_name}/
 		# {flow time} exist.
 		self.observable_output_folder_path = os.path.join(
-			self.observable_output_folder_path_old, 
-			"tflow%04.2f" % self.q0_flow_time)
+			self.observable_output_folder_path, 
+			"tflow%04.4f" % self.q0_flow_time)
 		check_folder(self.observable_output_folder_path, self.dryrun,
 			self.verbose)
 
@@ -114,7 +118,7 @@ class QtQ0EuclideanAnalyser(FlowAnalyser):
 		# Checks that {post_analysis_folder}/{observable_name}/{flow time} 
 		# exist.
 		self.post_analysis_folder = os.path.join(self.post_analysis_folder_old,
-			"tflow%04.2f" % self.q0_flow_time)
+			"tflow%04.4f" % self.q0_flow_time)
 		check_folder(self.post_analysis_folder, self.dryrun, self.verbose)
 
 		# Checks that {post_analysis_folder}/{observable_name}/{flow time}/

@@ -400,7 +400,8 @@ class FlowAnalyser(object):
 			raise KeyError("%s not a receognized method. Choose from: %s." % (
 				method, ", ".join(available_ac_methods)))
 
-		print "Running autocorrelation with %s ac-method" % method
+		if self.verbose:
+			print "Running autocorrelation with %s ac-method" % method
 
 		# Gets autocorrelation
 		if self.parallel:
@@ -610,7 +611,7 @@ class FlowAnalyser(object):
 		ax.set_title(title_string)
 		if not self.dryrun: 
 			fig.savefig(self.__check_ac(fname), dpi=self.dpi)
-		if self.verbose:
+		if self.verbose or self.dryrun:
 			print "Figure created in %s" % fname
 
 		# plt.show()
@@ -672,7 +673,8 @@ class FlowAnalyser(object):
 		# ax.legend()
 		if not self.dryrun: 
 			fig.savefig(fname_path, dpi=self.dpi)
-		print "Figure created in %s" % fname_path
+		if self.verbose or self.dryrun:
+			print "Figure created in %s" % fname_path
 		plt.close(fig)
 
 	def plot_integrated_correlation_time(self):
@@ -706,7 +708,8 @@ class FlowAnalyser(object):
 		ax.grid(True)
 		if not self.dryrun: 
 			fig.savefig(fname_path, dpi=self.dpi)
-		print "Figure created in %s" % fname_path
+		if self.verbose or self.dryrun:
+			print "Figure created in %s" % fname_path
 		plt.close(fig)
 
 	def plot_histogram(self, flow_time_index, x_label=None, NBins=30,
@@ -804,7 +807,8 @@ class FlowAnalyser(object):
 		# Saves figure
 		if not self.dryrun:
 			plt.savefig(fname_path, dpi=self.dpi)
-		print "Figure created in %s" % fname_path
+		if self.verbose or self.dryrun:
+			print "Figure created in %s" % fname_path
 
 		# Closes figure for garbage collection
 		plt.close(fig)
@@ -860,7 +864,8 @@ class FlowAnalyser(object):
 		# Saves figure
 		if not self.dryrun:
 			plt.savefig(fname_path, dpi=self.dpi)
-		print "Figure created in %s" % fname_path
+		if self.verbose or self.dryrun:
+			print "Figure created in %s" % fname_path
 
 		# Closes figure for garbage collection
 		plt.close(fig)
@@ -908,7 +913,8 @@ class FlowAnalyser(object):
 		ax.legend()
 		if not self.dryrun: 
 			fig.savefig(fname_path, dpi=self.dpi)
-		print "Figure created in %s" % fname_path
+		if self.verbose or self.dryrun:
+			print "Figure created in %s" % fname_path
 		plt.close(fig)
 
 	def __str__(self):

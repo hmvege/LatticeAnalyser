@@ -232,7 +232,8 @@ class PostCore(object):
 		# Saves and closes figure
 		fname = self._get_plot_figure_name()
 		plt.savefig(fname)
-		print "Figure saved in %s" % fname
+		if self.verbose:
+			print "Figure saved in %s" % fname
 		# plt.show()
 		plt.close(fig)
 

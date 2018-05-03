@@ -3,6 +3,7 @@ from tools.postanalysisdatareader import PostAnalysisDataReader
 from collections import OrderedDict
 import numpy as np
 import os
+from tqdm import tqdm
 
 def append_fit_params(fplist, obs_name, analysis_name, fparams):
 	"""Function for appending fit parameters."""
@@ -81,7 +82,8 @@ def plaq_post_analysis(*args, **kwargs):
 def post_analysis(batch_folder, batch_beta_names, observables,
 	topsus_fit_targets, line_fit_interval_points, energy_fit_target,
 	q0_flow_times, euclidean_time_percents, figures_folder="figures", 
-	post_analysis_data_type=None, bval_to_plot="all", verbose=False):
+	post_analysis_data_type=None, bval_to_plot="all", gif_flow_range=None,
+	gif_euclidean_time=None, verbose=False):
 	"""
 	Post analysis of the flow observables.
 
@@ -314,18 +316,24 @@ def post_analysis(batch_folder, batch_beta_names, observables,
 				qtq0e_analysis.plot_series(te, [0,1,2,3], beta=bval_to_plot)
 				qtq0e_analysis.plot_series(te, [0,2,3,4], beta=bval_to_plot)
 
+		if"qtq0e_gif" in observables:
+			qtq0e_analysis = QtQ0EuclideanPostAnalysis(data, 
+				figures_folder=figures_folder, verbose=verbose)
+
+			# Checks that we have similar flow times
+			N_tf, flow_intervals = qtq0e_analysis.get_N_intervals()
+
 			# Euclidean time
-			gif_euclidean_time = 0.5
-			gif_flow_range = range(0, 0.6, 100)
 			qtq0e_analysis.set_analysis_data_type(gif_euclidean_time, analysis_type)
-			# qtq0e_analysis.set_gif_folder(gif_euclidean_time)
-			for tf in gif_flow_range:
-				qtq0e_analysis.plot_gif_image(tf, gif_euclidean_time)
+			qtq0e_analysis.set_gif_folder(gif_euclidean_time)
 
-			qtq0e_analysis.create_gif(gif_flow_range)
+			gif_descr = "Creating gif frames for qtq0"
+			for tf in tqdm(gif_flow_range, desc=gif_descr):
+			# for tf in gif_flow_range:
+				qtq0e_analysis.plot_gif_image(tf, gif_euclidean_time,
+					y_limits=[-0.05, 0.7])
 
-
-
+			qtq0e_analysis.create_gif()
 
 		if "qtq0eff" in observables:
 			print "FIX SELECTION @ qtq0eff"

@@ -4,6 +4,7 @@ from pre_analysis.pre_analyser import pre_analysis
 from post_analysis.post_analyser import post_analysis
 import copy
 import os
+import numpy as np
 
 def get_num_observables(batch_folder, beta_folder):
 	"""Gets the number of observable in a folder."""
@@ -55,7 +56,8 @@ def main():
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
 	observables = ["qtq0e", "qtq0eff", "topsusqtq0"]
 	# observables = ["topsusqtq0"]
-	observables = ["qtq0e", "qtq0eff"]
+	observables = ["qtq0e", "qtq0eff", "qtq0gif"]
+	observables = ["qtq0e_gif"]
 
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
 	print 100*"=" + "\n"
@@ -88,6 +90,11 @@ def main():
 	# topsus_fit_targets = [0.3,0.4,0.5,0.58]
 	topsus_fit_targets = [0.5, 0.6]
 	energy_fit_target = 0.3
+
+	# Smearing gif parameters for qtq0e
+	gif_create_data = False
+	gif_euclidean_time = 0.5
+	gif_flow_range = np.linspace(0, 0.6, 100)
 
 	#### Different batches
 	# data_batch_folder = "data2"
@@ -152,12 +159,15 @@ def main():
 		"correct_energy": correct_energy,
 		"num_t_euclidean_indexes": num_t_euclidean_indexes,
 		"q0_flow_times": q0_flow_times,
-		# "flow_time_indexes": flow_time_indexes,
 		"euclidean_time_percents": euclidean_time_percents,
 		"numsplits_eucl": numsplits_eucl,
 		"intervals_eucl": intervals_eucl,
 		"MC_time_splits": MC_time_splits,
-		# "eff_mass_flow_times": eff_mass_flow_times,
+		# Gif smearing parameters in the qtq0e observable
+		"gif_create_data": gif_create_data,
+		"gif_euclidean_time": gif_euclidean_time,
+		"gif_flow_range": gif_flow_range,
+		# Passing on lattice sizes
 		"lattice_sizes": {
 			6.0: 24**3*48,
 			6.1: 28**3*56,
@@ -219,7 +229,8 @@ def main():
 			topsus_fit_targets, line_fit_interval_points, energy_fit_target,
 			q0_flow_times, euclidean_time_percents,
 			post_analysis_data_type=post_analysis_data_type,
-			figures_folder=figures_folder, verbose=verbose)
+			figures_folder=figures_folder, gif_flow_range=gif_flow_range,
+			gif_euclidean_time=gif_euclidean_time, verbose=verbose)
 
 if __name__ == '__main__':
 	main()

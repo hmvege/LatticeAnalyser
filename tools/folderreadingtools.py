@@ -765,7 +765,8 @@ def write_data_to_file(analysis_object, save_as_txt=False):
 		else:
 			np.save(fname_path, data)
 
-	print "Data for the post analysis written to %s" % fname_path
+	if analysis_object.verbose or analysis_object.dryrun:
+		print "Data for the post analysis written to %s" % fname_path
 
 def write_raw_analysis_to_file(raw_data, analysis_type, observable, 
 	post_analysis_folder, dryrun=False, verbose=False):

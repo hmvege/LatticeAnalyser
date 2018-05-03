@@ -2,6 +2,8 @@ from observable_analysis import *
 from tools.folderreadingtools import DataReader
 import time
 import numpy as np
+import types
+from tqdm import tqdm
 
 def _check_splits(NT, numsplits):
 	"""Checks if the temporal dimension has been split into good .intervals"""
@@ -157,7 +159,8 @@ def analyse_topsus_qtq0(params, q0_flow_times):
 		qtq0_analysis.setQ0(q0_flow_time) 
 		analyse_default(qtq0_analysis, N_bs, skip_histogram=True)
 
-def analyse_qtq0e(params, q0_flow_times, euclidean_time_percents):
+def analyse_qtq0e(params, q0_flow_times, euclidean_time_percents, 
+	gif_create_data=False, gif_flow_range=None, gif_euclidean_time=None):
 	"""Analysis for the effective mass qtq0 with q0 at a fixed flow time."""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
 
@@ -168,6 +171,30 @@ def analyse_qtq0e(params, q0_flow_times, euclidean_time_percents):
 		for euclidean_percent in euclidean_time_percents:
 			qtq0_analysis.set_time(q0_flow_time, euclidean_percent)
 			analyse_default(qtq0_analysis, N_bs)
+
+def analyse_qtq0e_gif(params, gif_flow_range=None,
+	gif_euclidean_time=None):
+	"""Method for creating a data for smearing gif of the qtq0e quantity."""
+	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
+
+	qtq0_analysis = QtQ0EuclideanAnalyser(obs_data("topct"), dryrun=dryrun,
+		parallel=parallel, numprocs=numprocs, verbose=verbose)
+
+	asrt_msg = "missing gif flow range and or euclidean time float."
+	assert (not isinstance(gif_flow_range, types.NoneType) \
+		and not isinstance(gif_euclidean_time, types.NoneType)), asrt_msg
+
+	# Runs basic data analysis
+	gif_descr = "Data creation for qtq0 gif"
+	for q0_gif_flow_time in tqdm(gif_flow_range, desc=gif_descr):
+	# for q0_gif_flow_time in gif_flow_range:
+		qtq0_analysis.verbose = False
+		qtq0_analysis.set_time(q0_gif_flow_time, gif_euclidean_time)
+		qtq0_analysis.boot(N_bs)
+		qtq0_analysis.jackknife()
+		qtq0_analysis.autocorrelation()
+		qtq0_analysis.save_post_analysis_data(N_bs)
+
 
 def analyse_qtq0_effective_mass(params, q0_flow_times):
 	"""Pre-analyser for the effective mass qtq0 with q0 at a fixed flow time."""
@@ -412,6 +439,9 @@ def pre_analysis(parameters):
 	if "qtq0e" in parameters["observables"]:
 		analyse_qtq0e(params, parameters["q0_flow_times"],
 			parameters["euclidean_time_percents"])
+	if "qtq0e_gif" in parameters["observables"]:
+		analyse_qtq0e_gif(params, parameters["gif_flow_range"],
+			parameters["gif_euclidean_time"])
 	if "qtq0eff" in parameters["observables"]:
 		analyse_qtq0_effective_mass(params, parameters["q0_flow_times"])
 	
