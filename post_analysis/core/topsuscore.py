@@ -1,7 +1,7 @@
 from postcore import PostCore
 from tools.latticefunctions import get_lattice_spacing
 from tools.latticefunctions import witten_veneziano
-from statistics.linefit import LineFit
+from statistics.linefit import LineFit, extract_fit_target
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -19,8 +19,8 @@ class TopsusCore(PostCore):
 	x_label_continuum = r"$a^2/t_0$"
 
 	def plot_continuum(self, fit_target, title_addendum="",
-		extrapolation_type="platou", ac_correction_method="average",
-		use_raw_values=False, platou_fit_size=20):
+		extrapolation_method="platou", use_raw_values=False, 
+		platou_fit_size=20, interpolation_rank=3):
 		"""
 		Method for plotting the continuum limit of topsus at a given 
 		fit_target.
@@ -29,27 +29,22 @@ class TopsusCore(PostCore):
 			fit_target: float, value of where we extrapolate from.
 			title_addendum: str, optional, default is an empty string, ''. 
 				Adds string to end of title.
-			extrapolation_type: str, optional, method of selecting the 
-				extrapolation point to do the continuum limit. Choices:
-				- platou: line fits points neighbouring point in order to 
-					reduce the error bars.
-				- nearest: line fit from the point nearest to what we seek
-			extrapolation_data: str, optional, what data we will extrapolate 
-				from. Default is to use the bootstrap data. Choices:
-				- bs: bootstrapped means and autocorrelation corrected
-					errors.
-				- jk: jackknifed means and autocorrelation corrected errors.
-				- unanalyzed: unanalyzed means and autocorrelation corrected 
-					errors.
-			ac_correction_method: str, optional. Method of correcting the
-				autocorrelation in the standard	deviation. Choices:
-				- platou: takes the average of the neighbouring tau ints.
-				- nearest: uses the value closest to the fit_target.
+			extrapolation_method: str, optional, method of selecting the 
+				extrapolation point to do the continuum limit. Method will be
+				used on y values and tau int. Choices:
+					- platou: line fits points neighbouring point in order to 
+						reduce the error bars.
+					- nearest: line fit from the point nearest to what we seek
+					- interpolate: linear interpolation in order to retrieve 
+						value and error. Does not work in conjecture with 
+						use_raw_values.
 			use_raw_values: bool, optional, if true, will use bootstrap, 
 				jackknifed or unanalyzed samples directly. Default is False.
 			platou_size: int, optional. Number of points in positive and 
-				negative direction to extrapolate fit target value from. 
-				Default is 20.
+				negative direction to extrapolate fit target value from. This 
+				value also applies to the interpolation interval. Default is 20.
+			interpolation_rank: int, optional. Interpolation rank to use if 
+				extrapolation method is interpolation Default is 3.
 		"""
 
 		#################################
