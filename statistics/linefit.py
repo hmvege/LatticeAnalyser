@@ -374,6 +374,75 @@ class ErrorPropagationSpline(object):
 		s = np.vstack([curve(x, *args, **kwargs) for curve in self._splines])
 		return (np.mean(s, axis=0), np.std(s, axis=0))
 
+def extract_fit_target(fit_target, x, y, y_err, y_raw, tau_int=None, 
+	extrapolation_type="platou", ac_correction_method="average", 
+	use_raw_values=False, platou_size=20):
+	"""Function for extracting a value at a specific point.
+
+	Args:
+		fit_target: float, value of where we extrapolate from.
+		extrapolation_type: str, optional, method of selecting the 
+			extrapolation point to do the continuum limit. Choices:
+			- platou: line fits points neighbouring point in order to 
+				reduce the error bars.
+			- nearest: line fit from the point nearest to what we seek
+		extrapolation_data: str, optional, what data we will extrapolate 
+			from. Default is to use the bootstrap data. Choices:
+			- bs: bootstrapped means and autocorrelation corrected
+				errors.
+			- jk: jackknifed means and autocorrelation corrected errors.
+			- unanalyzed: unanalyzed means and autocorrelation corrected 
+				errors.
+		ac_correction_method: str, optional. Method of correcting the
+			autocorrelation in the standard	deviation. Choices:
+			- platou: takes the average of the neighbouring tau ints.
+			- nearest: uses the value closest to the fit_target.
+		use_raw_values: bool, optional, if true, will use bootstrap, 
+			jackknifed or unanalyzed samples directly. Default is False.
+		platou_size: int, optional. Number of points in positive and 
+			negative direction to extrapolate fit target value from. 
+			Default is 20.
+
+	Raises:
+		AssertionError: if extrapolation_type, extrapolation_data or
+			ac_correction_method is not recognized among built in methods. 
+
+	Returns:
+		x0: x axis value at fit target
+		y0: y axis value at fit target
+		y0_error: y axis error at fit target
+		y0_raw: raw value at y axis fit target
+		tau_int_0: tau int value at the fit target
+	"""
+
+	extrap_types_list = ["platou", "nearest"]
+	extrap_data_list = ["bs", "jk", "unanalyzed"]
+	ac_corr_methods_list = ["platou", "nearest"]
+
+	extrap_type_err = ("%s not an available extrapolation type: %s" % (
+			(extrapolation_type, ", ".join(extrap_types_list))))
+	assert extrapolation_type in extrap_types_list, extrap_type_err
+
+	extrap_data_err = ("%s data not among the available extrapolation "
+			"data: %s" % ((extrapolation_data, ", ".join(extrap_data_err))))
+	assert extrapolation_data in extrap_data_list, extrap_data_err
+
+	ac_corr_err = ("%s not an available method in autocorrelation correction"
+		" methods: %s" % (ac_correction_method, ", ".join(ac_corr_methods_list)))
+	assert ac_correction_method in ac_corr_methods_list, ac_corr_err
+
+	if extrapolation_data
+
+	if extrapolation_type == "platou":
+		# perform linear fit in +/- platou_size, correct error if tau_int != None
+		pass
+	elif extrapolation_type == "nearest":
+		# simply select the value closest to the fit target
+		pass
+
+
+
+
 def _fit_var_printer(var_name, var, var_error, w=16):
 	return "{0:<s} = {1:<.{w}f} +/- {2:<.{w}f}".format(var_name, var, 
 		var_error, w=w)

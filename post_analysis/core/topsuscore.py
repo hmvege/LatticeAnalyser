@@ -19,8 +19,8 @@ class TopsusCore(PostCore):
 	x_label_continuum = r"$a^2/t_0$"
 
 	def plot_continuum(self, fit_target, title_addendum="",
-		extrapolation_type="platou", extrapolation_data="bs",
-		ac_correction_method="average"):
+		extrapolation_type="platou", ac_correction_method="average",
+		use_raw_values=False, platou_fit_size=20):
 		"""
 		Method for plotting the continuum limit of topsus at a given 
 		fit_target.
@@ -29,22 +29,27 @@ class TopsusCore(PostCore):
 			fit_target: float, value of where we extrapolate from.
 			title_addendum: str, optional, default is an empty string, ''. 
 				Adds string to end of title.
-			extrapolation_type: str, optional, method of extrapolating to the 
-				continuum limit. Choices:
+			extrapolation_type: str, optional, method of selecting the 
+				extrapolation point to do the continuum limit. Choices:
 				- platou: line fits points neighbouring point in order to 
 					reduce the error bars.
+				- nearest: line fit from the point nearest to what we seek
 			extrapolation_data: str, optional, what data we will extrapolate 
 				from. Default is to use the bootstrap data. Choices:
 				- bs: bootstrapped means and autocorrelation corrected
 					errors.
-				- bs_raw: raw bootstrap values. Tau int will be chosen from 
-					the ac_correction_method of, by default taking the average
-					of the neighbouring tau ints.
-			ac_correction_method: str, optional. Choices:
-				- average: takes the average of the neighbouring tau ints.
-				- linear: takes the average of the two nearest points.
-
-
+				- jk: jackknifed means and autocorrelation corrected errors.
+				- unanalyzed: unanalyzed means and autocorrelation corrected 
+					errors.
+			ac_correction_method: str, optional. Method of correcting the
+				autocorrelation in the standard	deviation. Choices:
+				- platou: takes the average of the neighbouring tau ints.
+				- nearest: uses the value closest to the fit_target.
+			use_raw_values: bool, optional, if true, will use bootstrap, 
+				jackknifed or unanalyzed samples directly. Default is False.
+			platou_size: int, optional. Number of points in positive and 
+				negative direction to extrapolate fit target value from. 
+				Default is 20.
 		"""
 
 		#################################
@@ -54,20 +59,23 @@ class TopsusCore(PostCore):
 		if fit_target == -1:
 			fit_target = self.plot_values[max(self.plot_values)]["x"][-1]
 
-		a_squared, obs, obs_err = [], [], []
+		a_squared, obs, obs_raw, obs_err, tau_int_corr = [], [], [], [], []
 		for beta in sorted(self.plot_values):
 			x = self.plot_values[beta]["x"]
 			y = self.plot_values[beta]["y"]
 			y_err = self.plot_values[beta]["y_err"]
+			y_raw = self.plot_values[beta][self.analysis_data_type]
 			if self.with_autocorr:
 				tau_int = self.plot_values[beta]["tau_int"]
 
 			# THIS IS WHERE WE IMPLEMENT DIFFERENT METHODS!!!
 			fit_index = np.argmin(np.abs(x - fit_target))
-
 			a_squared.append(self.plot_values[beta]["a"]**2/fit_target)
 			obs.append(y[fit_index])
 			obs_err.append(y_err[fit_index])
+			obs_raw.append(y_raw[fit_index])
+			tau_int_corr.append(tau_int[fit_index])
+
 
 		# Makes lists into arrays
 		a_squared = np.asarray(a_squared)[::-1]
