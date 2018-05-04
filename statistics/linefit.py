@@ -44,6 +44,8 @@ class LineFit:
 
 		if isinstance(x_arr, types.NoneType):
 			x_arr = np.linspace(self.x[self.x_lower], self.x[self.x_upper], 100)
+		else:
+			x_arr = np.atleast_1d(x)
 
 		# self.x_mean = np.mean(self.x)
 		# self.y_mean = np.mean(self.y)
@@ -110,6 +112,8 @@ class LineFit:
 
 		if isinstance(x_arr, types.NoneType):
 			x_arr = np.linspace(self.x[0], self.x[-1], 100)
+		else:
+			x_arr = np.atleast_1d(x_arr)
 
 		assert not isinstance(self.y_err, types.NoneType), "Missing y_err."
 

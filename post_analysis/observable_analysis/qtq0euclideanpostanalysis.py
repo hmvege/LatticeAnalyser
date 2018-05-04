@@ -58,13 +58,18 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 		fig_base_name = "post_analysis_%s_%s_tf*.png" % (
 			self.observable_name_compact, self.analysis_data_type)
 
+		gif_path = os.path.join(self.output_folder_path,
+			"%s_smearing.gif" % self.observable_name_compact)
+
 		input_paths = os.path.join(self.gif_folder, fig_base_name)
-		cmd = ['convert', '-delay', '1', '-loop', '0', input_paths,
-			self.output_folder_path]
+		cmd = ['convert', '-delay', '4', '-loop', '0', input_paths,
+			gif_path]
 
 		print "> %s" % " ".join(cmd)	
 		proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 		read_out = proc.stdout.read()
+		print read_out
+		print "\nGif creation done.\n"
 
 	def _initiate_plot_values(self, data, data_raw, euclidean_percent, 
 		q0_flow_time=None):
@@ -86,8 +91,11 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 
 					sub_values["y"] = data[beta][sub_obs][te_index]["y"]
 					sub_values["y_err"] = data[beta][sub_obs][te_index]["y_error"]
-					sub_values["bs"] = data_raw[beta] \
-						[self.observable_name_compact][sub_obs][te_index]
+
+					sub_values[self.analysis_data_type] = \
+						data_raw[self.analysis_data_type][beta]\
+						[self.observable_name_compact][sub_obs]
+					sub_values["tau_int"] = data[beta][sub_obs]["ac"]["tau_int"]
 
 					sub_values["label"] = r"%s, $\beta=%2.2f$, $\sqrt{8t_{f,0}}=%.2f$" \
 						% (self.size_labels[beta], beta, self._convert_label(sub_obs))
@@ -108,8 +116,11 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 
 				values["y"] = data[beta][tf_index][te_index]["y"]
 				values["y_err"] = data[beta][tf_index][te_index]["y_error"]
-				values["bs"] = data_raw[beta][self.observable_name_compact] \
-					[tf_index][te_index]
+
+				values[self.analysis_data_type] = \
+					data_raw[self.analysis_data_type][beta]\
+					[self.observable_name_compact][tf_index]
+				values["tau_int"] = data[beta]["ac"]["tau_int"]
 
 				values["label"] = r"%s $\beta=%2.2f$, $t_f=%.2f$, $t_e=%d$" % (
 					self.size_labels[beta], beta, q0_flow_time, euclidean_index)
@@ -131,12 +142,14 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 	def _get_plot_figure_name(self, output_folder=None):
 		"""Retrieves appropriate figure file name."""
 		if isinstance(output_folder, types.NoneType):
+			# Sets up slices folder containing all euclidean times
 			output_folder = os.path.join(self.output_folder_path, "slices")
-		check_folder(output_folder, False, True)
+			check_folder(output_folder, False, True)
+	
+			# Sets up euclidean time folder
+			output_folder = os.path.join(output_folder,
+				"te%04d" % self.interval_index[1])
 
-		# Sets up euclidean time folder
-		output_folder = os.path.join(output_folder,
-			"te%04d" % self.interval_index[1])
 		check_folder(output_folder, False, True)
 
 		fname = "post_analysis_%s_%s_tf%4.4f.png" % (self.observable_name_compact,
@@ -180,85 +193,11 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 			plot_with_formula: bool, default is false, is True will look for 
 				formula for the y-value to plot in title.
 		"""
+
 		self.plot_values = {}
 		self._initiate_plot_values(self.data[self.analysis_data_type],
 			self.data_raw[self.analysis_data_type],
 			euclidean_percent=euclidean_percent)
-
-		# old_rc_paramx = plt.rcParams['xtick.labelsize']
-		# old_rc_paramy = plt.rcParams['ytick.labelsize']
-		# plt.rcParams['xtick.labelsize'] = 6
-		# plt.rcParams['ytick.labelsize'] = 6
-
-		# # Starts plotting
-		# # fig = plt.figure(sharex=True)
-		# fig, axes = plt.subplots(2, 2, sharey=True, sharex=True)
-
-		# # Ensures beta is a list
-		# if not isinstance(beta, list):
-		# 	beta = [beta]
-
-		# # Sets the beta values to plot
-		# if beta[0] == "all" and len(beta) == 1:
-		# 	bvalues = self.plot_values
-		# else:
-		# 	bvalues = beta
-
-		# # print axes
-		# for ax, i in zip(list(itertools.chain(*axes)), indexes):
-		# 	for ibeta in bvalues:
-		# 		# Retrieves the values deepending on the indexes provided and beta values
-		# 		value = self.plot_values[ibeta] \
-		# 			[sorted(self.observable_intervals[ibeta])[i]]
-
-		# 		x = value["x"]
-		# 		y = value["y"]
-		# 		y_err = value["y_err"]
-		# 		# ax.plot(x, y, "-", label=value["label"], color=value["color"])
-		# 		# ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, edgecolor='',
-		# 		# 	facecolor=value["color"])
-		# 		if error_shape == "band":
-		# 			ax.plot(x, y, "-", label=value["label"], color=value["color"])
-		# 			ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, 
-		# 				edgecolor='', facecolor=value["color"])
-		# 		elif error_shape == "bars":
-		# 			ax.errorbar(x, y, yerr=y_err, capsize=5, fmt="_", ls=":", 
-		# 				label=value["label"], color=value["color"], 
-		# 				ecolor=value["color"])
-
-				
-		# 		# Basic plotting commands
-		# 		ax.grid(True)
-		# 		ax.legend(loc="best", prop={"size":5})
-
-		# 		# Sets axes limits if provided
-		# 		if x_limits != False:
-		# 			ax.set_xlim(x_limits)
-		# 		if y_limits != False:
-		# 			ax.set_ylim(y_limits)
-
-		# # Set common labels
-		# # https://stackoverflow.com/questions/6963035/pyplot-axes-labels-for-subplots
-		# fig.text(0.52, 0.035, self.x_label, ha='center', va='center', 
-		# 	fontsize=9)
-		# fig.text(0.03, 0.5, self.y_label, ha='center', va='center', 
-		# 	rotation='vertical', fontsize=11)
-
-		# # Sets the title string
-		# title_string = r"%s" % self.observable_name
-		# if plot_with_formula:
-		# 	title_string += r" %s" % self.formula
-		# plt.suptitle(title_string)
-		# plt.tight_layout(pad=1.7)
-
-		# # Saves and closes figure
-		# if beta == "all":
-		# 	folder_name = "beta%s" % beta
-		# else:
-		# 	folder_name = "beta%s" % "-".join([str(i) for i in beta])
-		# folder_name += "_N%s" % "".join([str(i) for i in indexes])
-		# folder_path = os.path.join(self.output_folder_path, folder_name)
-		# check_folder(folder_path, False, True)
 
 		fname = "post_analysis_%s_%s_te%04d.png" % (
 			self.observable_name_compact,
@@ -266,11 +205,3 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 
 		self._series_plot_core(indexes, beta="all", x_limits=False, 
 		y_limits=False, plot_with_formula=False, fname=fname)
-
-		# plt.savefig(fname, dpi=400)
-		# print "Figure saved in %s" % fname
-		# # plt.show()
-		# plt.close(fig)
-
-		# plt.rcParams['xtick.labelsize'] = old_rc_paramx
-		# plt.rcParams['ytick.labelsize'] = old_rc_paramy

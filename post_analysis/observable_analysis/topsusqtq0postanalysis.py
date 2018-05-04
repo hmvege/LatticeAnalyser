@@ -14,7 +14,7 @@ class TopsusQtQ0PostAnalysis(MultiPlotCore, TopsusCore):
 	# Continuum plot variables
 	y_label_continuum = r"$\chi^{1/4}(\langle Q_{t} Q_{t_0} \rangle)[GeV]$"
 
-	def plot_continuum(self, fit_target, interval_index):
+	def plot_continuum(self, fit_target, interval_index, **kwargs):
 		"""
 		Continuum plotter for topsus qtq0 in fixed flow time.
 
@@ -51,7 +51,7 @@ class TopsusQtQ0PostAnalysis(MultiPlotCore, TopsusCore):
 		t_flow = float(self.interval)/100.0 # To normalize the flow
 		title_addendum = r", $t_{0=%.2f}$" % t_flow
 		super(TopsusQtQ0PostAnalysis, self).plot_continuum(fit_target,
-			title_addendum=title_addendum)
+			title_addendum=title_addendum, **kwargs)
 
 		# Resets the plot values and output folder path
 		self.plot_values = self.plot_values_old

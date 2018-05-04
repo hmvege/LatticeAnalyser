@@ -316,7 +316,7 @@ def post_analysis(batch_folder, batch_beta_names, observables,
 				qtq0e_analysis.plot_series(te, [0,1,2,3], beta=bval_to_plot)
 				qtq0e_analysis.plot_series(te, [0,2,3,4], beta=bval_to_plot)
 
-		if"qtq0e_gif" in observables:
+		if "qtq0e_gif" in observables:
 			qtq0e_analysis = QtQ0EuclideanPostAnalysis(data, 
 				figures_folder=figures_folder, verbose=verbose)
 

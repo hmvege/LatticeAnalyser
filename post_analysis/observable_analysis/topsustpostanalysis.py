@@ -14,7 +14,7 @@ class TopsustPostAnalysis(MultiPlotCore, TopsusCore):
 	# Continuum plot variables
 	y_label_continuum = r"$\chi^{1/4}(\langle Q_t Q_{t_{euclidean}} \rangle)[GeV]$"
 
-	def plot_continuum(self, fit_target, interval_index):
+	def plot_continuum(self, fit_target, interval_index, **kwargs):
 		# Backs up old variables
 		self.plot_values_old = self.plot_values
 		self.output_folder_path_old = self.output_folder_path
@@ -32,7 +32,7 @@ class TopsustPostAnalysis(MultiPlotCore, TopsusCore):
 		check_folder(self.output_folder_path, False, self.verbose)
 		title_addendum = r", $t_{e}=%d$" % t_euclidean
 		super(TopsustPostAnalysis, self).plot_continuum(fit_target,
-			title_addendum=title_addendum)
+			title_addendum=title_addendum, **kwargs)
 
 		# Resets the plot values and output folder path
 		self.plot_values = self.plot_values_old

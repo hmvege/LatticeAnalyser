@@ -46,6 +46,7 @@ def main():
 		"topcr",
 		"qtq0e",
 		"qtq0eff",
+		# "qtq0_gif",
 	]
 
 	# observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
@@ -55,9 +56,7 @@ def main():
 	# observables = ["topcr"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
 	observables = ["qtq0e", "qtq0eff", "topsusqtq0"]
-	# observables = ["topsusqtq0"]
-	observables = ["qtq0e", "qtq0eff", "qtq0gif"]
-	observables = ["qtq0e_gif"]
+	observables = ["topsus"]
 
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
 	print 100*"=" + "\n"
@@ -92,7 +91,6 @@ def main():
 	energy_fit_target = 0.3
 
 	# Smearing gif parameters for qtq0e
-	gif_create_data = False
 	gif_euclidean_time = 0.5
 	gif_flow_range = np.linspace(0, 0.6, 100)
 
@@ -164,7 +162,6 @@ def main():
 		"intervals_eucl": intervals_eucl,
 		"MC_time_splits": MC_time_splits,
 		# Gif smearing parameters in the qtq0e observable
-		"gif_create_data": gif_create_data,
 		"gif_euclidean_time": gif_euclidean_time,
 		"gif_flow_range": gif_flow_range,
 		# Passing on lattice sizes

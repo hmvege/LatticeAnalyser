@@ -11,7 +11,7 @@ class TopsusMCIntervalPostAnalysis(MultiPlotCore, TopsusCore):
 	y_label = r"$\chi^{1/4} [GeV]$"
 	sub_obs = True
 
-	def plot_continuum(self, fit_target, interval_index):
+	def plot_continuum(self, fit_target, interval_index, **kwargs):
 		"""
 		Continuum plotter for topsus in intervals in MC-time.
 
@@ -40,7 +40,7 @@ class TopsusMCIntervalPostAnalysis(MultiPlotCore, TopsusCore):
 		title_addendum = r", MC-Interval: $[%s)$" % self.interval
 
 		super(TopsusMCIntervalPostAnalysis, self).plot_continuum(fit_target,
-			title_addendum=title_addendum)
+			title_addendum=title_addendum, **kwargs)
 
 		# Resets the plot values and output folder path
 		self.plot_values = self.plot_values_old

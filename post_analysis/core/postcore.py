@@ -4,6 +4,7 @@ from tools.folderreadingtools import check_folder, get_NBoots
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import types
 
 class PostCore(object):
 	"""Post analysis base class. Based on paper DOI 10.1002/mas.20100."""
@@ -57,6 +58,14 @@ class PostCore(object):
 
 		self.beta_values = sorted(data.beta_values)
 
+		if self.with_autocorr:
+			# Adds tau ints to data
+			pass
+
+		# print data.data_observables["topsus"][6.0]["with_autocorr"].keys()
+		# print "exits @ 64 in postcore.py"
+		# exit(1)
+
 		self.analysis_types = data.analysis_types
 		if "autocorrelation" in self.analysis_types:
 			self.analysis_types.remove("autocorrelation")
@@ -93,6 +102,13 @@ class PostCore(object):
 								self.data[atype][beta][subobs][subsubobs] = \
 									data.data_observables[observable][beta] \
 									[subobs][subsubobs][self.ac][atype]
+
+								if self.with_autocorr:
+									self.data[atype][beta][subobs][subsubobs] \
+										["ac"] = data.data_observables \
+										[observable][beta][subobs][subsubobs] \
+										["with_autocorr"]["autocorr"]
+
 					else:
 						# Fills up observable intervals
 						self.observable_intervals[beta] = \
@@ -102,9 +118,19 @@ class PostCore(object):
 							self.data[atype][beta][subobs] = \
 								data.data_observables[observable][beta] \
 								[subobs][self.ac][atype]
+
+						if self.with_autocorr:
+							self.data[atype][beta][subobs]["ac"] = \
+								data.data_observables[observable][beta] \
+								[subobs]["with_autocorr"]["autocorr"]
 				else:
 					self.data[atype][beta] = data.data_observables \
 						[observable][beta][self.ac][atype]
+
+					if self.with_autocorr:
+						self.data[atype][beta]["ac"] = \
+							data.data_observables[observable][beta] \
+							["with_autocorr"]["autocorr"]
 
 		self.data_raw = {}
 		for key in data.raw_analysis:
@@ -148,11 +174,13 @@ class PostCore(object):
 
 	def set_analysis_data_type(self, analysis_data_type="bootstrap"):
 		"""Sets the analysis type and retrieves correct analysis data."""
+
+		# Makes it a global constant so it can be added in plot figure name
+		self.analysis_data_type = analysis_data_type
+
 		self.plot_values = {} # Clears old plot values
 		self._initiate_plot_values(self.data[analysis_data_type], 
 			self.data_raw[analysis_data_type])
-		# Makes it a global constant so it can be added in plot figure name
-		self.analysis_data_type = analysis_data_type
 
 	def _initiate_plot_values(self, data, data_raw):
 		"""Sorts data into a format specific for the plotting method."""
@@ -162,9 +190,14 @@ class PostCore(object):
 			values["a"] = get_lattice_spacing(beta)
 			values["x"] = values["a"]* np.sqrt(8*self.flow_time)
 			values["y"] = data[beta]["y"]
-			# values["bs"] = data_raw[beta][self.observable_name_compact]
 			values["y_err"] = data[beta]["y_error"]
-			values["label"] = r"%s $\beta=%2.2f$" % (self.size_labels[beta], beta)
+			values[self.analysis_data_type] = \
+				data_raw[beta]\
+				[self.observable_name_compact]
+			if self.with_autocorr:
+				values["tau_int"] = data[beta]["ac"]["tau_int"]
+			values["label"] = r"%s $\beta=%2.2f$" % (
+				self.size_labels[beta], beta)
 			values["color"] = self.colors[beta]
 			self.plot_values[beta] = values
 
@@ -180,8 +213,9 @@ class PostCore(object):
 			plot_with_formula: bool, default is false, is True will look for 
 				formula for the y-value to plot in title.
 			figure_folder: optional, default is None. If default, will place
-				figures in 
+				figures in figures/{batch_name}/post_analysis/{observable_name}
 		"""
+
 		if self.verbose:
 			print "Plotting %s for betas %s together" % (
 				self.observable_name_compact,
@@ -230,7 +264,7 @@ class PostCore(object):
 		# plt.tight_layout()
 
 		# Saves and closes figure
-		fname = self._get_plot_figure_name()
+		fname = self._get_plot_figure_name(output_folder=figure_folder)
 		plt.savefig(fname)
 		if self.verbose:
 			print "Figure saved in %s" % fname

@@ -234,6 +234,10 @@ class TopcRPostAnalysis(PostCore):
 			values["x"] = values["a"]* np.sqrt(8*self.flow_time)
 			values["y"] = data[beta]["y"]
 			values["y_err"] = data[beta]["y_error"]
+			values[self.analysis_data_type] = \
+				data_raw[self.analysis_data_type][beta]\
+				[self.observable_name_compact]
+			values["tau_int"] = data[beta]["ac"]["tau_int"]
 			values["label"] = r"%s $\beta=%2.2f$" % (
 				self.size_labels[beta], beta)
 			values["color"] = self.colors[beta]

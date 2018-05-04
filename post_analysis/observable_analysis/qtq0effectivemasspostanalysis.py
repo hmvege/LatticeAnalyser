@@ -142,6 +142,11 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 						self.size_labels[beta], beta, 
 						self._convert_label(sub_obs))
 
+					sub_values[self.analysis_data_type] = \
+						data_raw[self.analysis_data_type][beta]\
+						[self.observable_name_compact][sub_obs]
+					sub_values["tau_int"] = data[beta][sub_obs]["ac"]["tau_int"]
+
 					sub_values["color"] = self.colors[beta]
 					values[sub_obs] = sub_values
 				self.plot_values[beta] = values
@@ -155,9 +160,10 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 					self.lattice_sizes[beta][1] * values["a"],
 					self.lattice_sizes[beta][1])
 
-				# values["y"] = self.C(data[beta][tf_index]["y"])
-				# values["y_err"] = self.C_std(data[beta][tf_index]["y"], data[beta][tf_index]["y_error"])
-				# values["y"], values["y_err"] = self.analyse_raw(data_raw[beta][self.observable_name_compact][tf_index])
+				values[self.analysis_data_type] = \
+					data_raw[self.analysis_data_type][beta]\
+					[self.observable_name_compact][tf_index]
+				values["tau_int"] = data[beta]["ac"]["tau_int"]
 
 				values["y"], values["y_err"] = \
 					self.analyse_data(data[beta][tf_index])
@@ -204,104 +210,6 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 		kwargs["y_limits"] = [-1,1]
 		kwargs["x_limits"] = [-0.1,1]
 		super(QtQ0EffectiveMassPostAnalysis, self).plot(*args, **kwargs)
-
-	# def plot_series(self, indexes, beta="all", x_limits=False, 
-	# 	y_limits=False, plot_with_formula=False):
-	# 	"""
-	# 	Method for plotting 4 axes together.
-
-	# 	Args:
-	# 		indexes: list containing integers of which intervals to plot 
-	# 			together.
-	# 		beta: beta values to plot. Default is "all". Otherwise, 
-	# 			a list of numbers or a single beta value is provided.
-	# 		x_limits: limits of the x-axis. Default is False.
-	# 		y_limits: limits of the y-axis. Default is False.
-	# 		plot_with_formula: bool, default is false, is True will look for 
-	# 			formula for the y-value to plot in title.
-	# 	"""
-	# 	self.plot_values = {}
-	# 	self._initiate_plot_values(self.data[self.analysis_data_type],
-	# 		self.data_raw[self.analysis_data_type])
-
-	# 	# old_rc_paramx = plt.rcParams['xtick.labelsize']
-	# 	# old_rc_paramy = plt.rcParams['ytick.labelsize']
-	# 	# plt.rcParams['xtick.labelsize'] = 6
-	# 	# plt.rcParams['ytick.labelsize'] = 6
-
-	# 	# # Starts plotting
-	# 	# # fig = plt.figure(sharex=True)
-	# 	# fig, axes = plt.subplots(2, 2, sharey=True, sharex=True)
-
-	# 	# # Ensures beta is a list
-	# 	# if not isinstance(beta, list):
-	# 	# 	beta = [beta]
-
-	# 	# # Sets the beta values to plot
-	# 	# if beta[0] == "all" and len(beta) == 1:
-	# 	# 	bvalues = self.plot_values
-	# 	# else:
-	# 	# 	bvalues = beta
-
-	# 	# # print axes
-	# 	# for ax, i in zip(list(itertools.chain(*axes)), indexes):
-	# 	# 	for ibeta in bvalues:
-	# 	# 		# Retrieves the values deepending on the indexes provided and 
-	# 	# 		# beta values.
-	# 	# 		value = self.plot_values[ibeta] \
-	# 	# 			[sorted(self.observable_intervals[ibeta])[i]]
-	# 	# 		x = value["x"]
-	# 	# 		y = value["y"]
-	# 	# 		y_err = value["y_err"]
-	# 	# 		# ax.plot(x, y, "o", label=value["label"], color=value["color"])
-	# 	# 		# ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, edgecolor='',
-	# 	# 		# 	facecolor=value["color"])
-	# 	# 		ax.errorbar(x, y, yerr=y_err, capsize=5, fmt="_", ls=":", 
-	# 	# 				label=value["label"], color=value["color"], 
-	# 	# 				ecolor=value["color"])
-				
-	# 	# 		# Basic plotting commands
-	# 	# 		ax.grid(True)
-	# 	# 		ax.legend(loc="best", prop={"size":5})
-
-	# 	# 		# Sets axes limits if provided
-	# 	# 		if x_limits != False:
-	# 	# 			ax.set_xlim(x_limits)
-	# 	# 		if y_limits != False:
-	# 	# 			ax.set_ylim(y_limits)
-
-	# 	# # Set common labels
-	# 	# # https://stackoverflow.com/questions/6963035/pyplot-axes-labels-for-subplots
-	# 	# fig.text(0.52, 0.035, self.x_label, ha='center', va='center', 
-	# 	# 	fontsize=9)
-	# 	# fig.text(0.03, 0.5, self.y_label, ha='center', va='center', 
-	# 	# 	rotation='vertical', fontsize=11)
-
-	# 	# # Sets the title string
-	# 	# title_string = r"%s" % self.observable_name
-	# 	# if plot_with_formula:
-	# 	# 	title_string += r" %s" % self.formula
-	# 	# plt.suptitle(title_string, fontsize=16)
-	# 	# plt.tight_layout(pad=1.7)
-
-	# 	# # Saves and closes figure
-	# 	# if beta == "all":
-	# 	# 	folder_name = "beta%s" % beta
-	# 	# else:
-	# 	# 	folder_name = "beta%s" % "-".join([str(i) for i in beta])
-	# 	# folder_name += "_N%s" % "".join([str(i) for i in indexes])
-	# 	# folder_path = os.path.join(self.output_folder_path, folder_name)
-	# 	# check_folder(folder_path, False, True)
-
-	# 	# fname = os.path.join(folder_path, "post_analysis_%s_%s.png" % (
-	# 	# 	self.observable_name_compact, self.analysis_data_type))
-	# 	# plt.savefig(fname, dpi=400)
-	# 	# print "Figure saved in %s" % fname
-	# 	# # plt.show()
-	# 	# plt.close(fig)
-
-	# 	# plt.rcParams['xtick.labelsize'] = old_rc_paramx
-	# 	# plt.rcParams['ytick.labelsize'] = old_rc_paramy
 
 def main():
 	exit(("Exit: QtQ0EffectiveMassPostAnalysis not intended to be a "

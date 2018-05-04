@@ -11,7 +11,7 @@ class TopsusteIntervalPostAnalysis(MultiPlotCore, TopsusCore):
 	y_label = r"$\chi^{1/4} [GeV]$"
 	sub_obs = True
 
-	def plot_continuum(self, fit_target, interval_index, title_addendum=""):
+	def plot_continuum(self, fit_target, interval_index, title_addendum="", **kwargs):
 		# Backs up old variables
 		self.plot_values_old = self.plot_values
 		self.output_folder_path_old = self.output_folder_path
@@ -26,7 +26,7 @@ class TopsusteIntervalPostAnalysis(MultiPlotCore, TopsusCore):
 		self.interval = str(sorted(self.plot_values.values())[0]["interval"])
 		title_addendum = r", $t_{e}$-interval: $[%s)$" % self.interval
 		super(TopsusteIntervalPostAnalysis, self).plot_continuum(fit_target,
-			title_addendum=title_addendum)
+			title_addendum=title_addendum, **kwargs)
 
 		# Resets the plot values and output folder path
 		self.plot_values = self.plot_values_old

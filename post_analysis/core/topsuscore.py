@@ -18,7 +18,9 @@ class TopsusCore(PostCore):
 	# x_label_continuum = r"$a/{{r_0}^2}$"
 	x_label_continuum = r"$a^2/t_0$"
 
-	def plot_continuum(self, fit_target, title_addendum=""):
+	def plot_continuum(self, fit_target, title_addendum="",
+		extrapolation_type="platou", extrapolation_data="bs",
+		ac_correction_method="average"):
 		"""
 		Method for plotting the continuum limit of topsus at a given 
 		fit_target.
@@ -27,7 +29,28 @@ class TopsusCore(PostCore):
 			fit_target: float, value of where we extrapolate from.
 			title_addendum: str, optional, default is an empty string, ''. 
 				Adds string to end of title.
+			extrapolation_type: str, optional, method of extrapolating to the 
+				continuum limit. Choices:
+				- platou: line fits points neighbouring point in order to 
+					reduce the error bars.
+			extrapolation_data: str, optional, what data we will extrapolate 
+				from. Default is to use the bootstrap data. Choices:
+				- bs: bootstrapped means and autocorrelation corrected
+					errors.
+				- bs_raw: raw bootstrap values. Tau int will be chosen from 
+					the ac_correction_method of, by default taking the average
+					of the neighbouring tau ints.
+			ac_correction_method: str, optional. Choices:
+				- average: takes the average of the neighbouring tau ints.
+				- linear: takes the average of the two nearest points.
+
+
 		"""
+
+		#################################
+		#### Continuum extrapolation ####
+		#################################
+		# Retrieves data for analysis.
 		if fit_target == -1:
 			fit_target = self.plot_values[max(self.plot_values)]["x"][-1]
 
@@ -36,17 +59,23 @@ class TopsusCore(PostCore):
 			x = self.plot_values[beta]["x"]
 			y = self.plot_values[beta]["y"]
 			y_err = self.plot_values[beta]["y_err"]
+			if self.with_autocorr:
+				tau_int = self.plot_values[beta]["tau_int"]
 
+			# THIS IS WHERE WE IMPLEMENT DIFFERENT METHODS!!!
 			fit_index = np.argmin(np.abs(x - fit_target))
 
 			a_squared.append(self.plot_values[beta]["a"]**2/fit_target)
 			obs.append(y[fit_index])
 			obs_err.append(y_err[fit_index])
 
-		# Initiates empty arrays for the continuum limit
+		# Makes lists into arrays
 		a_squared = np.asarray(a_squared)[::-1]
 		obs = np.asarray(obs)[::-1]
 		obs_err = np.asarray(obs_err)[::-1]
+		#################################
+		#################################
+		#################################
 
 		# Continuum limit arrays
 		N_cont = 1000
@@ -63,27 +92,24 @@ class TopsusCore(PostCore):
 
 		# continuum_fit.plot(True)
 
-		title_string = r"$\sqrt{8t_{flow,0}} = %.2f[fm], \chi^2 = %.2g$" % (
-			fit_target, chi_squared)
-		title_string += title_addendum
-		
 		# Gets the continium value and its error
-		cont_index = np.argmin(np.abs(a_squared_cont))
-		a0_squared = [a_squared_cont[cont_index], a_squared_cont[cont_index]]
-		y0 = [y_cont[cont_index], y_cont[cont_index]]
+		y0_cont, y0_cont_err, _, _, = \
+			continuum_fit.fit_weighted(0.0)
 
-		if y_cont_err[1][cont_index] < y_cont_err[0][cont_index]:
-			y0_err_lower = y0[0] - y_cont_err[1][cont_index]
-			y0_err_upper = y_cont_err[0][cont_index] - y0[0]
-		else:
-			y0_err_lower = y0[0] - y_cont_err[0][cont_index]
-			y0_err_upper = y_cont_err[1][cont_index] - y0[0]
+		# Matplotlib requires 2 point to plot error bars at
+		a0_squared = [0, 0]
+		y0 = [y0_cont[0], y0_cont[0]]
+		y0_err = [y0_cont_err[0][0], y0_cont_err[1][0]]
+		y0_err = [y0_err, y0_err]
 
 		# Stores the chi continuum
-		self.topsus_continuum = y_cont[cont_index]
-		self.topsus_continuum_error = [y0_err_lower, y0_err_upper]
+		self.topsus_continuum = y0[0]
+		self.topsus_continuum_error = (y0_err[0][1] - y0_err[0][0])/2.0
 
-		y0_err = [[y0_err_lower, 0], [y0_err_upper, 0]]
+		# Sets of title string with the chi squared and fit target
+		title_string = r"$\sqrt{8t_{flow,0}} = %.2f[fm], \chi^2 = %.2g$" % (
+			self.fit_target, self.chi_squared)
+		title_string += title_addendum
 
 		# Creates figure and plot window
 		fig = plt.figure()
@@ -101,8 +127,8 @@ class TopsusCore(PostCore):
 		# plots continuum limit, 5 is a good value for cap size
 		ax.errorbar(a0_squared, y0, yerr=y0_err, fmt="o", capsize=None,
 			capthick=1, color="tab:red", ecolor="tab:red",
-			label=r"$\chi^{1/4}=%.3f\pm%.3f$" % (y0[0],
-				(y0_err_lower + y0_err_upper)/2.0))
+			label=r"$\chi^{1/4}=%.3f\pm%.3f$" % (self.topsus_continuum,
+				self.topsus_continuum_error))
 
 		ax.set_ylabel(self.y_label_continuum)
 		ax.set_xlabel(self.x_label_continuum)
@@ -112,8 +138,8 @@ class TopsusCore(PostCore):
 		ax.grid(True)
 
 		if self.verbose:
-			print "Target: %.16f +/- %.16f" % (y0[0],
-				(y0_err_lower + y0_err_upper)/2.0)
+			print "Target: %.16f +/- %.16f" % (self.topsus_continuum,
+				self.topsus_continuum_error)
 
 		# Saves figure
 		fname = os.path.join(self.output_folder_path, 
@@ -131,15 +157,15 @@ class TopsusCore(PostCore):
 	def get_linefit_parameters(self):
 		"""Returns the chi^2, a, a_err, b, b_err."""
 		return self.chi_squared, self.fit_params, self.topsus_continuum, \
-			self.topsus_continuum_error[0], self.NF, self.NF_error, \
+			self.topsus_continuum_error, self.NF, self.NF_error, \
 			self.fit_target, self.interval
 
 	def print_continuum_estimate(self):
 		"""Prints the NF from the Witten-Veneziano formula."""
 		self.NF, self.NF_error = witten_veneziano(self.topsus_continuum, 
-			self.topsus_continuum_error[0])
+			self.topsus_continuum_error)
 		msg =  "\n    Topsus = %.16f" % self.topsus_continuum
-		msg += "\n    Topsus_error = %.16f" % self.topsus_continuum_error[0]
+		msg += "\n    Topsus_error = %.16f" % self.topsus_continuum_error
 		msg += "\n    N_f = %.16f" % self.NF
 		msg += "\n    N_f_error = %.16f" % self.NF_error
 		msg += "\n    Chi^2 = %.16f" % self.chi_squared

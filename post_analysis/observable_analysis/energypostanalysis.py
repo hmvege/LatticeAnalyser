@@ -87,7 +87,7 @@ class EnergyPostAnalysis(PostCore):
 
 	def _function_correction(self, x):
 		"""Function that corrects the energy data."""
-		return x*self.flow_time**2
+		return - x*self.flow_time**2
 
 	def _initiate_plot_values(self, data, data_raw):
 		# Sorts data into a format specific for the plotting method
@@ -97,11 +97,14 @@ class EnergyPostAnalysis(PostCore):
 			values["a"] = get_lattice_spacing(beta)
 			values["x"] = self.flow_time/self.r0**2*get_lattice_spacing(beta)**2
 			values["y"] = self._function_correction(data[beta]["y"])
-			values["bs"] = np.asarray([self._function_correction(self.data_raw["bootstrap"][beta][self.observable_name_compact][:,iBoot]) for iBoot in xrange(self.NBoots)]).T
-			
+			values["tau_int"] = data[beta]["ac"]["tau_int"]
+			values[self.analysis_data_type] = \
+				data_raw[self.analysis_data_type][beta]\
+				[self.observable_name_compact]
+
 			# Negative since the minus sign will go away during linear 
 			# error propagation.
-			values["y_err"] = - self._function_correction(data[beta]["y_error"])
+			values["y_err"] = self._function_correction(data[beta]["y_error"])
 			values["label"] = (r"%s $\beta=%2.2f$" %
 				(self.size_labels[beta], beta))
 			values["color"] = self.colors[beta]

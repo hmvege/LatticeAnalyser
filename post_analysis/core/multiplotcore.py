@@ -16,7 +16,8 @@ class MultiPlotCore(PostCore):
 	analysis_data_type = "bootstrap"
 
 	def _initiate_plot_values(self, data, data_raw, interval_index=None):
-		# Sorts data into a format specific for the plotting method
+		"""Sorts data into a format specific for the plotting method."""
+
 		for beta in sorted(data.keys()):
 			values = {}
 			if interval_index == None:
@@ -29,8 +30,13 @@ class MultiPlotCore(PostCore):
 					sub_values["x"] = sub_values["a"]*np.sqrt(8*self.flow_time)
 					sub_values["y"] = data[beta][sub_obs]["y"]
 					sub_values["y_err"] = data[beta][sub_obs]["y_error"]
-					sub_values["bs"] = data_raw[beta]\
+					sub_values["tau_int"] = data[beta][sub_obs]["ac"]["tau_int"]
+					
+					# Retrieves raw data
+					sub_values[self.analysis_data_type] = \
+						data_raw[self.analysis_data_type][beta]\
 						[self.observable_name_compact][sub_obs]
+					
 					sub_values["label"] = r"%s $\beta=%2.2f$ %s" % (
 						self.size_labels[beta], beta, 
 						self._convert_label(sub_obs))
@@ -44,7 +50,10 @@ class MultiPlotCore(PostCore):
 					[sorted_intervals[interval_index]]["y"]
 				values["y_err"] = data[beta] \
 					[sorted_intervals[interval_index]]["y_error"]
-				values["bs"] = data_raw[beta][self.observable_name_compact] \
+				values["tau_int"] = data[beta]["ac"]["tau_int"]
+				values[self.analysis_data_type] = \
+					data_raw[self.analysis_data_type][beta]\
+					[self.observable_name_compact] \
 					[sorted_intervals[interval_index]]
 				values["label"] = r"%s $\beta=%2.2f$ %s" % (
 					self.size_labels[beta], beta, 
@@ -117,92 +126,6 @@ class MultiPlotCore(PostCore):
 
 		self._series_plot_core(indexes, beta="all", x_limits=False, 
 		y_limits=False, plot_with_formula=False, error_shape="band")
-
-		# old_rc_paramx = plt.rcParams['xtick.labelsize']
-		# old_rc_paramy = plt.rcParams['ytick.labelsize']
-		# plt.rcParams['xtick.labelsize'] = 6
-		# plt.rcParams['ytick.labelsize'] = 6
-
-		# # Starts plotting
-		# # fig = plt.figure(sharex=True)
-		# fig, axes = plt.subplots(2, 2, sharey=True, sharex=True)
-
-		# # Ensures beta is a list
-		# if not isinstance(beta, list):
-		# 	beta = [beta]
-
-		# # Sets the beta values to plot
-		# if beta[0] == "all" and len(beta) == 1:
-		# 	bvalues = self.plot_values
-		# else:
-		# 	bvalues = beta
-
-		# for ax, i in zip(list(itertools.chain(*axes)), indexes):
-		# 	for ibeta in bvalues:
-		# 		# Retrieves the values deepending on the indexes provided and
-		# 		# beta values.
-		# 		value = self.plot_values[ibeta] \
-		# 			[sorted(self.observable_intervals[ibeta])[i]]
-
-		# 		x = value["x"]
-		# 		y = value["y"]
-		# 		y_err = value["y_err"]
-		# 		# ax.plot(x, y, "-", label=value["label"], color=value["color"])
-		# 		# ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, edgecolor='',
-		# 		# 	facecolor=value["color"])
-				
-		# 		if error_shape == "band":
-		# 			ax.plot(x, y, "-", label=value["label"], color=value["color"])
-		# 			ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, 
-		# 				edgecolor='', facecolor=value["color"])
-		# 		elif error_shape == "bars":
-		# 			ax.errorbar(x, y, yerr=y_err, capsize=5, fmt="_", ls=":", 
-		# 				label=value["label"], color=value["color"], 
-		# 				ecolor=value["color"])
-
-
-		# 		# Basic plotting commands
-		# 		ax.grid(True)
-		# 		ax.legend(loc="best", prop={"size":5})
-
-		# 		# Sets axes limits if provided
-		# 		if x_limits != False:
-		# 			ax.set_xlim(x_limits)
-		# 		if y_limits != False:
-		# 			ax.set_ylim(y_limits)
-
-		# # Set common labels
-		# # https://stackoverflow.com/questions/6963035/pyplot-axes-labels-for-subplots
-		# fig.text(0.52, 0.035, self.x_label, ha='center', va='center', 
-		# 	fontsize=9)
-		# fig.text(0.03, 0.5, self.y_label, ha='center', va='center', 
-		# 	rotation='vertical', fontsize=11)
-
-		# # Sets the title string
-		# title_string = r"%s" % self.observable_name
-		# if plot_with_formula:
-		# 	title_string += r" %s" % self.formula
-		# plt.suptitle(title_string)
-		# plt.tight_layout(pad=1.7)
-
-		# # Saves and closes figure
-		# if beta == "all":
-		# 	folder_name = "beta%s" % beta
-		# else:
-		# 	folder_name = "beta%s" % "-".join([str(i) for i in beta])
-		# folder_name += "_N%s" % "".join([str(i) for i in indexes])
-		# folder_path = os.path.join(self.output_folder_path, folder_name)
-		# check_folder(folder_path, False, True)
-
-		# fname = os.path.join(folder_path, "post_analysis_%s_%s.png" % (
-		# 	self.observable_name_compact, self.analysis_data_type))
-		# plt.savefig(fname, dpi=400)
-		# print "Figure saved in %s" % fname
-		# # plt.show()
-		# plt.close(fig)
-
-		# plt.rcParams['xtick.labelsize'] = old_rc_paramx
-		# plt.rcParams['ytick.labelsize'] = old_rc_paramy
 
 	def _series_plot_core(self, indexes, beta="all", x_limits=False, 
 		y_limits=False, plot_with_formula=False, error_shape="band", fname=None):
