@@ -196,6 +196,7 @@ class PostCore(object):
 				[self.observable_name_compact]
 			if self.with_autocorr:
 				values["tau_int"] = data[beta]["ac"]["tau_int"]
+				values["tau_int_err"] = data[beta]["ac"]["tau_int_err"]
 			values["label"] = r"%s $\beta=%2.2f$" % (
 				self.size_labels[beta], beta)
 			values["color"] = self.colors[beta]

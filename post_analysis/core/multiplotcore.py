@@ -30,7 +30,12 @@ class MultiPlotCore(PostCore):
 					sub_values["x"] = sub_values["a"]*np.sqrt(8*self.flow_time)
 					sub_values["y"] = data[beta][sub_obs]["y"]
 					sub_values["y_err"] = data[beta][sub_obs]["y_error"]
-					sub_values["tau_int"] = data[beta][sub_obs]["ac"]["tau_int"]
+
+					if self.with_autocorr:
+						sub_values["tau_int"] = \
+							data[beta][sub_obs]["ac"]["tau_int"]
+						sub_values["tau_int_err"] = \
+							data[beta][sub_obs]["ac"]["tau_int_err"]
 					
 					# Retrieves raw data
 					sub_values[self.analysis_data_type] = \
@@ -50,7 +55,11 @@ class MultiPlotCore(PostCore):
 					[sorted_intervals[interval_index]]["y"]
 				values["y_err"] = data[beta] \
 					[sorted_intervals[interval_index]]["y_error"]
-				values["tau_int"] = data[beta]["ac"]["tau_int"]
+
+				if self.with_autocorr:
+					values["tau_int"] = data[beta]["ac"]["tau_int"]
+					values["tau_int_err"] = data[beta]["ac"]["tau_int_err"]
+
 				values[self.analysis_data_type] = \
 					data_raw[self.analysis_data_type][beta]\
 					[self.observable_name_compact] \

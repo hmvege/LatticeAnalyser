@@ -62,6 +62,16 @@ class TopsusCore(PostCore):
 			y_raw = self.plot_values[beta][self.analysis_data_type]
 			if self.with_autocorr:
 				tau_int = self.plot_values[beta]["tau_int"]
+				tau_int_err = self.plot_values[beta]["tau_int_err"]
+			else:
+				tau_int = None
+				tau_int_err = None
+
+			res = extract_fit_target(fit_target, x, y, y_err, y_raw=y_raw,
+				tau_int=tau_int, tau_int_err=tau_int_err, 
+				extrapolation_method="platou", use_raw_values=True, 
+				platou_size=20, interpolation_rank=3, plot_fit=True,
+				verbose=self.verbose)
 
 			# THIS IS WHERE WE IMPLEMENT DIFFERENT METHODS!!!
 			fit_index = np.argmin(np.abs(x - fit_target))

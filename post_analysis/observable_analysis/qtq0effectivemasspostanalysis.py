@@ -145,7 +145,12 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 					sub_values[self.analysis_data_type] = \
 						data_raw[self.analysis_data_type][beta]\
 						[self.observable_name_compact][sub_obs]
-					sub_values["tau_int"] = data[beta][sub_obs]["ac"]["tau_int"]
+
+					if self.with_autocorr:
+						sub_values["tau_int"] = \
+							data[beta][sub_obs]["ac"]["tau_int"]
+						sub_values["tau_int_err"] = \
+							data[beta][sub_obs]["ac"]["tau_int_err"]
 
 					sub_values["color"] = self.colors[beta]
 					values[sub_obs] = sub_values
@@ -163,7 +168,10 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 				values[self.analysis_data_type] = \
 					data_raw[self.analysis_data_type][beta]\
 					[self.observable_name_compact][tf_index]
-				values["tau_int"] = data[beta]["ac"]["tau_int"]
+
+				if self.with_autocorr:
+					values["tau_int"] = data[beta]["ac"]["tau_int"]
+					values["tau_int_err"] = data[beta]["ac"]["tau_int_err"]
 
 				values["y"], values["y_err"] = \
 					self.analyse_data(data[beta][tf_index])

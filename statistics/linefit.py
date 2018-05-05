@@ -1,11 +1,11 @@
 #!/usr/bin/env python2
 
+from scipy.interpolate import InterpolatedUnivariateSpline as spline
+import scipy.optimize as sciopt
+import scipy.stats
 import numpy as np
 import matplotlib.pyplot as plt
-import scipy.stats
 import types
-
-from scipy.interpolate import InterpolatedUnivariateSpline as spline
 
 __all__ = ["LineFit", "extract_fit_target"]
 
@@ -47,7 +47,7 @@ class LineFit:
 		if isinstance(x_arr, types.NoneType):
 			x_arr = np.linspace(self.x[self.x_lower], self.x[self.x_upper], 100)
 		else:
-			x_arr = np.atleast_1d(x)
+			x_arr = np.atleast_1d(x_arr)
 
 		# self.x_mean = np.mean(self.x)
 		# self.y_mean = np.mean(self.y)
@@ -78,7 +78,10 @@ class LineFit:
 		fit_params = [self.b0, self.b0_err, self.b1, self.b1_err]
 
 		# Goodness of fit
-		self.chi = self.chi_squared(self.y, self.y_err, self._y_hat(self.x))
+		if not isinstance(self.y_err, types.NoneType):
+			self.chi = self.chi_squared(self.y, self.y_err, self._y_hat(self.x))
+		else:
+			self.chi = None
 
 		self.x_fit = x_arr
 		self.y_fit = self._y_hat(x_arr)
@@ -286,10 +289,22 @@ class LineFit:
 
 		return x0, x0_err
 
-	def chi_squared(self, y, y_err, y_fit, n=None):
-		"""Goodness test of fit."""
-		if isinstance(n, types.NoneType):
-			n = self.n
+	@staticmethod
+	def chi_squared(y, y_err, y_fit):
+		"""
+		Goodness test of a linear fit. 
+
+		D.o.f. is 2. n is the number of observations.
+
+		X^2 = 1/(n-2) sum^n_{i=1} (y_i - y_fit_i)^2/y_err_i^2
+
+		Args:
+			y: numpy float array, observations.
+			y_err: numpy float array, standard deviations of the observations.
+			y_fit: numpy float array, line fitted through n points.
+		"""
+		n = len(y)
+		assert n == len(y_fit) == len(y_err)
 		return np.sum((y - y_fit)**2 / y_err**2) / (n - 2.0)
 
 	def plot(self, weighted=False):
@@ -376,23 +391,35 @@ class ErrorPropagationSpline(object):
 		s = np.vstack([curve(x, *args, **kwargs) for curve in self._splines])
 		return (np.mean(s, axis=0), np.std(s, axis=0))
 
-def extract_fit_target(fit_target, x, y, y_err, y_raw, tau_int=None, 
-	extrapolation_method="platou", use_raw_values=False, platou_size=20,
-	interpolation_rank=3):
+def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
+	tau_int_err=None, extrapolation_method="platou", use_raw_values=False, 
+	platou_size=20, interpolation_rank=3, plot_fit=False, verbose=False):
 	"""
 	Function for extracting a value at a specific point.
 
 	Args:
 		fit_target: float, value of where we extrapolate from.
+		x: numpy float array
+		y: numpy float array
+		y_err: numpy float array, errors of y.
+		y_raw: optional, numpy float array, raw values of y. E.g. unanalyzed,
+			bootstrapped or jackknifed values.
+		tau_int: numpy optional, float array, tau_int from autocorrelation.
+		tau_int_err: numpy optional, float array, tau_int error from full
+			autocorrelation.
 		extrapolation_method: str, optional, method of selecting the 
 			extrapolation point to do the continuum limit. Method will be used
 			on y values and tau int. Choices:
 			- platou: line fits points neighbouring point in order to 
 				reduce the error bars. Covariance matrix will be automatically
 				included.
+			- platou_mean: line fits points neighbouring point in order to 
+				reduce the error bars. Line will be weighted by the y_err.
 			- nearest: line fit from the point nearest to what we seek
 			- interpolate: linear interpolation in order to retrieve value
 				and error. Does not work in conjecture with use_raw_values.
+			- bootstrap: will perform bootstrap on the line fits using the 
+				y_raw values.
 		use_raw_values: bool, optional, if true, will use bootstrap, 
 			jackknifed or unanalyzed samples directly. Default is False.
 		platou_size: int, optional. Number of points in positive and 
@@ -400,6 +427,8 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw, tau_int=None,
 			also applies to the interpolation interval.	Default is 20.
 		interpolation_rank: int, optional. Interpolation rank to use if 
 			extrapolation method is interpolation Default is 3, cubic spline.
+		plot_fit: bool, optional. Will plot and show the extrapolation window.
+			Default is false.
 
 	Raises:
 		AssertionError: if extrapolation_method, extrapolation_data or
@@ -413,64 +442,238 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw, tau_int=None,
 		tau_int0: tau int value at the fit target
 	"""
 
-	extrap_method_list = ["platou", "nearest", "interpolate"]
+	# Default values
+	x0 = fit_target
+	y0_raw = None
+	tau_int0 = None
+	chi_squared = None
+
+	extrap_method_list = ["platou", "platou_mean", "nearest", "interpolate", 
+		"bootstrap"]
 
 	extrap_method_err = ("%s not an available extrapolation type: %s" % (
 			(extrapolation_method, ", ".join(extrap_method_list))))
 	assert extrapolation_method in extrap_method_list, extrap_method_err
 
 	fit_index = np.argmin(np.abs(x - fit_target))
+	ilow = fit_index - platou_size
+	ihigh = fit_index + platou_size
+
+	def _f(_x, a, b):
+		return _x*a + b
+
+	# TODO: return chi^square as well or print it
+
 
 	if extrapolation_method == "platou":
-		# perform linear fit in +/- platou_size, correct error if tau_int != None
-		x0 = fit_target
+		y0, y0_error, tau_int0, chi_squared = _extract_platou_fit(x0, _f, 
+			x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh], 
+			y_raw[ilow:ihigh], tau_int[ilow:ihigh])
 
+	elif extrapolation_method == "platou_mean":
+		y0, y0_error, chi_squared = _extract_platou_mean_fit(x0, _f, 
+			x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh])
 
-		
-		pass
+	elif extrapolation_method == "bootstrap":
+		# Assumes that y_raw is the bootstrapped samples.
+		y0, y0_error, tau_int0, chi_squared = _extract_bootstrap_fit(x0, _f, 
+			x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh], 
+			y_raw[ilow:ihigh], tau_int[ilow:ihigh])
 
 	elif extrapolation_method == "nearest":
 		x0 = x[fit_index]
 		y0 = y[fit_index]
 		y0_error = y_err[fit_index]
-		y0_raw = y_raw[fit_index]
-		tau_int0 = tau_int[fit_index]
+
+		if isinstance(y_raw, types.NoneType):
+			y0_raw = y_raw[fit_index]
+
+		if isinstance(tau_int, types.NoneType):
+			tau_int0 = tau_int[fit_index]
 
 	elif extrapolation_method == "interpolate":
-		x0 = fit_target
-		ilow = fit_index - platou_size
-		ihigh = fit_index + platou_size
-
 		y_spline = ErrorPropagationSpline(x[ilow:ihigh], y[ilow:ihigh],
 			y_error[ilow:ihigh], k=interpolation_rank)
 		y0, y0_error = y_spline(fit_target)
 
-		y0_raw = np.zeros(y_raw.shape[-1])
-		_err_tmp = np.ones(y_raw.shape[0])[ilow:ihigh]
-		for i_sample in xrange(y_raw.shape[-1]):
-			_spl = ErrorPropagationSpline(x[ilow:ihigh], y_raw[ilow:ihigh,
-			i_sample], _err_tmp, k=interpolation_rank)
-			y0_raw[i_sample], _ = _spl(fit_target)
+	if plot_fit:
+		title_string = "Fit: %s" % extrapolation_method
+		__plot_fit_target(x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh],
+			x0, y0, y0_error, title_string)
 
-		tau_int_spline = ErrorPropagationSpline(x[ilow:ihigh], 
-			tau_int[ilow:ihigh], _err_tmp, k=interpolation_rank)
-		tau_int0, _ = tau_int_spline(fit_target)
-
+	if verbose:
+		msg = "Method:   %s" % extrapolation_method
+		msg += "\nx0:       %16.10f" % x0
+		msg += "\ny0:       %16.10f" % y0
+		msg += "\ny0_error: %16.10f" % y0_error
+		if not isinstance(y0_raw, types.NoneType):
+			msg += "\ny0_raw:   %16.10f" % y0_raw
+		if not isinstance(tau_int0, types.NoneType):
+			msg += "\ntau_int0:  %16.10f" % tau_int0
+		if not isinstance(chi_squared, types.NoneType):
+			msg += "\nchi^2      %16.10f" % chi_squared
+		print msg
 
 	return x0, y0, y0_error, y0_raw, tau_int0
 
-# def _extract_platou(, platou_size=20):
-# 	pass
+def __plot_fit_target(x, y, yerr, x0, y0, y0err, title_string=""):
+	"""
+	Internal method for plotting the fit window.
 
-# def _extract_nearest(fit_target, x, y, axis="x"):
-# 	"""
-# 	Args:
-# 		fit_target: float, value to extract nearest value at
-# 	"""
-# 	pass
+	Args:
+		x, y, yerr: numpy 1D float arrays, containing unfitted data.
+		x0, y0, y0err: float values, containing fit parameters.
+		title_string: optional, str. Title name, default is "".
+	"""
+	fig = plt.figure()
+	ax = fig.add_subplot(111)
+	ax.axvline(x0, linestyle="dashed", color="tab:grey")
+	ax.errorbar(x, y, yerr=yerr, color="tab:red", 
+		label="Original data points", capsize=5, fmt="_", ls=":",
+		ecolor="tab:red")
+	ax.errorbar([x0, x0], [y0, y0], yerr=[y0err, y0err], fmt="o",
+		capsize=10, color="tab:blue", ecolor="tab:blue")
+	ax.legend(loc="best", prop={"size":8})
+	ax.set_title(title_string)
+	ax.set_xlabel("x")
+	ax.set_ylabel("y")
+	plt.show()
+	plt.close(fig)
 
-# def _extract_interpolation(, interpolation_rank=3):
-# 	pass
+def _extract_platou_fit(x0, f, x, y, y_err, y_raw, tau_int):
+	"""
+	Extract y0 with y0err at a given x0 by using a line fit with the 
+	covariance matrix from the raw y data.
+
+	Args:
+		x0: float, value at which to extract a y0 and y0err.
+		f: function to fit against.
+		x: numpy float array, x-axis to fit against.
+		y: numpy float array, y values.
+		y_err: numpy float array, y standard deviation values.
+		y_raw: numpy float array, y raw values. E.g. bootstrap, jackknifed or 
+			analyzed values.
+		tau_int: numpy float array, autocorrelation times.
+
+	Returns:
+		y0, y0_error, tau_int0, chi_squared
+	"""
+
+	# Uses bootstrap, jackknifed or analyzed values directly.
+	cov_raw = np.cov(y_raw)
+
+	assert not isinstance(y_raw, types.NoneType), \
+		"missing y_raw values."
+	assert not isinstance(tau_int, types.NoneType), \
+		"missing tau_int values."
+
+	# Get eigenvalues for covariance matrix
+	eig = np.linalg.eigvals(cov_raw)
+
+	counter = 1
+	while np.min(eig) < 0:
+		# Gets the magnitude of the smallest eigenvalue
+		magnitude = np.floor(np.log10(np.absolute(np.min(eig))))
+		# Increments magnitude til we have positive definite cov-matrix
+		eps = 10**(magnitude + counter)
+		eps_matrix = np.zeros(cov_raw.shape)
+
+		# Adds a small diagonal epsilon to make it positive definite
+		np.fill_diagonal(eps_matrix, eps)
+		cov_raw += eps_matrix
+
+		eig = np.linalg.eigvals(cov_raw)
+
+		# In order no to get stuck at a particular place
+		counter += 1
+		if counter >= 10:
+			raise ValueError("Exceeding maximum iteration 10.")
+
+	# Line fit from the mean values and the raw values covariance matrix
+	pol_raw, polcov_raw = sciopt.curve_fit(f, x, y, sigma=cov_raw,
+		absolute_sigma=False)
+	pol_raw_err = np.sqrt(np.diag(polcov_raw))
+
+	# Extract fit target values
+	lfit_raw = LineFit(x, y, y_err)
+	lfit_raw.set_fit_parameters(pol_raw[1], pol_raw_err[1], pol_raw[0],
+		pol_raw_err[0], weighted=True)
+	y0, y0_error, _, chi_squared = lfit_raw.fit_weighted(x0)
+
+	# Errors should be equal in positive and negative directions.
+	if np.abs(y0 - y0_error[0]) != np.abs(y0 - y0_error[1]):
+		print "Warning: uneven errors:\nlower: %.10f\nupper: %.10f" % (
+			y0_error[0], y0_error[1])
+
+	y0 = y0[0] #  y0 and y0_error both comes in form of arrays
+	y0_error = ((y0_error[1] - y0_error[0])/2)
+	y0_error = y0_error[0]
+
+	# Perform line fit for tau int as well to error correct
+	tauFit = LineFit(x, tau_int)
+	tau_int0, _, _, _ = tauFit.fit(x0)
+
+	# Corrects error with the tau int
+	y0_error *= np.sqrt(2*tau_int0[0])
+
+	return y0, y0_error, tau_int0, chi_squared
+
+def _extract_platou_mean_fit(x0, f, x, y, y_err):
+	"""
+	Extract y0 with y0err at a given x0 by using a line fitw ith y_err as 
+	weights.
+
+	Args:
+		x0: float, value at which to extract a y0 and y0err.
+		f: function to fit against.
+		x: numpy float array, x-axis to fit against.
+		y: numpy float array, y values.
+		y_err: numpy float array, y standard deviation values.
+
+	Returns:
+		y0, y0_error, chi_squared
+	"""
+
+	# Line fit from the mean values and their standard deviations
+	pol_line, polcov_line = sciopt.curve_fit(f, x, y, sigma=y_err,
+	 	absolute_sigma=False)
+	pol_line_err = np.sqrt(np.diag(polcov_line))
+
+	# Extract fit target values
+	lfit_default = LineFit(x, y, y_err)
+	lfit_default.set_fit_parameters(pol_line[1], pol_line_err[1], 
+		pol_line[0], pol_line_err[0], weighted=True)
+	y0, y0_error, _, chi_squared = lfit_default.fit_weighted(x0)
+
+	return y0, y0_error, chi_squared
+
+def _extract_bootstrap_fit(x0, f, x, y, y_err, y_raw, tau_int):
+	"""
+	Extract y0 with y0err at a given x0 by using line fitting the y_raw data.
+	Error will be corrected by line fitting tau int and getting the exact
+	value at x0.
+
+	Args:
+		x0: float, value at which to extract a y0 and y0err.
+		f: function to fit against.
+		x: numpy float array, x-axis to fit against.
+		y: numpy float array, y values.
+		y_err: numpy float array, y standard deviation values.
+		y_raw: numpy float array, y raw values. E.g. bootstrap, jackknifed or 
+			analyzed values.
+		tau_int: numpy float array, autocorrelation times.
+
+	Returns:
+		y0, y0_error, tau_int0, chi_squared
+	"""
+
+	raise NotImplementedError("bootstrap")
+
+def __get_tau_int(x0, x, tau_int, tau_int_err):
+	"""Smal internal function for getting tau int at x0."""
+	tauFit = LineFit(x, tau_int, y_err=tau_int_err)
+	tau_int0, _, _, _ = tauFit.fit_weighted(x0)
+	return tau_int0
 
 def _fit_var_printer(var_name, var, var_error, w=16):
 	return "{0:<s} = {1:<.{w}f} +/- {2:<.{w}f}".format(var_name, var, 
@@ -680,7 +883,7 @@ def _test_inverse_line_fit():
 
 	lf = LineFit(x, signal_mean, signal_err)
 	print "Bootstrap Chi^2: ", lf.chi_squared(signal_mean, signal_err, 
-		bs_mean, n=N)
+		bs_mean)
 
 	# Sets up bs std edges
 	ax_bs.plot(x_hat, bs_std[0], x_hat, bs_std[1], color="tab:blue", alpha=0.6)
@@ -839,7 +1042,7 @@ def _test_inverse_line_fit():
 	# x_hat = np.linspace(0, 5, 100)
 
 def main():
-	# _test_simple_line_fit()
+	_test_simple_line_fit()
 	_test_inverse_line_fit()
 
 if __name__ == '__main__':

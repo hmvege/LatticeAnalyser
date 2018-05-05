@@ -81,7 +81,8 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 			te_index = "te%04d" % euclidean_index
 			values = {}
 			if q0_flow_time == None:
-				# Case where we have sub sections of observables, e.g. in euclidean time
+				# Case where we have sub sections of observables, 
+				# e.g. in euclidean time.
 				for sub_obs in self.observable_intervals[beta]:
 					sub_values = {}
 					sub_values["a"] = get_lattice_spacing(beta)
@@ -95,7 +96,12 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 					sub_values[self.analysis_data_type] = \
 						data_raw[self.analysis_data_type][beta]\
 						[self.observable_name_compact][sub_obs]
-					sub_values["tau_int"] = data[beta][sub_obs]["ac"]["tau_int"]
+
+					if self.with_autocorr:
+						sub_values["tau_int"] = \
+							data[beta][sub_obs]["ac"]["tau_int"]
+						sub_values["tau_int_err"] = \
+							data[beta][sub_obs]["ac"]["tau_int_err"]
 
 					sub_values["label"] = r"%s, $\beta=%2.2f$, $\sqrt{8t_{f,0}}=%.2f$" \
 						% (self.size_labels[beta], beta, self._convert_label(sub_obs))
@@ -120,7 +126,10 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 				values[self.analysis_data_type] = \
 					data_raw[self.analysis_data_type][beta]\
 					[self.observable_name_compact][tf_index]
-				values["tau_int"] = data[beta]["ac"]["tau_int"]
+
+				if self.with_autocorr:
+					values["tau_int"] = data[beta]["ac"]["tau_int"]
+					values["tau_int_err"] = data[beta]["ac"]["tau_int_err"]
 
 				values["label"] = r"%s $\beta=%2.2f$, $t_f=%.2f$, $t_e=%d$" % (
 					self.size_labels[beta], beta, q0_flow_time, euclidean_index)

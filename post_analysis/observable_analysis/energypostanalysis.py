@@ -97,7 +97,11 @@ class EnergyPostAnalysis(PostCore):
 			values["a"] = get_lattice_spacing(beta)
 			values["x"] = self.flow_time/self.r0**2*get_lattice_spacing(beta)**2
 			values["y"] = self._function_correction(data[beta]["y"])
-			values["tau_int"] = data[beta]["ac"]["tau_int"]
+
+			if self.with_autocorr:
+				values["tau_int"] = data[beta]["ac"]["tau_int"]
+				values["tau_int_err"] = data[beta]["ac"]["tau_int_err"]
+
 			values[self.analysis_data_type] = \
 				data_raw[self.analysis_data_type][beta]\
 				[self.observable_name_compact]
