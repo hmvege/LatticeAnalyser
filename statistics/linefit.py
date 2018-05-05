@@ -6,6 +6,7 @@ import scipy.stats
 import numpy as np
 import matplotlib.pyplot as plt
 import types
+from tqdm import tqdm
 
 __all__ = ["LineFit", "extract_fit_target"]
 
@@ -169,7 +170,8 @@ class LineFit:
 		"""Weigthed y(x) errors, eq. 22."""
 		_pt1 = self.b0w + self.b1w * x
 		_pt2 = scipy.stats.t.isf(0.32, self.n - 2) * np.sqrt(self.s_xyw_err) 
-		_pt2 *= np.sqrt(1.0 / np.sum(self.w) + (x - self.xw_mean)**2 / self.xwi_xmean_sum)
+		_pt2 *= np.sqrt(1.0 / np.sum(self.w) + \
+			(x - self.xw_mean)**2 / self.xwi_xmean_sum)
 
 		# print [_pt1 - _pt2, _pt1 + _pt2]
 
@@ -235,6 +237,7 @@ class LineFit:
 
 	def __call__(self, x, weighted=False):
 		"""Returns the fitted function at x."""
+		x = np.atleast_1d(x)
 		if weighted:
 			y_fit, y_fit_err = self._yw_hat(x), self._yw_hat_err(x)
 			return y_fit, y_fit_err, self.chi_squared(self.y, self.y_err, 
@@ -418,8 +421,8 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 			- nearest: line fit from the point nearest to what we seek
 			- interpolate: linear interpolation in order to retrieve value
 				and error. Does not work in conjecture with use_raw_values.
-			- bootstrap: will perform bootstrap on the line fits using the 
-				y_raw values.
+			- bootstrap: will create multiple line fits, and take average. 
+				Assumes y_raw is the bootstrapped or jackknifed samples.
 		use_raw_values: bool, optional, if true, will use bootstrap, 
 			jackknifed or unanalyzed samples directly. Default is False.
 		platou_size: int, optional. Number of points in positive and 
@@ -462,9 +465,6 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 	def _f(_x, a, b):
 		return _x*a + b
 
-	# TODO: return chi^square as well or print it
-
-
 	if extrapolation_method == "platou":
 		y0, y0_error, tau_int0, chi_squared = _extract_platou_fit(x0, _f, 
 			x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh], 
@@ -477,7 +477,7 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 	elif extrapolation_method == "bootstrap":
 		# Assumes that y_raw is the bootstrapped samples.
 		y0, y0_error, tau_int0, chi_squared = _extract_bootstrap_fit(x0, _f, 
-			x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh], 
+			x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh],
 			y_raw[ilow:ihigh], tau_int[ilow:ihigh])
 
 	elif extrapolation_method == "nearest":
@@ -643,11 +643,12 @@ def _extract_platou_mean_fit(x0, f, x, y, y_err):
 	lfit_default = LineFit(x, y, y_err)
 	lfit_default.set_fit_parameters(pol_line[1], pol_line_err[1], 
 		pol_line[0], pol_line_err[0], weighted=True)
-	y0, y0_error, _, chi_squared = lfit_default.fit_weighted(x0)
+	y0, y0_error, chi_squared = lfit_default(x0, weighted=True)
 
 	return y0, y0_error, chi_squared
 
-def _extract_bootstrap_fit(x0, f, x, y, y_err, y_raw, tau_int):
+def _extract_bootstrap_fit(x0, f, x, y, y_err, y_raw, tau_int, 
+	plot_samples=False):
 	"""
 	Extract y0 with y0err at a given x0 by using line fitting the y_raw data.
 	Error will be corrected by line fitting tau int and getting the exact
@@ -662,10 +663,66 @@ def _extract_bootstrap_fit(x0, f, x, y, y_err, y_raw, tau_int):
 		y_raw: numpy float array, y raw values. E.g. bootstrap, jackknifed or 
 			analyzed values.
 		tau_int: numpy float array, autocorrelation times.
+		plot_bs: bool, optional. Will plot the bootstrapped line fits and show.
 
 	Returns:
 		y0, y0_error, tau_int0, chi_squared
 	"""
+
+	y0_sample = np.zeros(y_raw.shape[-1])
+	y0_sample_err = np.zeros(y_raw.shape[-1])
+
+	if plot_samples:
+		fig_samples = plt.figure()
+		ax_samples = fig_samples.add_subplot(111)
+
+		# Empty arrays for storing plot means and errors		
+		plot_ymean = np.zeros(y_raw.shape)
+		plot_yerr = np.zeros((y_raw.shape[0], y_raw.shape[1], 2))
+
+	for i, y_sample in enumerate(tqdm(y_raw.T, desc="Sample line fitting")):
+		p, pcov = sciopt.curve_fit(f, x, y_sample)
+		pfit_err = np.sqrt(np.diag(pcov))
+
+		# Fits sample
+		fit_sample = LineFit(x, y_sample)
+		fit_sample.set_fit_parameters(p[1], pfit_err[1], p[0], pfit_err[0])
+		y0_sample[i], _tmp_err = fit_sample(x0)
+		y0_sample_err[i] = (_tmp_err[1] - _tmp_err[0])/2
+
+		if plot_samples:
+			plot_ymean[:,i], _temp_err = fit_sample(x)
+			plot_yerr[:,i] = np.asarray(_temp_err).T
+			ax_samples.fill_between(x, plot_yerr[:,i,0], plot_yerr[:,i,1], 
+				alpha=0.01, color="tab:red")
+			ax_samples.plot(x, plot_ymean, label="Scipy curve fit",
+				color="tab:red", alpha=0.1)
+
+	y0_mean = y0_sample.mean(axis=0)
+	y0_std = y0_sample_err.std(axis=0)
+
+	if plot_samples:
+		sample_mean = plot_ymean.mean(axis=0)
+		sample_std = plot_ymean.std(axis=0)
+
+		_lf = LineFit(x, y, y_err)
+		print "Samples Chi^2: ", _lf.chi_squared(y, y_err, sample_mean)
+
+		# Sets up sample std edges
+		ax_samples.plot(x, sample_std[0], x, sample_std[1], color="tab:blue",
+			alpha=0.6)
+
+		# Plots sample mean
+		ax_samples.plot(x, sample_mean, label="Averaged samples fit", 
+			color="tab:blue")
+
+		# Plots original data with error bars
+		ax_samples.errorbar(x, y, yerr=y_err, marker=".", 
+			linestyle="none", color="tab:orange", label="Original")
+
+		plt.close(fig_samples)
+
+	return y0_mean, y0_std
 
 	raise NotImplementedError("bootstrap")
 
@@ -1010,7 +1067,8 @@ def _test_inverse_line_fit():
 	fit_err = np.sqrt(np.diag(polcov1))
 
 	# print np.cov(signal_mean.T)
-	# lfit.set_fit_parameters(fit_par[1], fit_err[1], fit_par[0], fit_err[0], weighted=True)
+	# lfit.set_fit_parameters(fit_par[1], fit_err[1], fit_par[0], fit_err[0],
+	# 	weighted=True)
 	lfit.fit_weighted(x_arr=x_hat)
 	y_hat, y_hat_err, chi_squared = lfit(x_hat, weighted=True)
 	print "Regular weighted fit Chi^2: ", chi_squared
@@ -1025,14 +1083,15 @@ def _test_inverse_line_fit():
 
 	# SPLINE FIT
 	ax1.plot(X_values, spline_mean, label="Numpy curve fit", color="tab:blue")
-	ax1.fill_between(X_values, spline_mean-spline_err, spline_mean+spline_err, alpha=0.5,
-		color="tab:blue")
+	ax1.fill_between(X_values, spline_mean-spline_err, spline_mean+spline_err,
+		alpha=0.5, color="tab:blue")
 	ax1.errorbar(x, signal_mean, yerr=signal_err, marker=".",
 		label=r"Signal $\chi=%.2f$" % chi_squared, linestyle="none", 
 		color="tab:orange")
 	ax1.set_ylim(0.5, 5)
 	# ax1.axvline(x_fit, color="tab:orange")
-	# ax1.fill_betweenx(np.linspace(0,6,100), x_fit_err[0], x_fit_err[1], label=r"$x_0\pm\sigma_{x_0}$", alpha=0.5, color="tab:orange")
+	# ax1.fill_betweenx(np.linspace(0,6,100), x_fit_err[0], x_fit_err[1], 
+	# 	label=r"$x_0\pm\sigma_{x_0}$", alpha=0.5, color="tab:orange")
 	ax1.legend(loc="best", prop={"size":8})
 	ax1.set_title((r"Fit test: $a=%.2f\pm%.4f, b=%.2f\pm%.4f$" %
 		(fit_par[0], fit_err[0], fit_par[1], fit_err[1])))

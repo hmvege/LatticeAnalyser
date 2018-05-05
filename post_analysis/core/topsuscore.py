@@ -69,7 +69,7 @@ class TopsusCore(PostCore):
 
 			res = extract_fit_target(fit_target, x, y, y_err, y_raw=y_raw,
 				tau_int=tau_int, tau_int_err=tau_int_err, 
-				extrapolation_method="platou", use_raw_values=True, 
+				extrapolation_method="bootstrap", use_raw_values=True, 
 				platou_size=20, interpolation_rank=3, plot_fit=True,
 				verbose=self.verbose)
 

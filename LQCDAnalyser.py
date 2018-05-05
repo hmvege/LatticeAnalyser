@@ -18,11 +18,16 @@ def get_num_observables(batch_folder, beta_folder):
 	# Loops over flow obs folders
 	for flow_obs in os.listdir(flow_path):
 		# Skips all hidden files, e.g. .DS_Store
-		if flow_obs.startswith("."): continue
+		if flow_obs.startswith("."):
+			continue
 
 		# Gets flow observable files, should be equal to number of observables
 		flow_obs_path = os.path.join(flow_path, flow_obs)
 		flow_obs_files = os.listdir(flow_obs_path)
+
+		# In case observable folder is empty
+		if len(flow_obs_files) == 0:
+			continue
 
 		# Removes all hidden files, e.g. .DS_Store
 		flow_obs_files = [f for f in flow_obs_files if not f.startswith(".")]
