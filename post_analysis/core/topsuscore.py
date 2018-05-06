@@ -5,6 +5,7 @@ from statistics.linefit import LineFit, extract_fit_target
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import copy
 
 class TopsusCore(PostCore):
 	observable_name = "topsus_core"
@@ -17,6 +18,52 @@ class TopsusCore(PostCore):
 	y_label_continuum = r"$\chi^{1/4}[GeV]$"
 	# x_label_continuum = r"$a/{{r_0}^2}$"
 	x_label_continuum = r"$a^2/t_0$"
+
+	# For topsus function
+	hbarc = 0.19732697 #eV micro m
+
+	chi_const = {}
+	chi = {}
+	chi_der = {}
+
+	def __init__(self, *args, **kwargs):
+		super(TopsusCore, self).__init__(*args, **kwargs)
+		self._initialize_topsus_func()
+
+	def _initialize_topsus_func_const(self):
+		"""Sets the constant in the topsus function for found beta values."""
+		for beta in self.beta_values:
+			V = self.lattice_sizes[beta][0]**3 * self.lattice_sizes[beta][1]
+			self.chi_const[beta] = self.hbarc/get_lattice_spacing(beta)\
+				/float(V)**(0.25)
+			# self.chi[beta] = lambda qq: self.chi_const[beta]*qq**(0.25)
+
+	def _initialize_topsus_func(self):
+		"""Sets the topsus function for all found beta values."""
+
+		self._initialize_topsus_func_const()
+
+		# Bad hardcoding due to functions stored in a dictionary in a loop is
+		# not possible.
+		if 6.0 in self.beta_values:
+			self.chi[6.0] = lambda qq: self.chi_const[6.0]*qq**(0.25)
+			self.chi_der[6.0] = lambda qq, qqerr: \
+				0.25*self.chi_const[6.0]*qqerr/qq**(0.75)
+
+		if 6.1 in self.beta_values:
+			self.chi[6.1] = lambda qq: self.chi_const[6.1]*qq**(0.25)
+			self.chi_der[6.1] = lambda qq, qqerr: \
+				0.25*self.chi_const[6.1]*qqerr/qq**(0.75)
+
+		if 6.2 in self.beta_values:
+			self.chi[6.2] = lambda qq: self.chi_const[6.2]*qq**(0.25)
+			self.chi_der[6.2] = lambda qq, qqerr: \
+				0.25*self.chi_const[6.2]*qqerr/qq**(0.75)
+
+		if 6.45 in self.beta_values:
+			self.chi[6.45] = lambda qq: self.chi_const[6.45]*qq**(0.25)
+			self.chi_der[6.45] = lambda qq, qqerr: \
+				0.25*self.chi_const[6.45]*qqerr/qq**(0.75)
 
 	def plot_continuum(self, fit_target, title_addendum="",
 		extrapolation_method="bootstrap", platou_fit_size=20,
@@ -57,7 +104,8 @@ class TopsusCore(PostCore):
 			x = self.plot_values[beta]["x"]
 			y = self.plot_values[beta]["y"]
 			y_err = self.plot_values[beta]["y_err"]
-			y_raw = self.plot_values[beta][self.analysis_data_type]
+			y_raw = self.plot_values[beta]["y_raw"]
+
 			if self.with_autocorr:
 				tau_int = self.plot_values[beta]["tau_int"]
 				tau_int_err = self.plot_values[beta]["tau_int_err"]
@@ -65,15 +113,15 @@ class TopsusCore(PostCore):
 				tau_int = None
 				tau_int_err = None
 
-			# print y_raw[:,:100].shape
-			# exit(1)
-			y_raw = y_raw[:,:100]
+			# print "IN INITIALIZATION OF PLOT VALUES: ", beta, self.observable_name_compact
+			# print self.chi_der[beta](np.mean(y_raw, axis=1)[100], np.std(y_raw, axis=1)[100])
 
 			# Extrapolation of point to use in continuum extrapolation
 			res = extract_fit_target(fit_target, x, y, y_err, y_raw=y_raw,
 				tau_int=tau_int, tau_int_err=tau_int_err, 
 				extrapolation_method=extrapolation_method,platou_size=20, 
-				interpolation_rank=3, plot_fit=True, verbose=self.verbose)
+				interpolation_rank=3, plot_fit=True, raw_func=self.chi[beta],
+				raw_func_der=self.chi_der[beta], verbose=self.verbose)
 			_x0, _y0, _y0_error, _y0_raw, _tau_int0 = res
 
 			a_squared.append(self.plot_values[beta]["a"]**2/_x0)
@@ -81,6 +129,8 @@ class TopsusCore(PostCore):
 			obs_err.append(_y0_error)
 			obs_raw.append(_y0_raw)
 			tau_int_corr.append(_tau_int0)
+
+		exit("exits after topsus extrap")
 
 		# Makes lists into arrays
 		a_squared = np.asarray(a_squared)[::-1]

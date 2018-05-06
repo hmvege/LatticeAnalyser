@@ -191,15 +191,14 @@ class PostCore(object):
 			values["x"] = values["a"]* np.sqrt(8*self.flow_time)
 			values["y"] = data[beta]["y"]
 			values["y_err"] = data[beta]["y_error"]
-			values[self.analysis_data_type] = \
-				data_raw[beta]\
-				[self.observable_name_compact]
+			values["y_raw"] = data_raw[beta][self.observable_name_compact]
 			if self.with_autocorr:
 				values["tau_int"] = data[beta]["ac"]["tau_int"]
 				values["tau_int_err"] = data[beta]["ac"]["tau_int_err"]
 			values["label"] = r"%s $\beta=%2.2f$" % (
 				self.size_labels[beta], beta)
 			values["color"] = self.colors[beta]
+
 			self.plot_values[beta] = values
 
 	def plot(self, x_limits=False, y_limits=False, plot_with_formula=False,

@@ -191,7 +191,7 @@ def post_analysis(batch_folder, batch_beta_names, observables,
 			topcmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
 		if "topsus" in observables:
-			print "FIX EXTRAPOLATION SELECTION @ topsus"
+			print "FIX EXTRAPOLATION SELECTION @ topsus @ post_analyser.py"
 			# Plots topsusprint analysis
 			topsus_analysis = TopsusPostAnalysis(data, 
 				figures_folder=figures_folder, verbose=verbose)
@@ -213,7 +213,7 @@ def post_analysis(batch_folder, batch_beta_names, observables,
 			topsus4_analysis.plot()
 
 		if "topsusqtq0" in observables:
-			print "FIX SELECTION & EXTRAPOLATION @ topsusqtq0"
+			print "FIX SELECTION & EXTRAPOLATION @ topsusqtq0 @ post_analyser.py"
 			topsusqtq0_analysis = TopsusQtQ0PostAnalysis(data,
 				figures_folder=figures_folder, verbose=verbose)
 			topsusqtq0_analysis.set_analysis_data_type(analysis_type)
@@ -233,7 +233,7 @@ def post_analysis(batch_folder, batch_beta_names, observables,
 			topsusqtq0_analysis.plot_series([3,4,5,6], beta=bval_to_plot)
 
 		if "topsust" in observables:
-			print "FIX EXTRAPOLATION SELECTION @ topsust"
+			print "FIX EXTRAPOLATION SELECTION @ topsust @ post_analyser.py"
 			topsust_analysis = TopsustPostAnalysis(data,
 				figures_folder=figures_folder, verbose=verbose)
 			topsust_analysis.set_analysis_data_type(analysis_type)
@@ -252,7 +252,7 @@ def post_analysis(batch_folder, batch_beta_names, observables,
 			topsust_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
 		if "topsuste" in observables:
-			print "FIX EXTRAPOLATION SELECTION @ topsuste"
+			print "FIX EXTRAPOLATION SELECTION @ topsuste @ post_analyser.py"
 			topsuste_analysis = TopsusteIntervalPostAnalysis(data, 
 				figures_folder=figures_folder, verbose=verbose)
 			topsuste_analysis.set_analysis_data_type(analysis_type)
@@ -271,7 +271,7 @@ def post_analysis(batch_folder, batch_beta_names, observables,
 			topsuste_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
 		if "topsusMC" in observables:
-			print "FIX EXTRAPOLATION SELECTION @ topsusMC"
+			print "FIX EXTRAPOLATION SELECTION @ topsusMC @ post_analyser.py"
 			topsusmc_analysis = TopsusMCIntervalPostAnalysis(data,
 				figures_folder=figures_folder, verbose=verbose)
 			topsusmc_analysis.set_analysis_data_type(analysis_type)
@@ -290,7 +290,7 @@ def post_analysis(batch_folder, batch_beta_names, observables,
 			topsusmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
 		if "qtq0e" in observables:
-			print "FIX SELECTION @ qtq0e"
+			print "FIX SELECTION @ qtq0e @ post_analyser.py"
 			qtq0e_analysis = QtQ0EuclideanPostAnalysis(data, 
 				figures_folder=figures_folder, verbose=verbose)
 
@@ -336,7 +336,7 @@ def post_analysis(batch_folder, batch_beta_names, observables,
 			qtq0e_analysis.create_gif()
 
 		if "qtq0eff" in observables:
-			print "FIX SELECTION @ qtq0eff"
+			print "FIX SELECTION @ qtq0eff @ post_analyser.py"
 			qtq0e_analysis = QtQ0EffectiveMassPostAnalysis(data, 
 				figures_folder=figures_folder, verbose=verbose)
 			qtq0e_analysis.set_analysis_data_type(analysis_type)
