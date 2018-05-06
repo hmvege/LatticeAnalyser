@@ -28,8 +28,8 @@ def _autocorrelation_propagated_parallel_core(input_values):
 def _bootstrap_parallel_core(input_values):
 	data, N_bs, index_lists = input_values
 	bs = Bootstrap(data, N_bs, index_lists=index_lists)
-	return bs.bs_avg, bs.bs_std, bs.avg_original, bs.std_original, bs.bs_data,\
-		bs.data_original
+	return bs.bs_avg, bs.bs_std, bs.avg_original, bs.std_original, \
+		bs.bs_data, bs.data_original
 
 def _jackknife_parallel_core(input_values):
 	jk = Jackknife(input_values)

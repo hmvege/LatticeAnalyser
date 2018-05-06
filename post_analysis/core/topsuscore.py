@@ -19,8 +19,8 @@ class TopsusCore(PostCore):
 	x_label_continuum = r"$a^2/t_0$"
 
 	def plot_continuum(self, fit_target, title_addendum="",
-		extrapolation_method="platou", use_raw_values=False, 
-		platou_fit_size=20, interpolation_rank=3):
+		extrapolation_method="bootstrap", platou_fit_size=20,
+		interpolation_rank=3):
 		"""
 		Method for plotting the continuum limit of topsus at a given 
 		fit_target.
@@ -33,13 +33,14 @@ class TopsusCore(PostCore):
 				extrapolation point to do the continuum limit. Method will be
 				used on y values and tau int. Choices:
 					- platou: line fits points neighbouring point in order to 
-						reduce the error bars.
+						reduce the error bars using y_raw for covariance matrix.
+					- platou_mean: line fits points neighbouring point in order to 
+						reduce the error bars. Line will be weighted by the y_err.
 					- nearest: line fit from the point nearest to what we seek
-					- interpolate: linear interpolation in order to retrieve 
-						value and error. Does not work in conjecture with 
-						use_raw_values.
-			use_raw_values: bool, optional, if true, will use bootstrap, 
-				jackknifed or unanalyzed samples directly. Default is False.
+					- interpolate: linear interpolation in order to retrieve value
+						and error. Does not work in conjecture with use_raw_values.
+					- bootstrap: will create multiple line fits, and take average. 
+						Assumes y_raw is the bootstrapped or jackknifed samples.
 			platou_size: int, optional. Number of points in positive and 
 				negative direction to extrapolate fit target value from. This 
 				value also applies to the interpolation interval. Default is 20.
@@ -47,9 +48,6 @@ class TopsusCore(PostCore):
 				extrapolation method is interpolation Default is 3.
 		"""
 
-		#################################
-		#### Continuum extrapolation ####
-		#################################
 		# Retrieves data for analysis.
 		if fit_target == -1:
 			fit_target = self.plot_values[max(self.plot_values)]["x"][-1]
@@ -67,32 +65,31 @@ class TopsusCore(PostCore):
 				tau_int = None
 				tau_int_err = None
 
+			# print y_raw[:,:100].shape
+			# exit(1)
+			y_raw = y_raw[:,:100]
+
+			# Extrapolation of point to use in continuum extrapolation
 			res = extract_fit_target(fit_target, x, y, y_err, y_raw=y_raw,
 				tau_int=tau_int, tau_int_err=tau_int_err, 
-				extrapolation_method="bootstrap", use_raw_values=True, 
-				platou_size=20, interpolation_rank=3, plot_fit=True,
-				verbose=self.verbose)
+				extrapolation_method=extrapolation_method,platou_size=20, 
+				interpolation_rank=3, plot_fit=True, verbose=self.verbose)
+			_x0, _y0, _y0_error, _y0_raw, _tau_int0 = res
 
-			# THIS IS WHERE WE IMPLEMENT DIFFERENT METHODS!!!
-			fit_index = np.argmin(np.abs(x - fit_target))
-			a_squared.append(self.plot_values[beta]["a"]**2/fit_target)
-			obs.append(y[fit_index])
-			obs_err.append(y_err[fit_index])
-			obs_raw.append(y_raw[fit_index])
-			tau_int_corr.append(tau_int[fit_index])
-
+			a_squared.append(self.plot_values[beta]["a"]**2/_x0)
+			obs.append(_y0)
+			obs_err.append(_y0_error)
+			obs_raw.append(_y0_raw)
+			tau_int_corr.append(_tau_int0)
 
 		# Makes lists into arrays
 		a_squared = np.asarray(a_squared)[::-1]
 		obs = np.asarray(obs)[::-1]
 		obs_err = np.asarray(obs_err)[::-1]
-		#################################
-		#################################
-		#################################
 
 		# Continuum limit arrays
 		N_cont = 1000
-		a_squared_cont = np.linspace(0, a_squared[-1]*1.1, N_cont)
+		a_squared_cont = np.linspace(-0.0025, a_squared[-1]*1.1, N_cont)
 
 		# Fits to continuum and retrieves values to be plotted
 		continuum_fit = LineFit(a_squared, obs, obs_err)
@@ -113,11 +110,12 @@ class TopsusCore(PostCore):
 		a0_squared = [0, 0]
 		y0 = [y0_cont[0], y0_cont[0]]
 		y0_err = [y0_cont_err[0][0], y0_cont_err[1][0]]
-		y0_err = [y0_err, y0_err]
 
 		# Stores the chi continuum
 		self.topsus_continuum = y0[0]
-		self.topsus_continuum_error = (y0_err[0][1] - y0_err[0][0])/2.0
+		self.topsus_continuum_error = (y0_err[1] - y0_err[0])/2.0
+
+		y0_err = [self.topsus_continuum_error, self.topsus_continuum_error]
 
 		# Sets of title string with the chi squared and fit target
 		title_string = r"$\sqrt{8t_{flow,0}} = %.2f[fm], \chi^2 = %.2g$" % (
@@ -138,7 +136,8 @@ class TopsusCore(PostCore):
 			color="tab:orange", ecolor="tab:orange")
 
 		# plots continuum limit, 5 is a good value for cap size
-		ax.errorbar(a0_squared, y0, yerr=y0_err, fmt="o", capsize=None,
+		ax.errorbar(a0_squared, y0,
+			yerr=y0_err, fmt="o", capsize=None,
 			capthick=1, color="tab:red", ecolor="tab:red",
 			label=r"$\chi^{1/4}=%.3f\pm%.3f$" % (self.topsus_continuum,
 				self.topsus_continuum_error))
@@ -146,7 +145,7 @@ class TopsusCore(PostCore):
 		ax.set_ylabel(self.y_label_continuum)
 		ax.set_xlabel(self.x_label_continuum)
 		ax.set_title(title_string)
-		ax.set_xlim(0, a_squared[-1]*1.1)
+		ax.set_xlim(a_squared_cont[0], a_squared_cont[-1])
 		ax.legend()
 		ax.grid(True)
 
@@ -156,13 +155,16 @@ class TopsusCore(PostCore):
 
 		# Saves figure
 		fname = os.path.join(self.output_folder_path, 
-			"post_analysis_%s_continuum%s_%s.png" % (self.observable_name_compact,
+			"post_analysis_extrapmethod%s_%s_continuum%s_%s.png" % (
+				extrapolation_method, self.observable_name_compact,
 				str(fit_target).replace(".",""), self.analysis_data_type))
 		fig.savefig(fname, dpi=self.dpi)
 
 		if self.verbose:
 			print "Continuum plot of %s created in %s" % (
 				self.observable_name.lower(), fname)
+
+		plt.show()
 		plt.close(fig)
 
 		self.print_continuum_estimate()

@@ -301,9 +301,20 @@ class FlowAnalyser(object):
 		self.unanalyzed_y_std = F_error(self.unanalyzed_y, self.unanalyzed_y_std)
 		self.unanalyzed_y = F(self.unanalyzed_y)
 
+		print self.bs_y.shape, self.bs_y_data.shape
+		print self.bs_y[100]
+		print F(np.mean(self.bs_y_data, axis=1)[100])
+
 		# Runs bs data through function F
-		self.bs_y_data = F(self.bs_y_data)
-		self.unanalyzed_y_data = F(self.unanalyzed_y_data)
+		self.bs_y_data = self.bs_y_data
+		self.unanalyzed_y_data = self.unanalyzed_y_data
+
+		# The error is in that I am taking F, which is not a linear operation
+		# on the bootstrap data, which will be averaged afterwards and is therefore
+		# not equal the data bootstrap samples. BADBADBAD!
+
+		print np.mean(self.bs_y_data, axis=1)[100]
+		exit(1)
 
 		if store_raw_bs_values:
 			self.save_raw_analysis_data(self.bs_y_data, "bootstrap")
@@ -372,7 +383,8 @@ class FlowAnalyser(object):
 		# Runs data through the F and F_error
 		self.jk_y_std = F_error(self.jk_y, self.jk_y_std)
 		self.jk_y = F(self.jk_y)
-		self.jk_y_data = F(self.jk_y_data)
+
+		self.jk_y_data = self.jk_y_data
 
 		if store_raw_jk_values:
 			self.save_raw_analysis_data(self.jk_y_data, "jackknife")

@@ -221,9 +221,9 @@ def main():
 	# analysis_parameter_list = [smaug_data_beta61_analysis]
 
 
-	# #### Submitting observable-batches
-	# for analysis_parameters in analysis_parameter_list:
-	# 	pre_analysis(analysis_parameters)
+	#### Submitting observable-batches
+	for analysis_parameters in analysis_parameter_list:
+		pre_analysis(analysis_parameters)
 
 	#### Submitting post-analysis data
 	if len(analysis_parameter_list) >= 3:
