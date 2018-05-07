@@ -394,7 +394,7 @@ class ErrorPropagationSpline(object):
 def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 	tau_int_err=None, extrapolation_method="platou", platou_size=20, 
 	interpolation_rank=3, plot_fit=False, raw_func=lambda y: y, 
-	raw_func_der=lambda y, yerr: yerr, verbose=False):
+	raw_func_der=lambda y, yerr: yerr, verbose=False, **kwargs):
 	"""
 	Function for extracting a value at a specific point.
 
@@ -479,8 +479,8 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 		# Assumes that y_raw is the bootstrapped samples.
 		y0, y0_error, tau_int0 = _extract_bootstrap_fit(x0, _f, x[ilow:ihigh],
 			y[ilow:ihigh], y_err[ilow:ihigh], y_raw[ilow:ihigh], 
-			tau_int[ilow:ihigh], tau_int_err[ilow:ihigh], plot_samples=True,
-			F=raw_func, FDer=raw_func_der)
+			tau_int[ilow:ihigh], tau_int_err[ilow:ihigh], F=raw_func,
+			FDer=raw_func_der, plot_samples=False)
 
 		print y0, y0_error, tau_int0
 
@@ -721,12 +721,16 @@ def _extract_bootstrap_fit(x0, f, x, y, y_err, y_raw, tau_int, tau_int_err,
 	y0_std = FDer(np.mean(y0_sample, axis=0), 
 		np.std(y0_sample, axis=0) * np.sqrt(2*tau_int0))
 
-	# print np.mean(y0_sample_err, axis=0)
+	# y0_mean = np.mean(y0_sample, axis=0)
+	# y0_std = np.std(y0_sample, axis=0)*np.sqrt(8*tau_int0)
 
 	if plot_samples:
 		sample_mean = F(np.mean(plot_ymean, axis=1))
 		sample_std = FDer(np.mean(plot_ymean, axis=1), 
 			np.std(plot_ymean, axis=1) * np.sqrt(2*tau_int0))
+
+		# sample_mean = np.mean(plot_ymean, axis=1)
+		# sample_std = np.std(plot_ymean, axis=1)*np.sqrt(2*tau_int0)
 
 		# Sets up sample std edges
 		ax_samples.plot(x, sample_mean - sample_std, x, 
@@ -747,8 +751,6 @@ def _extract_bootstrap_fit(x0, f, x, y, y_err, y_raw, tau_int, tau_int_err,
 
 	# print y[np.argmin(np.abs(x-x0))], y_err[np.argmin(np.abs(x-x0))], "%.10f" % np.abs(y[np.argmin(np.abs(x-x0))] - y0_mean)
 	# print y0_mean, y0_std, tau_int0
-
-	exit("Need to implement FDer.")
 
 	return y0_mean, y0_std, tau_int0
 
@@ -1037,7 +1039,6 @@ def _test_inverse_line_fit():
 	lfit = LineFit(x, signal_mean, y_err=signal_err)
 
 	
-	# exit(1)
 	# pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=signal_err, 
 	# 	absolute_sigma=True)
 

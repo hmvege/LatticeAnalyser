@@ -66,7 +66,7 @@ class TopsusCore(PostCore):
 				0.25*self.chi_const[6.45]*qqerr/qq**(0.75)
 
 	def plot_continuum(self, fit_target, title_addendum="",
-		extrapolation_method="bootstrap", platou_fit_size=20,
+		extrapolation_method="platou", platou_fit_size=20,
 		interpolation_rank=3):
 		"""
 		Method for plotting the continuum limit of topsus at a given 
@@ -81,7 +81,7 @@ class TopsusCore(PostCore):
 				used on y values and tau int. Choices:
 					- platou: line fits points neighbouring point in order to 
 						reduce the error bars using y_raw for covariance matrix.
-					- platou_mean: line fits points neighbouring point in order to 
+					- platou_mean: line fits points neighbouring point in order to
 						reduce the error bars. Line will be weighted by the y_err.
 					- nearest: line fit from the point nearest to what we seek
 					- interpolate: linear interpolation in order to retrieve value
@@ -93,6 +93,11 @@ class TopsusCore(PostCore):
 				value also applies to the interpolation interval. Default is 20.
 			interpolation_rank: int, optional. Interpolation rank to use if 
 				extrapolation method is interpolation Default is 3.
+			raw_func: function, optional, will modify the bootstrap data after 
+				samples has been taken by this function.
+			raw_func_err: function, optional, will propagate the error of the 
+				bootstrapped line fitted data, raw_func_err(y, yerr). Calculated
+				by regular error propagation.
 		"""
 
 		# Retrieves data for analysis.
@@ -113,15 +118,13 @@ class TopsusCore(PostCore):
 				tau_int = None
 				tau_int_err = None
 
-			# print "IN INITIALIZATION OF PLOT VALUES: ", beta, self.observable_name_compact
-			# print self.chi_der[beta](np.mean(y_raw, axis=1)[100], np.std(y_raw, axis=1)[100])
-
 			# Extrapolation of point to use in continuum extrapolation
 			res = extract_fit_target(fit_target, x, y, y_err, y_raw=y_raw,
 				tau_int=tau_int, tau_int_err=tau_int_err, 
-				extrapolation_method=extrapolation_method,platou_size=20, 
+				extrapolation_method=extrapolation_method, platou_size=20, 
 				interpolation_rank=3, plot_fit=True, raw_func=self.chi[beta],
-				raw_func_der=self.chi_der[beta], verbose=self.verbose)
+				raw_func_err=self.chi_der[beta], plot_samples=True, 
+				verbose=self.verbose)
 			_x0, _y0, _y0_error, _y0_raw, _tau_int0 = res
 
 			a_squared.append(self.plot_values[beta]["a"]**2/_x0)
@@ -130,7 +133,7 @@ class TopsusCore(PostCore):
 			obs_raw.append(_y0_raw)
 			tau_int_corr.append(_tau_int0)
 
-		exit("exits after topsus extrap")
+		# exit("exits after topsus extrap")
 
 		# Makes lists into arrays
 		a_squared = np.asarray(a_squared)[::-1]
