@@ -9,7 +9,7 @@ class TopsustAnalyser(TopsusAnalyserCore):
 	observable_name = "Topological Susceptibility in Euclidean Time"
 	observable_name_compact = "topsust"
 	x_label = r"$\sqrt{8t_{flow}}[fm]$"
-	y_label = r"$\chi(\langle Q_t Q_{t_{euclidean}} \rangle)^{1/4} [GeV]$"
+	y_label = r"$\chi^{1/4}(\langle Q_t Q_{t_{euclidean}} \rangle) [GeV]$"
 
 	def __init__(self, *args, **kwargs):
 		super(TopsustAnalyser, self).__init__(*args, **kwargs)
@@ -35,8 +35,9 @@ class TopsustAnalyser(TopsusAnalyserCore):
 		self.function_derivative_parameters = {"const": self.const}
 
 		# Sets file name
-		self.observable_name = (r"$\chi(\langle Q_t Q_{t_{euclidean}} "
-			"\rangle)^{1/4}$ at $i_{euclidean}=%d$" % self.t_euclidean_index)
+		self.observable_name = r"$\chi(\langle Q_t Q_{t_{euclidean}}$"
+		self.observable_name += r"$\rangle)^{1/4}$ at $i_{euclidean}=%d$" \
+			% self.t_euclidean_index
 
 		# Manual method for multiplying the matrices
 		y_qe0 = copy.deepcopy(self.y_original[:,:,self.t_euclidean_index])

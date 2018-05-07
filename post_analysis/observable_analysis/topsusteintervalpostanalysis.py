@@ -1,6 +1,7 @@
 from post_analysis.core.multiplotcore import MultiPlotCore
 from post_analysis.core.topsuscore import TopsusCore
 from tools.folderreadingtools import check_folder
+from tools.latticefunctions import get_lattice_spacing
 import os
 
 class TopsusteIntervalPostAnalysis(MultiPlotCore, TopsusCore):
@@ -31,6 +32,14 @@ class TopsusteIntervalPostAnalysis(MultiPlotCore, TopsusCore):
 		# Resets the plot values and output folder path
 		self.plot_values = self.plot_values_old
 		self.output_folder_path = self.output_folder_path_old
+
+	def _initialize_topsus_func_const(self):
+		"""Sets the constant in the topsus function for found beta values."""
+		for beta in self.beta_values:
+			V = self.lattice_sizes[beta][0]**3 * (self.lattice_sizes[beta][1]/4.0)
+			self.chi_const[beta] = self.hbarc/get_lattice_spacing(beta)\
+				/float(V)**(0.25)
+			# self.chi[beta] = lambda qq: self.chi_const[beta]*qq**(0.25)
 
 def main():
 	exit(("Exit: TopsusteIntervalPostAnalysis not intended to be a "

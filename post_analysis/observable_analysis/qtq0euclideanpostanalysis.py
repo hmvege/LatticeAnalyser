@@ -93,8 +93,7 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 					sub_values["y"] = data[beta][sub_obs][te_index]["y"]
 					sub_values["y_err"] = data[beta][sub_obs][te_index]["y_error"]
 
-					sub_values[self.analysis_data_type] = \
-						data_raw[self.analysis_data_type][beta]\
+					sub_values["y_raw"] = data_raw[beta] \
 						[self.observable_name_compact][sub_obs]
 
 					if self.with_autocorr:
@@ -123,8 +122,7 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 				values["y"] = data[beta][tf_index][te_index]["y"]
 				values["y_err"] = data[beta][tf_index][te_index]["y_error"]
 
-				values[self.analysis_data_type] = \
-					data_raw[self.analysis_data_type][beta]\
+				values["y_raw"] = data_raw[beta] \
 					[self.observable_name_compact][tf_index]
 
 				if self.with_autocorr:

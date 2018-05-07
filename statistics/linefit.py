@@ -534,9 +534,9 @@ def __plot_fit_target(x, y, yerr, x0, y0, y0err, title_string=""):
 	fig = plt.figure()
 	ax = fig.add_subplot(111)
 	ax.axvline(x0, linestyle="dashed", color="tab:grey")
-	ax.errorbar(x, y, yerr=yerr, color="tab:red", 
+	ax.errorbar(x, y, yerr=yerr, color="tab:orange", 
 		label="Original data points", capsize=5, fmt="_", ls=":",
-		ecolor="tab:red")
+		ecolor="tab:orange")
 	ax.errorbar([x0, x0], [y0, y0], yerr=[y0err, y0err], fmt="o",
 		capsize=10, color="tab:blue", ecolor="tab:blue")
 	ax.legend(loc="best", prop={"size":8})
@@ -580,7 +580,7 @@ def _extract_platou_fit(x0, f, x, y, y_err, y_raw, tau_int, tau_int_err):
 	eig = np.linalg.eigvals(cov_raw)
 
 	counter = 1
-	while np.min(eig) < 0:
+	while np.min(eig) <= 1e-15:
 		# Gets the magnitude of the smallest eigenvalue
 		magnitude = np.floor(np.log10(np.absolute(np.min(eig))))
 		# Increments magnitude til we have positive definite cov-matrix
@@ -600,7 +600,7 @@ def _extract_platou_fit(x0, f, x, y, y_err, y_raw, tau_int, tau_int_err):
 
 	# Line fit from the mean values and the raw values covariance matrix
 	pol_raw, polcov_raw = sciopt.curve_fit(f, x, y, sigma=cov_raw,
-		absolute_sigma=False)
+		absolute_sigma=False, p0=[0.18, 0.0])
 	pol_raw_err = np.sqrt(np.diag(polcov_raw))
 
 	# Extract fit target values
@@ -709,10 +709,10 @@ def _extract_bootstrap_fit(x0, f, x, y, y_err, y_raw, tau_int, tau_int_err,
 			plot_ymean[:,i], _p_err = fit_sample(x)
 			plot_yerr[:,i] = np.asarray(_p_err).T
 
-		# 	ax_samples.fill_between(x, plot_yerr[:,i,0], plot_yerr[:,i,1], 
-		# 		alpha=0.01, color="tab:red")
-		# 	ax_samples.plot(x, plot_ymean, label="Scipy curve fit",
-		# 		color="tab:red", alpha=0.1)
+			ax_samples.fill_between(x, plot_yerr[:,i,0], plot_yerr[:,i,1], 
+				alpha=0.01, color="tab:red")
+			ax_samples.plot(x, plot_ymean, label="Scipy curve fit",
+				color="tab:red", alpha=0.1)
 
 	# Gets the tau int
 	tau_int0 = __get_tau_int(x0, x, tau_int, tau_int_err)

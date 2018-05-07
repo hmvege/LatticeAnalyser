@@ -54,14 +54,14 @@ def main():
 		# "qtq0_gif",
 	]
 
-	# observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
+	observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["topc", "plaq", "energy", "topsus", "topcr"]
 	# observables = ["topcr", "qtq0eff"]
-	# observables = ["qtq0eff"]
-	# observables = ["topcr"]
+	observables = ["qtq0eff"]
+	observables = ["topcr"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
-	observables = ["qtq0e", "qtq0eff", "topsusqtq0"]
-	observables = ["topsus"]
+	# observables = ["qtq0e", "qtq0eff", "topsusqtq0"]
+	# observables = ["topsuste"]
 
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
 	print 100*"=" + "\n"
@@ -92,7 +92,7 @@ def main():
 	run_post_analysis = True
 	line_fit_interval_points = 20
 	# topsus_fit_targets = [0.3,0.4,0.5,0.58]
-	topsus_fit_targets = [0.5, 0.6]
+	topsus_fit_targets = [0.3, 0.4, 0.5, 0.6]
 	energy_fit_target = 0.3
 
 	# Smearing gif parameters for qtq0e

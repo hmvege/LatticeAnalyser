@@ -1,6 +1,7 @@
 from post_analysis.core.multiplotcore import MultiPlotCore
 from post_analysis.core.topsuscore import TopsusCore
 from tools.folderreadingtools import check_folder
+from tools.latticefunctions import get_lattice_spacing
 import os
 
 class TopsustPostAnalysis(MultiPlotCore, TopsusCore):
@@ -13,6 +14,14 @@ class TopsustPostAnalysis(MultiPlotCore, TopsusCore):
 
 	# Continuum plot variables
 	y_label_continuum = r"$\chi^{1/4}(\langle Q_t Q_{t_{euclidean}} \rangle)[GeV]$"
+
+	def _initialize_topsus_func_const(self):
+		"""Sets the constant in the topsus function for found beta values."""
+		for beta in self.beta_values:
+			V = self.lattice_sizes[beta][0]**3
+			self.chi_const[beta] = self.hbarc/get_lattice_spacing(beta)\
+				/float(V)**(0.25)
+			# self.chi[beta] = lambda qq: self.chi_const[beta]*qq**(0.25)
 
 	def plot_continuum(self, fit_target, interval_index, **kwargs):
 		# Backs up old variables

@@ -9,6 +9,11 @@ class Topsus4PostAnalysis(PostCore):
 	formula = (r"$\chi(\langle Q^4 \rangle)^{1/8} = \frac{\hbar}{aV^{1/4}} "
 		"\langle Q^4 \rangle^{1/8} [GeV]$")
 
+def __init__(self, *args, **kwargs):
+	raise DeprecationWarning("Topsus4PostAnalysis is discontinued, as it does"
+		" not make sense to perform this kind of analysis.")
+	super(Topsus4PostAnalysis, self).__init__(*args, **kwargs)
+
 def main():
 	exit("Exit: Topsus4PostAnalysis not intended to be a standalone module.")
 

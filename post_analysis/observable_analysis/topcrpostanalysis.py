@@ -41,62 +41,85 @@ class TopcRPostAnalysis(PostCore):
 		# Retrieves relevant data values and sorts them by beta values
 		self.flow_time = data.flow_time
 
+		self.beta_values = sorted(data.beta_values)
+
+		self.analysis_types = data.analysis_types
+		if "autocorrelation" in self.analysis_types:
+			self.analysis_types.remove("autocorrelation")
+
 		# Q^2
-		self.topc2 = {}
+		self.topc2 = {atype: {beta: {} for beta in self.beta_values} \
+			for atype in self.analysis_types}
 		
 		# Q^4
-		self.topc4 = {}
+		self.topc4 = {atype: {beta: {} for beta in self.beta_values} \
+			for atype in self.analysis_types}
 
 		# Q^4_C
-		self.topc4C = {}
+		self.topc4C = {atype: {beta: {} for beta in self.beta_values} \
+			for atype in self.analysis_types}
 
 		# R = Q^4_C / Q^2
-		self.topcR = {}
+		self.topcR = {atype: {beta: {} for beta in self.beta_values} \
+			for atype in self.analysis_types}
+
+		# Data will be copied from R
+		self.data = {atype: {beta: {} for beta in self.beta_values} \
+			for atype in self.analysis_types}
 
 		# Q^2 and Q^4 raw bs values
 		self.topc2_raw = {}
 		self.topc4_raw = {}
 		self.topc4c_raw = {}
 		self.topcR_raw = {}
+		self.data_raw = {}
 
-		self.beta_values = sorted(data.beta_values)
-		self.analysis_types = data.analysis_types
-		if "autocorrelation" in self.analysis_types:
-			self.analysis_types.remove("autocorrelation")
-
-		# Data dictionary, to be populated by R
-		self.data = {atype: {} for atype in self.analysis_types}
-		self.data_raw = {atype: {} for atype in self.analysis_types}
+		for atype in data.raw_analysis:
+			if atype == "autocorrelation":
+				self.ac_raw = data.raw_analysis[atype]
+			else:
+				self.data_raw[atype] = data.raw_analysis[atype]
 
 		# First, gets the topc2, then topc4
-		for beta in self.beta_values:
-			# Q^2
-			self.topc2[beta] = {
-				k: data.data_observables["topq2"][beta][self.ac][k] \
-					for k in self.analysis_types
-			}
+		for atype in self.analysis_types:
+			for beta in self.beta_values:
+				# Q^2
+				self.topc2[atype][beta] = data.data_observables["topq2"] \
+						[beta][self.ac][atype]
 
-			# Q^4
-			self.topc4[beta] = {
-				k: data.data_observables["topq4"][beta][self.ac][k] \
-					for k in self.analysis_types
-			}
+				# Q^4
+				self.topc4[atype][beta] = data.data_observables["topq4"] \
+					[beta][self.ac][atype]
 
-			# Q^4_C
-			self.topc4C[beta] = {}
+				# # Q^4_C
+				# self.topc4C[atype][beta] = {}
 
-			# R = Q^4_C / Q^2
-			self.topcR[beta] = {}
-			self.topc2_raw[beta] = {
-			k: data.raw_analysis[k][beta]["topq2"] \
-				for k in self.analysis_types
-			}
-			self.topc4_raw[beta] = {
-				k: data.raw_analysis[k][beta]["topq4"] \
-				for k in self.analysis_types
-			}
-			self.topc4c_raw[beta] = {}
-			self.topcR_raw[beta] = {}
+				# # R = Q^4_C / Q^2
+				# self.topcR[beta] = {}
+				# self.topc2_raw[beta] = {
+				# k: data.raw_analysis[k][beta]["topq2"] \
+				# 	for k in self.analysis_types
+				# }
+
+
+				if self.with_autocorr:
+					self.topc2[atype][beta]["ac"] = \
+						data.data_observables["topq2"][beta] \
+						["with_autocorr"]["autocorr"]
+
+					self.topc4[atype][beta]["ac"] = \
+						data.data_observables["topq4"][beta] \
+						["with_autocorr"]["autocorr"]
+				
+
+				# self.topc4_raw[beta] = {
+				# 	k: data.raw_analysis[k][beta]["topq4"] \
+				# 	for k in self.analysis_types
+				# }
+				# self.topc4c_raw[beta] = {}
+				# self.topcR_raw[beta] = {}
+
+		# print self.topcR_raw.keys()
 
 		# Creates base output folder for post analysis figures
 		self.figures_folder = figures_folder
@@ -119,6 +142,10 @@ class TopcRPostAnalysis(PostCore):
 
 		self._calculate_R()
 
+
+	def _calculate_Q4C(self, q4, q2, q4raw, q2raw):
+		pass
+
 	def _calculate_R(self):
 		"""Calculates R = Q^4_C / Q^2."""
 
@@ -134,36 +161,36 @@ class TopcRPostAnalysis(PostCore):
 			(q4cerr/q2)**2 + (q4c*q2err / q2**2)**2 - 2*q4cerr*q4c*q2err/q2**3)
 
 		# Gets Q4C and R
-		for beta in self.beta_values:
-			for atype in self.analysis_types:
+		for atype in self.analysis_types:
+			for beta in self.beta_values:
 
-				self.topc4C[beta][atype] = {
+				self.topc4C[atype][beta] = {
 
 					"y": Q4C(
-						self.topc4[beta][atype]["y"], 
-						self.topc2[beta][atype]["y"]),
+						self.topc4[atype][beta]["y"], 
+						self.topc2[atype][beta]["y"]),
 
 					"y_error": Q4C_error(
-						self.topc4[beta][atype]["y"],
-						self.topc4[beta][atype]["y_error"],
-						self.topc2[beta][atype]["y"],
-						self.topc2[beta][atype]["y_error"]),
+						self.topc4[atype][beta]["y"],
+						self.topc4[atype][beta]["y_error"],
+						self.topc2[atype][beta]["y"],
+						self.topc2[atype][beta]["y_error"]),
 				}
 
-				self.topcR[beta][atype] = {
+				self.topcR[atype][beta] = {
 				
 					"y": R(
-						self.topc4C[beta][atype]["y"], 
-						self.topc2[beta][atype]["y"]),
+						self.topc4C[atype][beta]["y"], 
+						self.topc2[atype][beta]["y"]),
 
 					"y_error": R_error(
-						self.topc4C[beta][atype]["y"], 
-						self.topc4C[beta][atype]["y_error"], 
-						self.topc2[beta][atype]["y"], 
-						self.topc2[beta][atype]["y_error"])
+						self.topc4C[atype][beta]["y"], 
+						self.topc4C[atype][beta]["y_error"], 
+						self.topc2[atype][beta]["y"], 
+						self.topc2[atype][beta]["y_error"])
 				}
 
-				self.data[atype][beta] = self.topcR[beta][atype]
+				self.data[atype][beta] = self.topcR[atype][beta]
 
 		# comp_lattices = { # D ensembles
 		# 	6.0: {"size": 14**4, "q2": 3.028, "q4": 28.14, "q4c": 0.63, "R": 0.209, "L": 14, "beta_article": 5.96},
@@ -234,9 +261,7 @@ class TopcRPostAnalysis(PostCore):
 			values["x"] = values["a"]* np.sqrt(8*self.flow_time)
 			values["y"] = data[beta]["y"]
 			values["y_err"] = data[beta]["y_error"]
-			values[self.analysis_data_type] = \
-				data_raw[self.analysis_data_type][beta]\
-				[self.observable_name_compact]
+			values["y_raw"] = data_raw[beta][self.observable_name_compact]
 			values["tau_int"] = data[beta]["ac"]["tau_int"]
 			values["label"] = r"%s $\beta=%2.2f$" % (
 				self.size_labels[beta], beta)

@@ -54,23 +54,14 @@ class PostCore(object):
 		# Retrieves relevant data values and sorts them by beta values
 		self.flow_time = data.flow_time
 
-		self.data = {}
-
 		self.beta_values = sorted(data.beta_values)
-
-		if self.with_autocorr:
-			# Adds tau ints to data
-			pass
-
-		# print data.data_observables["topsus"][6.0]["with_autocorr"].keys()
-		# print "exits @ 64 in postcore.py"
-		# exit(1)
 
 		self.analysis_types = data.analysis_types
 		if "autocorrelation" in self.analysis_types:
 			self.analysis_types.remove("autocorrelation")
-		for atype in self.analysis_types:
-			self.data[atype] = {beta: {} for beta in self.beta_values}
+
+		self.data = {atype: {beta: {} for beta in self.beta_values} \
+			for atype in self.analysis_types}
 		
 		# Only sets this variable if we have sub-intervals in order to avoid bugs.
 		if self.sub_obs:
@@ -115,14 +106,16 @@ class PostCore(object):
 							data.data_observables[observable][beta].keys()
 
 						for subobs in data.data_observables[observable][beta]:
+
 							self.data[atype][beta][subobs] = \
 								data.data_observables[observable][beta] \
 								[subobs][self.ac][atype]
 
-						if self.with_autocorr:
-							self.data[atype][beta][subobs]["ac"] = \
-								data.data_observables[observable][beta] \
-								[subobs]["with_autocorr"]["autocorr"]
+							if self.with_autocorr:
+								self.data[atype][beta][subobs]["ac"] = \
+									data.data_observables[observable][beta] \
+									[subobs]["with_autocorr"]["autocorr"]
+
 				else:
 					self.data[atype][beta] = data.data_observables \
 						[observable][beta][self.ac][atype]
@@ -133,11 +126,11 @@ class PostCore(object):
 							["with_autocorr"]["autocorr"]
 
 		self.data_raw = {}
-		for key in data.raw_analysis:
-			if key == "autocorrelation":
-				self.ac_raw = data.raw_analysis[key]
+		for atype in data.raw_analysis:
+			if atype == "autocorrelation":
+				self.ac_raw = data.raw_analysis[atype]
 			else:
-				self.data_raw[key] = data.raw_analysis[key]
+				self.data_raw[atype] = data.raw_analysis[atype]
 
 		# Small test to ensure that the number of bootstraps and number of 
 		# different beta batches match
@@ -179,7 +172,7 @@ class PostCore(object):
 		self.analysis_data_type = analysis_data_type
 
 		self.plot_values = {} # Clears old plot values
-		self._initiate_plot_values(self.data[analysis_data_type], 
+		self._initiate_plot_values(self.data[analysis_data_type],
 			self.data_raw[analysis_data_type])
 
 	def _initiate_plot_values(self, data, data_raw):
@@ -270,56 +263,6 @@ class PostCore(object):
 			print "Figure saved in %s" % fname
 		# plt.show()
 		plt.close(fig)
-
-	def _get_beta_values_to_fit(self, fit_target, fit_interval, axis,
-								fit_type="bootstrap_fit",
-								fit_function_modifier=lambda x: x,
-								plot_fit_window=False):
-		"""
-		Retrieves a line fitted value at a target t0.
-		Available fit_types:
-			- bootstrap_fit (default)
-			- linefit_data
-			- nearest
-		"""
-		self.beta_fit = []
-
-		self._check_plot_values()
-
-		# Populates values to be plotted and 
-		for beta in self.plot_values:
-			bfit = {}
-			# Sets beta value for data
-			bfit["beta"] = beta
-
-			# Retrieves fit value as well as its error
-			if fit_type == "bootstrap_fit":
-				bfit["t0"], bfit["t0_err"] = fit_line_from_bootstrap(	
-					values["x"], values["bs"], self.observable_name_compact,
-					beta, fit_target, fit_interval, axis=axis,
-					fit_function_modifier=fit_function_modifier,
-					plot_fit_window=plot_fit_window)
-			elif fit_type == "data_line_fit":
-				bfit["t0"], bfit["t0_err"] = fit_line(	
-					values["x"], values["y"], values["y_err"],
-					self.observable_name_compact, beta,
-					fit_target, fit_interval, axis=axis,
-					fit_function_modifier=fit_function_modifier,
-					plot_fit_window=plot_fit_window)
-			elif fit_type == "nearest_val_fit":
-				raise NotImplementedError(
-					("'nearest_val_fit' not implemented "
-					"as a fit type yet."))
-			else:
-				raise KeyError(
-					("No fit_type named %s. Options: 'bootstrap_fit', "
-					"'data_line_fit' or 'nearest_val_fit'" % fit_type))
-
-			# Adds lattice spacing to fit
-			bfit["a"] = getLatticeSpacing(bfit["beta"])
-
-			# Adds to list of batch-values
-			self.beta_fit.append(bfit)
 
 	def _get_plot_figure_name(self, output_folder=None):
 		"""Retrieves appropriate figure file name."""

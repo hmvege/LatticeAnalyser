@@ -142,8 +142,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 						self.size_labels[beta], beta, 
 						self._convert_label(sub_obs))
 
-					sub_values[self.analysis_data_type] = \
-						data_raw[self.analysis_data_type][beta]\
+					sub_values["raw"] = data_raw[beta] \
 						[self.observable_name_compact][sub_obs]
 
 					if self.with_autocorr:
@@ -165,8 +164,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 					self.lattice_sizes[beta][1] * values["a"],
 					self.lattice_sizes[beta][1])
 
-				values[self.analysis_data_type] = \
-					data_raw[self.analysis_data_type][beta]\
+				values["y_raw"] = data_raw[beta] \
 					[self.observable_name_compact][tf_index]
 
 				if self.with_autocorr:

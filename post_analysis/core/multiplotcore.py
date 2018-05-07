@@ -39,8 +39,7 @@ class MultiPlotCore(PostCore):
 					
 					# Retrieves raw data
 					sub_values[self.analysis_data_type] = \
-						data_raw[self.analysis_data_type][beta]\
-						[self.observable_name_compact][sub_obs]
+						data_raw[beta][self.observable_name_compact][sub_obs]
 					
 					sub_values["label"] = r"%s $\beta=%2.2f$ %s" % (
 						self.size_labels[beta], beta, 
@@ -57,12 +56,13 @@ class MultiPlotCore(PostCore):
 					[sorted_intervals[interval_index]]["y_error"]
 
 				if self.with_autocorr:
-					values["tau_int"] = data[beta]["ac"]["tau_int"]
-					values["tau_int_err"] = data[beta]["ac"]["tau_int_err"]
+					values["tau_int"] = data[beta] \
+						[sorted_intervals[interval_index]]["ac"]["tau_int"]
+					values["tau_int_err"] = data[beta] \
+						[sorted_intervals[interval_index]]["ac"]["tau_int_err"]
 
-				values[self.analysis_data_type] = \
-					data_raw[self.analysis_data_type][beta]\
-					[self.observable_name_compact] \
+				values["y_raw"] = \
+					data_raw[beta][self.observable_name_compact] \
 					[sorted_intervals[interval_index]]
 				values["label"] = r"%s $\beta=%2.2f$ %s" % (
 					self.size_labels[beta], beta, 

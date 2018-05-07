@@ -66,7 +66,7 @@ class TopsusCore(PostCore):
 				0.25*self.chi_const[6.45]*qqerr/qq**(0.75)
 
 	def plot_continuum(self, fit_target, title_addendum="",
-		extrapolation_method="platou", platou_fit_size=20,
+		extrapolation_method="bootstrap", platou_fit_size=20,
 		interpolation_rank=3):
 		"""
 		Method for plotting the continuum limit of topsus at a given 
@@ -122,9 +122,10 @@ class TopsusCore(PostCore):
 			res = extract_fit_target(fit_target, x, y, y_err, y_raw=y_raw,
 				tau_int=tau_int, tau_int_err=tau_int_err, 
 				extrapolation_method=extrapolation_method, platou_size=20, 
-				interpolation_rank=3, plot_fit=True, raw_func=self.chi[beta],
-				raw_func_err=self.chi_der[beta], plot_samples=True, 
-				verbose=self.verbose)
+				interpolation_rank=3, plot_fit=False, raw_func=self.chi[beta],
+				raw_func_err=self.chi_der[beta], plot_samples=False, 
+				verbose=False)
+
 			_x0, _y0, _y0_error, _y0_raw, _tau_int0 = res
 
 			a_squared.append(self.plot_values[beta]["a"]**2/_x0)
@@ -217,7 +218,7 @@ class TopsusCore(PostCore):
 			print "Continuum plot of %s created in %s" % (
 				self.observable_name.lower(), fname)
 
-		plt.show()
+		# plt.show()
 		plt.close(fig)
 
 		self.print_continuum_estimate()

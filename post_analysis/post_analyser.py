@@ -39,7 +39,7 @@ def write_fit_parameters_to_file(fparams, fname, verbose=False):
 			("fit_target", {"name": "f_t", "w": 5, "type": ".2f"}),
 			("interval", {"name": "int", "w": 12, "type": "s"}),
 			("analysis_type", {"name": "atype", "w": 14, "type": "s"}),
-			("chi_squared", {"name": "Chi^2", "w": fw, "type": ".8f"}),
+			("chi_squared", {"name": "Chi^2", "w": 25, "type": ".8f"}),
 			("a", {"name": "a", "w": fw, "type": ".8f"}),
 			("a_err", {"name": "aerr", "w": fw, "type": ".8f"}),
 			("b", {"name": "b", "w": fw, "type": ".8f"}),
@@ -56,8 +56,9 @@ def write_fit_parameters_to_file(fparams, fname, verbose=False):
 			_val, w=_width, t=_fcode)
 		for k in dict_keys.items():
 			header_string += create_str(k[-1]["name"], k[-1]["w"], "s")
-		if verbose: print header_string
-		f.write(header_string)
+		if verbose: 
+			print header_string
+		f.write(header_string + "\n")
 
 		# Writes out analysis values to text file
 		for fp in sorted_parameter_list:
@@ -65,8 +66,9 @@ def write_fit_parameters_to_file(fparams, fname, verbose=False):
 			for k in dict_keys.items():
 				line_values += create_str(fp[k[0]], k[-1]["w"],
 					k[-1]["type"])
-			if verbose: print line_values
-			f.write(line_values)
+			if verbose:
+				print line_values
+			f.write(line_values + "\n")
 
 def default_post_analysis(PostAnalysis, data, figures_folder, analysis_type,
 	verbose=False):
