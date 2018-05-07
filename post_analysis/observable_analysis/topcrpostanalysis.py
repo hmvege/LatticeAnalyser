@@ -91,17 +91,6 @@ class TopcRPostAnalysis(PostCore):
 				self.topc4[atype][beta] = data.data_observables["topq4"] \
 					[beta][self.ac][atype]
 
-				# # Q^4_C
-				# self.topc4C[atype][beta] = {}
-
-				# # R = Q^4_C / Q^2
-				# self.topcR[beta] = {}
-				# self.topc2_raw[beta] = {
-				# k: data.raw_analysis[k][beta]["topq2"] \
-				# 	for k in self.analysis_types
-				# }
-
-
 				if self.with_autocorr:
 					self.topc2[atype][beta]["ac"] = \
 						data.data_observables["topq2"][beta] \
@@ -110,16 +99,6 @@ class TopcRPostAnalysis(PostCore):
 					self.topc4[atype][beta]["ac"] = \
 						data.data_observables["topq4"][beta] \
 						["with_autocorr"]["autocorr"]
-				
-
-				# self.topc4_raw[beta] = {
-				# 	k: data.raw_analysis[k][beta]["topq4"] \
-				# 	for k in self.analysis_types
-				# }
-				# self.topc4c_raw[beta] = {}
-				# self.topcR_raw[beta] = {}
-
-		# print self.topcR_raw.keys()
 
 		# Creates base output folder for post analysis figures
 		self.figures_folder = figures_folder
