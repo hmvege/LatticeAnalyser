@@ -103,8 +103,7 @@ class EnergyPostAnalysis(PostCore):
 				values["tau_int_err"] = data[beta]["ac"]["tau_int_err"]
 
 			values[self.analysis_data_type] = \
-				data_raw[self.analysis_data_type][beta]\
-				[self.observable_name_compact]
+				data_raw[beta][self.observable_name_compact]
 
 			# Negative since the minus sign will go away during linear 
 			# error propagation.

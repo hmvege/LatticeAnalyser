@@ -46,9 +46,9 @@ class PostAnalysisDataReader:
 		# Iterates over the different beta value folders
 		for beta_folder in self._get_dir_content(self.batch_folder):
 
-			#### TEMP ####
-			if beta_folder == "beta645": continue
-			#### TEMP ####
+			# #### TEMP ####
+			# if beta_folder == "beta645": continue
+			# #### TEMP ####
 
 			# Construct beta folder path
 			beta_dir_path = os.path.join(self.batch_folder, beta_folder,

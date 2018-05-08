@@ -61,8 +61,9 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 		for iteuclidean in xrange(self.NFlows):
 			# self.y[:,iteuclidean] = np.roll(self.y[:,iteuclidean], -1, axis=1)
 			# self.y[:,iteuclidean] *= y_e0
-
 			self.y[:,iteuclidean] = self.y[:,iteuclidean] * y_e0
+
+		# self.y = np.log(self.y/np.roll(self.y, -1, axis=1)) # C(t)/C(t+1)
 
 		# Sets up variables deependent on the number of configurations again
 		self.unanalyzed_y = np.zeros(self.NFlows)
@@ -105,15 +106,15 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 		self.jackknife_performed = False
 		self.autocorrelation_performed = False
 
-	# def C(self, Q):
-	# 	"""Correlator for qtq0."""
-	# 	return np.log(Q/np.roll(Q, -1, axis=0))
+	def C(self, Q):
+		"""Correlator for qtq0."""
+		return np.log(Q/np.roll(Q, -1, axis=0))
 
-	# def C_std(self, Q, dQ):
-	# 	"""Correlator for qtq0 with error propagation."""
-	# 	q = np.roll(Q, -1, axis=0)
-	# 	dq = np.roll(dQ, -1, axis=0)
-	# 	return np.sqrt((dQ/Q)**2 + (dq/q)**2 - dQ*dq/(Q*q))
+	def C_err(self, Q, dQ):
+		"""Correlator for qtq0 with error propagation."""
+		q = np.roll(Q, -1, axis=0)
+		dq = np.roll(dQ, -1, axis=0)
+		return np.sqrt((dQ/Q)**2 + (dq/q)**2 - dQ*dq/(Q*q))
 
 	# def jackknife(self, F=None, F_error=None, store_raw_jk_values=True):
 	# 	"""Overriding the jackknife class by adding the Correaltor function"""
@@ -128,11 +129,15 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 	def plot_jackknife(self, *args, **kwargs):
 		"""Making sure we are plotting with in euclidean time."""
 		kwargs["x"] = self.x
+		kwargs["correction_function"] = self.C
+		kwargs["error_correction_function"] = self.C_err
 		super(QtQ0EffectiveMassAnalyser, self).plot_jackknife(*args, **kwargs)
 
 	def plot_boot(self, *args, **kwargs):
 		"""Making sure we are plotting with in euclidean time."""
 		kwargs["x"] = self.x
+		kwargs["correction_function"] = self.C
+		kwargs["error_correction_function"] = self.C_err
 		super(QtQ0EffectiveMassAnalyser, self).plot_boot(*args, **kwargs)
 
 	def plot_histogram(self, *args, **kwargs):

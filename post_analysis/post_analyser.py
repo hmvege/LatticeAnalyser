@@ -347,8 +347,12 @@ def post_analysis(batch_folder, batch_beta_names, observables,
 			for tf in q0_flow_times: # Flow times
 				print tf
 				qtq0e_analysis.plot_interval(tf)
-			qtq0e_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
-			qtq0e_analysis.plot_series([0,2,3,4], beta=bval_to_plot)
+			y_limits = [-1, 1]
+			error_shape = "band"
+			qtq0e_analysis.plot_series([0,1,2,3], beta=bval_to_plot,
+				error_shape=error_shape, y_limits=y_limits)
+			qtq0e_analysis.plot_series([0,2,3,4], beta=bval_to_plot,
+				error_shape=error_shape, y_limits=y_limits)
 
 	for obs in observables:
 		if "topsus" in obs:

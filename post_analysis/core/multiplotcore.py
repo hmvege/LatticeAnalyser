@@ -127,14 +127,16 @@ class MultiPlotCore(PostCore):
 			y_limits: limits of the y-axis. Default is False.
 			plot_with_formula: bool, default is false, is True will look for 
 				formula for the y-value to plot in title.
-			error_shape: plot with error bands or with error bars.
+			error_shape: plot with error bands or with error bars. 
+				Options: band, bars
 		"""
 		self.plot_values = {}
 		self._initiate_plot_values(self.data[self.analysis_data_type],
 			self.data_raw[self.analysis_data_type])
 
-		self._series_plot_core(indexes, beta="all", x_limits=False, 
-		y_limits=False, plot_with_formula=False, error_shape="band")
+		self._series_plot_core(indexes, beta=beta, x_limits=x_limits, 
+		y_limits=y_limits, plot_with_formula=plot_with_formula, 
+		error_shape=error_shape)
 
 	def _series_plot_core(self, indexes, beta="all", x_limits=False, 
 		y_limits=False, plot_with_formula=False, error_shape="band", fname=None):
@@ -150,7 +152,8 @@ class MultiPlotCore(PostCore):
 			y_limits: limits of the y-axis. Default is False.
 			plot_with_formula: bool, default is false, is True will look for 
 				formula for the y-value to plot in title.
-			error_shape: plot with error bands or with error bars.
+			error_shape: plot with error bands or with error bars. 
+				Options: band, bars
 			fname: str, figure name. Default is 
 				post_analysis_{obs_name}_{analysis_type}.png
 		"""
@@ -195,6 +198,9 @@ class MultiPlotCore(PostCore):
 					ax.errorbar(x, y, yerr=y_err, capsize=5, fmt="_", ls=":", 
 						label=value["label"], color=value["color"], 
 						ecolor=value["color"])
+				else:
+					raise KeyError("%s is not a valid error bar shape." % 
+						error_shape)
 
 
 				# Basic plotting commands

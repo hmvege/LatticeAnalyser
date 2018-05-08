@@ -40,7 +40,7 @@ class FlowAnalyser(object):
 	plot_vline_at = None
 
 	def __init__(self, data, dryrun=False, parallel=False, numprocs=4,
-		verbose=False, figures_folder=False, lattice_size=None):
+		verbose=False, figures_folder=False):
 		"""
 		Parent class for analyzing flowed observables.
 
@@ -129,11 +129,13 @@ class FlowAnalyser(object):
 		self.post_analysis_folder_old = self.post_analysis_folder
 
 		# Checks if we already have scaled the x values or not
+		# print np.all(np.abs(np.diff(self.x) - self.flow_epsilon) > 1e-14)
 		if np.all(np.abs(np.diff(self.x) - self.flow_epsilon) > 1e-14):
 			self.x = self.x * self.flow_epsilon
 			self.pre_scale = False
 		else:
 			self.pre_scale = True
+
 
 		# Max plotting window variables
 		self.y_limits = [None,None]
@@ -179,7 +181,8 @@ class FlowAnalyser(object):
 				a*sqrt(8t).
 		"""
 		assert q0_flow_time < (self.a * np.sqrt(8*self.x))[-1], \
-			"q0_flow_time exceed maximum flow time value."
+			"q0_flow_time %f exceed maximum flow time value %f." % \
+			(q0_flow_time, (self.a * np.sqrt(8*self.x))[-1])
 
 		# Stores the q0 flow time value
 		self.q0_flow_time = q0_flow_time
@@ -474,7 +477,8 @@ class FlowAnalyser(object):
 		# Sets performed flag to true
 		self.autocorrelation_performed = True
 
-	def plot_jackknife(self, x=None, correction_function=lambda x: x):
+	def plot_jackknife(self, x=None, correction_function=lambda x: x, 
+		error_correction_function=None):
 		"""
 		Function for plotting the jackknifed data.
 
@@ -483,6 +487,9 @@ class FlowAnalyser(object):
 				self.a*np.sqrt(8*t).
 			correction_function: function to correct y-axis values with.
 				Default is to leave them unmodified.
+			error_correction_function: function that corrects the error term.
+				Takes y and y_err. Default is this being equal to correction 
+				function.
 
 		Raises:
 			ValueError: if jackknife has not been performed yet.
@@ -497,6 +504,9 @@ class FlowAnalyser(object):
 			# Default x axis points is the flow time
 			x = self.a * np.sqrt(8*self.x)
 
+		if isinstance(error_correction_function, types.NoneType):
+			error_correction_function = lambda q, qerr: correction_function(qerr)
+
 		# Copies data over to arrays to be plotted
 		y = self.jk_y
 		y_std = self.jk_y_std*self.autocorrelation_error_correction
@@ -510,9 +520,10 @@ class FlowAnalyser(object):
 
 		# Plots the jackknifed data
 		self.__plot_error_core(x, correction_function(y), 
-			correction_function(y_std), title_string, fname_path)
+			error_correction_function(y, y_std), title_string, fname_path)
 
-	def plot_boot(self, x=None, correction_function=lambda x: x, _plot_bs=True):
+	def plot_boot(self, x=None, correction_function=lambda x: x, 
+		error_correction_function=None, _plot_bs=True):
 		"""
 		Function for plotting the bootstrapped data.
 
@@ -521,6 +532,9 @@ class FlowAnalyser(object):
 				self.a*np.sqrt(8*t).
 			correction_function: function to correct y-axis values with.
 				Default is to leave them unmodified.
+			error_correction_function: function that corrects the error term.
+				Takes y and y_err. Default is this being equal to correction 
+				function.
 			_plot_bs: internval argument for plotting the bootstrapped and
 				non-bootstrapped values. Default is True.
 
@@ -536,6 +550,9 @@ class FlowAnalyser(object):
 		if isinstance(x, types.NoneType):
 			# Default x axis points is the flow time
 			x = self.a * np.sqrt(8*self.x)
+
+		if isinstance(error_correction_function, types.NoneType):
+			error_correction_function = lambda q, qerr: correction_function(qerr)
 
 		# Determines if we are to plot bootstrap or original and retrieves data
 		if _plot_bs:
@@ -566,9 +583,10 @@ class FlowAnalyser(object):
 
 		# Plots either bootstrapped or regular stuff
 		self.__plot_error_core(x, correction_function(y), 
-			correction_function(y_std), title_string, fname_path)
+			error_correction_function(y, y_std), title_string, fname_path)
 
-	def plot_original(self, x=None, correction_function=lambda x: x):
+	def plot_original(self, x=None, correction_function=lambda x: x, 
+		error_correction_function=None):
 		"""
 		Plots the default analysis, mean and std of the observable.
 
@@ -577,9 +595,13 @@ class FlowAnalyser(object):
 				self.a*np.sqrt(8*t).
 			correction_function: function to correct y-axis values with.
 				Default is to leave them unmodified.
+			error_correction_function: function that corrects the error term.
+				Takes y and y_err. Default is this being equal to correction 
+				function.
 
 		"""
 		self.plot_boot(x=x, correction_function=correction_function, 
+			error_correction_function=error_correction_function,
 			_plot_bs=False)
 
 	def __plot_error_core(self, x, y, y_std, title_string, fname):

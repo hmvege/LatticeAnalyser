@@ -38,8 +38,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 
 	def effMass(self, Q, axis=0):
 		"""Correlator for qtq0."""
-		return np.log(Q/np.roll(Q, -1, axis=axis))
-		# return np.log(np.roll(Q, -1, axis=axis)/Q)
+		return np.log(Q/np.roll(Q, -1, axis=axis)) # C(t)/C(t+1)
 
 	def effMass_err(self, Q, dQ, axis=0):
 		"""Correlator for qtq0 with error propagation."""
@@ -48,54 +47,33 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 		# return np.sqrt((dQ/Q)**2 + (dq/q)**2 - 2*dq*dQ/(q*Q))
 		return np.sqrt((dQ/Q)**2 + (dq/q)**2 - 2*dq*dQ/(q*Q))
 
-	def analyse_raw(self, data_raw):
+	def analyse_raw(self, data, data_raw):
 		"""
 		Method for analysis <QteQ0>_i where i is index of bootstrapped,
 		jackknifed or unanalyzed samples.
 		"""
 
-		# # Sets up jobs for parallel processing
-		# input_values = zip(	[self.y[:,i] for i in xrange(self.NFlows)],
-		# 					[N_bs for i in xrange(self.NFlows)],
-		# 					[index_lists for i in xrange(self.NFlows)])
+		# # Using bs samples
+		# y = self.effMass(data["y"])
+		# y_err = self.effMass_err(data["y"], data["y_error"])
 
-		# # Initializes multiprocessing
-		# pool = multiprocessing.Pool(processes=self.numprocs)								
-
-		# # Runs parallel processes. Can this be done more efficiently?
-		# results = pool.map(ptools._bootstrap_parallel_core, input_values)
-
-		# # Garbage collection for multiprocessing instance
+		# # Runs parallel processes
+		# input_values = zip([_d for _d in data_raw])
+		# pool = multiprocessing.Pool(processes=8)				
+		# results = pool.map(ptools._autocorrelation_parallel_core, input_values)
 		# pool.close()
 
-		# # Populating bootstrap data
-		# for i in xrange(self.NFlows):
-		# 	self.bs_y[i] = results[i][0]
-		# 	self.bs_y_std[i] = results[i][1]
-		# 	self.unanalyzed_y[i] = results[i][2]
-		# 	self.unanalyzed_y_std[i] = results[i][3]
-
-		# 	# Stores last data for plotting in histogram later and post analysis
-		# 	self.bs_y_data[i] = results[i][4]
-		# 	self.unanalyzed_y_data[i] = results[i][5]
-
-		# Runs parallel processes
-		input_values = zip([_d for _d in data_raw])
-		pool = multiprocessing.Pool(processes=8)				
-		results = pool.map(ptools._autocorrelation_parallel_core, input_values)
-		pool.close()
-
 		_y_temp = self.effMass(data_raw, axis=0)
-		error_correction = np.zeros(data_raw.shape[0])
+		error_correction = np.ones(data_raw.shape[0])
 		# for i, _data in enumerate(data_raw):
 		# 	ac = Autocorrelation(_data)
 		# 	error_correction[i] = np.sqrt(2*ac.integrated_autocorrelation_time())
 
-		y = np.mean(_y_temp, axis=1)
-		y_err = np.std(_y_temp, axis=1) * error_correction
+		y = np.nanmean(_y_temp, axis=1)
+		y_err = np.nanstd(_y_temp, axis=1) * error_correction
 
-		for _res in results:
-			y_err *= np.sqrt(2*_res[2])
+		# for _res in results:
+		# 	y_err *= np.sqrt(2*_res[2])
 
 
 		# C = np.mean(data_raw, axis=1)
@@ -136,9 +114,10 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 						self.lattice_sizes[beta][1])
 
 					sub_values["y"], sub_values["y_err"] = self.analyse_raw(
+						data[beta][sub_obs],
 						data_raw[beta][self.observable_name_compact][sub_obs])
 
-					sub_values["label"] = r"%s, $\beta=%2.2f$, $t_f=%d$" % (
+					sub_values["label"] = r"%s, $\beta=%2.2f$, $t_f=%.2f$" % (
 						self.size_labels[beta], beta, 
 						self._convert_label(sub_obs))
 
@@ -168,13 +147,13 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 					[self.observable_name_compact][tf_index]
 
 				if self.with_autocorr:
-					values["tau_int"] = data[beta]["ac"]["tau_int"]
-					values["tau_int_err"] = data[beta]["ac"]["tau_int_err"]
+					values["tau_int"] = data[beta][tf_index]["ac"]["tau_int"]
+					values["tau_int_err"] = data[beta][tf_index]["ac"]["tau_int_err"]
 
 				values["y"], values["y_err"] = \
 					self.analyse_data(data[beta][tf_index])
 
-				values["label"] = r"%s $\beta=%2.2f$, $t_f=%d$" % (
+				values["label"] = r"%s $\beta=%2.2f$, $t_f=%.2f$" % (
 					self.size_labels[beta], beta, flow_index)
 
 				values["color"] = self.colors[beta]
@@ -190,10 +169,8 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 		"""
 		self.plot_values = {}
 		self.interval_index = flow_index
-		data = self.data[self.analysis_data_type]
-		data_raw = self.data_raw[self.analysis_data_type]
-		# print data.keys(), data[6.1]["tflow0999"]["y"].shape
-		self._initiate_plot_values(data, data_raw, flow_index=flow_index)
+		self._initiate_plot_values(self.data[self.analysis_data_type], 
+			self.data_raw[self.analysis_data_type], flow_index=flow_index)
 
 		# Sets the x-label to proper units
 		x_label_old = self.x_label
@@ -214,7 +191,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 		kwargs["plot_with_formula"] = True
 		# kwargs["y_limits"] = [-2,2]
 		kwargs["y_limits"] = [-1,1]
-		kwargs["x_limits"] = [-0.1,1]
+		kwargs["x_limits"] = [-0.1,4.7]
 		super(QtQ0EffectiveMassPostAnalysis, self).plot(*args, **kwargs)
 
 def main():

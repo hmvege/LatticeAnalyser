@@ -58,10 +58,12 @@ def main():
 	# observables = ["topc", "plaq", "energy", "topsus", "topcr"]
 	# observables = ["topcr", "qtq0eff"]
 	observables = ["qtq0eff"]
-	observables = ["topcr"]
+	# observables = ["topcr"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
 	# observables = ["qtq0e", "qtq0eff", "topsusqtq0"]
 	# observables = ["topsuste"]
+	observables = ["energy", "plaq", "topsus"]
+	# observables = ["topc"]
 
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
 	print 100*"=" + "\n"
@@ -199,6 +201,7 @@ def main():
 	databeta62["obs_file"] = "32_6.20"
 	databeta62["lattice_size"] = {6.2: 32**3*64}
 
+	default_params["flow_epsilon"] = 0.02
 	databeta645 = copy.deepcopy(default_params)
 	databeta645["batch_name"] = beta_folders[3]
 	databeta645["NCfgs"] = get_num_observables(data_batch_folder,
@@ -214,9 +217,10 @@ def main():
 	# smaug_data_beta60_analysis["lattice_size"] = {6.0: 8**3*16}
 
 	#### Adding relevant batches to args
-	# analysis_parameter_list = [databeta60, databeta61, databeta62, databeta645]
-	analysis_parameter_list = [databeta60, databeta61, databeta62]
+	analysis_parameter_list = [databeta60, databeta61, databeta62, databeta645]
+	# analysis_parameter_list = [databeta60, databeta61, databeta62]
 	# analysis_parameter_list = [databeta645]
+	# analysis_parameter_list = [databeta62]
 	# analysis_parameter_list = [databeta61, databeta62]
 	# analysis_parameter_list = [smaug_data_beta61_analysis]
 
