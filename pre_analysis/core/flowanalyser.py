@@ -136,7 +136,6 @@ class FlowAnalyser(object):
 		else:
 			self.pre_scale = True
 
-
 		# Max plotting window variables
 		self.y_limits = [None,None]
 

@@ -22,6 +22,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 	y_label = r"$am_{eff}$"
 	sub_obs = True
 	hbarc = 0.19732697 #eV micro m
+	dpi=400
 
 	def __init__(self, *args, **kwargs):
 		# Ensures we load correct data
@@ -53,24 +54,46 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 		jackknifed or unanalyzed samples.
 		"""
 
-		# # Using bs samples
+		# Using bs samples
 		# y = self.effMass(data["y"])
 		# y_err = self.effMass_err(data["y"], data["y_error"])
 
-		# # Runs parallel processes
-		# input_values = zip([_d for _d in data_raw])
-		# pool = multiprocessing.Pool(processes=8)				
-		# results = pool.map(ptools._autocorrelation_parallel_core, input_values)
-		# pool.close()
+		NEucl, NCfgs = data_raw.shape
+		if self.analysis_data_type=="unanalyzed":
+			N_BS = 500
+			y_raw = np.zeros((NEucl, N_BS)) 	# Correlator, G
+			index_lists = np.random.randint(NCfgs, size=(N_BS, NCfgs))
+			# Performing the bootstrap samples
+			for i in xrange(NEucl):
+				for j in xrange(N_BS):
+					y_raw[i,j] = np.mean(data_raw[i][index_lists[j]])
+		else:
+			y_raw = data_raw
 
-		_y_temp = self.effMass(data_raw, axis=0)
-		error_correction = np.ones(data_raw.shape[0])
-		# for i, _data in enumerate(data_raw):
-		# 	ac = Autocorrelation(_data)
-		# 	error_correction[i] = np.sqrt(2*ac.integrated_autocorrelation_time())
+		y_raw = np.log(y_raw/np.roll(y_raw, -1, axis=0))
+		y = np.mean(y_raw, axis=1)
+		y_err = np.std(y_raw, axis=1)
 
-		y = np.nanmean(_y_temp, axis=1)
-		y_err = np.nanstd(_y_temp, axis=1) * error_correction
+		# Runs parallel processes
+		input_values = zip(	[data_raw[iEucl] for iEucl in range(NEucl)],
+							[None for _d in range(NEucl)],
+							[{} for _d in range(NEucl)])
+
+		pool = multiprocessing.Pool(processes=8)				
+		res = pool.map(ptools._autocorrelation_propagated_parallel_core, input_values)
+		pool.close()
+
+		error_correction = np.ones(NEucl)
+		for i, _data in enumerate(data_raw):
+			error_correction[i] = np.sqrt(2*res[i][2])
+
+		# y = np.mean(_y_temp, axis=1)
+		# y_err = np.std(_y_temp, axis=1) * error_correction
+		y_err *= error_correction
+
+		# print "\n"
+		# print y[:10]
+		# print y_err[:10],"\n"
 
 		# for _res in results:
 		# 	y_err *= np.sqrt(2*_res[2])
@@ -178,7 +201,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 
 		# SET THIS TO ZERO IF NO Y-AXIS SCALING IS TO BE DONE
 		# kwargs["y_limits"] = [-1,1]
-		# kwargs["x_limits"] = [-0.1,1]
+		kwargs["x_limits"] = [-0.1,1]
 		kwargs["error_shape"] = "bars"
 
 		# Makes it a global constant so it can be added in plot figure name
@@ -192,6 +215,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 		# kwargs["y_limits"] = [-2,2]
 		kwargs["y_limits"] = [-1,1]
 		kwargs["x_limits"] = [-0.1,4.7]
+		kwargs["x_limits"] = [-0.1,1]
 		super(QtQ0EffectiveMassPostAnalysis, self).plot(*args, **kwargs)
 
 def main():

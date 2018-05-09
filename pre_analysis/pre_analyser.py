@@ -202,8 +202,10 @@ def analyse_qtq0_effective_mass(params, q0_flow_times):
 
 	qtq0eff_analysis = QtQ0EffectiveMassAnalyser(obs_data("topct"), dryrun=dryrun,
 		parallel=parallel, numprocs=numprocs, verbose=verbose)
-
+	print q0_flow_times
 	for q0_flow_time in q0_flow_times:
+		if q0_flow_time != 0.6: # Only zeroth flow 
+			continue
 		qtq0eff_analysis.set_time(q0_flow_time)
 		analyse_default(qtq0eff_analysis, N_bs)
 

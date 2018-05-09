@@ -58,11 +58,11 @@ def main():
 	# observables = ["topc", "plaq", "energy", "topsus", "topcr"]
 	# observables = ["topcr", "qtq0eff"]
 	observables = ["qtq0eff"]
-	# observables = ["topcr"]
+	observables = ["topcr"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
-	# observables = ["qtq0e", "qtq0eff", "topsusqtq0"]
+	# observables = ["qtq0eff"]
 	# observables = ["topsuste"]
-	observables = ["energy", "plaq", "topsus"]
+	# observables = ["energy"]
 	# observables = ["topc"]
 
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
@@ -146,7 +146,7 @@ def main():
 	# euclidean_time_percents = [0]
 	
 	# Data types to be looked at in the post-analysis.
-	post_analysis_data_type = ["bootstrap"]
+	post_analysis_data_type = ["bootstrap", "jackknife", "unanalyzed"]
 
 	# eff_mass_flow_times = [0, 100, 400, 700, 999]
 

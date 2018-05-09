@@ -13,7 +13,7 @@ class PostCore(object):
 	formula = ""
 	x_label = r""
 	y_label = r""
-	dpi = 350
+	dpi = None
 	size_labels = {
 		6.0  : r"$24^3 \times 48$",
 		6.1  : r"$28^3 \times 56$",
@@ -35,6 +35,14 @@ class PostCore(object):
 		6.2: "#bc232e", # red
 		6.45: "#8519b7" # purple
 	}
+
+	# colors = {
+	# 	6.0: "#3366ff", # blue
+	# 	6.1: "#00ffff", # green
+	# 	6.2: "#ffff33", # red
+	# 	6.45: "#ff3333" # purple
+	# }
+
 	interval = None
 
 	def __init__(self, data, with_autocorr=True, figures_folder="../figures",
@@ -53,6 +61,7 @@ class PostCore(object):
 
 		# Retrieves relevant data values and sorts them by beta values
 		self.flow_time = data.flow_time
+		self.flow_time = np.arange(0,10,0.01)
 
 		self.beta_values = sorted(data.beta_values)
 
@@ -178,10 +187,12 @@ class PostCore(object):
 	def _initiate_plot_values(self, data, data_raw):
 		"""Sorts data into a format specific for the plotting method."""
 		for beta in sorted(data.keys()):
-			if beta == 6.45: self.flow_time *= 2
+			ftime = self.flow_time
+			if beta == 6.45: 
+				ftime *= 2
 			values = {}
 			values["a"] = get_lattice_spacing(beta)
-			values["x"] = values["a"]* np.sqrt(8*self.flow_time)
+			values["x"] = values["a"]* np.sqrt(8*ftime)
 			values["y"] = data[beta]["y"]
 			values["y_err"] = data[beta]["y_error"]
 			values["y_raw"] = data_raw[beta][self.observable_name_compact]
@@ -246,7 +257,10 @@ class PostCore(object):
 		ax.set_title(title_string)
 		ax.set_xlabel(self.x_label)
 		ax.set_ylabel(self.y_label)
-		ax.legend(loc="best", prop={"size": 8})
+		ax.legend(loc="lower right", prop={"size": 8})
+
+		# if self.observable_name_compact == "energy":
+		# 	ax.ticklabel_format(style="sci", axis="y", scilimits=(1,10))
 
 		# Sets axes limits if provided
 		if x_limits != False:
@@ -261,7 +275,10 @@ class PostCore(object):
 		plt.savefig(fname)
 		if self.verbose:
 			print "Figure saved in %s" % fname
-		# plt.show()
+
+		if self.observable_name_compact == "energy":
+			plt.show()
+	
 		plt.close(fig)
 
 	def _get_plot_figure_name(self, output_folder=None):

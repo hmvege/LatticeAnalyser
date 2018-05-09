@@ -18,6 +18,8 @@ class TopcRPostAnalysis(PostCore):
 	formula = r", $R = \langle Q^4_C \rangle = \langle Q^4 \rangle - $"
 	formula += r"$3 \langle Q^2 \rangle^2$"
 
+	dpi=400
+
 	total_lattice_sizes = {
 		6.0: 24**3*48, 6.1: 28**3*56, 6.2: 32**3*64, 6.45: 48**3*96
 	}
@@ -120,7 +122,7 @@ class TopcRPostAnalysis(PostCore):
 			verbose=self.verbose)
 
 		self._setup_volumes()
-		# self._normalize_Q()
+		self._normalize_Q()
 		self._calculate_R()
 
 	def _setup_volumes(self):
@@ -169,7 +171,7 @@ class TopcRPostAnalysis(PostCore):
 		print "Q2[t_flow]      =", Q2[t_flow]/V2
 		print "3*Q2[t_flow]**2 =", 3*(Q2[t_flow]/V2)**2
 		print "Q4[t_flow]      =", Q4[t_flow]/V4
-		print "Q4C[t_flow]     =", Q4[t_flow]/V4 - 3*(Q2[t_flow]/V2)
+		print "Q4C[t_flow]     =", Q4[t_flow]/V4 - 3*(Q2[t_flow]/V2)**2
 		print "R[t_flow]       =", (Q4[t_flow]/V4 - 3*(Q2[t_flow]/V2)**2)/(Q2[t_flow]/V2)
 
 		print "Q4 normalized with a^4 * V and a^4 * V:"
@@ -221,13 +223,15 @@ class TopcRPostAnalysis(PostCore):
 
 		# Gets Q4C and R
 		for atype in self.analysis_types:
+			# print "\n","\n","="*100
+			# print atype
 			for beta in self.beta_values:
 
-				self.topc4C[atype][beta] = self._calculate_Q4C(
-					self.topc2[atype][beta], self.data_raw[atype][beta]["topq2"],
-					self.topc4[atype][beta], self.data_raw[atype][beta]["topq4"],
-					self.data_raw[atype][beta]["topc"], beta)
-
+				# self.topc4C[atype][beta] = self._calculate_Q4C(
+				# 	self.topc2[atype][beta], self.data_raw[atype][beta]["topq2"],
+				# 	self.topc4[atype][beta], self.data_raw[atype][beta]["topq4"],
+				# 	self.data_raw[atype][beta]["topc"], beta)
+				# continue
 				self.topc4C[atype][beta] = {
 
 					"y": Q4C(
@@ -335,6 +339,9 @@ class TopcRPostAnalysis(PostCore):
 	def plot(self, *args, **kwargs):
 		"""Ensuring I am plotting with formule in title."""
 		kwargs["plot_with_formula"] = True
+		kwargs["error_shape"] = "band"
+		kwargs["y_limits"] = [-1,1]
+		# kwargs["x_limits"] = [0.5, 0.6]
 		super(TopcRPostAnalysis, self).plot(*args, **kwargs)
 
 def main():

@@ -55,6 +55,7 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 		# Sets a new x-axis
 		self.x = np.linspace(0, self.NFlows - 1, self.NFlows)
 
+
 		# Multiplies by Q0 to get the correlator
 		y_e0 = copy.deepcopy(self.y_original[:,self.q0_flow_time_index,0])
 
