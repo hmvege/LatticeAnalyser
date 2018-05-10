@@ -203,6 +203,9 @@ class PostAnalysisDataReader:
 
 		folders = self._get_dir_content(folder_path)
 
+		if len(folders) == 0:
+			return []
+
 		if "-" in folders[0]: # For MC and euclidean intervals
 			sort_key = lambda s: int(s.split("-")[-1])
 		else:

@@ -44,29 +44,36 @@ def main():
 	observables = [
 		"plaq", "energy", 
 		# Topological charge definitions
-		"topc", "topc2", "topc4", "topcr", "topct", "topcte", "topcMC",
+		"topc", "topc2", "topc4", "topcr", "topcMC",
 		# Topological susceptibility definitions
-		"topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0",
+		"topsus", "topsusMC",
 		# Other quantities 
 		"topcr",
+	]
+
+	observables_euclidean_time = [
+		# Topological charge
+		"topct", "topcte",
+		# Topological susceptiblity
+		"topsust", "topsuste", "topsusqtq0",
+		# Other quantities 
 		"qtq0e",
 		"qtq0eff",
-		# "qtq0_gif",
+		"qtq0_gif",
 	]
+
+	observables += observables_euclidean_time
 
 	observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["topc", "plaq", "energy", "topsus", "topcr"]
 	# observables = ["topcr", "qtq0eff"]
-	observables = ["qtq0eff"]
-	# observables = ["topcr"]
+	# observables = ["qtq0eff"]
+	observables = ["topcr", "topsus"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
 	# observables = ["qtq0eff"]
 	# observables = ["topsuste"]
 	# observables = ["energy"]
 	# observables = ["topc"]
-
-	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
-	print 100*"=" + "\n"
 
 	#### Base parameters
 	N_bs = 500
@@ -84,7 +91,7 @@ def main():
 	create_perflow_data = False
 
 	#### Save binary file
-	save_to_binary = False
+	save_to_binary = True
 
 	#### Load specific parameters
 	NFlows = 1000
@@ -113,9 +120,9 @@ def main():
 	# data_batch_folder = "smaug_data_beta61"
 
 	#### If we need to multiply
-	if data_batch_folder == "DataGiovanni":
-		if "topct" in observables:
-			observables.remove("topct")
+	if "DataGiovanni" in data_batch_folder:
+		observables = set(set(observables) - set(observables_euclidean_time))
+		observables = list(observables)
 		correct_energy = False
 		load_file = True
 		save_to_binary = False
@@ -124,9 +131,6 @@ def main():
 
 	#### Different beta values folders:
 	beta_folders = ["beta60", "beta61", "beta62", "beta645"]
-	# beta_folders = ["beta6_0", "beta6_1", "beta6_2"]
-	# beta_folders = ["beta61"]
-	# beta_folders = ["beta60"]
 
 	# Indexes to look at for topct.
 	num_t_euclidean_indexes = 5
@@ -180,6 +184,9 @@ def main():
 		},
 	}
 
+	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
+	print 100*"=" + "\n"
+
 	databeta60 = copy.deepcopy(default_params)
 	databeta60["batch_name"] = beta_folders[0]
 	databeta60["NCfgs"] = get_num_observables(data_batch_folder,
@@ -224,9 +231,9 @@ def main():
 	# analysis_parameter_list = [databeta61, databeta62]
 	# analysis_parameter_list = [smaug_data_beta61_analysis]
 
-	# #### Submitting observable-batches
-	# for analysis_parameters in analysis_parameter_list:
-	# 	pre_analysis(analysis_parameters)
+	#### Submitting observable-batches
+	for analysis_parameters in analysis_parameter_list:
+		pre_analysis(analysis_parameters)
 
 	#### Submitting post-analysis data
 	if len(analysis_parameter_list) >= 3:
