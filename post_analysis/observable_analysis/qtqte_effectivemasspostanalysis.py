@@ -55,39 +55,41 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 		"""
 
 		# Using bs samples
-		y = self.effMass(data["y"])
-		y_err = self.effMass_err(data["y"], data["y_error"])
+		# y = self.effMass(data["y"])
+		# y_err = self.effMass_err(data["y"], data["y_error"])
 
-		# NEucl, NCfgs = data_raw.shape
-		# if self.analysis_data_type=="unanalyzed":
-		# 	N_BS = 500
-		# 	y_raw = np.zeros((NEucl, N_BS)) 	# Correlator, G
-		# 	index_lists = np.random.randint(NCfgs, size=(N_BS, NCfgs))
-		# 	# Performing the bootstrap samples
-		# 	for i in xrange(NEucl):
-		# 		for j in xrange(N_BS):
-		# 			y_raw[i,j] = np.mean(data_raw[i][index_lists[j]])
-		# else:
-		# 	y_raw = data_raw
+		NEucl, NCfgs = data_raw.shape
+		if self.analysis_data_type=="unanalyzed":
+			N_BS = 500
+			y_raw = np.zeros((NEucl, N_BS)) 	# Correlator, G
+			index_lists = np.random.randint(NCfgs, size=(N_BS, NCfgs))
+			# Performing the bootstrap samples
+			for i in xrange(NEucl):
+				for j in xrange(N_BS):
+					y_raw[i,j] = np.mean(data_raw[i][index_lists[j]])
+		else:
+			y_raw = data_raw
 
-		# y_raw = np.log(y_raw/np.roll(y_raw, -1, axis=0))
-		# y = np.mean(y_raw, axis=1)
-		# y_err = np.std(y_raw, axis=1)
+		y_raw = np.log(y_raw/np.roll(y_raw, -1, axis=0))
+		y = np.mean(y_raw, axis=1)
+		y_err = np.std(y_raw, axis=1)
 
-		# # Runs parallel processes
-		# input_values = zip(	[data_raw[iEucl] for iEucl in range(NEucl)],
-		# 					[None for _d in range(NEucl)],
-		# 					[{} for _d in range(NEucl)])
+		# Runs parallel processes
+		input_values = zip(	[data_raw[iEucl] for iEucl in range(NEucl)],
+							[None for _d in range(NEucl)],
+							[{} for _d in range(NEucl)])
 
-		# pool = multiprocessing.Pool(processes=8)				
-		# res = pool.map(ptools._autocorrelation_propagated_parallel_core, input_values)
-		# pool.close()
+		pool = multiprocessing.Pool(processes=8)				
+		res = pool.map(ptools._autocorrelation_propagated_parallel_core, input_values)
+		pool.close()
 
-		# error_correction = np.ones(NEucl)
-		# for i, _data in enumerate(data_raw):
-		# 	error_correction[i] = np.sqrt(2*res[i][2])
+		error_correction = np.ones(NEucl)
+		for i, _data in enumerate(data_raw):
+			error_correction[i] = np.sqrt(2*res[i][2])
 
-		# y_err *= error_correction
+		# y = np.mean(_y_temp, axis=1)
+		# y_err = np.std(_y_temp, axis=1) * error_correction
+		y_err *= error_correction
 
 		# print "\n"
 		# print y[:10]

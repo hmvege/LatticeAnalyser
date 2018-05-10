@@ -166,6 +166,7 @@ def post_analysis(batch_folder, batch_beta_names, observables,
 			topcr_analysis.set_analysis_data_type(analysis_type)
 			print topcr_analysis
 			topcr_analysis.plot()
+		topcr_analysis.compare_lattice_values()
 
 	if "topct" in observables:
 		topct_analysis = TopctPostAnalysis(data, 

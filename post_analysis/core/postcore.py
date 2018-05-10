@@ -61,13 +61,12 @@ class PostCore(object):
 
 		# Retrieves relevant data values and sorts them by beta values
 		self.flow_time = data.flow_time
-		self.flow_time = np.arange(0,10,0.01)
 
 		self.beta_values = sorted(data.beta_values)
 
-		self.analysis_types = data.analysis_types
-		if "autocorrelation" in self.analysis_types:
-			self.analysis_types.remove("autocorrelation")
+		self._setup_flow_times()
+
+		self._setup_analysis_types(data.analysis_types)
 
 		self.data = {atype: {beta: {} for beta in self.beta_values} \
 			for atype in self.analysis_types}
@@ -169,6 +168,21 @@ class PostCore(object):
 		check_folder(self.output_folder_path, dryrun=self.dryrun, 
 			verbose=self.verbose)
 
+	def _setup_flow_times(self):
+		"""Initializes flow times to be used by others."""
+		self.flow_times = {b: np.arange(0, 10, 0.01) for b in self.beta_values}
+		self.flow_times[6.45] = np.arange(0, 20, 0.02)
+
+	def _setup_analysis_types(self, atypes):
+		"""
+		Stores the number of analysis types from the data container, while 
+		removing the autocorrelation one.
+		"""
+		self.analysis_types = atypes
+		if "autocorrelation" in self.analysis_types:
+			self.analysis_types.remove("autocorrelation")
+
+
 	def _check_plot_values(self):
 		"""Checks if we have set the analysis data type yet."""
 		if not hasattr(self, "plot_values"):
@@ -187,9 +201,7 @@ class PostCore(object):
 	def _initiate_plot_values(self, data, data_raw):
 		"""Sorts data into a format specific for the plotting method."""
 		for beta in sorted(data.keys()):
-			ftime = self.flow_time
-			if beta == 6.45: 
-				ftime *= 2
+			ftime = self.flow_times[beta]
 			values = {}
 			values["a"] = get_lattice_spacing(beta)
 			values["x"] = values["a"]* np.sqrt(8*ftime)

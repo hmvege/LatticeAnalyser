@@ -58,7 +58,7 @@ def main():
 	# observables = ["topc", "plaq", "energy", "topsus", "topcr"]
 	# observables = ["topcr", "qtq0eff"]
 	observables = ["qtq0eff"]
-	observables = ["topcr"]
+	# observables = ["topcr"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
 	# observables = ["qtq0eff"]
 	# observables = ["topsuste"]

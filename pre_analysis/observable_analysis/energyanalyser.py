@@ -4,8 +4,11 @@ class EnergyAnalyser(FlowAnalyser):
 	"""Energy/action density analysis class."""
 	observable_name = "Energy"
 	observable_name_compact = "energy"
-	x_label = r"$t/r_0^2$" # Dimensionsless, Implied multiplication by a^2
-	y_label = r"$t^2\langle E \rangle$" # Energy is dimension 4, while t^2 is dimension invsere 4, or length/time which is inverse energy, see Peskin and Schroeder
+	# Dimensionsless, Implied multiplication by a^2
+	x_label = r"$t/r_0^2$"
+	# Energy is dimension 4, while t^2 is dimension inverse 4, or 
+	# length/time which is inverse energy, see Peskin and Schroeder
+	y_label = r"$t^2\langle E \rangle$" 
 
 	def __init__(self, *args, **kwargs):
 		super(EnergyAnalyser, self).__init__(*args, **kwargs)
@@ -16,8 +19,7 @@ class EnergyAnalyser(FlowAnalyser):
 		self.plot_hline_at = 0.3
 
 	def correction_function(self, y):
-		# *  self.flow_epsilon * self.flow_epsilon
-		return y * self.x * self.x # factor 0.5 left out, see paper by 
+		return y * self.x * self.x # factor 0.5 left out
 
 	def plot_original(self):
 		super(EnergyAnalyser, self).plot_boot(x=self.x_vals, correction_function=self.correction_function, _plot_bs=False)

@@ -45,9 +45,9 @@ class TopcRPostAnalysis(PostCore):
 
 		self.beta_values = sorted(data.beta_values)
 
-		self.analysis_types = data.analysis_types
-		if "autocorrelation" in self.analysis_types:
-			self.analysis_types.remove("autocorrelation")
+		self._setup_flow_times()
+
+		self._setup_analysis_types(data.analysis_types)
 
 		# Q^2
 		self.topc2 = {atype: {beta: {} for beta in self.beta_values} \
@@ -121,80 +121,29 @@ class TopcRPostAnalysis(PostCore):
 		check_folder(self.output_folder_path, dryrun=self.dryrun, 
 			verbose=self.verbose)
 
+		self._setup_article_values()
+		self._normalize_article_values()
+
 		self._setup_volumes()
 		self._normalize_Q()
+		self._calculate_Q4C()
 		self._calculate_R()
 
 	def _setup_volumes(self):
+		"""Sets up lattice volumes."""
 		vol = lambda b: self.total_lattice_sizes[b]*get_lattice_spacing(b)**4
 		self.V = {b: vol(b) for b in self.beta_values}
 
-	def _calculate_Q4C(self, q2, q2raw, q4, q4raw, qraw, beta):
-		"""Caluclates the 4th cumulent,
+		# print self.V
 
-		<Q^4>_C = 1/N_conf sum^{N_conf}_{i=1} ((Q_i)^4 - 3<Q^2>)
-		"""
-
-		assert q2raw.shape == q4raw.shape
-
-		V = self.V[beta] / get_lattice_spacing(beta)**4
-		# Q2 = q2["y"] / V
-		# Q4 = q4["y"] / V**2
-		Q2 = q2["y"]
-		Q4 = q4["y"]
-
-		# Q4C = np.zeros(qraw.shape)
-		# print qraw.shape
-		# for iCfg in xrange(qraw.shape[1]):
-		# 	Q4C[:,iCfg] = qraw[:,iCfg]**4 - 3*Q2**2
-
-		# Q4C = np.mean(Q4C, axis=1)
-
-		Q4C = Q4 - 3*Q2**2
-		R = Q4C / Q2
-
-		print "\n"
-		print "Beta =", beta
-		print "L    =", get_lattice_spacing(beta)*self.lattice_sizes[beta][0]
-		print "V    =", V
-		t_flow = [600, 601]
-		print "Unnormalized"
-		print "Q2[t_flow]      =", Q2[t_flow]
-		print "3*Q2[t_flow]**2 =", 3*Q2[t_flow]**2
-		print "Q4[t_flow]      =", Q4[t_flow]
-		print "Q4C[t_flow]     =", Q4C[t_flow]
-		print "R[t_flow]       =", R[t_flow]
-
-		print "Normalized with just a^4 * V and a^8 * V^2:"
-		V2 = V * get_lattice_spacing(beta)**4 
-		V4 = V**2 * get_lattice_spacing(beta)**8
-		print "Q2[t_flow]      =", Q2[t_flow]/V2
-		print "3*Q2[t_flow]**2 =", 3*(Q2[t_flow]/V2)**2
-		print "Q4[t_flow]      =", Q4[t_flow]/V4
-		print "Q4C[t_flow]     =", Q4[t_flow]/V4 - 3*(Q2[t_flow]/V2)**2
-		print "R[t_flow]       =", (Q4[t_flow]/V4 - 3*(Q2[t_flow]/V2)**2)/(Q2[t_flow]/V2)
-
-		print "Q4 normalized with a^4 * V and a^4 * V:"
-		# V2 = V * get_lattice_spacing(beta)**(4)
-		V2 = 1
-		V4 = V * get_lattice_spacing(beta)**(4)
-		# print "Q2[t_flow]      =", Q2[t_flow/V2
-		# print "3*Q2[t_flow]**2 =", 3*(Q2[t_flow]/V2)**2
-		# print "Q4[t_flow]      =", Q4[t_flow]/V4
-		# print "Q4C[t_flow]     =", Q4[t_flow]/V4 - 3*(Q2[t_flow]/V2)**2
-		# print "R[t_flow]       =", (Q4[t_flow]/V4 - 3*(Q2[t_flow]/V2)**2)/(Q2[t_flow]/V2)
-		print "Q2[t_flow]      =", Q2[t_flow]
-		print "3*Q2[t_flow]**2 =", 3*(Q2[t_flow])**2
-		print "Q4[t_flow]      =", Q4[t_flow]
-		print "Q4C[t_flow]     =", (Q4[t_flow] - 3*(Q2[t_flow])**2)/V4
-		print "R[t_flow]       =", (Q4[t_flow] - 3*(Q2[t_flow])**2)/V4/(Q2[t_flow])
-
-
-		# import matplotlib.pyplot as plt
-		# plt.plot(R)
-		# plt.show()
-
-		# exit("Exiting before returning..")
+		# self.V2 = {}
+		# for beta in self.beta_values:
+		# 	a = get_lattice_spacing(beta)
+		# 	L_s = a*self.lattice_sizes[beta][0]
+		# 	L_t = a*self.lattice_sizes[beta][1]
+		# 	self.V2[beta] = L_s**3 * L_t
+		# 	print beta, a, L_s, L_t, self.V2[beta]
+		# exit(1)
 
 	def _normalize_Q(self):
 		"""Normalizes Q4 and Q2"""
@@ -205,53 +154,64 @@ class TopcRPostAnalysis(PostCore):
 				self.topc4[atype][beta]["y"] /= self.V[beta]**2
 				self.topc4[atype][beta]["y_error"] /= self.V[beta]**2
 
+	@staticmethod
+	def Q4C(q4, q2):
+		"""4th cumulant."""
+		return q4 - 3 * q2**2
 
+	@staticmethod
+	def Q4C_error(q4, q4err, q2, q2err):
+		"""4th cumulant error."""
+		return np.sqrt(q4err**2 + (6*q2err*q2)**2 - 12*q2*q4err*q2err)
 
-	def _calculate_R(self):
-		"""Calculates R = Q^4_C / Q^2."""
+	@staticmethod 
+	def R(q4c, q2):
+		"""Returns the ratio <Q^4>C/<Q^2>"""
+		return q4c/q2
 
-		# The 3 comes from subtracting the disconnected diagrams.
-		Q4C = lambda q4, q2: q4 - 3 * q2**2
-
-		Q4C_error = lambda q4, q4err, q2, q2err: np.sqrt(
-			q4err**2 + (6*q2err*q2)**2 - 12*q2*q4err*q2err)
-
-		R = lambda q4c, q2: q4c/q2
-
-		R_error = lambda q4c, q4cerr, q2, q2err: np.sqrt(
+	@staticmethod 
+	def R_error(q4c, q4cerr, q2, q2err):
+		"""Returns the ratio <Q^4>C/<Q^2>"""
+		return np.sqrt(
 			(q4cerr/q2)**2 + (q4c*q2err / q2**2)**2 - 2*q4cerr*q4c*q2err/q2**3)
+
+
+	def _calculate_Q4C(self):
+		"""Caluclates the 4th cumulant for my data."""
 
 		# Gets Q4C and R
 		for atype in self.analysis_types:
-			# print "\n","\n","="*100
-			# print atype
+
 			for beta in self.beta_values:
 
-				# self.topc4C[atype][beta] = self._calculate_Q4C(
-				# 	self.topc2[atype][beta], self.data_raw[atype][beta]["topq2"],
-				# 	self.topc4[atype][beta], self.data_raw[atype][beta]["topq4"],
-				# 	self.data_raw[atype][beta]["topc"], beta)
-				# continue
 				self.topc4C[atype][beta] = {
 
-					"y": Q4C(
+					"y": self.Q4C(
 						self.topc4[atype][beta]["y"], 
 						self.topc2[atype][beta]["y"]),
 
-					"y_error": Q4C_error(
+					"y_error": self.Q4C_error(
 						self.topc4[atype][beta]["y"],
 						self.topc4[atype][beta]["y_error"],
 						self.topc2[atype][beta]["y"],
 						self.topc2[atype][beta]["y_error"]),
 				}
 
+	def _calculate_R(self):
+		"""Calculates R = Q^4_C / Q^2 for my data."""
+
+		# Gets Q4C and R
+		for atype in self.analysis_types:
+
+			for beta in self.beta_values:
+
 				self.topcR[atype][beta] = {
 				
-					"y": R(
+					"y": self.R(
 						self.topc4C[atype][beta]["y"], 
 						self.topc2[atype][beta]["y"]),
 
-					"y_error": R_error(
+					"y_error": self.R_error(
 						self.topc4C[atype][beta]["y"], 
 						self.topc4C[atype][beta]["y_error"], 
 						self.topc2[atype][beta]["y"], 
@@ -259,12 +219,6 @@ class TopcRPostAnalysis(PostCore):
 				}
 
 				self.data[atype][beta] = self.topcR[atype][beta]
-
-		# comp_lattices = { # D ensembles
-		# 	6.0: {"size": 14**4, "q2": 3.028, "q4": 28.14, "q4c": 0.63, "R": 0.209, "L": 14, "beta_article": 5.96},
-		# 	6.1: {"size": 19**4, "q2": 3.523, "q4": 37.8, "q4c": 0.56, "R": 0.16, "L": 19, "beta_article": 6.13},
-		# 	6.2: {"size": 21**4, "q2": 3.266, "q4": 32.7, "q4c": 0.68, "R": 0.21, "L": 21, "beta_article": 6.21},
-		# }
 
 		# for beta in self.beta_values:
 		# 	print "="*100
@@ -311,6 +265,74 @@ class TopcRPostAnalysis(PostCore):
 		# 		self.data[atype][beta] = {"y": _R_mean, "y_error": _R_err}
 		# 		self.data_raw[atype][beta] = self.topcR_raw[beta][atype]
 
+	def compare_lattice_values(self, atype="bootstrap"):
+		"""
+		Compares values at flow times given by the data we are comparing against
+		"""
+
+		x_pvals_article = []
+		y_pvals_article = []
+
+		x_pvals_me = []
+		y_pvals_me = []
+
+		article_data2 = {}
+		for data_set in sorted(self.data_article.keys()):
+			for size in sorted(self.data_article[data_set].keys()):
+				article_data2[size] = {}
+
+		for data_set in sorted(self.data_article.keys()):
+			for size in sorted(self.data_article[data_set].keys()):
+				article_data2[size][data_set] = self.data_article[data_set][size]
+
+
+		# for size in sorted(self.data_article[data_set].keys()):
+		for size in sorted(article_data2.keys()):
+			t0 = self.data_article["B"][size]["t0"]
+			print "="*150
+			print "Reference value t0: %f" % t0
+			print "\nMy data:"
+
+			for beta in self.beta_values:
+				# Gets the approximate same t0 ref. value
+				t0_index = np.argmin(np.abs(self.flow_times[beta] - t0))
+				print "Beta: %4.2f Q2: %10.5f Q2_err: %10.5f Q4: %10.5f \
+Q4_err: %10.5f Q4C: %10.5f Q4C_err: %10.5f R: %10.5f R_err: %10.5f" % (beta,
+					self.topc2[atype][beta]["y"][t0_index], 
+					self.topc2[atype][beta]["y_error"][t0_index],
+					self.topc4[atype][beta]["y"][t0_index], 
+					self.topc4[atype][beta]["y_error"][t0_index],
+					self.topc4C[atype][beta]["y"][t0_index], 
+					self.topc4C[atype][beta]["y_error"][t0_index],
+					self.topcR[atype][beta]["y"][t0_index], 
+					self.topcR[atype][beta]["y_error"][t0_index])
+			print "\nArticle data(normalized by volume):"
+
+			for data_set in sorted(article_data2[size].keys()):
+
+				print "Dataset: %s Beta: %2.2f Volume: %f t0: %f" % (
+					data_set, self.data_article[data_set][size]["beta"],
+					self.data_article[data_set][size]["V"],	t0)
+				print "Q2:  %10.5f Q2_err:  %10.5f" % (
+					self.data_article[data_set][size]["Q2_norm"],
+					self.data_article[data_set][size]["Q2Err_norm"])
+				print "Q4:  %10.5f Q4_err:  %10.5f" % (
+					self.data_article[data_set][size]["Q4_norm"],
+					self.data_article[data_set][size]["Q4Err_norm"])
+				print "Q4C: %10.5f Q4C_err: %10.5f" % (
+					self.data_article[data_set][size]["Q4C_norm"],
+					self.data_article[data_set][size]["Q4CErr_norm"])
+				print "R:   %10.5f R_err:   %10.5f" % (
+					self.data_article[data_set][size]["R_norm"],
+					self.data_article[data_set][size]["RErr_norm"])
+
+				if size==1:
+					x_pvals_article.append(t0)
+					y_pvals_article.append((
+						self.data_article[data_set][size]["R_norm"],
+						self.data_article[data_set][size]["RErr_norm"])
+					)
+			print ""
 
 
 	def set_analysis_data_type(self, analysis_data_type="bootstrap"):
@@ -343,6 +365,279 @@ class TopcRPostAnalysis(PostCore):
 		kwargs["y_limits"] = [-1,1]
 		# kwargs["x_limits"] = [0.5, 0.6]
 		super(TopcRPostAnalysis, self).plot(*args, **kwargs)
+
+
+	def _normalize_article_values(self):
+		"""
+		Normalizes values from article based on physical volume.
+		"""
+		for data_set in self.data_article:
+			for size in self.data_article[data_set]:
+				# Set up volume in physical units
+				L = self.data_article[data_set][size]["L"]
+				a = self.data_article[data_set][size]["a"]
+				self.data_article[data_set][size]["aL"] = a*L
+				V = float(self.data_article[data_set][size]["aL"]**4)
+				self.data_article[data_set][size]["V"] = V
+
+				# Normalize Q^2 by V
+				Q2 = self.data_article[data_set][size]["Q2"]
+				Q2Err = self.data_article[data_set][size]["Q2Err"]
+				Q2_norm = Q2/V
+				Q2Err_norm = Q2Err/V
+				self.data_article[data_set][size]["Q2_norm"] = Q2_norm
+				self.data_article[data_set][size]["Q2Err_norm"] = Q2Err_norm
+
+				# Normalize Q^4 by V
+				Q4 = self.data_article[data_set][size]["Q4"]
+				Q4Err = self.data_article[data_set][size]["Q4Err"]
+				Q4_norm = Q4/V**2
+				Q4Err_norm = Q4Err/V**2
+				self.data_article[data_set][size]["Q4_norm"] = Q4_norm
+				self.data_article[data_set][size]["Q4Err_norm"] = Q4Err_norm
+
+				# Recalculates 4th cumulant
+				Q4C_norm = self.Q4C(Q4_norm, Q2_norm)
+				Q4CErr_norm = self.Q4C_error(Q4_norm, Q4Err_norm, Q2_norm, 
+					Q2Err_norm)
+				self.data_article[data_set][size]["Q4C_norm"] = Q4C_norm
+				self.data_article[data_set][size]["Q4CErr_norm"] = Q4CErr_norm
+
+				# Recalculates R
+				R_norm = self.R(Q4C_norm, Q2_norm)
+				RErr_norm = self.R_error(Q4C_norm, Q4CErr_norm, Q2_norm, 
+					Q2Err_norm)
+				self.data_article[data_set][size]["R_norm"] = R_norm
+				self.data_article[data_set][size]["RErr_norm"] = RErr_norm
+
+		# for data_set in sorted(self.data_article.keys()):
+		# 	for size in sorted(self.data_article[data_set].keys()):
+		# 		print "="*50
+		# 		print "Dataset: %s Size number: %s Volume: %f" % (
+		# 			data_set, size, self.data_article[data_set][size]["V"])
+		# 		print "Q2: %10.5f %10.5f" % (
+		# 			self.data_article[data_set][size]["Q2_norm"],
+		# 			self.data_article[data_set][size]["Q2Err_norm"])
+		# 		print "Q4: %10.5f %10.5f" % (
+		# 			self.data_article[data_set][size]["Q4_norm"],
+		# 			self.data_article[data_set][size]["Q4Err_norm"])
+		# 		print "Q4C: %10.5f %10.5f" % (
+		# 			self.data_article[data_set][size]["Q4C_norm"],
+		# 			self.data_article[data_set][size]["Q4CErr_norm"])
+		# 		print "R: %10.5f %10.5f" % (
+		# 			self.data_article[data_set][size]["R_norm"],
+		# 			self.data_article[data_set][size]["RErr_norm"])
+
+	def _setup_article_values(self):
+		"""
+		Sets up the article values from https://arxiv.org/abs/1506.06052
+
+		Format:
+			{Lattice type}/{Beta value}/{all other stuff}
+		"""
+
+		self.data_article = {
+			"A": 
+			{
+				1: {
+					"beta": 5.96,
+					"t0": 2.79, # t0/a^2
+					"L": 10,
+					# "aL": 1.0, # [fm]
+					"a": 0.102, # [fm]
+					"Q2": 0.701,
+					"Q2Err": 0.006,
+					"Q4": 1.75,
+					"Q4Err": 0.04,
+					"Q4C": 0.273,
+					"Q4CErr": 0.020,
+					"R": 0.39,
+					"RErr": 0.03,
+				},
+			},
+
+			"B": 
+			{
+				1: {
+					"beta": 5.96,
+					"t0": 2.79, # t0/a^2
+					"L": 12,
+					# "aL": 1.2, # [fm]
+					"a": 0.102, # [fm]
+					"Q2": 1.617,
+					"Q2Err": 0.006,
+					"Q4": 8.15,
+					"Q4Err": 0.07,
+					"Q4C": 0.30,
+					"Q4CErr": 0.04,
+					"R": 0.187,
+					"RErr": 0.024,
+				},
+				2: {
+					"beta": 6.05,
+					"t0": 3.78, # t0/a^2
+					"L": 14,
+					# "aL": 1.2, # [fm]
+					"a": 0.087, # [fm]
+					"Q2": 1.699,
+					"Q2Err": 0.007,
+					"Q4": 9.07,
+					"Q4Err": 0.09,
+					"Q4C": 0.41,
+					"Q4CErr": 0.05,
+					"R": 0.24,
+					"RErr": 0.03,					
+				},
+				3: {
+					"beta": 6.13,
+					"t0": 4.87, # t0/a^2
+					"L": 16,
+					# "aL": 1.2, # [fm]
+					"a": 0.077, # [fm]
+					"Q2": 1.750,
+					"Q2Err": 0.007,
+					"Q4": 9.58,
+					"Q4Err": 0.09,
+					"Q4C": 0.39,
+					"Q4CErr": 0.05,
+					"R": 0.22,
+					"RErr": 0.03,
+				},
+				4: {
+					"beta": 6.21,
+					"t0": 6.20, # t0/a^2
+					"L": 18,
+					# "aL": 1.2, # [fm]
+					"a": 0.068, # [fm]
+					"Q2": 1.741,
+					"Q2Err": 0.007,
+					"Q4": 9.44,
+					"Q4Err": 0.09,
+					"Q4C": 0.35,
+					"Q4CErr": 0.05,
+					"R": 0.20,
+					"RErr": 0.03,
+				},
+			},
+
+			"C": 
+			{
+				1: {
+					"beta": 5.96,
+					"t0": 2.79, # t0/a^2
+					"L": 13,
+					# "aL": 1.3, # [fm]
+					"a": 0.102, # [fm]
+					"Q2": 2.244,
+					"Q2Err": 0.006,
+					"Q4": 15.50,
+					"Q4Err": 0.10,
+					"Q4C": 0.40,
+					"Q4CErr": 0.05,
+					"R": 0.177,
+					"RErr": 0.023,
+				},
+			},
+
+			"D": {
+				1: {
+					"beta": 5.96,
+					"t0": 2.79, # t0/a^2
+					"L": 14,
+					# "aL": 1.4, # [fm]
+					"a": 0.102, # [fm]
+					"Q2": 3.028,
+					"Q2Err": 0.006,
+					"Q4": 28.14,
+					"Q4Err": 0.14,
+					"Q4C": 0.63,
+					"Q4CErr": 0.07,
+					"R": 0.209,
+					"RErr": 0.023,
+				},
+				2: {
+					"beta": 6.05,
+					"t0": 3.78, # t0/a^2
+					"L": 17,
+					# "aL": 1.5, # [fm]
+					"a": 0.087, # [fm]
+					"Q2": 3.686,
+					"Q2Err": 0.014,
+					"Q4": 41.6,
+					"Q4Err": 0.4,
+					"Q4C": 0.83,
+					"Q4CErr": 0.19,
+					"R": 0.22,
+					"RErr": 0.05,
+				},
+				3: {
+					"beta": 6.13,
+					"t0": 4.87, # t0/a^2
+					"L": 19,
+					# "aL": 1.5, # [fm]
+					"a": 0.077, # [fm]
+					"Q2": 3.523,
+					"Q2Err": 0.013,
+					"Q4": 37.8,
+					"Q4Err": 0.3,
+					"Q4C": 0.56,
+					"Q4CErr": 0.17,
+					"R": 0.16,
+					"RErr": 0.05,
+				},
+				4: {
+					"beta": 6.21,
+					"t0": 6.20, # t0/a^2
+					"L": 21,
+					# "aL": 1.4, # [fm]
+					"a": 0.068, # [fm]
+					"Q2": 3.266,
+					"Q2Err": 0.012,
+					"Q4": 32.7,
+					"Q4Err": 0.3,
+					"Q4C": 0.68,
+					"Q4CErr": 0.15,
+					"R": 0.21,
+					"RErr": 0.05,
+				},
+			},
+
+			"E": {
+				1: {
+					"beta": 5.96,
+					"t0": 2.79, # t0/a^2
+					"L": 15,
+					# "aL": 1.5, # [fm]
+					"a": 0.102, # [fm]
+					"Q2": 3.982,
+					"Q2Err": 0.006,
+					"Q4": 48.38,
+					"Q4Err": 0.18,
+					"Q4C": 0.81,
+					"Q4CErr": 0.09,
+					"R": 0.202,
+					"RErr": 0.023,
+				},
+			},
+
+			"F": {
+				1: {
+					"beta": 5.96,
+					"t0": 2.79, # t0/a^2
+					"L": 16,
+					# "aL": 1.6, # [fm]
+					"a": 0.102, # [fm]
+					"Q2": 5.167,
+					"Q2Err": 0.006,
+					"Q4": 80.90,
+					"Q4Err": 0.22,
+					"Q4C": 0.81,
+					"Q4CErr": 0.11,
+					"R": 0.157,
+					"RErr": 0.022,
+				},
+			},
+		}
 
 def main():
 	exit("Exit: TopcRPostAnalysis not intended to be a standalone module.")
