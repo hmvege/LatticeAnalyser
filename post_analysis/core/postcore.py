@@ -284,9 +284,9 @@ class PostCore(object):
 		if self.verbose:
 			print "Figure saved in %s" % fname
 
-		if self.observable_name_compact == "energy":
-			plt.show()
-	
+		# if self.observable_name_compact == "energy":
+		# 	plt.show()
+
 		plt.close(fig)
 
 	def _get_plot_figure_name(self, output_folder=None):

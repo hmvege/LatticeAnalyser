@@ -14,9 +14,9 @@ class MCIntervalAnalyser(FlowAnalyser):
 			self.observable_output_folder_path
 		self.post_analysis_folder_old = self.post_analysis_folder
 
-	def set_MC_interval(self, MC_interval):
+	def set_mc_interval(self, mc_interval):
 		self.y = copy.deepcopy(self.y_original)
-		self.y = self.y[MC_interval[0]:MC_interval[1],:]
+		self.y = self.y[mc_interval[0]:mc_interval[1],:]
 
 		self.N_configurations = self.y.shape[0]
 
@@ -28,19 +28,19 @@ class MCIntervalAnalyser(FlowAnalyser):
 		self.autocorrelations_errors = np.zeros(
 			(self.NFlows, self.N_configurations/2))
 
-		self.MC_interval = MC_interval
+		self.mc_interval = mc_interval
 
 		# Creates a new folder to store t0 results in
 		self.observable_output_folder_path = os.path.join(
 			self.observable_output_folder_path_old,
-			"MCint%03d-%03d" % MC_interval)
+			"MCint%03d-%03d" % mc_interval)
 		check_folder(self.observable_output_folder_path, 
 			self.dryrun, self.verbose)
 
 		# Checks that {post_analysis_folder}/{observable_name}/{time interval}
 		# exists.
 		self.post_analysis_folder = os.path.join(self.post_analysis_folder_old,
-			"%03d-%03d" % self.MC_interval)
+			"%03d-%03d" % self.mc_interval)
 		check_folder(self.post_analysis_folder, self.dryrun, self.verbose)
 
 		# Resets some of the ac, jk and bs variable
@@ -59,6 +59,6 @@ class MCIntervalAnalyser(FlowAnalyser):
 			self.observable_name_compact)
 		return_string += info_string("Beta", "%.2f" % self.beta)
 		return_string += info_string("Time interval",
-			"[%d,%d)" % self.MC_interval)
+			"[%d,%d)" % self.mc_interval)
 		return_string += "\n" + "="*100
 		return return_string

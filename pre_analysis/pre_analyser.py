@@ -7,8 +7,8 @@ from tqdm import tqdm
 
 def _check_splits(NT, numsplits):
 	"""Checks if the temporal dimension has been split into good .intervals"""
-	assert NT % numsplits == 0, ("Bad number of splits: NT % "
-			"numplits = %d " % (NT % numsplits))
+	assert NT % numsplits == 0, ("Bad number of splits: NT %% "
+			"numplits = %d" % (NT % numsplits))
 
 def _check_intervals(intervals, numsplits):
 	"""Sets up the intervals"""
@@ -315,7 +315,7 @@ def analyse_topcMCTime(params, numsplits=None, intervals=None):
 	_check_intervals(intervals, numsplits)
 
 	NCfgs = analyse_topcMC.N_configurations
-	if intervals == None:
+	if isinstance(intervals, types.NoneType):
 		split_interval = NCfgs/numsplits
 		intervals = zip(
 			range(0, NCfgs+1, split_interval), 
@@ -326,7 +326,7 @@ def analyse_topcMCTime(params, numsplits=None, intervals=None):
 	MC_interval = iter(intervals)
 
 	for MC_int in MC_interval:
-		analyse_topcMC.set_MC_interval(MC_int)
+		analyse_topcMC.set_mc_interval(MC_int)
 		analyse_default(analyse_topcMC, N_bs)
 
 def analyse_topsusMCTime(params, numsplits=None, intervals=None):
@@ -351,7 +351,7 @@ def analyse_topsusMCTime(params, numsplits=None, intervals=None):
 	MC_interval = iter(intervals)
 
 	for MC_int in MC_interval:
-		analyse_topcMC.set_MC_interval(MC_int)
+		analyse_topcMC.set_mc_interval(MC_int)
 		analyse_default(analyse_topcMC, N_bs)
 
 def pre_analysis(parameters):

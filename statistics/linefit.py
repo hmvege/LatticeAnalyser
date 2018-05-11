@@ -482,8 +482,6 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 			tau_int[ilow:ihigh], tau_int_err[ilow:ihigh], F=raw_func,
 			FDer=raw_func_der, plot_samples=False)
 
-		print y0, y0_error, tau_int0
-
 	elif extrapolation_method == "nearest":
 		x0 = x[fit_index]
 		y0 = y[fit_index]
@@ -695,7 +693,8 @@ def _extract_bootstrap_fit(x0, f, x, y, y_err, y_raw, tau_int, tau_int_err,
 		plot_yerr = np.zeros((y_raw.shape[0], y_raw.shape[1], 2))
 
 	# Gets the bootstrapped line fits
-	for i, y_sample in enumerate(tqdm(y_raw.T, desc="Sample line fitting")):
+	# for i, y_sample in enumerate(tqdm(y_raw.T, desc="Sample line fitting")):
+	for i, y_sample in enumerate(y_raw.T):
 		p, pcov = sciopt.curve_fit(f, x, y_sample, p0=[0.01, 0.18])
 		pfit_err = np.sqrt(np.diag(pcov))
 

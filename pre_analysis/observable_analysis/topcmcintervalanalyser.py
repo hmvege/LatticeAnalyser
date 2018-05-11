@@ -15,10 +15,10 @@ class TopcMCIntervalAnalyser(MCIntervalAnalyser):
 		self.NT = self.y_original.shape[-1]
 		self.observable_output_folder_path_old = self.observable_output_folder_path
 
-	def set_MC_interval(self, *args):
+	def set_mc_interval(self, *args):
 		"""Runs first the inherited time setter function, then its own."""
-		super(TopcMCIntervalAnalyser, self).set_MC_interval(*args)
-		self.observable_name = r"Q in MC interval $[%d,%d)$" % self.MC_interval
+		super(TopcMCIntervalAnalyser, self).set_mc_interval(*args)
+		self.observable_name = r"Q in MC interval $[%d,%d)$" % self.mc_interval
 
 
 def main():

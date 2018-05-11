@@ -19,6 +19,9 @@ class TopsusCore(PostCore):
 	# x_label_continuum = r"$a/{{r_0}^2}$"
 	x_label_continuum = r"$a^2/t_0$"
 
+	# For specialized observables
+	extra_continuum_msg = ""
+
 	# For topsus function
 	hbarc = 0.19732697 #eV micro m
 
@@ -234,11 +237,14 @@ class TopsusCore(PostCore):
 		"""Prints the NF from the Witten-Veneziano formula."""
 		self.NF, self.NF_error = witten_veneziano(self.topsus_continuum, 
 			self.topsus_continuum_error)
-		msg =  "\n    Topsus = %.16f" % self.topsus_continuum
+		msg = "Observable: %s" % self.observable_name_compact
+		msg += "\n    Fit target: %.4f" % self.fit_target
+		msg += "\n    Topsus = %.16f" % self.topsus_continuum
 		msg += "\n    Topsus_error = %.16f" % self.topsus_continuum_error
 		msg += "\n    N_f = %.16f" % self.NF
 		msg += "\n    N_f_error = %.16f" % self.NF_error
 		msg += "\n    Chi^2 = %.16f" % self.chi_squared
+		msg += self.extra_continuum_msg
 		msg += "\n"
 		print msg 
 

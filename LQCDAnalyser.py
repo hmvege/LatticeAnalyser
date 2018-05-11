@@ -64,24 +64,25 @@ def main():
 
 	observables += observables_euclidean_time
 
-	obs_exlusions = ["plaq", "energy", "topcr", "topc2", "topc4", "topc", "topct", "topcte", "topcMC", "topsus"]
+	obs_exlusions = ["plaq", "energy", "topc", "topc2", "topc4", "topcr", "topcMC", "topsus"]
 	observables = list(set(set(observables) - set(obs_exlusions)))
+
 
 	# observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["topc", "plaq", "energy", "topsus", "topcr"]
 	# observables = ["topcr", "qtq0eff"]
 	# observables = ["qtq0eff"]
-	observables = ["topcr", "topsus"]
+	# observables = ["topcr", "topsus"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
 	# observables = ["qtq0eff"]
 	# observables = ["topsus"]
-	# observables = ["energy"]
+	# observables = ["topcMC"]
 	# observables = ["topc"]
 
 	#### Base parameters
 	N_bs = 500
 	dryrun = False
-	verbose = True
+	verbose = False
 	parallel = True
 	numprocs = 8
 	base_parameters = {"N_bs": N_bs, "dryrun": dryrun, "verbose": verbose, 
@@ -141,7 +142,7 @@ def main():
 	intervals_eucl = None
 
 	# Number of different sectors we will analyse in monte carlo time
-	MC_time_splits = 4
+	MC_time_splits = 5
  
 	# Extraction point in sqrt(8*t) for q0 in qtq0
 	q0_flow_times = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
@@ -152,6 +153,7 @@ def main():
 	
 	# Data types to be looked at in the post-analysis.
 	post_analysis_data_type = ["bootstrap", "jackknife", "unanalyzed"]
+	# post_analysis_data_type = ["unanalyzed"]
 
 	#### Analysis batch setups
 	default_params = {
@@ -230,9 +232,9 @@ def main():
 	# analysis_parameter_list = [databeta645]
 	# analysis_parameter_list = [smaug_data_beta61_analysis]
 
-	#### Submitting observable-batches
-	for analysis_parameters in analysis_parameter_list:
-		pre_analysis(analysis_parameters)
+	# #### Submitting observable-batches
+	# for analysis_parameters in analysis_parameter_list:
+	# 	pre_analysis(analysis_parameters)
 
 	#### Submitting post-analysis data
 	if len(analysis_parameter_list) >= 3:

@@ -74,9 +74,6 @@ class FlowAnalyser(object):
 		self.y = data["obs"]
 		self.flow_epsilon = data["FlowEpsilon"]
 
-		# Sets the MC interval
-		self._set_mc_interval(mc_interval)
-
 		# Sets lattice parameters
 		self.beta = data["beta"]
 		self.a = get_lattice_spacing(self.beta)
@@ -132,6 +129,9 @@ class FlowAnalyser(object):
 			self.observable_name_compact)
 		check_folder(self.post_analysis_folder, self.dryrun, 
 			verbose=self.verbose)
+
+		# Sets the MC interval
+		self._set_mc_interval(mc_interval)
 
 		# Makes a backup, for later use
 		self.post_analysis_folder_old = self.post_analysis_folder
@@ -230,7 +230,20 @@ class FlowAnalyser(object):
 		self.y = self.y[mc_interval]
 
 		# Updates the title name or label to include range
+		self.fig_label = r"MC interval: $[%d, %d]$" % mc_interval
 
+		# Checks and creates file folders for mc interval
+		self.observable_output_folder_path = os.path.join(
+			self.observable_output_folder_path,
+			"MCint%03d-%03d" % mc_interval)
+		check_folder(self.observable_output_folder_path, 
+			self.dryrun, self.verbose)
+
+		# Checks that {post_analysis_folder}/{observable_name}/{mc-interval}
+		# exists.
+		self.post_analysis_folder = os.path.join(self.post_analysis_folder,
+			"%03d-%03d" % self.mc_interval)
+		check_folder(self.post_analysis_folder, self.dryrun, self.verbose)
 
 	def __check_ac(self, fname):
 		"""
@@ -991,6 +1004,9 @@ class FlowAnalyser(object):
 		return_string += info_string("Batch name", self.batch_name)
 		return_string += info_string("Observable", self.observable_name_compact)
 		return_string += info_string("Beta", "%.2f" % self.beta)
+		if not isinstance(self.mc_interval, types.NoneType):
+			return_string += info_string("MC interval",
+				"[%d,%d)" % self.mc_interval)
 		return_string += "\n" + "="*100
 		return return_string
 

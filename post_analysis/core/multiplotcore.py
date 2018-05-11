@@ -38,8 +38,10 @@ class MultiPlotCore(PostCore):
 							data[beta][sub_obs]["ac"]["tau_int_err"]
 					
 					# Retrieves raw data
-					sub_values[self.analysis_data_type] = \
+					sub_values["y_raw"] = \
 						data_raw[beta][self.observable_name_compact][sub_obs]
+					# sub_values[self.analysis_data_type] = \
+					# 	data_raw[beta][self.observable_name_compact][sub_obs]
 					
 					sub_values["label"] = r"%s $\beta=%2.2f$ %s" % (
 						self.size_labels[beta], beta, 
@@ -48,28 +50,28 @@ class MultiPlotCore(PostCore):
 					values[sub_obs] = sub_values
 			else:
 				sorted_intervals = sorted(data[beta].keys())
+
+				# Modulo division in order to avoid going out of range in 
+				# intervals.
+				int_key = sorted_intervals[interval_index % len(sorted_intervals)]
+
 				values["a"] = get_lattice_spacing(beta)
-				values["x"] = values["a"] * np.sqrt(8*data[beta] \
-					[sorted_intervals[interval_index]]["x"])
-				values["y"] = data[beta] \
-					[sorted_intervals[interval_index]]["y"]
-				values["y_err"] = data[beta] \
-					[sorted_intervals[interval_index]]["y_error"]
+				values["x"] = values["a"] * np.sqrt(8*data[beta][int_key]["x"])
+				values["y"] = data[beta][int_key]["y"]
+				values["y_err"] = data[beta][int_key]["y_error"]
 
 				if self.with_autocorr:
-					values["tau_int"] = data[beta] \
-						[sorted_intervals[interval_index]]["ac"]["tau_int"]
+					values["tau_int"] = data[beta][int_key]["ac"]["tau_int"]
 					values["tau_int_err"] = data[beta] \
-						[sorted_intervals[interval_index]]["ac"]["tau_int_err"]
+						[int_key]["ac"]["tau_int_err"]
 
 				values["y_raw"] = \
-					data_raw[beta][self.observable_name_compact] \
-					[sorted_intervals[interval_index]]
+					data_raw[beta][self.observable_name_compact][int_key]
 				values["label"] = r"%s $\beta=%2.2f$ %s" % (
 					self.size_labels[beta], beta, 
-					self._convert_label(sorted_intervals[interval_index]))
+					self._convert_label(int_key))
 				values["color"] = self.colors[beta]
-				values["interval"] = sorted_intervals[interval_index]
+				values["interval"] = int_key
 			self.plot_values[beta] = values
 
 	def _convert_label(self, label):

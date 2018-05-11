@@ -35,9 +35,14 @@ class TopsusMCIntervalPostAnalysis(MultiPlotCore, TopsusCore):
 
 		check_folder(self.output_folder_path, False, self.verbose)
 
-		self.interval = str(sorted(self.plot_values.values())[0]["interval"])
+		# Sets up MC intervals in usefull formats
+		self.intervals = [self.plot_values[i]["interval"] \
+			for i in sorted(self.plot_values.keys())]
+		self.intervals_str = ", ".join([i for i in self.intervals])
+		self.extra_continuum_msg = \
+			"\n    MC intervals: %s" % self.intervals_str
 
-		title_addendum = r", MC-Interval: $[%s)$" % self.interval
+		title_addendum = ", MC-Intervals:" + self.intervals_str
 
 		super(TopsusMCIntervalPostAnalysis, self).plot_continuum(fit_target,
 			title_addendum=title_addendum, **kwargs)
