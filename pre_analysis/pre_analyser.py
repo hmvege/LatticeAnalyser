@@ -380,19 +380,20 @@ def pre_analysis(parameters):
 
 	# Retrieves data
 	obs_data = DataReader(batch_name, batch_folder, figures_folder, 
-		load_file=parameters["load_file"],
+		load_binary_file=parameters["load_file"],
+		save_to_binary=parameters["save_to_binary"],
 		flow_epsilon=parameters["flow_epsilon"], NCfgs=parameters["NCfgs"],
 		create_perflow_data=parameters["create_perflow_data"],
-		verbose=_bp["verbose"], dryrun=_bp["dryrun"],
 		correct_energy=parameters["correct_energy"],
-		lattice_sizes=parameters["lattice_sizes"])
+		lattice_sizes=parameters["lattice_sizes"], verbose=_bp["verbose"],
+		dryrun=_bp["dryrun"])
 
 	# Writes a parameters file for the post analysis
 	obs_data.write_parameter_file()
 
 	# Writes raw observable data to a single binary file
-	if parameters["save_to_binary"] and not parameters["load_file"]:
-		obs_data.write_single_file()
+	# if parameters["save_to_binary"] and not parameters["load_file"]:
+	# 	obs_data.write_single_file()
 	print "="*100
 
 	# Builds parameters list to be passed to analyser

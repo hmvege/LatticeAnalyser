@@ -3,7 +3,7 @@ from pre_analysis.core.flowanalyser import FlowAnalyser
 class Topc2Analyser(FlowAnalyser):
 	"""Class for topological charge with quartic topological charge."""
 	observable_name = r"$\langle Q^2 \rangle$"
-	observable_name_compact = "topq2"
+	observable_name_compact = "topc2"
 	x_label = r"$\sqrt{8t_{flow}}[fm]$"
 	y_label = r"$\langle Q^2 \rangle$"
 

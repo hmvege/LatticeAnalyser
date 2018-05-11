@@ -48,8 +48,6 @@ class TopsustAnalyser(TopsusAnalyserCore):
 
 		self.y *= y_qe0
 
-		# self.y = np.abs(self.y) # If not absolute value, will get error!
-
 		# Creates a new folder to store t0 results in
 		self.observable_output_folder_path = os.path.join(
 			self.observable_output_folder_path_old, 

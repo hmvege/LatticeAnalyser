@@ -24,10 +24,10 @@ class MultiPlotCore(PostCore):
 				# Case where we have sub sections of observables, e.g. in 
 				# euclidean time.
 				for sub_obs in self.observable_intervals[beta]:
-					if beta == 6.45: self.flow_time *= 2
 					sub_values = {}
 					sub_values["a"] = get_lattice_spacing(beta)
-					sub_values["x"] = sub_values["a"]*np.sqrt(8*self.flow_time)
+					sub_values["x"] = sub_values["a"] * \
+						np.sqrt(8*data[beta][sub_obs]["x"])
 					sub_values["y"] = data[beta][sub_obs]["y"]
 					sub_values["y_err"] = data[beta][sub_obs]["y_error"]
 
@@ -49,7 +49,8 @@ class MultiPlotCore(PostCore):
 			else:
 				sorted_intervals = sorted(data[beta].keys())
 				values["a"] = get_lattice_spacing(beta)
-				values["x"] = values["a"]* np.sqrt(8*self.flow_time)
+				values["x"] = values["a"] * np.sqrt(8*data[beta] \
+					[sorted_intervals[interval_index]]["x"])
 				values["y"] = data[beta] \
 					[sorted_intervals[interval_index]]["y"]
 				values["y_err"] = data[beta] \

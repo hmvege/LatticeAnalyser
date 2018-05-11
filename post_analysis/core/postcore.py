@@ -59,12 +59,9 @@ class PostCore(object):
 		self.verbose = verbose
 		self.dryrun = dryrun
 
-		# Retrieves relevant data values and sorts them by beta values
-		self.flow_time = data.flow_time
-
 		self.beta_values = sorted(data.beta_values)
 
-		self._setup_flow_times()
+		# self._setup_flow_times()
 
 		self._setup_analysis_types(data.analysis_types)
 
@@ -201,10 +198,9 @@ class PostCore(object):
 	def _initiate_plot_values(self, data, data_raw):
 		"""Sorts data into a format specific for the plotting method."""
 		for beta in sorted(data.keys()):
-			ftime = self.flow_times[beta]
 			values = {}
 			values["a"] = get_lattice_spacing(beta)
-			values["x"] = values["a"]* np.sqrt(8*ftime)
+			values["x"] = values["a"]* np.sqrt(8*data[beta]["x"])
 			values["y"] = data[beta]["y"]
 			values["y_err"] = data[beta]["y_error"]
 			values["y_raw"] = data_raw[beta][self.observable_name_compact]

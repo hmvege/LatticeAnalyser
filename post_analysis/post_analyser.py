@@ -81,7 +81,7 @@ def default_post_analysis(PostAnalysis, data, figures_folder, analysis_type,
 def plaq_post_analysis(*args, **kwargs):
 	default_post_analysis(PlaqPostAnalysis, *args, **kwargs)
 
-def post_analysis(batch_folder, batch_beta_names, observables,
+def post_analysis(beta_parameter_list, observables,
 	topsus_fit_targets, line_fit_interval_points, energy_fit_target,
 	q0_flow_times, euclidean_time_percents, figures_folder="figures", 
 	post_analysis_data_type=None, bval_to_plot="all", gif_flow_range=None,
@@ -90,8 +90,7 @@ def post_analysis(batch_folder, batch_beta_names, observables,
 	Post analysis of the flow observables.
 
 	Args: 
-		batch_folder: string, folder containing all the beta data.
-		batch_beta_names: list of the beta folder names.
+		beta_parameter_list: list of the beta batch parameters.
 		topsus_fit_targets: list of x-axis points to line fit at.
 		line_fit_interval_points: int, number of points which we will use in 
 			line fit.
@@ -100,13 +99,18 @@ def post_analysis(batch_folder, batch_beta_names, observables,
 		euclidean_time_percents: points where we perform qtq0e at.
 	"""
 
-	print "="*100 + "\nPost-analysis: retrieving data from: %s" % batch_folder
+	batch_folders = [os.path.join(b["batch_folder"], b["batch_name"]) \
+		for b in beta_parameter_list]
+
+	print "="*100 
+	print "Post-analysis: retrieving data from folders: %s" % (
+		", ".join(batch_folders))
 
 	if post_analysis_data_type == None:
 		post_analysis_data_type = ["bootstrap", "jackknife", "unanalyzed"]
 
 	# Loads data from post analysis folder
-	data = PostAnalysisDataReader(batch_folder)
+	data = PostAnalysisDataReader(batch_folders)
 
 	continuum_targets = topsus_fit_targets
 

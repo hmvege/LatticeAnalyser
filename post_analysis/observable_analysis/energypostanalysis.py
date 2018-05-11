@@ -85,27 +85,16 @@ class EnergyPostAnalysis(PostCore):
 		alpha = 4*np.pi / (beta0 * np.log(q/LAMBDA**2))
 		return alpha
 
-	# def _function_correction(self, x):
-	# 	"""Function that corrects the energy data."""
-	# 	return x*self.flow_time**2
-
 	def _initiate_plot_values(self, data, data_raw):
 		# Sorts data into a format specific for the plotting method
-		print self.flow_time
 		for beta in sorted(data.keys()):
-			if beta==6.45: continue
 			values = {}
 			values["beta"] = beta
 			values["a"] = get_lattice_spacing(beta)
 
-			values["x"] = self.flow_time/self.r0**2*values["a"]**2
-			values["y"] = data[beta]["y"]*self.flow_time**2
-			values["y_err"] = data[beta]["y_error"]*self.flow_time**2
-
-			# if beta==6.45:
-			# 	values["x"] *= 2
-			# 	values["y"] *= 4
-			# 	values["y_err"] *= 4
+			values["x"] = data[beta]["x"]/self.r0**2*values["a"]**2
+			values["y"] = data[beta]["y"]*data[beta]["x"]**2
+			values["y_err"] = data[beta]["y_error"]*data[beta]["x"]**2
 
 			if self.with_autocorr:
 				values["tau_int"] = data[beta]["ac"]["tau_int"]

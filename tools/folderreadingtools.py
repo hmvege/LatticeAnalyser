@@ -340,9 +340,10 @@ class DataReader:
 	beta_to_spatial_size = {6.0: 24, 6.1: 28, 6.2: 32, 6.45: 48}
 	fobs = ["plaq", "energy", "topc"]
 
-	def __init__(self, batch_name, batch_folder, figures_folder, load_file=None, 
-			flow_epsilon=0.01, NCfgs=None, create_perflow_data=False, 
-			verbose=True, dryrun=False, correct_energy=False, lattice_sizes=None):
+	def __init__(self, batch_name, batch_folder, figures_folder, 
+			load_binary_file=None, save_to_binary=False, flow_epsilon=0.01, 
+			NCfgs=None, create_perflow_data=False, correct_energy=False, 
+			lattice_sizes=None,	verbose=True, dryrun=False):
 		"""
 		Class that reads and loads the observable data.
 
@@ -350,15 +351,19 @@ class DataReader:
 			batch_name: string containing batch name.
 			batch_folder: string containing location of batch.
 			figures_folder: location of where to place figures from analysis.
-			load_file: bool if we will try to look for a .npy file in 
+			load_binary_file: bool if we will try to look for a .npy file in 
 				batch_folder/batch_name. Will look for the topct file as well.
+			save_to_binary: bool, optional, will try and save file to binary for 
+				quicker loading.
 			flow_epsilon: flow epsilon in flow of file we are loading. Default
 				is 0.01.
 			create_perflow_data: boolean if we are to create a folder containing 
 				per-flow data(as opposite of per-config).
-			verbose: a more verbose run. Default is True.
-			dryrun: dryrun option. Default is False.
-			correct_energy: Correct energy by dividing by 64.
+			correct_energy: Optional, bool. If try, energy is by dividing by 64.
+			lattice_sizes: optional, dictionary with lattice sizes.
+				Format: {[beta_values]: size}
+			verbose: bool, a more verbose run. Default is True.
+			dryrun: bool, dryrun option. Default is False.
 		"""
 
 		self.verbose = verbose
@@ -386,18 +391,7 @@ class DataReader:
 		else:
 			self.NCfgs = NCfgs
 
-		if not load_file:
-			# Make it so that load_file is just a bool, and if prompted, will 
-			# try to locate files in the batch_folder. If the observables or 
-			# topct cant be found, will load them in a regular way
-
-			print ("Retrieving data for batch %s from folder %s" %
-				(self.batch_name, self.batch_folder))
-
-			observables_to_retrieve = self.file_tree.flow_tree
-			self.__retrieve_observable_data(observables_to_retrieve,
-				create_perflow_data=create_perflow_data)
-		else:
+		if load_binary_file:
 			# Retrieves binary file paths if they exist
 			topct_fp = None
 			obs_fp = None
@@ -420,6 +414,10 @@ class DataReader:
 					print "No binary file found for topct. Loads from .dat files."
 					self.__retrieve_observable_data(["topct"],
 						create_perflow_data=create_perflow_data)
+
+					# Writes topct to binary for future fast loading
+					if "topct" in self.file_tree.getFoundFlowObservables():
+						self.__write_file(["topct"])
 				else:
 					print "No data found for topct"
 
@@ -435,11 +433,25 @@ class DataReader:
 						", ".join(self.fobs))
 					self.__retrieve_observable_data(self.fobs,
 						create_perflow_data=create_perflow_data)
+
+					# Writes observables to binary file for future loading.
+					self.__write_file(["plaq", "energy", "topc"])
 				else:
 					print "No data found for %s" % (", ".join(self.fobs))
 
 			if create_perflow_data:
 				self._create_perflow_data()
+		else:
+			# Loads .dat files
+			print ("Retrieving data for batch %s from folder %s" %
+				(self.batch_name, self.batch_folder))
+
+			observables_to_retrieve = self.file_tree.flow_tree
+			self.__retrieve_observable_data(observables_to_retrieve,
+				create_perflow_data=create_perflow_data)
+
+			if save_to_binary:
+				self.write_single_file()
 
 		# Checks that provided folder exists
 		check_folder(self.figures_folder, self.dryrun, verbose=self.verbose)

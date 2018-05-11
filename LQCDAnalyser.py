@@ -64,14 +64,17 @@ def main():
 
 	observables += observables_euclidean_time
 
-	observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
+	obs_exlusions = ["plaq", "energy", "topcr", "topc2", "topc4", "topc", "topct", "topcte", "topcMC", "topsus"]
+	observables = list(set(set(observables) - set(obs_exlusions)))
+
+	# observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["topc", "plaq", "energy", "topsus", "topcr"]
 	# observables = ["topcr", "qtq0eff"]
 	# observables = ["qtq0eff"]
 	observables = ["topcr", "topsus"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
 	# observables = ["qtq0eff"]
-	# observables = ["topsuste"]
+	# observables = ["topsus"]
 	# observables = ["energy"]
 	# observables = ["topc"]
 
@@ -115,9 +118,10 @@ def main():
 	# data_batch_folder = "../GluonAction/data6"
 	data_batch_folder = "../GluonAction/data8"
 	# data_batch_folder = "../topc_modes_8x16"
-	figures_folder = "figures"
-	# data_batch_folder = "../GluonAction/DataGiovanni"
+	data_batch_folder = "../GluonAction/DataGiovanni"
 	# data_batch_folder = "smaug_data_beta61"
+	
+	figures_folder = "figures"
 
 	#### If we need to multiply
 	if "DataGiovanni" in data_batch_folder:
@@ -128,9 +132,6 @@ def main():
 		save_to_binary = False
 	else:
 		correct_energy = True
-
-	#### Different beta values folders:
-	beta_folders = ["beta60", "beta61", "beta62", "beta645"]
 
 	# Indexes to look at for topct.
 	num_t_euclidean_indexes = 5
@@ -151,8 +152,6 @@ def main():
 	
 	# Data types to be looked at in the post-analysis.
 	post_analysis_data_type = ["bootstrap", "jackknife", "unanalyzed"]
-
-	# eff_mass_flow_times = [0, 100, 400, 700, 999]
 
 	#### Analysis batch setups
 	default_params = {
@@ -188,31 +187,31 @@ def main():
 	print 100*"=" + "\n"
 
 	databeta60 = copy.deepcopy(default_params)
-	databeta60["batch_name"] = beta_folders[0]
+	databeta60["batch_name"] = "beta60"
 	databeta60["NCfgs"] = get_num_observables(data_batch_folder,
-		beta_folders[0])
+		databeta60["batch_name"])
 	databeta60["obs_file"] = "24_6.00"
 	databeta60["lattice_size"] = {6.0: 24**3*48}
 
 	databeta61 = copy.deepcopy(default_params)
-	databeta61["batch_name"] = beta_folders[1]
+	databeta61["batch_name"] = "beta61"
 	databeta61["NCfgs"] = get_num_observables(data_batch_folder,
-		beta_folders[1])
+		databeta61["batch_name"])
 	databeta61["obs_file"] = "28_6.10"
 	databeta61["lattice_size"] = {6.1: 28**3*56}
 
 	databeta62 = copy.deepcopy(default_params)
-	databeta62["batch_name"] = beta_folders[2]
+	databeta62["batch_name"] = "beta62"
 	databeta62["NCfgs"] = get_num_observables(data_batch_folder, 
-		beta_folders[2])
+		databeta62["batch_name"])
 	databeta62["obs_file"] = "32_6.20"
 	databeta62["lattice_size"] = {6.2: 32**3*64}
 
 	default_params["flow_epsilon"] = 0.02
 	databeta645 = copy.deepcopy(default_params)
-	databeta645["batch_name"] = beta_folders[3]
+	databeta645["batch_name"] = "beta645"
 	databeta645["NCfgs"] = get_num_observables(data_batch_folder,
-		beta_folders[3])
+		databeta645["batch_name"])
 	databeta645["obs_file"] = "48_6.45"
 	databeta645["lattice_size"] = {6.45: 48**3*96}
 
@@ -226,9 +225,9 @@ def main():
 	#### Adding relevant batches to args
 	analysis_parameter_list = [databeta60, databeta61, databeta62, databeta645]
 	# analysis_parameter_list = [databeta60, databeta61, databeta62]
-	# analysis_parameter_list = [databeta645]
-	# analysis_parameter_list = [databeta62]
 	# analysis_parameter_list = [databeta61, databeta62]
+	# analysis_parameter_list = [databeta62]
+	# analysis_parameter_list = [databeta645]
 	# analysis_parameter_list = [smaug_data_beta61_analysis]
 
 	#### Submitting observable-batches
@@ -237,12 +236,15 @@ def main():
 
 	#### Submitting post-analysis data
 	if len(analysis_parameter_list) >= 3:
-		post_analysis(data_batch_folder, beta_folders, observables, 
+		post_analysis(analysis_parameter_list, observables,
 			topsus_fit_targets, line_fit_interval_points, energy_fit_target,
 			q0_flow_times, euclidean_time_percents,
 			post_analysis_data_type=post_analysis_data_type,
 			figures_folder=figures_folder, gif_flow_range=gif_flow_range,
 			gif_euclidean_time=gif_euclidean_time, verbose=verbose)
+	else:
+		msg = "Need at least 3 different beta values to run post analysis"
+		msg += "(%d given)."% len(analysis_parameter_list)
 
 if __name__ == '__main__':
 	main()

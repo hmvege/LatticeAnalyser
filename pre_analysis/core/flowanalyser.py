@@ -35,12 +35,15 @@ class FlowAnalyser(object):
 	# Resolution in figures created
 	dpi = 350
 
+	# Default figure label is None
+	fig_label = None
+
 	# Hline and Vline plots. Internal variables, accesible through children.
 	plot_hline_at = None
 	plot_vline_at = None
 
-	def __init__(self, data, dryrun=False, parallel=False, numprocs=4,
-		verbose=False, figures_folder=False):
+	def __init__(self, data, mc_interval=None, figures_folder=False, parallel=False, 
+		numprocs=4, dryrun=False, verbose=False):
 		"""
 		Parent class for analyzing flowed observables.
 
@@ -48,26 +51,31 @@ class FlowAnalyser(object):
 			data: DataReader([observable_name]), an DataReader object called 
 				with the compact observable name. Options: "plaq", "energy", 
 				"topc".
-			dryrun: optional dryrun mode. Default is False.
+			mc_interval: optional, tuple, will only look at Monte Carlo history
+				inside interval. Default is using all Monte Carlo of the Monte 
+				Carlo history available.
+			figures_folder: optional argument for where to place the figures 
+				created. Default is "../figures".
 			parallel: optinal argument if we are to run analysis in parallel.
 				Default is False.
 			numprocs: optional argument for the number of processors to use. 
 				Default is 4.
+			dryrun: optional dryrun mode. Default is False.
 			verbose: optional argument for a more verbose run. Default is 
 				False.
-			figures_folder: optional argument for where to place the figures 
-				created. Default is "../figures".
 
 		Returns:
 			Object for analyzing flow.
 		"""
-
 		# Retrieves data from data
 		self.batch_name = data["batch_name"]
 		self.batch_data_folder = data["batch_data_folder"]
 		self.x = data["t"]
 		self.y = data["obs"]
 		self.flow_epsilon = data["FlowEpsilon"]
+
+		# Sets the MC interval
+		self._set_mc_interval(mc_interval)
 
 		# Sets lattice parameters
 		self.beta = data["beta"]
@@ -137,7 +145,7 @@ class FlowAnalyser(object):
 			self.pre_scale = True
 
 		# Max plotting window variables
-		self.y_limits = [None,None]
+		self.y_limits = [None, None]
 
 		# Default type of observables, one per configuration per flow
 		self.N_configurations, self.NFlows = self.y.shape[:2]
@@ -194,6 +202,35 @@ class FlowAnalyser(object):
 			print ("Extracting values at flow time %.2f with index %d for"
 				" observable %s" % (self.q0_flow_time, 
 					self.q0_flow_time_index, self.observable_name_compact))
+
+	def _check_skip_wolff_condition(self):
+		"""
+		Method for check if we are to skip performing the Wolff 
+		autocorrelation method. E.g. if we have a negative mean value.
+		By default, will assume this is not a problem for observable and
+		return True.
+		"""
+		return True
+
+	def _set_mc_interval(self, mc_interval):
+		"""
+		Selects a Monte Carlo interval in the MC history to use based on the 
+		tuple provided.
+		"""
+		if isinstance(mc_interval, types.NoneType):
+			self.mc_interval = mc_interval
+			return
+
+		assert isinstance(mc_interval, [tuple, list]), \
+			"invalid type: " + type(mc_interval)
+
+		self.mc_interval = mc_interval
+
+		# Sets the new y config range
+		self.y = self.y[mc_interval]
+
+		# Updates the title name or label to include range
+
 
 	def __check_ac(self, fname):
 		"""
@@ -414,7 +451,9 @@ class FlowAnalyser(object):
 			# Sets up parallel job
 			pool = multiprocessing.Pool(processes=self.numprocs)
 			
-			if method == "wolff":
+			skip_condition = self._check_skip_wolff_condition()
+
+			if method == "wolff" and skip_condition:
 				# Sets up jobs for parallel processing
 				input_values = zip(	
 					[self.y[:,i] for i in xrange(self.NFlows)],
@@ -634,6 +673,8 @@ class FlowAnalyser(object):
 		ax.set_ylim(self.y_limits)
 		ax.grid(True)
 		ax.set_title(title_string)
+		if not isinstance(self.fig_label, types.NoneType):
+			ax.legend([self.fig_label])
 		if not self.dryrun: 
 			fig.savefig(self.__check_ac(fname), dpi=self.dpi)
 		if self.verbose or self.dryrun:

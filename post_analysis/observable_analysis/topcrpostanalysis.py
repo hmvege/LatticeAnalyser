@@ -40,9 +40,6 @@ class TopcRPostAnalysis(PostCore):
 		self.verbose = verbose
 		self.dryrun = dryrun
 
-		# Retrieves relevant data values and sorts them by beta values
-		self.flow_time = data.flow_time
-
 		self.beta_values = sorted(data.beta_values)
 
 		self._setup_flow_times()
@@ -86,20 +83,20 @@ class TopcRPostAnalysis(PostCore):
 		for atype in self.analysis_types:
 			for beta in self.beta_values:
 				# Q^2
-				self.topc2[atype][beta] = data.data_observables["topq2"] \
+				self.topc2[atype][beta] = data.data_observables["topc2"] \
 						[beta][self.ac][atype]
 
 				# Q^4
-				self.topc4[atype][beta] = data.data_observables["topq4"] \
+				self.topc4[atype][beta] = data.data_observables["topc4"] \
 					[beta][self.ac][atype]
 
 				if self.with_autocorr:
 					self.topc2[atype][beta]["ac"] = \
-						data.data_observables["topq2"][beta] \
+						data.data_observables["topc2"][beta] \
 						["with_autocorr"]["autocorr"]
 
 					self.topc4[atype][beta]["ac"] = \
-						data.data_observables["topq4"][beta] \
+						data.data_observables["topc4"][beta] \
 						["with_autocorr"]["autocorr"]
 
 		# Creates base output folder for post analysis figures
@@ -186,6 +183,8 @@ class TopcRPostAnalysis(PostCore):
 
 				self.topc4C[atype][beta] = {
 
+					"x": self.topc2[atype][beta]["x"],
+
 					"y": self.Q4C(
 						self.topc4[atype][beta]["y"], 
 						self.topc2[atype][beta]["y"]),
@@ -207,6 +206,8 @@ class TopcRPostAnalysis(PostCore):
 
 				self.topcR[atype][beta] = {
 				
+					"x": self.topc2[atype][beta]["x"],
+
 					"y": self.R(
 						self.topc4C[atype][beta]["y"], 
 						self.topc2[atype][beta]["y"]),
@@ -295,7 +296,7 @@ class TopcRPostAnalysis(PostCore):
 
 			for beta in self.beta_values:
 				# Gets the approximate same t0 ref. value
-				t0_index = np.argmin(np.abs(self.flow_times[beta] - t0))
+				t0_index = np.argmin(np.abs(self.topc2[atype][beta]["x"] - t0))
 				print "Beta: %4.2f Q2: %10.5f Q2_err: %10.5f Q4: %10.5f \
 Q4_err: %10.5f Q4C: %10.5f Q4C_err: %10.5f R: %10.5f R_err: %10.5f" % (beta,
 					self.topc2[atype][beta]["y"][t0_index], 
@@ -345,10 +346,9 @@ Q4_err: %10.5f Q4C: %10.5f Q4C_err: %10.5f R: %10.5f R_err: %10.5f" % (beta,
 	def _initiate_plot_values(self, data, data_raw):
 		"""Sorts data into a format specific for the plotting method."""
 		for beta in self.beta_values:
-			if beta == 6.45: self.flow_time *= 2
 			values = {}
 			values["a"] = get_lattice_spacing(beta)
-			values["x"] = values["a"]* np.sqrt(8*self.flow_time)
+			values["x"] = values["a"]* np.sqrt(8*data[beta]["x"])
 			values["y"] = data[beta]["y"]
 			values["y_err"] = data[beta]["y_error"]
 			# values["y_raw"] = data_raw[beta][self.observable_name_compact]

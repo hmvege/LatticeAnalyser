@@ -11,16 +11,16 @@ class PostAnalysisDataReader:
 	"""
 	Small class for reading post analysis data
 	"""
-	def __init__(self, batch_folder, verbose=False):
+	def __init__(self, batch_folders, verbose=False):
 		"""
 		Class for loading the post analysis data.
 
 		Args:
-			batch_folder: string name of the data batch folder.
+			batch_folders: list of strings of beta folder paths.
 			verbose: optional more verbose output. Default is False.
 		"""
-		self.batch_name = os.path.split(batch_folder)[-1]
-		self.batch_folder = batch_folder
+		self._set_batch_name(batch_folders)
+
 		self.verbose = verbose
 
 		# Dictionary variable to hold all the data sorted by batches
@@ -36,23 +36,14 @@ class PostAnalysisDataReader:
 		# Observable list
 		self.observable_list = []
 
-		# Variable to store if we have retrieved flow time or not
-		self.retrieved_flow_time = False
-
 		# Number of betas variable
 		self.N_betas = 0
 		self.beta_values = []
 
 		# Iterates over the different beta value folders
-		for beta_folder in self._get_dir_content(self.batch_folder):
-
-			# #### TEMP ####
-			# if beta_folder == "beta645": continue
-			# #### TEMP ####
-
-			# Construct beta folder path
-			beta_dir_path = os.path.join(self.batch_folder, beta_folder,
-				"post_analysis_data")
+		for beta_folder in self.beta_folders:
+			# Construct beta post analysis folder path
+			beta_dir_path = os.path.join(beta_folder, "post_analysis_data")
 
 			observables_data = {}
 			obs_data_raw = {}
@@ -61,8 +52,8 @@ class PostAnalysisDataReader:
 
 			# Tries to load the parameter file
 			try:
-				param_file = os.path.join(self.batch_folder, beta_folder, 
-					"post_analysis_data", "params.json")
+				param_file = os.path.join(beta_folder, "post_analysis_data",
+					"params.json")
 				self.param_beta = self._get_parameter_data(param_file)["beta"]
 				_beta_values.append(self.param_beta)
 			except IOError:
@@ -157,6 +148,27 @@ class PostAnalysisDataReader:
 
 	def get_observables(self):
 		return self.observable_list
+
+	def _set_batch_name(self, batch_folders):
+		"""Sets batch name and batch folder."""	
+
+		# Splits all of the paths
+		_folders = [os.path.split(bf) for bf in batch_folders]
+
+		# Gets the batch folder names
+		_bfolders = set([_f[0] for _f in _folders])
+		assert len(_bfolders)==1, "Multiple batch folders detected: %s" \
+			% ", ".join(list(_bfolders))
+
+		# Gets the batch folder name
+		_bnames = set([os.path.split(_f)[-1] for _f in _bfolders])
+		assert len(_bnames)==1, "Multiple batches detected: %s" \
+			% ", ".join(list(_bnames))
+
+		# Sets the final results
+		self.beta_folders = batch_folders
+		self.batch_name = list(_bnames)[0]
+		self.batch_folder = list(_bfolders)[0]
 
 	def _get_obs_data(self, obs, obs_path, sub_obs=None, sub_obs_path=None):
 		"""Method for retrieving data associated with an observable."""
@@ -311,15 +323,18 @@ class PostAnalysisDataReader:
 		jk_y_error 	= retrieved_data[:,6]
 
 		# Stores data into dictionaries
-		unanalyzed_data = {"y": y, "y_error": y_error}
-		bs_data = {"y": bs_y, "y_error": bs_y_error}
-		jk_data = {"y": jk_y, "y_error": jk_y_error}
+		unanalyzed_data = {"y": y, "y_error": y_error, "x": t}
+		bs_data = {"y": bs_y, "y_error": bs_y_error, "x": t}
+		jk_data = {"y": jk_y, "y_error": jk_y_error, "x": t}
+
+		# Stores flow time
 
 		# Stores observable data
 		obs_data["beta"] 		= copy.deepcopy(meta_data["beta"])
 		obs_data["unanalyzed"] 	= copy.deepcopy(unanalyzed_data)
 		obs_data["bootstrap"] 	= copy.deepcopy(bs_data)
 		obs_data["jackknife"] 	= copy.deepcopy(jk_data)
+		# obs_data["flow_time"] 	= copy.deepcopy(t)
 
 		if autocorr:
 			tau_int 	= retrieved_data[:,7]
@@ -331,11 +346,6 @@ class PostAnalysisDataReader:
 				"sqrt2tau_int": sqrt2tau_int
 			}
 			obs_data["autocorr"] 	= copy.deepcopy(ac_data)
-
-		# Stores flow time in a seperate variable
-		if not self.retrieved_flow_time:
-			self.flow_time = copy.deepcopy(t)
-			self.retrieved_flow_time = True
 
 		if self.verbose:
 			print "Data retrieved from %s" % observable_file
