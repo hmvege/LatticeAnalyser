@@ -64,10 +64,10 @@ def main():
 
 	observables += observables_euclidean_time
 
-	obs_exlusions = ["plaq", "energy", "topc", "topc2", "topc4", "topcr", "topcMC", "topsus"]
-	observables = list(set(set(observables) - set(obs_exlusions)))
+	# obs_exlusions = ["plaq", "energy", "topc", "topc2", "topc4", "topcr", "topcMC", "topsus"]
+	# observables = list(set(set(observables) - set(obs_exlusions)))
 
-
+	# observables = observables_euclidean_time
 	# observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["topc", "plaq", "energy", "topsus", "topcr"]
 	# observables = ["topcr", "qtq0eff"]
@@ -119,7 +119,7 @@ def main():
 	# data_batch_folder = "../GluonAction/data6"
 	data_batch_folder = "../GluonAction/data8"
 	# data_batch_folder = "../topc_modes_8x16"
-	data_batch_folder = "../GluonAction/DataGiovanni"
+	# data_batch_folder = "../GluonAction/DataGiovanni"
 	# data_batch_folder = "smaug_data_beta61"
 	
 	figures_folder = "figures"
