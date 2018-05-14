@@ -2,42 +2,10 @@
 
 from pre_analysis.pre_analyser import pre_analysis
 from post_analysis.post_analyser import post_analysis
+from tools.folderreadingtools import get_num_observables
 import copy
 import os
 import numpy as np
-
-def get_num_observables(batch_folder, beta_folder):
-	"""Gets the number of observable in a folder."""
-	flow_path = os.path.join(batch_folder, beta_folder, "flow_observables")
-	num_obs = []
-
-	# If flow path do not exist, then we return
-	if not os.path.isdir(flow_path):
-		return 0
-
-	# Loops over flow obs folders
-	for flow_obs in os.listdir(flow_path):
-		# Skips all hidden files, e.g. .DS_Store
-		if flow_obs.startswith("."):
-			continue
-
-		# Gets flow observable files, should be equal to number of observables
-		flow_obs_path = os.path.join(flow_path, flow_obs)
-		flow_obs_files = os.listdir(flow_obs_path)
-
-		# In case observable folder is empty
-		if len(flow_obs_files) == 0:
-			continue
-
-		# Removes all hidden files, e.g. .DS_Store
-		flow_obs_files = [f for f in flow_obs_files if not f.startswith(".")]
-
-		num_obs.append(len(flow_obs_files))
-
-	assert not sum([i - num_obs[0] for i in num_obs]), \
-		"number of flow observables in each flow observable differ"
-
-	return num_obs[0]
 
 def main():
 	#### Available observables
@@ -76,7 +44,7 @@ def main():
 	# observables = ["qtq0eff"]
 	# observables = ["topsus"]
 	observables = []
-	# observables = ["topcMC"]
+	observables = ["topcMC"]
 	# observables = ["topc"]
 
 	#### Base parameters
@@ -110,8 +78,8 @@ def main():
 
 	# Smearing gif parameters for qtq0e
 	gif_params = {
-		"gif_observables": ["qtq0e", "qtq0eff"],
-		# "gif_observables": [],
+		# "gif_observables": ["qtq0e", "qtq0eff"],
+		"gif_observables": [], # Uncomment to turn off
 		"gif_euclidean_time": 0.5,
 		"gif_flow_range": np.linspace(0, 0.6, 100),
 		"betas_to_plot": "all",
@@ -120,10 +88,6 @@ def main():
 	}
 
 	#### Different batches
-	# data_batch_folder = "data2"
-	# data_batch_folder = "data4"
-	# data_batch_folder = "../GluonAction/data5"
-	# data_batch_folder = "../GluonAction/data6"
 	data_batch_folder = "../GluonAction/data8"
 	# data_batch_folder = "../topc_modes_8x16"
 	# data_batch_folder = "../GluonAction/DataGiovanni"
@@ -149,7 +113,7 @@ def main():
 	intervals_eucl = None
 
 	# Number of different sectors we will analyse in monte carlo time
-	MC_time_splits = 5
+	MC_time_splits = 2
  
 	# Extraction point in sqrt(8*t) for q0 in qtq0
 	q0_flow_times = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
@@ -234,25 +198,25 @@ def main():
 	analysis_parameter_list = [databeta60, databeta61, databeta62, databeta645]
 	# analysis_parameter_list = [databeta60, databeta61, databeta62]
 	# analysis_parameter_list = [databeta61, databeta62]
-	# analysis_parameter_list = [databeta62]
+	analysis_parameter_list = [databeta62]
 	# analysis_parameter_list = [databeta645]
 	# analysis_parameter_list = [smaug_data_beta61_analysis]
 
-	# #### Submitting observable-batches
-	# for analysis_parameters in analysis_parameter_list:
-	# 	pre_analysis(analysis_parameters)
+	#### Submitting observable-batches
+	for analysis_parameters in analysis_parameter_list:
+		pre_analysis(analysis_parameters)
 
-	#### Submitting post-analysis data
-	if len(analysis_parameter_list) >= 3:
-		post_analysis(analysis_parameter_list, observables,
-			topsus_fit_targets, line_fit_interval_points, energy_fit_target,
-			q0_flow_times, euclidean_time_percents,
-			post_analysis_data_type=post_analysis_data_type,
-			figures_folder=figures_folder, gif_params=gif_params, 
-			verbose=verbose)
-	else:
-		msg = "Need at least 3 different beta values to run post analysis"
-		msg += "(%d given)."% len(analysis_parameter_list)
+	# #### Submitting post-analysis data
+	# if len(analysis_parameter_list) >= 3:
+	# 	post_analysis(analysis_parameter_list, observables,
+	# 		topsus_fit_targets, line_fit_interval_points, energy_fit_target,
+	# 		q0_flow_times, euclidean_time_percents,
+	# 		post_analysis_data_type=post_analysis_data_type,
+	# 		figures_folder=figures_folder, gif_params=gif_params, 
+	# 		verbose=verbose)
+	# else:
+	# 	msg = "Need at least 3 different beta values to run post analysis"
+	# 	msg += "(%d given)."% len(analysis_parameter_list)
 
 if __name__ == '__main__':
 	main()

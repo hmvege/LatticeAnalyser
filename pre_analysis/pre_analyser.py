@@ -5,18 +5,49 @@ import numpy as np
 import types
 from tqdm import tqdm
 
-def _check_splits(NT, numsplits):
+def _check_splits(N, numsplits):
 	"""Checks if the temporal dimension has been split into good .intervals"""
-	assert NT % numsplits == 0, ("Bad number of splits: NT %% "
-			"numplits = %d" % (NT % numsplits))
+	assert N % numsplits == 0, ("Bad number of splits: N %% "
+			"numplits = %d" % (N % numsplits))
 
 def _check_intervals(intervals, numsplits):
 	"""Sets up the intervals"""
 	if (intervals == numsplits == None) or \
 		(intervals != None and numsplits != None):
 
-		raise KeyError(("Either provide MC intervals to plot for or the "
+		raise ValueError(("Either provide MC intervals to plot for or the "
 			"number of MC intervals to split into."))
+
+def get_intervals(N, numsplits=None, intervals=None):
+	"""
+	Method for retrieving the monte carlo time intervals.
+
+	Args:
+		N: int, number of points.
+		numsplits: int, optional, number of splits to make in N.
+		intervals: int, optional, excact intervals to make in N.
+
+	Returns:
+		iterator of list of intervals.
+
+	Raises:
+		ValueError: if no intervals or numsplits is provided, or if both is
+			provided.
+		AssertionError: if number of splits lead to an uneven split N.
+			(THIS FEATURE SHOULD PERHAPS BE REMOVED IN FUTURE??)
+	"""
+	_check_intervals(intervals, numsplits)
+
+	if isinstance(intervals, types.NoneType):
+		split_interval = N/numsplits
+		intervals = zip(
+			range(0, N+1, split_interval), 
+			range(split_interval, N+1, split_interval)
+		)
+		_check_splits(N, numsplits)
+
+	return iter(intervals)	
+
 
 def analyse_default(analysis_object, N_bs, NBins=30, skip_histogram=False,
 	bs_index_lists=None):
@@ -241,22 +272,25 @@ def analyse_topcte_intervals(params, numsplits=None, intervals=None):
 	"""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
 
+	t_interval = get_intervals(obs_data.NT, numsplits=numsplits, 
+		intervals=intervals)
+
 	analyse_topcte = TopcteIntervalAnalyser(obs_data("topct"),
 		dryrun=dryrun, parallel=parallel, 
 		numprocs=numprocs, verbose=verbose)
 
-	_check_intervals(intervals, numsplits)
+	# _check_intervals(intervals, numsplits)
 
-	NT = analyse_topcte.NT
-	if intervals == None:
-		split_interval = NT/numsplits
-		intervals = zip(
-			range(0, NT+1, split_interval), 
-			range(split_interval, NT+1, split_interval)
-		)
-		_check_splits(NT, numsplits)
+	# NT = analyse_topcte.NT
+	# if intervals == None:
+	# 	split_interval = NT/numsplits
+	# 	intervals = zip(
+	# 		range(0, NT+1, split_interval), 
+	# 		range(split_interval, NT+1, split_interval)
+	# 	)
+	# 	_check_splits(NT, numsplits)
 
-	t_interval = iter(intervals)
+	# t_interval = iter(intervals)
 
 	for t_int in t_interval:
 		analyse_topcte.set_t_interval(t_int)
@@ -275,22 +309,25 @@ def analyse_topsuste_intervals(params, numsplits=None, intervals=None):
 	"""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
 
+	t_interval = get_intervals(obs_data.NT, numsplits=numsplits, 
+		intervals=intervals)
+
 	analyse_topsuste = TopsusteIntervalAnalyser(obs_data("topct"),
 		dryrun=dryrun, parallel=parallel, 
 		numprocs=numprocs, verbose=verbose)
 
-	_check_intervals(intervals, numsplits)
+	# _check_intervals(intervals, numsplits)
 
-	NT = analyse_topsuste.NT
-	if intervals == None:
-		split_interval = NT/numsplits
-		intervals = zip(
-			range(0, NT+1, split_interval), 
-			range(split_interval, NT+1, split_interval)
-		)
-		_check_splits(NT, numsplits)
+	# NT = analyse_topsuste.NT
+	# if intervals == None:
+	# 	split_interval = NT/numsplits
+	# 	intervals = zip(
+	# 		range(0, NT+1, split_interval), 
+	# 		range(split_interval, NT+1, split_interval)
+	# 	)
+	# 	_check_splits(NT, numsplits)
 
-	t_interval = iter(intervals)
+	# t_interval = iter(intervals)
 
 	for t_int in t_interval:
 		analyse_topsuste.set_t_interval(t_int)
@@ -301,24 +338,15 @@ def analyse_topcMCTime(params, numsplits=None, intervals=None):
 	"""Analysis the topological charge in monte carlo time slices."""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
 
-	analyse_topcMC = TopcMCIntervalAnalyser(obs_data("topc"),
-		dryrun=dryrun, parallel=parallel,
-		numprocs=numprocs, verbose=verbose)
+	MC_interval = get_intervals(obs_data.NCfgs, numsplits=numsplits, 
+		intervals=intervals)
 
-	_check_intervals(intervals, numsplits)
-
-	NCfgs = analyse_topcMC.N_configurations
-	if isinstance(intervals, types.NoneType):
-		split_interval = NCfgs/numsplits
-		intervals = zip(
-			range(0, NCfgs+1, split_interval), 
-			range(split_interval, NCfgs+1, split_interval)
-		)
-		_check_splits(NCfgs, numsplits)
-
-	MC_interval = iter(intervals)
+	exit("Exiting in topcMCTime before analysis!")
 
 	for MC_int in MC_interval:
+		analyse_topcMC = TopcMCIntervalAnalyser(obs_data("topc"),
+			mc_interval=MC_int, dryrun=dryrun, parallel=parallel,
+			numprocs=numprocs, verbose=verbose)
 		analyse_topcMC.set_mc_interval(MC_int)
 		analyse_default(analyse_topcMC, N_bs)
 
@@ -326,22 +354,12 @@ def analyse_topsusMCTime(params, numsplits=None, intervals=None):
 	"""Analysis the topological susceptibility in monte carlo time slices."""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
 
+	MC_interval = get_intervals(obs_data.NCfgs, numsplits=numsplits, 
+		intervals=intervals)
+
 	analyse_topcMC = TopsusMCIntervalAnalyser(obs_data("topc"),
 		dryrun=dryrun, parallel=parallel,
 		numprocs=numprocs, verbose=verbose)
-
-	_check_intervals(intervals, numsplits)
-
-	NCfgs = analyse_topcMC.N_configurations
-	if intervals == None:
-		split_interval = NCfgs/numsplits
-		intervals = zip(
-			range(0, NCfgs+1, split_interval), 
-			range(split_interval, NCfgs+1, split_interval)
-		)
-		_check_splits(NCfgs, numsplits)
-
-	MC_interval = iter(intervals)
 
 	for MC_int in MC_interval:
 		analyse_topcMC.set_mc_interval(MC_int)

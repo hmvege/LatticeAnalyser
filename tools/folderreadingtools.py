@@ -816,6 +816,39 @@ def write_raw_analysis_to_file(raw_data, analysis_type, observable,
 		print ("Analysis %s for observable %s stored as binary data at %s.npy" 
 			% (analysis_type, observable, file_name_path))
 
+def get_num_observables(batch_folder, beta_folder):
+	"""Gets the number of observable in a folder."""
+	flow_path = os.path.join(batch_folder, beta_folder, "flow_observables")
+	num_obs = []
+
+	# If flow path do not exist, then we return
+	if not os.path.isdir(flow_path):
+		return 0
+
+	# Loops over flow obs folders
+	for flow_obs in os.listdir(flow_path):
+		# Skips all hidden files, e.g. .DS_Store
+		if flow_obs.startswith("."):
+			continue
+
+		# Gets flow observable files, should be equal to number of observables
+		flow_obs_path = os.path.join(flow_path, flow_obs)
+		flow_obs_files = os.listdir(flow_obs_path)
+
+		# In case observable folder is empty
+		if len(flow_obs_files) == 0:
+			continue
+
+		# Removes all hidden files, e.g. .DS_Store
+		flow_obs_files = [f for f in flow_obs_files if not f.startswith(".")]
+
+		num_obs.append(len(flow_obs_files))
+
+	assert not sum([i - num_obs[0] for i in num_obs]), \
+		"number of flow observables in each flow observable differ"
+
+	return num_obs[0]
+
 if __name__ == '__main__':
 	exit("Exiting: folderreadingtools not intended to be run as a standalone"
 		" module.")
