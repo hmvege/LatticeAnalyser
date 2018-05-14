@@ -92,14 +92,14 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 		# {flow time} exist.
 		self.observable_output_folder_path = os.path.join(
 			self.observable_output_folder_path_old,
-			"tflow%04.2f" % self.q0_flow_time)
+			"tflow%04.4f" % self.q0_flow_time)
 		check_folder(self.observable_output_folder_path, self.dryrun,
 			self.verbose)
 
 		# Checks that {post_analysis_folder}/{observable_name}/{flow time} 
 		# exist.
 		self.post_analysis_folder = os.path.join(self.post_analysis_folder_old,
-			"tflow%04.2f" % self.q0_flow_time)
+			"tflow%04.4f" % self.q0_flow_time)
 		check_folder(self.post_analysis_folder, self.dryrun, self.verbose)
 
 		# Resets some of the ac, jk and bs variable

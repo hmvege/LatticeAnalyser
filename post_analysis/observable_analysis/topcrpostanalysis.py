@@ -355,7 +355,6 @@ Q4_err: %10.5f Q4C: %10.5f Q4C_err: %10.5f R: %10.5f R_err: %10.5f" % (beta,
 			# values["tau_int"] = data[beta]["ac"]["tau_int"]
 			values["label"] = r"%s $\beta=%2.2f$" % (
 				self.size_labels[beta], beta)
-			values["color"] = self.colors[beta]
 			self.plot_values[beta] = values
 
 	def plot(self, *args, **kwargs):

@@ -46,7 +46,6 @@ class MultiPlotCore(PostCore):
 					sub_values["label"] = r"%s $\beta=%2.2f$ %s" % (
 						self.size_labels[beta], beta, 
 						self._convert_label(sub_obs))
-					sub_values["color"] = self.colors[beta]
 					values[sub_obs] = sub_values
 			else:
 				sorted_intervals = sorted(data[beta].keys())
@@ -70,7 +69,6 @@ class MultiPlotCore(PostCore):
 				values["label"] = r"%s $\beta=%2.2f$ %s" % (
 					self.size_labels[beta], beta, 
 					self._convert_label(int_key))
-				values["color"] = self.colors[beta]
 				values["interval"] = int_key
 			self.plot_values[beta] = values
 
@@ -194,13 +192,13 @@ class MultiPlotCore(PostCore):
 				y_err = value["y_err"]
 				
 				if error_shape == "band":
-					ax.plot(x, y, "-", label=value["label"], color=value["color"])
+					ax.plot(x, y, "-", label=value["label"], color=self.colors[beta])
 					ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, 
-						edgecolor='', facecolor=value["color"])
+						edgecolor='', facecolor=self.colors[beta])
 				elif error_shape == "bars":
 					ax.errorbar(x, y, yerr=y_err, capsize=5, fmt="_", ls=":", 
-						label=value["label"], color=value["color"], 
-						ecolor=value["color"])
+						label=value["label"], color=self.colors[beta], 
+						ecolor=self.colors[beta])
 				else:
 					raise KeyError("%s is not a valid error bar shape." % 
 						error_shape)

@@ -245,13 +245,13 @@ class PostCore(object):
 			y = value["y"]
 			y_err = value["y_err"]
 			if error_shape == "band":
-				ax.plot(x, y, "-", label=value["label"], color=value["color"])
+				ax.plot(x, y, "-", label=value["label"], color=self.colors[beta])
 				ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, 
-					edgecolor='', facecolor=value["color"])
+					edgecolor='', facecolor=self.colors[beta])
 			elif error_shape == "bars":
 				ax.errorbar(x, y, yerr=y_err, capsize=5, fmt="_", ls=":", 
-					label=value["label"], color=value["color"], 
-					ecolor=value["color"])
+					label=value["label"], color=self.colors[beta], 
+					ecolor=self.colors[beta])
 			else:
 				raise KeyError("%s not a recognized plot type" % error_shape)
 

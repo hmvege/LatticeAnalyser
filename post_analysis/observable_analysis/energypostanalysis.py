@@ -105,7 +105,6 @@ class EnergyPostAnalysis(PostCore):
 
 			values["label"] = (r"%s $\beta=%2.2f$" %
 				(self.size_labels[beta], beta))
-			values["color"] = self.colors[beta]
 
 			self.plot_values[beta] = values
 

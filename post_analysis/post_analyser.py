@@ -84,8 +84,8 @@ def plaq_post_analysis(*args, **kwargs):
 def post_analysis(beta_parameter_list, observables,
 	topsus_fit_targets, line_fit_interval_points, energy_fit_target,
 	q0_flow_times, euclidean_time_percents, figures_folder="figures", 
-	post_analysis_data_type=None, bval_to_plot="all", gif_flow_range=None,
-	gif_euclidean_time=None, verbose=False):
+	post_analysis_data_type=None, bval_to_plot="all", gif_params=None, 
+	verbose=False):
 	"""
 	Post analysis of the flow observables.
 
@@ -338,26 +338,6 @@ def post_analysis(beta_parameter_list, observables,
 				qtq0e_analysis.plot_series(te, [0,1,2,3], beta=bval_to_plot)
 				qtq0e_analysis.plot_series(te, [0,2,3,4], beta=bval_to_plot)
 
-	if "qtq0e_gif" in observables:
-		qtq0e_analysis = QtQ0EuclideanPostAnalysis(data, 
-			figures_folder=figures_folder, verbose=verbose)
-
-		# Checks that we have similar flow times
-		N_tf, flow_intervals = qtq0e_analysis.get_N_intervals()
-
-		for analysis_type in post_analysis_data_type:
-			# Euclidean time
-			qtq0e_analysis.set_analysis_data_type(gif_euclidean_time, analysis_type)
-			qtq0e_analysis.set_gif_folder(gif_euclidean_time)
-
-			gif_descr = "Creating gif frames for qtq0"
-			for tf in tqdm(gif_flow_range, desc=gif_descr):
-			# for tf in gif_flow_range:
-				qtq0e_analysis.plot_gif_image(tf, gif_euclidean_time,
-					y_limits=[-0.05, 0.7])
-
-			qtq0e_analysis.create_gif()
-
 	if "qtq0eff" in observables:
 		# if analysis_type != "unanalyzed": continue
 		print "FIX SELECTION @ qtq0eff @ post_analyser.py"
@@ -371,17 +351,38 @@ def post_analysis(beta_parameter_list, observables,
 				print tf
 				qtq0e_analysis.plot_interval(tf)
 			y_limits = [-1, 1]
-			# error_shape = "bars"
-			# qtq0e_analysis.plot_series([0,1,2,3], beta=bval_to_plot,
-			# 	error_shape=error_shape, y_limits=y_limits)
-			# qtq0e_analysis.plot_series([0,2,3,4], beta=bval_to_plot,
-			# 	error_shape=error_shape, y_limits=y_limits)
+			error_shape = "bars"
+			qtq0e_analysis.plot_series([0,1,2,3], beta=bval_to_plot,
+				error_shape=error_shape, y_limits=y_limits)
+			qtq0e_analysis.plot_series([0,2,3,4], beta=bval_to_plot,
+				error_shape=error_shape, y_limits=y_limits)
 
 	for obs in observables:
 		if "topsus" in obs:
 			write_fit_parameters_to_file(fit_parameters, 
 				os.path.join("param_file.txt"), verbose=verbose)
 			break
+
+	if len(gif_params["gif_observables"]) != 0:
+
+		if "qtq0e" in gif_params["gif_observables"]:
+			qtq0e_gif = QtQ0EPostGif(data, figures_folder=figures_folder, 
+				verbose=verbose)
+			qtq0e_gif.image_creator(gif_params["gif_euclidean_time"],
+				gif_betas=gif_params["betas_to_plot"], 
+				plot_together=gif_params["plot_together"],
+				error_shape=gif_params["error_shape"])
+
+		# if "qtq0eff" in gif_params["gif_observables"]:
+		# 	qtq0eff_gif = QtQ0EffPostGif(data, figures_folder=figures_folder, 
+		# 		verbose=verbose)
+		# 	qtq0eff_gif.data_setup()
+		# 	qtq0eff_gif.image_creator(gif_betas=gif_params["betas_to_plot"],
+		# 		plot_together=gif_params["plot_together"],
+		# 		error_shape="bars")
+			
+
+
 
 
 def main():

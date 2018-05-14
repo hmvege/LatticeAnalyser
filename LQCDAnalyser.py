@@ -59,7 +59,6 @@ def main():
 		# Other quantities 
 		"qtq0e",
 		"qtq0eff",
-		"qtq0_gif",
 	]
 
 	observables += observables_euclidean_time
@@ -76,6 +75,7 @@ def main():
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
 	# observables = ["qtq0eff"]
 	# observables = ["topsus"]
+	observables = []
 	# observables = ["topcMC"]
 	# observables = ["topc"]
 
@@ -109,8 +109,15 @@ def main():
 	energy_fit_target = 0.3
 
 	# Smearing gif parameters for qtq0e
-	gif_euclidean_time = 0.5
-	gif_flow_range = np.linspace(0, 0.6, 100)
+	gif_params = {
+		"gif_observables": ["qtq0e", "qtq0eff"],
+		# "gif_observables": [],
+		"gif_euclidean_time": 0.5,
+		"gif_flow_range": np.linspace(0, 0.6, 100),
+		"betas_to_plot": "all",
+		"plot_together": False,
+		"error_shape": "band",
+	}
 
 	#### Different batches
 	# data_batch_folder = "data2"
@@ -174,8 +181,7 @@ def main():
 		"intervals_eucl": intervals_eucl,
 		"MC_time_splits": MC_time_splits,
 		# Gif smearing parameters in the qtq0e observable
-		"gif_euclidean_time": gif_euclidean_time,
-		"gif_flow_range": gif_flow_range,
+		"gif": gif_params,
 		# Passing on lattice sizes
 		"lattice_sizes": {
 			6.0: 24**3*48,
@@ -242,8 +248,8 @@ def main():
 			topsus_fit_targets, line_fit_interval_points, energy_fit_target,
 			q0_flow_times, euclidean_time_percents,
 			post_analysis_data_type=post_analysis_data_type,
-			figures_folder=figures_folder, gif_flow_range=gif_flow_range,
-			gif_euclidean_time=gif_euclidean_time, verbose=verbose)
+			figures_folder=figures_folder, gif_params=gif_params, 
+			verbose=verbose)
 	else:
 		msg = "Need at least 3 different beta values to run post analysis"
 		msg += "(%d given)."% len(analysis_parameter_list)

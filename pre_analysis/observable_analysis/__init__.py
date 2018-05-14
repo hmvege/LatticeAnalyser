@@ -24,3 +24,7 @@ from topsusqtq0analyser import TopsusQtQ0Analyser
 # Other definitions & quantities
 from qtq0euclideananalyser import QtQ0EuclideanAnalyser
 from qtq0effectivemass import QtQ0EffectiveMassAnalyser
+
+# For gif creations
+from qtq0e_gif import QtQ0EGif
+from qtq0eff_gif import QtQ0EffGif

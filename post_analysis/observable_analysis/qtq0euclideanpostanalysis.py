@@ -31,45 +31,45 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 	def _convert_label(self, lab):
 		return float(lab[-4:])
 
-	def set_gif_folder(self, gif_euclidean_time, gif_folder=None):
-		"""
-		Creates a folder for storing the smearing gif in.
+	# def set_gif_folder(self, gif_euclidean_time, gif_folder=None):
+	# 	"""
+	# 	Creates a folder for storing the smearing gif in.
 
-		Args:
-			gif_euclidean_time: float, what euclidean time percent we are
-				creating the gif at.
-			gif_folder: optional, default is None. will override default
-				location.
-		"""
+	# 	Args:
+	# 		gif_euclidean_time: float, what euclidean time percent we are
+	# 			creating the gif at.
+	# 		gif_folder: optional, default is None. will override default
+	# 			location.
+	# 	"""
 
-		self.verbose = False
-		if isinstance(gif_folder, types.NoneType):
-			self.gif_folder = os.path.join(self.output_folder_path, "gif")
-		else:
-			self.gif_folder = gif_folder
+	# 	self.verbose = False
+	# 	if isinstance(gif_folder, types.NoneType):
+	# 		self.gif_folder = os.path.join(self.output_folder_path, "gif")
+	# 	else:
+	# 		self.gif_folder = gif_folder
 
-	def plot_gif_image(self, q0_flow_time, euclidean_percent, **kwargs):
-		"""Wrapper for plotting gifs."""
-		kwargs["figure_folder"] = self.gif_folder
-		self.plot_interval(q0_flow_time, euclidean_percent, **kwargs)
+	# def plot_gif_image(self, q0_flow_time, euclidean_percent, **kwargs):
+	# 	"""Wrapper for plotting gifs."""
+	# 	kwargs["figure_folder"] = self.gif_folder
+	# 	self.plot_interval(q0_flow_time, euclidean_percent, **kwargs)
 
-	def create_gif(self):
-		"""Creates a gif from images in gif the gif folder."""
-		fig_base_name = "post_analysis_%s_%s_tf*.png" % (
-			self.observable_name_compact, self.analysis_data_type)
+	# def create_gif(self):
+	# 	"""Creates a gif from images in gif the gif folder."""
+	# 	fig_base_name = "post_analysis_%s_%s_tf*.png" % (
+	# 		self.observable_name_compact, self.analysis_data_type)
 
-		gif_path = os.path.join(self.output_folder_path,
-			"%s_smearing.gif" % self.observable_name_compact)
+	# 	gif_path = os.path.join(self.output_folder_path,
+	# 		"%s_smearing.gif" % self.observable_name_compact)
 
-		input_paths = os.path.join(self.gif_folder, fig_base_name)
-		cmd = ['convert', '-delay', '4', '-loop', '0', input_paths,
-			gif_path]
+	# 	input_paths = os.path.join(self.gif_folder, fig_base_name)
+	# 	cmd = ['convert', '-delay', '4', '-loop', '0', input_paths,
+	# 		gif_path]
 
-		print "> %s" % " ".join(cmd)	
-		proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-		read_out = proc.stdout.read()
-		print read_out
-		print "\nGif creation done.\n"
+	# 	print "> %s" % " ".join(cmd)	
+	# 	proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+	# 	read_out = proc.stdout.read()
+	# 	print read_out
+	# 	print "\nGif creation done.\n"
 
 	def _initiate_plot_values(self, data, data_raw, euclidean_percent, 
 		q0_flow_time=None):
@@ -105,7 +105,6 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 					sub_values["label"] = r"%s, $\beta=%2.2f$, $\sqrt{8t_{f,0}}=%.2f$" \
 						% (self.size_labels[beta], beta, self._convert_label(sub_obs))
 
-					sub_values["color"] = self.colors[beta]
 					values[sub_obs] = sub_values
 				self.plot_values[beta] = values
 
@@ -132,7 +131,6 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 				values["label"] = r"%s $\beta=%2.2f$, $t_f=%.2f$, $t_e=%d$" % (
 					self.size_labels[beta], beta, q0_flow_time, euclidean_index)
 
-				values["color"] = self.colors[beta]
 				self.plot_values[beta] = values
 
 	def set_analysis_data_type(self, euclidean_percent, analysis_data_type="bootstrap"):

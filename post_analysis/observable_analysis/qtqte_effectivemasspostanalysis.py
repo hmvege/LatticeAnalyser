@@ -153,7 +153,6 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 						sub_values["tau_int_err"] = \
 							data[beta][sub_obs]["ac"]["tau_int_err"]
 
-					sub_values["color"] = self.colors[beta]
 					values[sub_obs] = sub_values
 				self.plot_values[beta] = values
 
@@ -179,7 +178,6 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 				values["label"] = r"%s $\beta=%2.2f$, $t_f=%.2f$" % (
 					self.size_labels[beta], beta, flow_index)
 
-				values["color"] = self.colors[beta]
 				self.plot_values[beta] = values
 
 	def plot_interval(self, flow_index, **kwargs):

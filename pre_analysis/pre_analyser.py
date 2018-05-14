@@ -51,8 +51,26 @@ def analyse_default(analysis_object, N_bs, NBins=30, skip_histogram=False,
 		analysis_object.plot_multihist([hist_pts[0], hist_pts[2], hist_pts[-1]],
 			NBins=NBins)
 	analysis_object.plot_integrated_correlation_time()
-	analysis_object.plot_integrated_correlation_time()
 	analysis_object.save_post_analysis_data() # save_as_txt=False
+
+def gif_analysis(gif_analysis_obj, gif_flow_range, N_bs, gif_euclidean_time=None):
+	"""Function for creating gifs as effectively as possible."""
+
+	# Sets up random boot strap lists so they are equal for all flow times
+	NCfgs = gif_analysis_obj.N_configurations
+	bs_index_lists = np.random.randint(NCfgs, size=(N_bs, NCfgs))
+
+	# Runs basic data analysis
+	gif_descr = "Data creation for %s gif" \
+		% gif_analysis_obj.observable_name_compact
+	for iFlow in tqdm(gif_flow_range, desc=gif_descr):
+		if isinstance(gif_euclidean_time, types.NoneType):
+			gif_analysis_obj.set_time(iFlow)
+		else:
+			gif_analysis_obj.set_time(iFlow, gif_euclidean_time)
+		gif_analysis_obj.boot(N_bs, index_lists=bs_index_lists)
+		gif_analysis_obj.autocorrelation()
+		gif_analysis_obj.save_post_analysis_data()
 
 def analyse_plaq(params):
 	"""Analysis of the plaquette."""
@@ -159,8 +177,7 @@ def analyse_topsus_qtq0(params, q0_flow_times):
 		qtq0_analysis.setQ0(q0_flow_time) 
 		analyse_default(qtq0_analysis, N_bs, skip_histogram=True)
 
-def analyse_qtq0e(params, q0_flow_times, euclidean_time_percents, 
-	gif_create_data=False, gif_flow_range=None, gif_euclidean_time=None):
+def analyse_qtq0e(params, q0_flow_times, euclidean_time_percents):
 	"""Analysis for the effective mass qtq0 with q0 at a fixed flow time."""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
 
@@ -171,30 +188,6 @@ def analyse_qtq0e(params, q0_flow_times, euclidean_time_percents,
 		for euclidean_percent in euclidean_time_percents:
 			qtq0_analysis.set_time(q0_flow_time, euclidean_percent)
 			analyse_default(qtq0_analysis, N_bs)
-
-def analyse_qtq0e_gif(params, gif_flow_range=None,
-	gif_euclidean_time=None):
-	"""Method for creating a data for smearing gif of the qtq0e quantity."""
-	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
-
-	qtq0_analysis = QtQ0EuclideanAnalyser(obs_data("topct"), dryrun=dryrun,
-		parallel=parallel, numprocs=numprocs, verbose=verbose)
-
-	asrt_msg = "missing gif flow range and or euclidean time float."
-	assert (not isinstance(gif_flow_range, types.NoneType) \
-		and not isinstance(gif_euclidean_time, types.NoneType)), asrt_msg
-
-	# Runs basic data analysis
-	gif_descr = "Data creation for qtq0 gif"
-	for q0_gif_flow_time in tqdm(gif_flow_range, desc=gif_descr):
-	# for q0_gif_flow_time in gif_flow_range:
-		qtq0_analysis.verbose = False
-		qtq0_analysis.set_time(q0_gif_flow_time, gif_euclidean_time)
-		qtq0_analysis.boot(N_bs)
-		qtq0_analysis.jackknife()
-		qtq0_analysis.autocorrelation()
-		qtq0_analysis.save_post_analysis_data(N_bs)
-
 
 def analyse_qtq0_effective_mass(params, q0_flow_times):
 	"""Pre-analyser for the effective mass qtq0 with q0 at a fixed flow time."""
@@ -391,9 +384,6 @@ def pre_analysis(parameters):
 	# Writes a parameters file for the post analysis
 	obs_data.write_parameter_file()
 
-	# Writes raw observable data to a single binary file
-	# if parameters["save_to_binary"] and not parameters["load_file"]:
-	# 	obs_data.write_single_file()
 	print "="*100
 
 	# Builds parameters list to be passed to analyser
@@ -442,12 +432,30 @@ def pre_analysis(parameters):
 	if "qtq0e" in parameters["observables"]:
 		analyse_qtq0e(params, parameters["q0_flow_times"],
 			parameters["euclidean_time_percents"])
-	if "qtq0e_gif" in parameters["observables"]:
-		analyse_qtq0e_gif(params, parameters["gif_flow_range"],
-			parameters["gif_euclidean_time"])
 	if "qtq0eff" in parameters["observables"]:
 		analyse_qtq0_effective_mass(params, parameters["q0_flow_times"])
-	
+
+	gif_params = parameters["gif"]
+	gif_observables = gif_params["gif_observables"]
+	gif_euclidean_time = gif_params["gif_euclidean_time"]
+	gif_flow_range = gif_params["gif_flow_range"]
+	if len(gif_observables) != 0:
+		obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
+
+		if "qtq0e" in gif_observables:
+			qtq0e_gif_analysis = QtQ0EGif(obs_data("topct"), 
+				dryrun=dryrun, parallel=parallel, numprocs=numprocs, 
+				verbose=False)
+			gif_analysis(qtq0e_gif_analysis, gif_flow_range, N_bs, 
+				gif_euclidean_time=gif_euclidean_time)
+		
+		if "qtq0eff" in gif_observables:
+			qtq0eff_gif_analysis = QtQ0EffGif(obs_data("topct"),
+				dryrun=dryrun, parallel=parallel, numprocs=numprocs, 
+				verbose=False)
+			gif_analysis(qtq0eff_gif_analysis, gif_flow_range, N_bs,
+				gif_euclidean_time=None)
+
 
 	post_time = time.clock()
 	print "="*100

@@ -24,3 +24,7 @@ from topsusqtq0postanalysis import TopsusQtQ0PostAnalysis
 # Other definitions and observable post analyses
 from qtq0euclideanpostanalysis import QtQ0EuclideanPostAnalysis 
 from qtq0effectivemasspostanalysis import QtQ0EffectiveMassPostAnalysis
+
+# Gif plotters
+from qtq0e_post_gif import QtQ0EPostGif
+from qtq0e_eff_post_gif import QtQ0EffPostGif

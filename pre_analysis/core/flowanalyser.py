@@ -355,7 +355,7 @@ class FlowAnalyser(object):
 
 		# The error is in that I am taking F, which is not a linear operation
 		# on the bootstrap data, which will be averaged afterwards and is therefore
-		# not equal the data bootstrap samples. BADBADBAD!
+		# not equal the data bootstrap samples.
 
 		# print self.bs_y.shape, self.bs_y_data.shape
 		# print self.bs_y[100]
