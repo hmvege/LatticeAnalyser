@@ -28,7 +28,8 @@ def get_intervals(N, numsplits=None, intervals=None):
 		intervals: int, optional, excact intervals to make in N.
 
 	Returns:
-		iterator of list of intervals.
+		List of intervals, list of tuples
+		Size of interval, int
 
 	Raises:
 		ValueError: if no intervals or numsplits is provided, or if both is
@@ -46,10 +47,10 @@ def get_intervals(N, numsplits=None, intervals=None):
 		)
 		_check_splits(N, numsplits)
 
-	return iter(intervals)	
+	return intervals, intervals[0][1] - intervals[0][0]
 
 
-def analyse_default(analysis_object, N_bs, NBins=30, skip_histogram=False,
+def analyse_default(analysis_object, N_bs, NBins=None, skip_histogram=False,
 	bs_index_lists=None):
 	"""Default analysis method for pre-analysis."""
 	print analysis_object
@@ -139,7 +140,7 @@ def analyse_topc(params):
 	else:
 		topc_analysis.y_limits = [None, None]
 
-	analyse_default(topc_analysis, N_bs, NBins=150)
+	analyse_default(topc_analysis, N_bs)
 
 def analyse_topc2(params):
 	"""Analysis of Q^2."""
@@ -226,7 +227,6 @@ def analyse_qtq0_effective_mass(params, q0_flow_times):
 
 	qtq0eff_analysis = QtQ0EffectiveMassAnalyser(obs_data("topct"), dryrun=dryrun,
 		parallel=parallel, numprocs=numprocs, verbose=verbose)
-	print q0_flow_times
 	for q0_flow_time in q0_flow_times:
 		if q0_flow_time != 0.6: # Only zeroth flow 
 			continue
@@ -272,25 +272,12 @@ def analyse_topcte_intervals(params, numsplits=None, intervals=None):
 	"""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
 
-	t_interval = get_intervals(obs_data.NT, numsplits=numsplits, 
+	t_interval, _ = get_intervals(obs_data.NT, numsplits=numsplits, 
 		intervals=intervals)
 
 	analyse_topcte = TopcteIntervalAnalyser(obs_data("topct"),
 		dryrun=dryrun, parallel=parallel, 
 		numprocs=numprocs, verbose=verbose)
-
-	# _check_intervals(intervals, numsplits)
-
-	# NT = analyse_topcte.NT
-	# if intervals == None:
-	# 	split_interval = NT/numsplits
-	# 	intervals = zip(
-	# 		range(0, NT+1, split_interval), 
-	# 		range(split_interval, NT+1, split_interval)
-	# 	)
-	# 	_check_splits(NT, numsplits)
-
-	# t_interval = iter(intervals)
 
 	for t_int in t_interval:
 		analyse_topcte.set_t_interval(t_int)
@@ -309,61 +296,50 @@ def analyse_topsuste_intervals(params, numsplits=None, intervals=None):
 	"""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
 
-	t_interval = get_intervals(obs_data.NT, numsplits=numsplits, 
+	t_interval, _ = get_intervals(obs_data.NT, numsplits=numsplits, 
 		intervals=intervals)
 
 	analyse_topsuste = TopsusteIntervalAnalyser(obs_data("topct"),
 		dryrun=dryrun, parallel=parallel, 
 		numprocs=numprocs, verbose=verbose)
 
-	# _check_intervals(intervals, numsplits)
-
-	# NT = analyse_topsuste.NT
-	# if intervals == None:
-	# 	split_interval = NT/numsplits
-	# 	intervals = zip(
-	# 		range(0, NT+1, split_interval), 
-	# 		range(split_interval, NT+1, split_interval)
-	# 	)
-	# 	_check_splits(NT, numsplits)
-
-	# t_interval = iter(intervals)
-
 	for t_int in t_interval:
 		analyse_topsuste.set_t_interval(t_int)
 		analyse_default(analyse_topsuste, N_bs)
-
 
 def analyse_topcMCTime(params, numsplits=None, intervals=None):
 	"""Analysis the topological charge in monte carlo time slices."""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
 
-	MC_interval = get_intervals(obs_data.NCfgs, numsplits=numsplits, 
-		intervals=intervals)
+	MC_interval, interval_size = get_intervals(obs_data.NCfgs, 
+		numsplits=numsplits, intervals=intervals)
 
-	exit("Exiting in topcMCTime before analysis!")
+	bs_index_lists = np.random.randint(interval_size,
+		size=(N_bs, interval_size))
 
 	for MC_int in MC_interval:
 		analyse_topcMC = TopcMCIntervalAnalyser(obs_data("topc"),
 			mc_interval=MC_int, dryrun=dryrun, parallel=parallel,
 			numprocs=numprocs, verbose=verbose)
-		analyse_topcMC.set_mc_interval(MC_int)
-		analyse_default(analyse_topcMC, N_bs)
+		# analyse_topcMC.set_mc_interval(MC_int)
+		analyse_default(analyse_topcMC, N_bs, bs_index_lists=bs_index_lists)
 
 def analyse_topsusMCTime(params, numsplits=None, intervals=None):
 	"""Analysis the topological susceptibility in monte carlo time slices."""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
 
-	MC_interval = get_intervals(obs_data.NCfgs, numsplits=numsplits, 
-		intervals=intervals)
+	MC_interval, interval_size = get_intervals(obs_data.NCfgs,
+		numsplits=numsplits, intervals=intervals)
 
-	analyse_topcMC = TopsusMCIntervalAnalyser(obs_data("topc"),
-		dryrun=dryrun, parallel=parallel,
-		numprocs=numprocs, verbose=verbose)
+	bs_index_lists = np.random.randint(interval_size,
+		size=(N_bs, interval_size))
 
 	for MC_int in MC_interval:
-		analyse_topcMC.set_mc_interval(MC_int)
-		analyse_default(analyse_topcMC, N_bs)
+		analyse_topcMC = TopsusMCIntervalAnalyser(obs_data("topc"),
+			mc_interval=MC_int, dryrun=dryrun, parallel=parallel,
+			numprocs=numprocs, verbose=verbose)
+		# analyse_topcMC.set_mc_interval(MC_int)
+		analyse_default(analyse_topcMC, N_bs, bs_index_lists=bs_index_lists)
 
 def pre_analysis(parameters):
 	"""

@@ -15,14 +15,16 @@ import statistics.parallel_tools as ptools
 class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 	"""Post-analysis of the effective mass."""
 	observable_name = r"Effective mass, "
-	observable_name += r"$am_{eff} = \log \frac{C(t_e)}{C(t_e+1)}$, "
+	observable_name += r"$am_\textrm{eff} = \log \frac{C(t_e)}{C(t_e+1)}$, "
 	observable_name += r"$C(t_e)=\langle q_t q_0\rangle$"
 	observable_name_compact = "qtq0eff"
 	x_label = r"$t_e[fm]$"
-	y_label = r"$am_{eff}$"
+	y_label = r"$am_\textrm{eff}$"
 	sub_obs = True
 	hbarc = 0.19732697 #eV micro m
 	dpi=400
+	fold = True
+	fold_range = 10
 
 	def __init__(self, *args, **kwargs):
 		# Ensures we load correct data
@@ -33,8 +35,15 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 		# Resets the observable name after data has been loaded.
 		self.observable_name_compact = self.observable_name_compact_old
 
+	def fold_array(self, arr, axis=0):
+		"""Method for folding an array by its last values."""
+		folded_array = np.roll(arr, self.fold_range, axis=axis)
+		folded_array = folded_array[:self.fold_range*2]
+		folded_array[self.fold_range:] *= -1
+		return folded_array
+
 	def _convert_label(self, lab):
-		return float(lab[-4:])
+		return float(lab[-6:])
 
 	def effMass(self, Q, axis=0):
 		"""Correlator for qtq0."""
@@ -105,14 +114,15 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 
 	def analyse_data(self, data):
 		"""Method for analysis <QteQ0>."""
-		return self.effMass(data["y"]), self.effMass_err(data["y"], data["y_error"])
+		return self.effMass(data["y"]), self.effMass_err(data["y"], \
+			data["y_error"])
 
 	def _get_plot_figure_name(self, output_folder=None):
 		"""Retrieves appropriate figure file name."""
 		if isinstance(output_folder, types.NoneType):
 			output_folder = os.path.join(self.output_folder_path, "slices")
 		check_folder(output_folder, False, True)
-		fname = "post_analysis_%s_%s_q0_%f.png" % (self.observable_name_compact,
+		fname = "post_analysis_%s_%s_tf%f.png" % (self.observable_name_compact,
 			self.analysis_data_type, self.interval_index)
 		return os.path.join(output_folder, fname)
 
@@ -133,6 +143,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 						self.lattice_sizes[beta][1] * sub_values["a"], 
 						self.lattice_sizes[beta][1])
 
+
 					sub_values["y"], sub_values["y_err"] = self.analyse_raw(
 						data[beta][sub_obs],
 						data_raw[beta][self.observable_name_compact][sub_obs])
@@ -144,6 +155,20 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 					sub_values["raw"] = data_raw[beta] \
 						[self.observable_name_compact][sub_obs]
 
+					if self.fold:
+						# sub_values["x"] = self.fold_array(sub_values["x"])
+						# sub_values["x"] = np.linspace(0, 
+						# 	self.fold_range*2 * sub_values["a"],
+						# 	self.fold_range*2)
+						sub_values["x"] = np.linspace(0, self.fold_range*2 - 1,
+							self.fold_range*2)
+						sub_values["y"] = self.fold_array(sub_values["y"])
+						sub_values["y_err"] = \
+							self.fold_array(sub_values["y_err"])
+						sub_values["raw"] = self.fold_array(sub_values["raw"],
+							axis=0)
+						self.fold_position = sub_values["x"][self.fold_range]
+
 					if self.with_autocorr:
 						sub_values["tau_int"] = \
 							data[beta][sub_obs]["ac"]["tau_int"]
@@ -154,7 +179,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 				self.plot_values[beta] = values
 
 			else:
-				tf_index = "tflow%04.2f" % flow_index
+				tf_index = "tflow%04.4f" % flow_index
 				values["a"] = get_lattice_spacing(beta)
 				
 				# For exact box sizes
@@ -167,10 +192,24 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 
 				if self.with_autocorr:
 					values["tau_int"] = data[beta][tf_index]["ac"]["tau_int"]
-					values["tau_int_err"] = data[beta][tf_index]["ac"]["tau_int_err"]
+					values["tau_int_err"] = \
+						data[beta][tf_index]["ac"]["tau_int_err"]
 
 				values["y"], values["y_err"] = \
 					self.analyse_data(data[beta][tf_index])
+
+				if self.fold:
+					# values["x"] = self.fold_array(values["x"])
+					# values["x"][self.fold_range:] -= values["x"][-1]
+					# x_shift_val = values["x"][:self.fold_range]
+					# values["x"] = np.roll(values["x"], self.fold_range)[:self.fold_range] - values["x"][-1]
+					values["x"] = np.linspace(0, self.fold_range*2 - 1, 
+						self.fold_range*2)
+					values["y"] = self.fold_array(values["y"])
+					values["y_err"] = \
+						self.fold_array(values["y_err"])
+					values["y_raw"] = self.fold_array(values["y_raw"], axis=0)
+					self.fold_position = values["x"][self.fold_range]
 
 				values["label"] = r"%s $\beta=%2.2f$, $t_f=%.2f$" % (
 					self.size_labels[beta], beta, flow_index)
@@ -196,8 +235,12 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 
 		# SET THIS TO ZERO IF NO Y-AXIS SCALING IS TO BE DONE
 		# kwargs["y_limits"] = [-1,1]
-		kwargs["x_limits"] = [-0.1,1]
 		kwargs["error_shape"] = "bars"
+
+		if self.fold:
+			kwargs["plot_vline_at"] = self.fold_position
+		else:
+			kwargs["x_limits"] = [-0.1,1]
 
 		# Makes it a global constant so it can be added in plot figure name
 		self.plot(**kwargs)
@@ -209,8 +252,11 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 		kwargs["plot_with_formula"] = True
 		# kwargs["y_limits"] = [-2,2]
 		kwargs["y_limits"] = [-1,1]
-		kwargs["x_limits"] = [-0.1,4.7]
-		kwargs["x_limits"] = [-0.1,1]
+		if self.fold:
+			kwargs["plot_vline_at"] = self.fold_position
+		else:
+			kwargs["x_limits"] = [-0.1,4.7]
+			kwargs["x_limits"] = [-0.1,1]
 		super(QtQ0EffectiveMassPostAnalysis, self).plot(*args, **kwargs)
 
 def main():

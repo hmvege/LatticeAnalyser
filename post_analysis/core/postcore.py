@@ -6,6 +6,10 @@ import numpy as np
 import os
 import types
 
+from matplotlib import rc
+rc("text", usetex=True)
+rc("font", **{"family": "serif", "serif": ["Computer Modern"]})
+
 class PostCore(object):
 	"""Post analysis base class. Based on paper DOI 10.1002/mas.20100."""
 	observable_name = "Observable"
@@ -35,6 +39,8 @@ class PostCore(object):
 		6.2: "#bc232e", # red
 		6.45: "#8519b7" # purple
 	}
+
+	# font_type = {"fontname": "modern"}
 
 	# colors = {
 	# 	6.0: "#3366ff", # blue
@@ -179,7 +185,6 @@ class PostCore(object):
 		if "autocorrelation" in self.analysis_types:
 			self.analysis_types.remove("autocorrelation")
 
-
 	def _check_plot_values(self):
 		"""Checks if we have set the analysis data type yet."""
 		if not hasattr(self, "plot_values"):
@@ -214,7 +219,7 @@ class PostCore(object):
 			self.plot_values[beta] = values
 
 	def plot(self, x_limits=False, y_limits=False, plot_with_formula=False,
-		error_shape="band", figure_folder=None):
+		error_shape="band", figure_folder=None, plot_vline_at=None):
 		"""
 		Function for making a basic plot of all the different beta values
 		together.
@@ -226,6 +231,8 @@ class PostCore(object):
 				formula for the y-value to plot in title.
 			figure_folder: optional, default is None. If default, will place
 				figures in figures/{batch_name}/post_analysis/{observable_name}
+			plot_vline_at: optional, float. If present, will plot a vline at 
+				position given position.
 		"""
 
 		if self.verbose:
@@ -247,7 +254,7 @@ class PostCore(object):
 			if error_shape == "band":
 				ax.plot(x, y, "-", label=value["label"], color=self.colors[beta])
 				ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, 
-					edgecolor='', facecolor=self.colors[beta])
+					edgecolor="", facecolor=self.colors[beta])
 			elif error_shape == "bars":
 				ax.errorbar(x, y, yerr=y_err, capsize=5, fmt="_", ls=":", 
 					label=value["label"], color=self.colors[beta], 
@@ -262,9 +269,9 @@ class PostCore(object):
 
 		# Basic plotting commands
 		ax.grid(True)
-		ax.set_title(title_string)
-		ax.set_xlabel(self.x_label)
-		ax.set_ylabel(self.y_label)
+		ax.set_title(r"%s" % title_string)
+		ax.set_xlabel(r"%s" % self.x_label)
+		ax.set_ylabel(r"%s" % self.y_label)
 		ax.legend(loc="lower right", prop={"size": 8})
 
 		# if self.observable_name_compact == "energy":
@@ -276,7 +283,9 @@ class PostCore(object):
 		if y_limits != False:
 			ax.set_ylim(y_limits)
 
-		# plt.tight_layout()
+		# Plots a vertical line at position "plot_vline_at"
+		if not isinstance(plot_vline_at, types.NoneType):
+			ax.axvline(plot_vline_at, linestyle="--", color="0", alpha=0.3)
 
 		# Saves and closes figure
 		fname = self._get_plot_figure_name(output_folder=figure_folder)
@@ -311,5 +320,5 @@ class PostCore(object):
 def main():
 	exit("Exit: PostCore is not intended to be used as a standalone module.")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 	main()

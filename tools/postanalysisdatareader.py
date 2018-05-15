@@ -357,8 +357,8 @@ class PostAnalysisDataReader:
 
 	def _get_bin(self, folder):
 		"""Gets binary data."""
-		assert len(os.listdir(folder)) == 1, ("multiple files in binary "
-			"folder %s: %s" % (folder, ", ".join(os.listdir(folder))))
+		assert len(os.listdir(folder)) == 1, ("unrecognized/multiple files in "
+			"binary folder %s: %s" % (folder, ", ".join(os.listdir(folder))))
 		return np.load(os.path.join(folder, self._get_dir_content(folder)[0]))
 
 	@staticmethod

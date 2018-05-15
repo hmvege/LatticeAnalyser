@@ -7,6 +7,7 @@ import os
 import itertools
 import types
 
+
 class MultiPlotCore(PostCore):
 	"""
 	Class to be inheritedfrom in case we got intervals or sub elements of the 
@@ -159,8 +160,6 @@ class MultiPlotCore(PostCore):
 				post_analysis_{obs_name}_{analysis_type}.png
 		"""
 
-		# her!!!
-
 		old_rc_paramx = plt.rcParams['xtick.labelsize']
 		old_rc_paramy = plt.rcParams['ytick.labelsize']
 		plt.rcParams['xtick.labelsize'] = 6
@@ -175,12 +174,21 @@ class MultiPlotCore(PostCore):
 
 		# Sets the beta values to plot
 		if beta[0] == "all" and len(beta) == 1:
-			bvalues = self.plot_values
+			beta_values = self.plot_values
 		else:
-			bvalues = beta
+			beta_values = beta
+
+		# Checks that we actually have enough different data points to plot
+		comparer = lambda b, ind: len(self.plot_values[b]) > max(ind)
+		asrt_msg = "Need at least %d different values. Currently have %d: %s" \
+			% (max(indexes), len(self.plot_values.values()[0]), 
+				", ".join(self.plot_values.values()[0].keys()))
+		if not np.all([comparer(b, indexes) for b in beta_values]):
+			print "WARNING:", asrt_msg
+			return
 
 		for ax, i in zip(list(itertools.chain(*axes)), indexes):
-			for ibeta in bvalues:
+			for ibeta in beta_values:
 				# Retrieves the values deepending on the indexes provided and
 				# beta values.
 				value = self.plot_values[ibeta] \
@@ -192,17 +200,17 @@ class MultiPlotCore(PostCore):
 				y_err = value["y_err"]
 				
 				if error_shape == "band":
-					ax.plot(x, y, "-", label=value["label"], color=self.colors[beta])
+					ax.plot(x, y, "-", label=value["label"], 
+						color=self.colors[ibeta])
 					ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, 
-						edgecolor='', facecolor=self.colors[beta])
+						edgecolor='', facecolor=self.colors[ibeta])
 				elif error_shape == "bars":
 					ax.errorbar(x, y, yerr=y_err, capsize=5, fmt="_", ls=":", 
-						label=value["label"], color=self.colors[beta], 
-						ecolor=self.colors[beta])
+						label=value["label"], color=self.colors[ibeta], 
+						ecolor=self.colors[ibeta])
 				else:
 					raise KeyError("%s is not a valid error bar shape." % 
 						error_shape)
-
 
 				# Basic plotting commands
 				ax.grid(True)

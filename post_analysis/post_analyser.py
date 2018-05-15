@@ -348,7 +348,9 @@ def post_analysis(beta_parameter_list, observables,
 			print qtq0e_analysis
 
 			for tf in q0_flow_times: # Flow times
-				print tf
+				if tf != 0.6: 
+					continue
+
 				qtq0e_analysis.plot_interval(tf)
 			y_limits = [-1, 1]
 			error_shape = "bars"
@@ -373,13 +375,13 @@ def post_analysis(beta_parameter_list, observables,
 				plot_together=gif_params["plot_together"],
 				error_shape=gif_params["error_shape"])
 
-		# if "qtq0eff" in gif_params["gif_observables"]:
-		# 	qtq0eff_gif = QtQ0EffPostGif(data, figures_folder=figures_folder, 
-		# 		verbose=verbose)
-		# 	qtq0eff_gif.data_setup()
-		# 	qtq0eff_gif.image_creator(gif_betas=gif_params["betas_to_plot"],
-		# 		plot_together=gif_params["plot_together"],
-		# 		error_shape="bars")
+		if "qtq0eff" in gif_params["gif_observables"]:
+			qtq0eff_gif = QtQ0EffPostGif(data, figures_folder=figures_folder, 
+				verbose=verbose)
+			qtq0eff_gif.data_setup()
+			qtq0eff_gif.image_creator(gif_betas=gif_params["betas_to_plot"],
+				plot_together=gif_params["plot_together"],
+				error_shape="bars")
 			
 
 

@@ -16,6 +16,10 @@ import types
 
 __all__ = ["FlowAnalyser"]
 
+from matplotlib import rc
+rc("text", usetex=True)
+rc("font", **{"family": "serif", "serif": ["Computer Modern"]})
+
 class FlowAnalyser(object):
 	observable_name = "Missing_Observable_Name"
 	observable_name_compact = "missing_obs_name"
@@ -221,17 +225,16 @@ class FlowAnalyser(object):
 			self.mc_interval = mc_interval
 			return
 
-		assert isinstance(mc_interval, [tuple, list]), \
+		assert isinstance(mc_interval, (tuple, list)), \
 			"invalid type: " + type(mc_interval)
 
 		self.mc_interval = mc_interval
 
 		# Sets the new y config range
-		self.y = self.y[mc_interval]
+		self.y = self.y[mc_interval[0]:mc_interval[1],:]
 
 		# Updates the title name or label to include range
-		self.fig_label = r"MC interval: $[%d, %d]$" % mc_interval
-
+		self.fig_label = r"MC interval: $[%d, %d)$" % mc_interval
 		# Checks and creates file folders for mc interval
 		self.observable_output_folder_path = os.path.join(
 			self.observable_output_folder_path,
@@ -671,14 +674,13 @@ class FlowAnalyser(object):
 
 		# Plots the error bar
 		ax.errorbar(x, y, yerr=y_std, fmt=".", color="0", ecolor="r",
-			label=self.observable_name, markevery=self.mark_interval,
-			errorevery=self.error_mark_interval)
+			markevery=self.mark_interval, errorevery=self.error_mark_interval)
 
 		# Plots hline/vline at specified position.
 		# Needed for plotting at e.g. t0. 
-		if self.plot_hline_at != None:
+		if not (self.plot_hline_at, types.NoneType):
 			ax.axhline(self.plot_hline_at, linestyle="--", color="0", alpha=0.3)
-		if self.plot_vline_at != None:
+		if not isinstance(self.plot_vline_at, types.NoneType):
 			ax.axvline(self.plot_vline_at, linestyle="--", color="0", alpha=0.3)
 
 		ax.set_xlabel(self.x_label)
@@ -791,25 +793,35 @@ class FlowAnalyser(object):
 			print "Figure created in %s" % fname_path
 		plt.close(fig)
 
-	def plot_histogram(self, flow_time_index, x_label=None, NBins=30,
-			x_limits="equal"):
+	def plot_histogram(self, flow_time_index, x_label=None, NBins=None,
+			x_limits="equal", F=lambda x: x):
 		"""
 		Function for creating histograms of the original, bootstrapped and 
 		jackknifed datasets together.
 
 		Args:
-			flow_time_index		(int): flow time to plot.
-			x_label				(str): x-axis label for plot.
-			[optional] NBins	(int): number of histogram bins.
-			[optional] x_limits	(str): type of x-axis limits. Default: 'auto'.
-				Choices: 'equal','auto','analysis'
+			flow_time_index: int, Flow time to plot.
+			x_label: str, x-axis label for plot.
+			NBins: int, optional, number of histogram bins.
+			x_limits: str, optional, type of x-axis limits. Default: 'auto'.
+				Choices: 'equal','auto','analysis'.
+			F: function, optional, function to run data through. Default is
+				a f(x): x.
 
 		Raises:
 			AssertionError: if the lengths of the different analyzed data sets 
 				differ.
-			AssertionError: if the flow
+			AssertionError: if the flow index exceeds the available total flow
+				time.
 		"""
 		N_unanalyzed = len(self.unanalyzed_y_data)
+
+		# Checks if we have a derived histogram_bins instance of class.
+		if not hasattr(self, "histogram_bins"):
+			if isinstance(NBins, types.NoneType):
+				NBins = 30
+		else:
+			NBins = self.histogram_bins
 
 		# Setting proper flow-time 
 		if flow_time_index < 0:
@@ -838,24 +850,24 @@ class FlowAnalyser(object):
 
 		# Adds unanalyzed data
 		ax1 = fig.add_subplot(311)
-		x1, y1, _ = ax1.hist(self.unanalyzed_y_data[flow_time_index], 
-			bins=NBins, label="Unanalyzed")
+		x1, y1, _ = ax1.hist(F(self.unanalyzed_y_data[flow_time_index]), 
+			bins=NBins, label="Unanalyzed", normed=True)
 		ax1.legend()
 		ax1.grid("on")
 		ax1.set_title(title_string)
 
 		# Adds bootstrapped data
 		ax2 = fig.add_subplot(312)
-		x2, y2, _ = ax2.hist(self.bs_y_data[flow_time_index],
-			bins=NBins, label="Bootstrap")
+		x2, y2, _ = ax2.hist(F(self.bs_y_data[flow_time_index]),
+			bins=NBins, label="Bootstrap", normed=True)
 		ax2.grid("on")
 		ax2.legend()
 		ax2.set_ylabel("Hits")
 
 		# Adds jackknifed histogram
 		ax3 = fig.add_subplot(313)
-		x3, y3, _ = ax3.hist(self.jk_y_data[flow_time_index],
-			bins=NBins, label="Jackknife")
+		x3, y3, _ = ax3.hist(F(self.jk_y_data[flow_time_index]),
+			bins=NBins, label="Jackknife", normed=True)
 		ax3.legend()
 		ax3.grid("on")
 		ax3.set_xlabel(r"%s" % x_label)
@@ -892,15 +904,25 @@ class FlowAnalyser(object):
 		# Closes figure for garbage collection
 		plt.close(fig)
 
-	def plot_multihist(self, histogram_slices, NBins=30, x_label=None):
+	def plot_multihist(self, histogram_slices, NBins=None, x_label=None, 
+		F=lambda x: x):
 		"""
 		Method for plotting multiple histograms in the same plot sequentially.
 
 		Args:
 			histogram_slices: list containing 3 flow time points of where to plot.
 			x_label: str for x-axis label, optional.
-			NBins: int, number of histogram bins, optional.
+			NBins: int, optional. Histogram binning. Default is 30 bins.
+			F: function, optional. Function to run data through. Default is	
+				f(x): x.
 		"""
+
+		# Checks if we have a derived histogram_bins instance of class.
+		if not hasattr(self, "histogram_bins"):
+			if isinstance(NBins, types.NoneType):
+				NBins = 30
+		else:
+			NBins = self.histogram_bins
 
 		# X-label set as the default y-label
 		if isinstance(x_label, types.NoneType):
@@ -981,12 +1003,10 @@ class FlowAnalyser(object):
 		# Sets up plot
 		fig = plt.figure()
 		ax = fig.add_subplot(111)
-		# print self.y_limits
-		# ax.set_ylim(self.y_limits)
 		ax.plot(correction_function(self.unanalyzed_y_data[flow_time_index]),
-			color="0", label=self.observable_name)
+			color="0", label=self.fig_label)
 		ax.set_xlabel(r"Monte Carlo time")
-		ax.set_ylabel(r"")
+		ax.set_ylabel(self.y_label)
 		ax.set_title(title_string)
 		ax.grid(True)
 		ax.legend()

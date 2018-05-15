@@ -10,7 +10,7 @@ import numpy as np
 def main():
 	#### Available observables
 	observables = [
-		"plaq", "energy", 
+		"plaq", "energy",
 		# Topological charge definitions
 		"topc", "topc2", "topc4", "topcr", "topcMC",
 		# Topological susceptibility definitions
@@ -44,13 +44,14 @@ def main():
 	# observables = ["qtq0eff"]
 	# observables = ["topsus"]
 	observables = []
-	observables = ["topcMC"]
-	# observables = ["topc"]
+	# observables = ["topcMC"]
+	# observables = ["topsusMC"]
+	observables = ["topcr"]
 
 	#### Base parameters
 	N_bs = 500
 	dryrun = False
-	verbose = False
+	verbose = True
 	parallel = True
 	numprocs = 8
 	base_parameters = {"N_bs": N_bs, "dryrun": dryrun, "verbose": verbose, 
@@ -198,25 +199,26 @@ def main():
 	analysis_parameter_list = [databeta60, databeta61, databeta62, databeta645]
 	# analysis_parameter_list = [databeta60, databeta61, databeta62]
 	# analysis_parameter_list = [databeta61, databeta62]
-	analysis_parameter_list = [databeta62]
+	# analysis_parameter_list = [databeta62]
 	# analysis_parameter_list = [databeta645]
 	# analysis_parameter_list = [smaug_data_beta61_analysis]
 
-	#### Submitting observable-batches
-	for analysis_parameters in analysis_parameter_list:
-		pre_analysis(analysis_parameters)
+	# #### Submitting observable-batches
+	# for analysis_parameters in analysis_parameter_list:
+	# 	pre_analysis(analysis_parameters)
 
-	# #### Submitting post-analysis data
-	# if len(analysis_parameter_list) >= 3:
-	# 	post_analysis(analysis_parameter_list, observables,
-	# 		topsus_fit_targets, line_fit_interval_points, energy_fit_target,
-	# 		q0_flow_times, euclidean_time_percents,
-	# 		post_analysis_data_type=post_analysis_data_type,
-	# 		figures_folder=figures_folder, gif_params=gif_params, 
-	# 		verbose=verbose)
-	# else:
-	# 	msg = "Need at least 3 different beta values to run post analysis"
-	# 	msg += "(%d given)."% len(analysis_parameter_list)
+	#### Submitting post-analysis data
+	if len(analysis_parameter_list) >= 3:
+		post_analysis(analysis_parameter_list, observables,
+			topsus_fit_targets, line_fit_interval_points, energy_fit_target,
+			q0_flow_times, euclidean_time_percents,
+			post_analysis_data_type=post_analysis_data_type,
+			figures_folder=figures_folder, gif_params=gif_params, 
+			verbose=verbose)
+	else:
+		msg = "Need at least 3 different beta values to run post analysis"
+		msg += "(%d given)."% len(analysis_parameter_list)
+		print msg
 
 if __name__ == '__main__':
 	main()

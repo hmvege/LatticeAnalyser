@@ -9,6 +9,7 @@ class TopsusAnalyserCore(FlowAnalyser):
 	x_label = r"$\sqrt{8t_{flow}}[fm]$"
 	y_label = r"$\chi_t^{1/4}[GeV]$"
 	NTemporal = {6.0: 48, 6.1: 56, 6.2: 64, 6.45: 96}
+	histogram_bins = 100
 
 	def __init__(self, *args, **kwargs):
 		super(TopsusAnalyserCore, self).__init__(*args, **kwargs)
@@ -56,6 +57,11 @@ class TopsusAnalyserCore(FlowAnalyser):
 		super(TopsusAnalyserCore, self).boot(N_bs, F=self.chi,
 			F_error=self.chi_std, store_raw_bs_values=store_raw_bs_values,
 			index_lists=index_lists)
+
+	def plot_histogram(self, flow_time_index, x_label=None, NBins=None,
+			x_limits="equal", F=None):
+		super(TopsusAnalyserCore, self).plot_histogram(flow_time_index, 
+			x_label=x_label, NBins=NBins, x_limits="auto", F=self.chi)
 
 # def main():
 # 	exit("Module TopSusAnalyser not intended for standalone usage.")
