@@ -11,6 +11,7 @@ class TopsusteIntervalPostAnalysis(MultiPlotCore, TopsusCore):
 	x_label = r"$\sqrt{8t_{flow}}[fm]$"
 	y_label = r"$\chi^{1/4} [GeV]$"
 	sub_obs = True
+	descr = "Intervals in euclidean time"
 
 	def plot_continuum(self, fit_target, interval_index, title_addendum="", **kwargs):
 		# Backs up old variables

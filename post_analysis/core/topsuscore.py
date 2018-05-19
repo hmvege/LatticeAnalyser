@@ -29,6 +29,12 @@ class TopsusCore(PostCore):
 	chi = {}
 	chi_der = {}
 
+	# For description in printing the different parameters from fit 
+	descr = ""
+
+	# Description for the extrapolation method in fit
+	extrapolation_method = ""
+
 	def __init__(self, *args, **kwargs):
 		super(TopsusCore, self).__init__(*args, **kwargs)
 		self._initialize_topsus_func()
@@ -69,7 +75,7 @@ class TopsusCore(PostCore):
 				0.25*self.chi_const[6.45]*qqerr/qq**(0.75)
 
 	def plot_continuum(self, fit_target, title_addendum="",
-		extrapolation_method="bootstrap", platou_fit_size=10,
+		extrapolation_method="plateau", plateau_fit_size=10,
 		interpolation_rank=3):
 		"""
 		Method for plotting the continuum limit of topsus at a given 
@@ -82,16 +88,16 @@ class TopsusCore(PostCore):
 			extrapolation_method: str, optional, method of selecting the 
 				extrapolation point to do the continuum limit. Method will be
 				used on y values and tau int. Choices:
-					- platou: line fits points neighbouring point in order to 
+					- plateau: line fits points neighbouring point in order to 
 						reduce the error bars using y_raw for covariance matrix.
-					- platou_mean: line fits points neighbouring point in order to
+					- plateau_mean: line fits points neighbouring point in order to
 						reduce the error bars. Line will be weighted by the y_err.
 					- nearest: line fit from the point nearest to what we seek
 					- interpolate: linear interpolation in order to retrieve value
 						and error. Does not work in conjecture with use_raw_values.
 					- bootstrap: will create multiple line fits, and take average. 
 						Assumes y_raw is the bootstrapped or jackknifed samples.
-			platou_size: int, optional. Number of points in positive and 
+			plateau_size: int, optional. Number of points in positive and 
 				negative direction to extrapolate fit target value from. This 
 				value also applies to the interpolation interval. Default is 20.
 			interpolation_rank: int, optional. Interpolation rank to use if 
@@ -102,6 +108,8 @@ class TopsusCore(PostCore):
 				bootstrapped line fitted data, raw_func_err(y, yerr). Calculated
 				by regular error propagation.
 		"""
+
+		self.extrapolation_method = extrapolation_method
 
 		# Retrieves data for analysis.
 		if fit_target == -1:
@@ -125,7 +133,7 @@ class TopsusCore(PostCore):
 			res = extract_fit_target(fit_target, x, y, y_err, y_raw=y_raw,
 				tau_int=tau_int, tau_int_err=tau_int_err, 
 				extrapolation_method=extrapolation_method, 
-				platou_size=platou_fit_size, interpolation_rank=3, 
+				plateau_size=plateau_fit_size, interpolation_rank=3, 
 				plot_fit=False, raw_func=self.chi[beta],
 				raw_func_err=self.chi_der[beta], plot_samples=False, 
 				verbose=False)
@@ -231,7 +239,8 @@ class TopsusCore(PostCore):
 		"""Returns the chi^2, a, a_err, b, b_err."""
 		return self.chi_squared, self.fit_params, self.topsus_continuum, \
 			self.topsus_continuum_error, self.NF, self.NF_error, \
-			self.fit_target, self.interval
+			self.fit_target, self.interval, self.descr, \
+			self.extrapolation_method
 
 	def print_continuum_estimate(self):
 		"""Prints the NF from the Witten-Veneziano formula."""

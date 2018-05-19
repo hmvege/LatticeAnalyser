@@ -1,12 +1,13 @@
 from post_analysis.core.flowgif import FlowGif
 from post_analysis.observable_analysis.qtq0effectivemasspostanalysis \
     import QtQ0EffectiveMassPostAnalysis
+from tools.latticefunctions import get_lattice_spacing
 
 class QtQ0EffPostGif(QtQ0EffectiveMassPostAnalysis, FlowGif):
     """Post-analysis of the effective mass."""
     observable_name_compact = "qtq0eff_gif"
     x_limits = [-0.1,4.7]
-    y_limits = [-1,1]
+    y_limits = [-1,3]
 
     def data_setup(self):
         """Sets up the data in a format FlowGif can utilze."""
@@ -21,6 +22,8 @@ class QtQ0EffPostGif(QtQ0EffectiveMassPostAnalysis, FlowGif):
         # self.data[atype][beta][flow_time][euclidean_time]
         for atype in self.analysis_types:
             for beta in self.beta_values:
+                norm = self.r0/get_lattice_spacing(beta)
+
                 for ftime in flow_times:
 
                     _y, _y_error = self.analyse_raw(
@@ -30,6 +33,6 @@ class QtQ0EffPostGif(QtQ0EffectiveMassPostAnalysis, FlowGif):
 
                     _data[atype][beta][ftime] = {
                         "x": self.data[atype][beta][ftime]["x"],
-                        "y": _y, "y_error": _y_error}
+                        "y": _y*norm, "y_error": _y_error*norm}
 
         self.data = _data

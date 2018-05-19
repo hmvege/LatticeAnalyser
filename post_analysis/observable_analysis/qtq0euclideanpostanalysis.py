@@ -13,7 +13,7 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 	"""Class for plotting different QteQte0 a specific flow time together."""
 	observable_name = ""
 	observable_name_compact = "qtq0e"
-	x_label = r"$t_e$"
+	x_label = r"$t_e[fm]$"
 	y_label = r"$\langle Q_{t_e} Q_{t_{e,0}} \rangle$" # $\chi_t^{1/4}[GeV]$
 	sub_obs = True
 	sub_sub_obs = True
@@ -98,9 +98,9 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 
 					if self.with_autocorr:
 						sub_values["tau_int"] = \
-							data[beta][sub_obs]["ac"]["tau_int"]
+							data[beta][sub_obs][te_index]["ac"]["tau_int"]
 						sub_values["tau_int_err"] = \
-							data[beta][sub_obs]["ac"]["tau_int_err"]
+							data[beta][sub_obs][te_index]["ac"]["tau_int_err"]
 
 					sub_values["label"] = r"%s, $\beta=%2.2f$, $\sqrt{8t_{f,0}}=%.2f$" \
 						% (self.size_labels[beta], beta, self._convert_label(sub_obs))
@@ -125,8 +125,8 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 					[self.observable_name_compact][tf_index]
 
 				if self.with_autocorr:
-					values["tau_int"] = data[beta]["ac"]["tau_int"]
-					values["tau_int_err"] = data[beta]["ac"]["tau_int_err"]
+					values["tau_int"] = data[beta][tf_index][te_index]["ac"]["tau_int"]
+					values["tau_int_err"] = data[beta][tf_index][te_index]["ac"]["tau_int_err"]
 
 				values["label"] = r"%s $\beta=%2.2f$, $t_f=%.2f$, $t_e=%d$" % (
 					self.size_labels[beta], beta, q0_flow_time, euclidean_index)

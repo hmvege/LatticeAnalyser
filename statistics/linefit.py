@@ -169,11 +169,12 @@ class LineFit:
 	def _yw_hat_err(self, x):
 		"""Weigthed y(x) errors, eq. 22."""
 		_pt1 = self.b0w + self.b1w * x
-		_pt2 = scipy.stats.t.isf(0.32, self.n - 2) * np.sqrt(self.s_xyw_err) 
+		_pt2 = scipy.stats.t.isf(1.0 - 0.32/2.0, self.n - 2) * np.sqrt(self.s_xyw_err) 
+		# _pt2 = scipy.stats.t.isf(0.32, self.n - 2) * np.sqrt(self.s_xyw_err) 
 		_pt2 *= np.sqrt(1.0 / np.sum(self.w) + \
 			(x - self.xw_mean)**2 / self.xwi_xmean_sum)
 
-		return [_pt1 - _pt2, _pt1 + _pt2]
+		return [_pt1 - np.abs(_pt2), _pt1 + np.abs(_pt2)]
 
 	def _get_s_xy(self):
 		"""Eq. 5."""
@@ -392,7 +393,7 @@ class ErrorPropagationSpline(object):
 		return (np.mean(s, axis=0), np.std(s, axis=0))
 
 def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
-	tau_int_err=None, extrapolation_method="platou", platou_size=20, 
+	tau_int_err=None, extrapolation_method="bootstrap", plateau_size=20, 
 	interpolation_rank=3, plot_fit=False, raw_func=lambda y: y, 
 	raw_func_der=lambda y, yerr: yerr, verbose=False, **kwargs):
 	"""
@@ -411,17 +412,17 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 		extrapolation_method: str, optional, method of selecting the 
 			extrapolation point to do the continuum limit. Method will be used
 			on y values and tau int. Choices:
-			- platou: line fits points neighbouring point in order to 
+			- plateau: line fits points neighbouring point in order to 
 				reduce the error bars. Covariance matrix will be automatically
 				included.
-			- platou_mean: line fits points neighbouring point in order to 
+			- plateau_mean: line fits points neighbouring point in order to 
 				reduce the error bars. Line will be weighted by the y_err.
 			- nearest: line fit from the point nearest to what we seek
 			- interpolate: linear interpolation in order to retrieve value
 				and error. Does not work in conjecture with use_raw_values.
 			- bootstrap: will create multiple line fits, and take average. 
 				Assumes y_raw is the bootstrapped or jackknifed samples.
-		platou_size: int, optional. Number of points in positive and 
+		plateau_size: int, optional. Number of points in positive and 
 			negative direction to extrapolate fit target value from. This value
 			also applies to the interpolation interval.	Default is 20.
 		interpolation_rank: int, optional. Interpolation rank to use if 
@@ -452,7 +453,7 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 	tau_int0 = None
 	chi_squared = None
 
-	extrap_method_list = ["platou", "platou_mean", "nearest", "interpolate", 
+	extrap_method_list = ["plateau", "plateau_mean", "nearest", "interpolate", 
 		"bootstrap"]
 
 	extrap_method_err = ("%s not an available extrapolation type: %s" % (
@@ -460,19 +461,19 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 	assert extrapolation_method in extrap_method_list, extrap_method_err
 
 	fit_index = np.argmin(np.abs(x - fit_target))
-	ilow = fit_index - platou_size
-	ihigh = fit_index + platou_size
+	ilow = fit_index - plateau_size
+	ihigh = fit_index + plateau_size
 
 	def _f(_x, a, b):
 		return _x*a + b
 
-	if extrapolation_method == "platou":
-		y0, y0_error, tau_int0, chi_squared = _extract_platou_fit(x0, _f, 
+	if extrapolation_method == "plateau":
+		y0, y0_error, tau_int0, chi_squared = _extract_plateau_fit(x0, _f, 
 			x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh], 
 			y_raw[ilow:ihigh], tau_int[ilow:ihigh], tau_int_err[ilow:ihigh])
 
-	elif extrapolation_method == "platou_mean":
-		y0, y0_error, chi_squared = _extract_platou_mean_fit(x0, _f, 
+	elif extrapolation_method == "plateau_mean":
+		y0, y0_error, chi_squared = _extract_plateau_mean_fit(x0, _f, 
 			x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh])
 
 	elif extrapolation_method == "bootstrap":
@@ -544,7 +545,7 @@ def __plot_fit_target(x, y, yerr, x0, y0, y0err, title_string=""):
 	plt.show()
 	plt.close(fig)
 
-def _extract_platou_fit(x0, f, x, y, y_err, y_raw, tau_int, tau_int_err):
+def _extract_plateau_fit(x0, f, x, y, y_err, y_raw, tau_int, tau_int_err):
 	"""
 	Extract y0 with y0err at a given x0 by using a line fit with the 
 	covariance matrix from the raw y data.
@@ -598,7 +599,7 @@ def _extract_platou_fit(x0, f, x, y, y_err, y_raw, tau_int, tau_int_err):
 
 	# Line fit from the mean values and the raw values covariance matrix
 	pol_raw, polcov_raw = sciopt.curve_fit(f, x, y, sigma=cov_raw,
-		absolute_sigma=False, p0=[0.18, 0.0])
+		absolute_sigma=False, p0=[0.18, 0.0], maxfev=1200)
 	pol_raw_err = np.sqrt(np.diag(polcov_raw))
 
 	# Extract fit target values
@@ -624,7 +625,7 @@ def _extract_platou_fit(x0, f, x, y, y_err, y_raw, tau_int, tau_int_err):
 
 	return y0, y0_error, tau_int0, chi_squared
 
-def _extract_platou_mean_fit(x0, f, x, y, y_err):
+def _extract_plateau_mean_fit(x0, f, x, y, y_err):
 	"""
 	Extract y0 with y0err at a given x0 by using a line fitw ith y_err as 
 	weights.

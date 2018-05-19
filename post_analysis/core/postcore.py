@@ -17,7 +17,7 @@ class PostCore(object):
 	formula = ""
 	x_label = r""
 	y_label = r""
-	dpi = None
+	dpi = 350
 	size_labels = {
 		6.0  : r"$24^3 \times 48$",
 		6.1  : r"$28^3 \times 56$",

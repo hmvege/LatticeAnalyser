@@ -35,18 +35,19 @@ def main():
 	# observables = list(set(set(observables) - set(obs_exlusions)))
 
 	# observables = observables_euclidean_time
-	# observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
+	observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["topc", "plaq", "energy", "topsus", "topcr"]
 	# observables = ["topcr", "qtq0eff"]
-	# observables = ["qtq0eff"]
+	observables = ["qtq0eff"]
+	# observables = observables_euclidean_time
 	# observables = ["topcr", "topsus"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
-	# observables = ["qtq0eff"]
 	# observables = ["topsus"]
-	observables = []
+	# observables = []
+	# observables = ["qtq0eff", "qtq0e"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["topcMC"]
 	# observables = ["topsusMC"]
-	observables = ["topcr"]
+	# observables = ["topcr"]
 
 	#### Base parameters
 	N_bs = 500
@@ -74,7 +75,8 @@ def main():
 	run_post_analysis = True
 	line_fit_interval_points = 20
 	# topsus_fit_targets = [0.3,0.4,0.5,0.58]
-	topsus_fit_targets = [0.3, 0.4, 0.5, 0.6]
+	# topsus_fit_targets = [0.3, 0.4, 0.5, 0.6]
+	topsus_fit_targets = [0.6]
 	energy_fit_target = 0.3
 
 	# Smearing gif parameters for qtq0e
@@ -89,7 +91,8 @@ def main():
 	}
 
 	#### Different batches
-	data_batch_folder = "../GluonAction/data8"
+	# data_batch_folder = "../GluonAction/data8"
+	data_batch_folder = "../GluonAction/data9"
 	# data_batch_folder = "../topc_modes_8x16"
 	# data_batch_folder = "../GluonAction/DataGiovanni"
 	# data_batch_folder = "smaug_data_beta61"
@@ -124,8 +127,8 @@ def main():
 	# euclidean_time_percents = [0]
 	
 	# Data types to be looked at in the post-analysis.
-	post_analysis_data_type = ["bootstrap", "jackknife", "unanalyzed"]
-	# post_analysis_data_type = ["unanalyzed"]
+	# post_analysis_data_type = ["bootstrap", "jackknife", "unanalyzed"]
+	post_analysis_data_type = ["bootstrap"]
 
 	#### Analysis batch setups
 	default_params = {

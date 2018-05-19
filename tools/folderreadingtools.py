@@ -456,6 +456,10 @@ class DataReader:
 		# Checks that provided folder exists
 		check_folder(self.figures_folder, self.dryrun, verbose=self.verbose)
 
+		# Sets the temporal dimension points
+		if "topct" in self.data.keys():
+			self.NT = self.data["topct"]["obs"].shape[-1]
+
 	def __call__(self, obs):
 		return copy.deepcopy(self.data[obs])
 

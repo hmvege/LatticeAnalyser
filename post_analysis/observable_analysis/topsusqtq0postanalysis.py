@@ -10,6 +10,7 @@ class TopsusQtQ0PostAnalysis(MultiPlotCore, TopsusCore):
 	x_label = r"$\sqrt{8t_{flow}}[fm]$"
 	y_label = r"$\chi(\langle Q_{t} Q_{t_0} \rangle)^{1/4} [GeV]$"
 	sub_obs = True
+	descr = "One Q at fixed flow time"
 
 	# Continuum plot variables
 	y_label_continuum = r"$\chi^{1/4}(\langle Q_{t} Q_{t_0} \rangle)[GeV]$"

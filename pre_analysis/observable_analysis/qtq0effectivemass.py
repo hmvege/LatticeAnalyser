@@ -29,7 +29,7 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 		self.NFlows_old = self.NFlows
 		self.x_old = self.x
 
-	def set_time(self, q0_flow_time):
+	def set_time(self, q0_flow_time, fold=True):
 		"""
 		Function for setting the flow time we will plot in euclidean time.
 
@@ -55,7 +55,6 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 		# Sets a new x-axis
 		self.x = np.linspace(0, self.NFlows - 1, self.NFlows)
 
-
 		# Multiplies by Q0 to get the correlator
 		y_e0 = copy.deepcopy(self.y_original[:,self.q0_flow_time_index,0])
 
@@ -63,6 +62,17 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 			# self.y[:,iteuclidean] = np.roll(self.y[:,iteuclidean], -1, axis=1)
 			# self.y[:,iteuclidean] *= y_e0
 			self.y[:,iteuclidean] = self.y[:,iteuclidean] * y_e0
+
+		# # Folds
+		# if fold:
+		# 	last_half = np.flip(self.y[:, self.NT/2:], axis=1)
+		# 	first_half = self.y[:, :self.NT/2]
+		# 	print self.y.shape, first_half.shape, last_half.shape, 
+		# 	self.y = np.concatenate((first_half, last_half), axis=0)
+
+			self.N_configurations, self.NT = self.y.shape
+		
+		print self.y.shape
 
 		# self.y = np.log(self.y/np.roll(self.y, -1, axis=1)) # C(t)/C(t+1)
 

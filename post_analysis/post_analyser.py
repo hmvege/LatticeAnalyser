@@ -8,9 +8,11 @@ from tqdm import tqdm
 def append_fit_params(fplist, obs_name, analysis_name, fparams):
 	"""Function for appending fit parameters."""
 	chi_squared, fit_params, topsus, topsus_err, N_F, N_F_err, \
-		fit_target, interval = fparams
+		fit_target, interval, descr, extrap_method = fparams
 	fplist.append({
 		"observable_type": obs_name,
+		"descr": descr,
+		"extrap_method": extrap_method,
 		"analysis_type": analysis_name,
 		"fit_target": fit_target,
 		"chi_squared": chi_squared,
@@ -26,7 +28,7 @@ def append_fit_params(fplist, obs_name, analysis_name, fparams):
 	})
 	return fplist
 
-def write_fit_parameters_to_file(fparams, fname, verbose=False):
+def write_fit_parameters_to_file(fparams, fname, skip_values=None, verbose=False):
 	"""Function for writing fit parameters to file."""
 	with open(fname, "w") as f:
 		sorted_parameter_list = sorted(fparams, key=lambda d: \
@@ -36,7 +38,9 @@ def write_fit_parameters_to_file(fparams, fname, verbose=False):
 		fw = 14
 		dict_keys = OrderedDict([
 			("observable_type", {"name": "obs", "w": 14, "type": "s"}),
-			("fit_target", {"name": "f_t", "w": 5, "type": ".2f"}),
+			("descr", {"name": "description", "w": 40, "type": "s"}),
+			("fit_target", {"name": "sqrt(8t_0)", "w": 15, "type": ".2f"}),
+			("extrap_method", {"name": "extrapolation-method", "w": 25, "type": "s"}),
 			("interval", {"name": "int", "w": 12, "type": "s"}),
 			("analysis_type", {"name": "atype", "w": 14, "type": "s"}),
 			("chi_squared", {"name": "Chi^2", "w": 25, "type": ".8f"}),
@@ -55,7 +59,8 @@ def write_fit_parameters_to_file(fparams, fname, verbose=False):
 		create_str = lambda _val, _width, _fcode: "{0:<{w}{t}}".format(
 			_val, w=_width, t=_fcode)
 		for k in dict_keys.items():
-			header_string += create_str(k[-1]["name"], k[-1]["w"], "s")
+			if not k[0] in skip_values:
+				header_string += create_str(k[-1]["name"], k[-1]["w"], "s")
 		if verbose: 
 			print header_string
 		f.write(header_string + "\n")
@@ -64,8 +69,9 @@ def write_fit_parameters_to_file(fparams, fname, verbose=False):
 		for fp in sorted_parameter_list:
 			line_values = ""
 			for k in dict_keys.items():
-				line_values += create_str(fp[k[0]], k[-1]["w"],
-					k[-1]["type"])
+				if not k[0] in skip_values:
+					line_values += create_str(fp[k[0]], k[-1]["w"],
+						k[-1]["type"])
 			if verbose:
 				print line_values
 			f.write(line_values + "\n")
@@ -206,8 +212,6 @@ def post_analysis(beta_parameter_list, observables,
 			topcmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
 	if "topsus" in observables:
-		print "FIX EXTRAPOLATION SELECTION @ topsus @ post_analyser.py"
-		# Plots topsusprint analysis
 		topsus_analysis = TopsusPostAnalysis(data, 
 			figures_folder=figures_folder, verbose=verbose)
 		for analysis_type in post_analysis_data_type:
@@ -230,7 +234,6 @@ def post_analysis(beta_parameter_list, observables,
 			topsus4_analysis.plot()
 
 	if "topsusqtq0" in observables:
-		print "FIX SELECTION & EXTRAPOLATION @ topsusqtq0 @ post_analyser.py"
 		topsusqtq0_analysis = TopsusQtQ0PostAnalysis(data,
 			figures_folder=figures_folder, verbose=verbose)
 		for analysis_type in post_analysis_data_type:
@@ -251,7 +254,6 @@ def post_analysis(beta_parameter_list, observables,
 			topsusqtq0_analysis.plot_series([3,4,5,6], beta=bval_to_plot)
 
 	if "topsust" in observables:
-		print "FIX EXTRAPOLATION SELECTION @ topsust @ post_analyser.py"
 		topsust_analysis = TopsustPostAnalysis(data,
 			figures_folder=figures_folder, verbose=verbose)
 		for analysis_type in post_analysis_data_type:
@@ -271,7 +273,6 @@ def post_analysis(beta_parameter_list, observables,
 			topsust_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
 	if "topsuste" in observables:
-		print "FIX EXTRAPOLATION SELECTION @ topsuste @ post_analyser.py"
 		topsuste_analysis = TopsusteIntervalPostAnalysis(data, 
 			figures_folder=figures_folder, verbose=verbose)
 		for analysis_type in post_analysis_data_type:
@@ -291,7 +292,6 @@ def post_analysis(beta_parameter_list, observables,
 			topsuste_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
 	if "topsusMC" in observables:
-		print "FIX EXTRAPOLATION SELECTION @ topsusMC @ post_analyser.py"
 		topsusmc_analysis = TopsusMCIntervalPostAnalysis(data,
 			figures_folder=figures_folder, verbose=verbose)
 		for analysis_type in post_analysis_data_type:
@@ -311,7 +311,6 @@ def post_analysis(beta_parameter_list, observables,
 			topsusmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
 	if "qtq0e" in observables:
-		print "FIX SELECTION @ qtq0e @ post_analyser.py"
 		qtq0e_analysis = QtQ0EuclideanPostAnalysis(data, 
 			figures_folder=figures_folder, verbose=verbose)
 
@@ -340,7 +339,6 @@ def post_analysis(beta_parameter_list, observables,
 
 	if "qtq0eff" in observables:
 		# if analysis_type != "unanalyzed": continue
-		print "FIX SELECTION @ qtq0eff @ post_analyser.py"
 		qtq0e_analysis = QtQ0EffectiveMassPostAnalysis(data, 
 			figures_folder=figures_folder, verbose=verbose)
 		for analysis_type in post_analysis_data_type:
@@ -361,8 +359,10 @@ def post_analysis(beta_parameter_list, observables,
 
 	for obs in observables:
 		if "topsus" in obs:
+			skip_values = ["a", "a_err", "b", "b_err", "analysis_type"]
 			write_fit_parameters_to_file(fit_parameters, 
-				os.path.join("param_file.txt"), verbose=verbose)
+				os.path.join("param_file.txt"), skip_values=skip_values, 
+				verbose=verbose)
 			break
 
 	if len(gif_params["gif_observables"]) != 0:

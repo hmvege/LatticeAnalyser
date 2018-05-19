@@ -76,7 +76,7 @@ class MultiPlotCore(PostCore):
 	def _convert_label(self, label):
 		"""Short method for formatting time in labels."""
 		try:
-			return r"$%d$" % int(label)
+			return r"$%d$" % float(label)
 		except ValueError:
 			return r"$%s$" % label
 
@@ -251,7 +251,7 @@ class MultiPlotCore(PostCore):
 		else:
 			fpath = os.path.join(folder_path, fname)
 
-		plt.savefig(fpath, dpi=400)
+		plt.savefig(fpath, dpi=self.dpi)
 		if self.verbose:
 			print "Figure saved in %s" % fpath
 		# plt.show()

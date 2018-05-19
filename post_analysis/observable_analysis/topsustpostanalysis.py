@@ -11,6 +11,7 @@ class TopsustPostAnalysis(MultiPlotCore, TopsusCore):
 	x_label = r"$\sqrt{8t_{flow}}[fm]$"
 	y_label = r"$\chi^{1/4}(\langle Q_t Q_{t_{euclidean}} \rangle) [GeV]$"
 	sub_obs = True
+	descr = "One Q at fixed euclidean time"
 
 	# Continuum plot variables
 	y_label_continuum = r"$\chi^{1/4}(\langle Q_t Q_{t_{euclidean}} \rangle)[GeV]$"

@@ -20,6 +20,8 @@ class TopsusPostAnalysis(TopsusCore):
 	# x_label_continuum = r"$a/{{r_0}^2}$"
 	x_label_continuum = r"$a^2/t_0$"
 
+	descr = "Default topological susceptibility"
+
 def main():
 	exit("Exit: TopsusPostAnalysis not intended to be a standalone module.")
 
