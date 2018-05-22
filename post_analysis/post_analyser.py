@@ -89,8 +89,9 @@ def plaq_post_analysis(*args, **kwargs):
 
 def post_analysis(beta_parameter_list, observables,
 	topsus_fit_targets, line_fit_interval_points, energy_fit_target,
-	q0_flow_times, euclidean_time_percents, figures_folder="figures", 
-	post_analysis_data_type=None, bval_to_plot="all", gif_params=None, 
+	q0_flow_times, euclidean_time_percents, extrapolation_method=None,
+	plot_continuum_fit=False, figures_folder="figures", 
+	post_analysis_data_type=None, bval_to_plot="all", gif_params=None,
 	verbose=False):
 	"""
 	Post analysis of the flow observables.
@@ -140,7 +141,8 @@ def post_analysis(beta_parameter_list, observables,
 			energy_analysis.plot()
 
 			# # Retrofits the energy for continiuum limit
-			# energy_analysis.plot_continuum(0.3, 0.015, "bootstrap_fit")
+			# energy_analysis.plot_continuum(0.3, 0.015, 
+			# 	extrapolation_method=extrapolation_method)
 
 			# # Plot running coupling
 			# energy_analysis.coupling_fit()
@@ -219,7 +221,9 @@ def post_analysis(beta_parameter_list, observables,
 			print topsus_analysis
 			topsus_analysis.plot()
 			for cont_target in continuum_targets:
-				topsus_analysis.plot_continuum(cont_target)
+				topsus_analysis.plot_continuum(cont_target, 
+					extrapolation_method=extrapolation_method,
+					plot_continuum_fit=plot_continuum_fit)
 
 				fit_parameters = append_fit_params(fit_parameters, 
 					topsus_analysis.observable_name_compact, analysis_type,

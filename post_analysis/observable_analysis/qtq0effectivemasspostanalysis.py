@@ -64,7 +64,6 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 		folded_array[1:-1] = np.sqrt((0.5*folded_array[1:-1])**2 + (0.5*np.flip(last_part, axis=0))**2)
 		return folded_array
 
-
 	def _convert_label(self, lab):
 		return float(lab[-6:])
 

@@ -29,7 +29,7 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 		return euclidean_index
 
 	def _convert_label(self, lab):
-		return float(lab[-4:])
+		return float(lab[-6:])
 
 	# def set_gif_folder(self, gif_euclidean_time, gif_folder=None):
 	# 	"""
@@ -102,7 +102,7 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 						sub_values["tau_int_err"] = \
 							data[beta][sub_obs][te_index]["ac"]["tau_int_err"]
 
-					sub_values["label"] = r"%s, $\beta=%2.2f$, $\sqrt{8t_{f,0}}=%.2f$" \
+					sub_values["label"] = r"%s, $\beta=%2.2f$, $t_{f,0}=%.2f$" \
 						% (self.size_labels[beta], beta, self._convert_label(sub_obs))
 
 					values[sub_obs] = sub_values

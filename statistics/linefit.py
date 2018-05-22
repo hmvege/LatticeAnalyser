@@ -655,7 +655,7 @@ def _extract_plateau_mean_fit(x0, f, x, y, y_err):
 	return y0[0], y0_error[0], chi_squared
 
 def _extract_bootstrap_fit(x0, f, x, y, y_err, y_raw, tau_int, tau_int_err,
-	plot_samples=False, F=lambda y: y, FDer=lambda y, yerr: yerr):
+	plot_samples=False, F=lambda _y: _y, FDer=lambda _y, _yerr: _yerr):
 	"""
 	Extract y0 with y0err at a given x0 by using line fitting the y_raw data.
 	Error will be corrected by line fitting tau int and getting the exact
@@ -718,11 +718,30 @@ def _extract_bootstrap_fit(x0, f, x, y, y_err, y_raw, tau_int, tau_int_err,
 	tau_int0 = __get_tau_int(x0, x, tau_int, tau_int_err)
 
 	y0_mean = F(np.mean(y0_sample, axis=0))
-	y0_std = FDer(np.mean(y0_sample, axis=0), 
-		np.std(y0_sample, axis=0) * np.sqrt(2*tau_int0))
 
-	# y0_mean = np.mean(y0_sample, axis=0)
-	# y0_std = np.std(y0_sample, axis=0)*np.sqrt(8*tau_int0)
+	# # Using error propegation on the std of the fit and correcting by tau int
+	# y0_std = FDer(np.mean(y0_sample, axis=0), 
+	# 	np.std(y0_sample, axis=0) * np.sqrt(2*tau_int0))
+	# print y0_std
+
+	# # Using error propegation on the fit errors and correcting by tau int
+	# y0_std = FDer(np.mean(y0_sample, axis=0),
+	# 	np.mean(y0_sample_err) * np.sqrt(2*tau_int0))
+	# print y0_std
+
+	# y0_std = np.mean(FDer(y0_sample, y0_sample_err * np.sqrt(2*tau_int0)))
+	# print y0_std
+
+	# y0_std = np.mean(FDer(y0_sample, y0_sample_err))*np.sqrt(2*tau_int0)
+	# print y0_std
+
+	# Using the mean of the line fit errors and correcting it by tau int
+	# y0_std = np.mean(F(y0_sample_err))*np.sqrt(2*tau_int0)
+	# print y0_std
+
+	# Using standard deviation of the line fits and correcting it by tau int
+	y0_std = np.std(F(y0_sample))*np.sqrt(2*tau_int0)
+	# print y0_std
 
 	if plot_samples:
 		sample_mean = F(np.mean(plot_ymean, axis=1))

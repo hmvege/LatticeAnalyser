@@ -33,11 +33,17 @@ class PostCore(object):
 	r0 = 0.5
 	sub_obs = False
 	sub_sub_obs = False
-	colors = {
-		6.0: "#5cbde0", # blue
-		6.1: "#6fb718", # green
-		6.2: "#bc232e", # red
-		6.45: "#8519b7" # purple
+	# colors = { # http://colorbrewer2.org
+	# 	6.0: "#d7191c", # blue
+	# 	6.1: "#fdae61", # green
+	# 	6.2: "#abd9e9", # red
+	# 	6.45: "#2c7bb6" # purple
+	# }
+	colors = { # http://colorbrewer2.org
+		6.0: "#e41a1c",
+		6.1: "#377eb8",
+		6.2: "#4daf4a",
+		6.45: "#984ea3"
 	}
 
 	# font_type = {"fontname": "modern"}

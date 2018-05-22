@@ -191,16 +191,20 @@ class FlowAnalyser(object):
 			AssertionError: if q0_flow_time is less than maximum value of 
 				a*sqrt(8t).
 		"""
-		assert q0_flow_time < (self.a * np.sqrt(8*self.x))[-1], \
+		# assert q0_flow_time < (self.a * np.sqrt(8*self.x))[-1], \
+		# 	"q0_flow_time %f exceed maximum flow time value %f." % \
+		# 	(q0_flow_time, (self.a * np.sqrt(8*self.x))[-1])
+
+		assert q0_flow_time < (self.a * self.x)[-1], \
 			"q0_flow_time %f exceed maximum flow time value %f." % \
-			(q0_flow_time, (self.a * np.sqrt(8*self.x))[-1])
+			(q0_flow_time, (self.a * self.x)[-1])
 
 		# Stores the q0 flow time value
 		self.q0_flow_time = q0_flow_time
 
 		# Selects index closest to q0_flow_time
 		self.q0_flow_time_index = np.argmin(
-			np.abs(self.a * np.sqrt(8*self.x) - self.q0_flow_time))
+			np.abs(self.a * self.x - self.q0_flow_time))
 
 		if self.verbose:
 			print ("Extracting values at flow time %.2f with index %d for"

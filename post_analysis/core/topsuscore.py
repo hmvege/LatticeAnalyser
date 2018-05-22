@@ -76,7 +76,7 @@ class TopsusCore(PostCore):
 
 	def plot_continuum(self, fit_target, title_addendum="",
 		extrapolation_method="plateau", plateau_fit_size=10,
-		interpolation_rank=3):
+		interpolation_rank=3, plot_continuum_fit=False):
 		"""
 		Method for plotting the continuum limit of topsus at a given 
 		fit_target.
@@ -134,7 +134,7 @@ class TopsusCore(PostCore):
 				tau_int=tau_int, tau_int_err=tau_int_err, 
 				extrapolation_method=extrapolation_method, 
 				plateau_size=plateau_fit_size, interpolation_rank=3, 
-				plot_fit=False, raw_func=self.chi[beta],
+				plot_fit=plot_continuum_fit, raw_func=self.chi[beta],
 				raw_func_err=self.chi_der[beta], plot_samples=False, 
 				verbose=False)
 
@@ -184,7 +184,7 @@ class TopsusCore(PostCore):
 		y0_err = [self.topsus_continuum_error, self.topsus_continuum_error]
 
 		# Sets of title string with the chi squared and fit target
-		title_string = r"$\sqrt{8t_{flow,0}} = %.2f[fm], \chi^2 = %.2g$" % (
+		title_string = r"$t_{flow,0} = %.2f[fm], \chi^2 = %.2f$" % (
 			self.fit_target, self.chi_squared)
 		title_string += title_addendum
 

@@ -38,14 +38,14 @@ def main():
 	observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["topc", "plaq", "energy", "topsus", "topcr"]
 	# observables = ["topcr", "qtq0eff"]
-	observables = ["qtq0eff"]
+	# observables = ["qtq0eff"]
 	# observables = observables_euclidean_time
 	# observables = ["topcr", "topsus"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
-	# observables = ["topsus"]
+	observables = ["topsus"]
 	# observables = []
 	# observables = ["qtq0eff", "qtq0e"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
-	# observables = ["topcMC"]
+	# observables = ["qtq0e"]
 	# observables = ["topsusMC"]
 	# observables = ["topcr"]
 
@@ -109,6 +109,11 @@ def main():
 	else:
 		correct_energy = True
 
+	# Method of continuum extrapolation
+	# Options: plateau, plateau_mean, nearest, interpolate, bootstrap
+	extrapolation_method = "interpolate"
+	plot_continuum_fit = True
+
 	# Indexes to look at for topct.
 	num_t_euclidean_indexes = 5
 
@@ -119,10 +124,10 @@ def main():
 	# Number of different sectors we will analyse in monte carlo time
 	MC_time_splits = 2
  
-	# Extraction point in sqrt(8*t) for q0 in qtq0
-	q0_flow_times = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+	# Extraction point in flow time a*t_f for q0 in qtq0
+	q0_flow_times = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6] # [fermi]
 
-	# Flow time indexes to plot qtq0 in euclidean time at
+	# Flow time indexes in percent to plot qtq0 in euclidean time at
 	euclidean_time_percents = [0, 0.25, 0.50, 0.75, 1.00]
 	# euclidean_time_percents = [0]
 	
@@ -215,6 +220,8 @@ def main():
 		post_analysis(analysis_parameter_list, observables,
 			topsus_fit_targets, line_fit_interval_points, energy_fit_target,
 			q0_flow_times, euclidean_time_percents,
+			extrapolation_method=extrapolation_method,
+			plot_continuum_fit=plot_continuum_fit,
 			post_analysis_data_type=post_analysis_data_type,
 			figures_folder=figures_folder, gif_params=gif_params, 
 			verbose=verbose)
