@@ -10,6 +10,10 @@ from tqdm import tqdm
 
 __all__ = ["LineFit", "extract_fit_target"]
 
+from matplotlib import rc
+rc("text", usetex=True)
+rc("font", **{"family": "serif", "serif": ["Computer Modern"]})
+
 class LineFit:
 	"""
 	Line fit based on article by Lavagini et al (2007).
@@ -609,7 +613,7 @@ def _extract_plateau_fit(x0, f, x, y, y_err, y_raw, tau_int, tau_int_err):
 	y0, y0_error, _, chi_squared = lfit_raw.fit_weighted(x0)
 
 	# Errors should be equal in positive and negative directions.
-	if np.abs(y0 - y0_error[0]) != np.abs(y0 - y0_error[1]):
+	if np.abs(np.abs(y0 - y0_error[0]) - np.abs(y0 - y0_error[1])) > 1e-15:
 		print "Warning: uneven errors:\nlower: %.10f\nupper: %.10f" % (
 			y0_error[0], y0_error[1])
 
@@ -763,13 +767,11 @@ def _extract_bootstrap_fit(x0, f, x, y, y_err, y_raw, tau_int, tau_int_err,
 		ax_samples.errorbar(x, y, yerr=y_err, marker=".", 
 			linestyle="none", color="tab:orange", label="Original")
 
-		print "Samples Chi^2: ", LineFit.chi_squared(y, y_err, sample_mean)
+		ax_samples.title(r"$\chi^2: %g$" % 
+			LineFit.chi_squared(y, y_err, sample_mean))
 
 		plt.show()
 		plt.close(fig_samples)
-
-	# print y[np.argmin(np.abs(x-x0))], y_err[np.argmin(np.abs(x-x0))], "%.10f" % np.abs(y[np.argmin(np.abs(x-x0))] - y0_mean)
-	# print y0_mean, y0_std, tau_int0
 
 	return y0_mean, y0_std, tau_int0
 
@@ -780,11 +782,6 @@ def __get_tau_int(x0, x, tau_int, tau_int_err):
 	return tau_int0[0]
 
 
-
-def _fit_var_printer(var_name, var, var_error, w=16):
-	return "{0:<s} = {1:<.{w}f} +/- {2:<.{w}f}".format(var_name, var, 
-		var_error, w=w)
-
 def _test_simple_line_fit():
 	"""
 	Function for testing the case where one compares the curve_fit module in
@@ -794,6 +791,10 @@ def _test_simple_line_fit():
 	"""
 	import random
 	import scipy.optimize as sciopt
+
+	def _fit_var_printer(var_name, var, var_error, w=16):
+		return "{0:<s} = {1:<.{w}f} +/- {2:<.{w}f}".format(var_name, var, 
+			var_error, w=w)
 
 	# Generates signal with noise
 	a = 0.65
@@ -891,9 +892,9 @@ def _test_simple_line_fit():
 	ax2.fill_betweenx(np.linspace(0,6,100), xw_fit_error[0], xw_fit_error[1], 
 		label=r"$x_{0,w}\pm\sigma_{x_0,w}$", alpha=0.5, color="tab:orange")
 	ax2.legend(loc="best", prop={"size":8})
+	fig1.savefig("line_fit_example.png", dpi=400)
 	plt.show()
-
-	# fit.plot(True)
+	plt.close(fig1)
 
 def _test_inverse_line_fit():
 	"""
@@ -923,100 +924,8 @@ def _test_inverse_line_fit():
 	x_hat = np.linspace(x_start, x_end, 10)
 	X_values = np.linspace(x_start, x_end, 1000)
 
-	# def covariance(M, bias=False):
-	# 	"""
-	# 	Method for determining coveriance.
-
-	# 	Equivalent to:
-	# 		np.cov(M.T, bias=True)
-	# 	"""
-	# 	_bias_correction = 0
-	# 	if bias: _bias_correction = 1
-	# 	NObs, NVar = M.shape
-	# 	sigma_matrix = np.zeros((N, N))
-	# 	M_mean = np.mean(M, axis=0)
-	# 	for i in range(NVar):
-	# 		v1 = M.T[i] - M_mean[i]
-	# 		for j in range(NVar):
-	# 			v2 = M.T[j] - M_mean[j]				
-	# 			sigma_matrix[i,j] = np.sum(v1*v2)/(NObs - _bias_correction)
-	# 	return sigma_matrix
-	# if not (np.abs(covariance(signal) - np.cov(signal.T, bias=True)) < 1e-16).all(): \
-	# 	print "covariances not equivalent"
-
 	def _f(_x, a, b):
 		return _x*a + b
-
-	###############################
-	######## Bootstrap fit ########
-	###############################
-	N_bs = 50
-	random_fit_indexes = np.random.randint(0, M, size=(N_bs, M, N))
-
-	print "random_fit_indexes.shape: ", random_fit_indexes.shape
-	print "signal.shape: ", signal.shape
-	bs_signals = np.zeros((N_bs, N))
-	for i_bs in xrange(N_bs):
-		for j in xrange(N):
-			bs_signals[i_bs,j] = signal[random_fit_indexes[i_bs,:,j], j].mean()
-
-	bs_vals = []
-	bs_vals_err = []
-
-	fig_bs = plt.figure()
-	ax_bs = fig_bs.add_subplot(111)
-	for bs_signal in bs_signals:
-		p, pcov = sciopt.curve_fit(_f, x, bs_signal)#, sigma=np.cov(bs_signals.T))
-		_fit_err = np.sqrt(np.diag(pcov))
-		_lfit = LineFit(x, bs_signal)
-		_lfit.set_fit_parameters(p[1], _fit_err[1], p[0], _fit_err[0], 
-			weighted=False)
-		_y_hat, _y_hat_err = _lfit(x_hat, weighted=False)
-
-		bs_vals.append(_y_hat)
-		bs_vals_err.append(_y_hat_err)
-
-		ax_bs.fill_between(x_hat, _y_hat_err[0], _y_hat_err[1], alpha=0.01, 
-			color="tab:red")
-		ax_bs.plot(x_hat, _y_hat, label="Numpy curve fit", color="tab:red", 
-			alpha=0.1)
-
-	bs_mean = np.asarray(bs_vals).mean(axis=0)
-	bs_std = np.asarray(bs_vals_err).mean(axis=0)
-
-	lf = LineFit(x, signal_mean, signal_err)
-	print "Bootstrap Chi^2: ", lf.chi_squared(signal_mean, signal_err, 
-		bs_mean)
-
-	# Sets up bs std edges
-	ax_bs.plot(x_hat, bs_std[0], x_hat, bs_std[1], color="tab:blue", alpha=0.6)
-
-	# Plots bs mean
-	ax_bs.plot(x_hat, bs_mean, label="Averaged bootstrap fit", color="tab:blue")
-
-	# Plots original data with error bars
-	ax_bs.errorbar(x, signal_mean, yerr=signal_err, marker=".", linestyle="none", 
-		color="tab:orange")
-	plt.show()
-	plt.close(fig_bs)
-
-	exit(1)
-
-
-	# import symfit as sf
-	# _a, _b = sf.parameters('a,b')
-	# _x, _y = sf.variables('x,y')
-	# res = sf.Fit({_y: _a * _x + _b}, x=x, y=signal_mean, sigma_y=signal_err)
-	# print res
-
-	## Unweigthed fit
-	# print help(sciopt.curve_fit)
-
-	# pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=np.cov(signal.T))
-	# print scipy.optimize.__all__
-
-	# pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=signal_err, 
-	# 	absolute_sigma=True)
 
 	from autocorrelation import Autocorrelation
 
@@ -1042,13 +951,6 @@ def _test_inverse_line_fit():
 		G /= np.arange(n, 0, -1)
 		return G
 
-	# autocov_mat = np.zeros((N,N))
-	# for i in xrange(N):
-	# 	for j in xrange(N):
-	# 		autocov_mat[i,j] = autocov(signal[:,i], signal[:,j])
-	# print autocov
-	# print G_matrix.shape
-
 	cov_mat = np.cov(signal.T)
 	print cov_mat.shape
 
@@ -1056,10 +958,6 @@ def _test_inverse_line_fit():
 		cov_mat[i,i] *= 2*_tau_ints[i]
 
 	lfit = LineFit(x, signal_mean, y_err=signal_err)
-
-	
-	# pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=signal_err, 
-	# 	absolute_sigma=True)
 
 	signal_err_corrected = np.sqrt(np.diag(cov_mat))
 	print "signal_err_corrected: ", signal_err_corrected[:5]
@@ -1070,84 +968,265 @@ def _test_inverse_line_fit():
 	lfit.set_fit_parameters(pol1[1], np.sqrt(polcov1[1,1]), pol1[0], 
 		np.sqrt(polcov1[0,0]), weighted=True)
 	y_hat, y_hat_err, chi_squared = lfit(X_values, weighted=True)
-	print "With polyfit:            ", np.sqrt(np.diag(polcov1)), 
-	get_err(y_hat_err)[:5]
+	print "With polyfit:            ", np.sqrt(np.diag(polcov1)), \
+		get_err(y_hat_err)[:5]
 	
 	pol1, polcov1 = scipy.optimize.curve_fit(_f, x, signal_mean, 
 		sigma=np.sqrt(np.diag(cov_mat)))
 	lfit.set_fit_parameters(pol1[1], np.sqrt(polcov1[1,1]), pol1[0],
 		np.sqrt(polcov1[0,0]), weighted=True)
 	y_hat, y_hat_err, chi_squared = lfit(X_values, weighted=True)
-	print "With naive autocorr:     ", np.sqrt(np.diag(polcov1)), 
-	get_err(y_hat_err)[:5]
-	
+	print "With naive autocorr:     ", np.sqrt(np.diag(polcov1)), \
+		get_err(y_hat_err)[:5]
+
 	pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=np.cov(signal.T))
 	lfit.set_fit_parameters(pol1[1], np.sqrt(polcov1[1,1]), pol1[0],
 		np.sqrt(polcov1[0,0]), weighted=True)
 	y_hat, y_hat_err, chi_squared = lfit(X_values, weighted=True)
-	print "With cov(signal.T):      ", np.sqrt(np.diag(polcov1)), 
-	get_err(y_hat_err)[:5]
+	print "With cov(signal.T):      ", np.sqrt(np.diag(polcov1)), \
+		get_err(y_hat_err)[:5]
 	
 	pol1, polcov1 = sciopt.curve_fit(_f, x, signal_mean, sigma=signal_err)
 	lfit.set_fit_parameters(pol1[1], np.sqrt(polcov1[1,1]), pol1[0], 
 		np.sqrt(polcov1[0,0]), weighted=True)
 	y_hat, y_hat_err, chi_squared = lfit(X_values, weighted=True)
-	print "With only signal errors: ", np.sqrt(np.diag(polcov1)), 
-	get_err(y_hat_err)[:5]
+	print "With only signal errors: ", np.sqrt(np.diag(polcov1)), \
+		get_err(y_hat_err)[:5]
 
-	#INTERPOLATION
-	
-	# print help(interpolate.InterpolatedUnivariateSpline)
-	s = spline(x, signal_mean, w=1/signal_err, k=1)
-	# print s(X_values)
+def _test_bootstrap(x, y, x0, _f=lambda _x, a, b: _x*a + b, N_bs=50):
+	"""Bootstrap example"""
+	x_hat = x[0,:]
+	y_mean, y_err = y.mean(axis=0), y.std(axis=0)
 
-	spl = ErrorPropagationSpline(x, signal_mean, signal_err, k=1)
-	spline_mean, spline_err = spl(X_values)
-	print spline_mean[:5]
-	print spline_err[:5]
+	M, N = y.shape
+	random_fit_indexes = np.random.randint(0, M, size=(N_bs, M, N))
+	y_bs = np.zeros((N_bs, N))
+	for i_bs in xrange(N_bs):
+		for j in xrange(N):
+			y_bs[i_bs,j] = y[random_fit_indexes[i_bs,:,j], j].mean()
 
+	tau_int, tau_int_err = np.ones(len(x_hat))*0.5, np.zeros(len(x_hat))+0.001
 
+	# Gets values to plot
+	bs_mean, bs_err = np.zeros(len(x_hat)), np.zeros(len(x_hat))
+	for i, _x0 in enumerate(x_hat):
+		res = _extract_bootstrap_fit(_x0, _f, x_hat, y_mean, y_err, y_bs.T, tau_int,
+			tau_int_err)
+		bs_mean[i] = res[0]
+		bs_err[i] = res[1]
 
-	fit_par = pol1
-	fit_err = np.sqrt(np.diag(polcov1))
+	fig_bs = plt.figure()
+	ax_bs = fig_bs.add_subplot(111)
 
-	# print np.cov(signal_mean.T)
-	# lfit.set_fit_parameters(fit_par[1], fit_err[1], fit_par[0], fit_err[0],
-	# 	weighted=True)
-	lfit.fit_weighted(x_arr=x_hat)
-	y_hat, y_hat_err, chi_squared = lfit(x_hat, weighted=True)
-	print "Regular weighted fit Chi^2: ", chi_squared
+	# Sets up bs std edges
+	ax_bs.fill_between(x_hat, bs_mean-bs_err, bs_mean+bs_err, alpha=0.5,
+		color="tab:blue")
 
-	fig1 = plt.figure()
-	ax1 = fig1.add_subplot(111)
+	# Plots bs mean
+	ax_bs.plot(x_hat, bs_mean, label="Bootstrap fit", color="tab:blue")
 
-	# REGULAR LINE FIT
-	# ax1.plot(x_hat, y_hat, label="Numpy curve fit", color="tab:blue")
-	# ax1.fill_between(x_hat, y_hat_err[0], y_hat_err[1], alpha=0.5,
-	# 	color="tab:blue")
+	# Plots original data with error bars
+	ax_bs.errorbar(x_hat, y_mean, yerr=y_err, marker=".", linestyle="none", 
+		color="tab:orange", label=r"Signal")
+	ax_bs.set_title(r"$\chi^2=%g$" % 
+		LineFit.chi_squared(y_mean, y_err, bs_mean))
+	ax_bs.axvline(x0, color="tab:grey", linestyle=":",
+		label=r"$x_0$ fit target")
+	ax_bs.legend(loc="best")
+	fig_name = "tests/bootstrap_inverse_fit.png"
+	# print "%s saved." % fig_name
+	fig_bs.savefig(fig_name, dpi=400)
+	# plt.show()
+	plt.close(fig_bs)
 
-	# SPLINE FIT
-	ax1.plot(X_values, spline_mean, label="Numpy curve fit", color="tab:blue")
-	ax1.fill_between(X_values, spline_mean-spline_err, spline_mean+spline_err,
-		alpha=0.5, color="tab:blue")
-	ax1.errorbar(x, signal_mean, yerr=signal_err, marker=".",
-		label=r"Signal $\chi=%.2f$" % chi_squared, linestyle="none", 
-		color="tab:orange")
-	ax1.set_ylim(0.5, 5)
-	# ax1.axvline(x_fit, color="tab:orange")
-	# ax1.fill_betweenx(np.linspace(0,6,100), x_fit_err[0], x_fit_err[1], 
-	# 	label=r"$x_0\pm\sigma_{x_0}$", alpha=0.5, color="tab:orange")
-	ax1.legend(loc="best", prop={"size":8})
-	ax1.set_title((r"Fit test: $a=%.2f\pm%.4f, b=%.2f\pm%.4f$" %
-		(fit_par[0], fit_err[0], fit_par[1], fit_err[1])))
+	return _extract_bootstrap_fit(x0, _f, x_hat, y_mean, y_err, y_bs.T, tau_int,
+			tau_int_err)[:2]
 
-	plt.show()
-	# fit = LineFit(x, signal, signal_err)
-	# x_hat = np.linspace(0, 5, 100)
+def _test_plateau(x, y, x0, _f=lambda _x, a, b: _x*a + b):
+	"""
+	Performs a line fit through points x points to get an exact value for x0.
+	"""
+	x_hat = x[0,:]
+	y_mean, y_err = y.mean(axis=0), y.std(axis=0)
+
+	tau_int, tau_int_err = np.ones(len(x_hat))*0.5, np.zeros(len(x_hat))+0.001
+
+	# Gets values to plot
+	x0_plot = np.linspace(x_hat[0], x_hat[-1], 1000)
+	y0_mean, y0_err = np.zeros(1000), np.zeros(1000)
+	for i, _x0 in enumerate(x0_plot):
+		res = _extract_plateau_fit(_x0, _f, x_hat, y_mean, y_err, y.T, tau_int,
+			tau_int_err)
+		y0_mean[i] = res[0]
+		y0_err[i] = res[1]
+
+	# Gets values to find chi^2
+	y0_mean_chi2 = np.zeros(len(x_hat))
+	for i, _x0 in enumerate(x_hat):
+		res = _extract_plateau_fit(_x0, _f, x_hat, y_mean, y_err, y.T, tau_int,
+			tau_int_err)
+		y0_mean_chi2[i] = res[0]
+
+	fig = plt.figure()
+	ax = fig.add_subplot(111)
+	ax.plot(x0_plot, y0_mean, label="Line fit", color="tab:blue")
+	ax.fill_between(x0_plot, y0_mean-y0_err, y0_mean+y0_err, alpha=0.5, 
+		color="tab:blue")
+	ax.errorbar(x_hat, y_mean, yerr=y_err, marker=".", linestyle="none",
+		color="tab:orange", label=r"Signal")
+	ax.set_ylim(0.5, 5)
+	ax.set_title(r"$\chi^2=%g$" % 
+		LineFit.chi_squared(y_mean, y_err, y0_mean_chi2))
+	ax.axvline(x0, color="tab:grey", linestyle=":",	label=r"$x_0$ fit target")
+	ax.legend(loc="best", prop={"size": 8})
+	fig.savefig("tests/plateau_inverse_fit.png", dpi=400)
+	# plt.show()
+	plt.close(fig)	
+
+	return _extract_plateau_fit(x0, _f, x_hat, y_mean, y_err, y.T, tau_int,
+		tau_int_err)[:2]
+
+def _test_plateau_mean(x, y, x0, _f=lambda _x, a, b: _x*a + b):
+	"""
+	Performs a line fit through points x points to get an exact value for x0.
+	"""
+	x_hat = x[0,:]
+	y_mean, y_err = y.mean(axis=0), y.std(axis=0)
+
+	# Line fit from the mean values and their standard deviations
+	pol_line, polcov_line = sciopt.curve_fit(_f, x_hat, y_mean, sigma=y_err,
+	 	absolute_sigma=False)
+	pol_line_err = np.sqrt(np.diag(polcov_line))
+	x_fit_arr = np.linspace(x_hat[0], x_hat[-1], 1000)
+	# Extract fit target values
+	lfit_default = LineFit(x_hat, y_mean, y_err)
+	lfit_default.set_fit_parameters(pol_line[1], pol_line_err[1], 
+		pol_line[0], pol_line_err[0], weighted=True)
+	y0, y0_error, chi_squared = lfit_default(x0, weighted=True)
+	y0_error = ((y0_error[1] - y0_error[0])/2)
+
+	y_fit_mean, y_fit_err, _ = lfit_default(x_fit_arr, weighted=True)
+	y_fit_err = ((y_fit_err[1] - y_fit_err[0])/2.0)
+
+	y_hat, _, _ = lfit_default(x_hat, weighted=True)
+
+	fig = plt.figure()
+	ax = fig.add_subplot(111)
+	ax.plot(x_fit_arr, y_fit_mean, label="Line fit", color="tab:blue")
+	ax.fill_between(x_fit_arr, y_fit_mean-y_fit_err, 
+		y_fit_mean+y_fit_err, alpha=0.5, color="tab:blue")
+	ax.errorbar(x_hat, y_mean, yerr=y_err, marker=".", linestyle="none",
+		color="tab:orange", label=r"Signal")
+	ax.set_ylim(0.5, 5)
+	ax.set_title(r"$\chi^2=%g$" % LineFit.chi_squared(y_mean, y_err, y_hat))
+	ax.axvline(x0, color="tab:grey", linestyle=":", label=r"$x_0$ fit target")
+	ax.legend(loc="best", prop={"size": 8})
+	fig.savefig("tests/plateau_mean_inverse_fit.png", dpi=400)
+	# plt.show()
+	plt.close(fig)
+
+	return _extract_plateau_mean_fit(x0, _f, x_hat, y_mean, y_err)[:2]
+
+def _test_interpolation(x, y, x0, _f=lambda _x, a, b: _x*a + b, k_spline=1):
+	"""Spline fit."""
+	x_hat = x[0,:]
+	x_fit_arr = np.linspace(x_hat[0], x_hat[-1], 1000)
+	signal_mean, signal_err = y.mean(axis=0), y.std(axis=0)
+	s = spline(x_hat, signal_mean, w=1/signal_err, k=1)
+
+	spl = ErrorPropagationSpline(x_hat, signal_mean, signal_err, k=k_spline)
+	spline_mean, spline_err = spl(x_fit_arr)
+	spl_fit, spl_err = spl(x_hat)
+
+	fig_spl = plt.figure()
+	ax_spl = fig_spl.add_subplot(111)
+	ax_spl.plot(x_fit_arr, spline_mean, label="Spline interpolation fit",
+		color="tab:blue")
+	ax_spl.fill_between(x_fit_arr, spline_mean-spline_err, 
+		spline_mean+spline_err, alpha=0.5, color="tab:blue")
+	ax_spl.errorbar(x_hat, signal_mean, yerr=signal_err, marker=".", 
+		linestyle="none", color="tab:orange", label=r"Signal")
+	ax_spl.set_ylim(0.5, 5)
+	ax_spl.set_title(r"$\chi^2=%g$" % 
+		LineFit.chi_squared(signal_mean, signal_err, spl_fit))
+	ax_spl.axvline(x0, color="tab:grey", linestyle=":",
+		label=r"$x_0$ fit target")
+	ax_spl.legend(loc="best", prop={"size": 8})
+	fig_spl.savefig("tests/spline_inverse_fit.png", dpi=400)
+	# plt.show()
+	plt.close(fig_spl)
+
+	x0_mean, x0_std = spl(x0)
+	return x0_mean[0], x0_std[0]
+
+def _test_nearest(x, y, x0, _f=lambda _x, a, b: _x*a + b):
+	x_hat = x[0,:]
+	fit_index = np.argmin(np.abs(x_hat - x0))
+	y_mean, y_err = y.mean(axis=0), y.std(axis=0)
+
+	fig = plt.figure()
+	ax = fig.add_subplot(111)
+	ax.errorbar(x_hat, y_mean, yerr=y_err, marker=".", 
+		linestyle="none", color="tab:orange", label=r"Signal")
+	ax.set_ylim(0.5, 5)
+	ax.axvline(x0, color="tab:grey", linestyle=":",
+		label=r"$x_0$ fit target")
+
+	# Plots hline to illustrate error bars
+	ax.axhline(y_mean[fit_index], color="tab:blue", label=r"$y(x_0)$ value estimation")
+	err_upper = (y_mean[fit_index]+y_err[fit_index])*np.ones(len(x_hat))
+	err_lower = (y_mean[fit_index]-y_err[fit_index])*np.ones(len(x_hat))
+	ax.fill_between(x_hat, err_lower, err_upper, alpha=0.5, color="tab:blue")
+	ax.set_title("Nearest value")
+	ax.legend(loc="best")
+	fig.savefig("tests/nearest_inverse_fit.png", dpi=400)
+	# plt.show()
+	plt.close(fig)
+
+	return y_mean[fit_index], y_err[fit_index]
+
+def _test_fit_methods():
+	"""Tests different methods of extracting an exact fit value at x0."""
+
+	# Generates signal for a line with cosine gaussian noise
+	x_start = 0
+	x_end = 5
+	a = 0.65 
+	b = 1.1
+	N = 5 # Number of data points
+	M = 20 # Number of observations at each data point
+	x = np.linspace(x_start, x_end, N)
+	x_matrix = np.ones((M, N)) * x
+	signal_spread = 1.7
+	np.random.seed(1)
+	signal = np.random.uniform(-signal_spread, signal_spread, (M, N))
+	# signal = np.cos(np.random.uniform(-signal_spread, signal_spread, (M, N)))
+	signal += a*x_matrix + b
+
+	x0 = x_end / 2
+
+	def tab_print(name, values):
+		y0, y0err = values
+		print "%s & $%.2f$ & $%.2f$ \\\\" % (name, y0, y0err)
+
+	tab_print("Nearest", _test_nearest(x_matrix, signal, x0))
+	tab_print("Interpolation", _test_interpolation(x_matrix, signal, x0, 
+		k_spline=3))
+	tab_print("Bootstrap", _test_bootstrap(x_matrix, signal, x0))
+	tab_print("Plateau mean", _test_plateau_mean(x_matrix, signal, x0))
+	tab_print("Plateau", _test_plateau(x_matrix, signal, x0))
+
+	# print "Bootstrap fit: ", _test_bootstrap(x_matrix, signal, x0)
+	# print "Spline interpolation: ",	_test_interpolation(x_matrix, signal, x0, 
+	# 	k_spline=3)
+	# print "Plateau mean linefit: ", _test_plateau_mean(x_matrix, signal, x0)
+	# print "Nearest: ", _test_nearest(x_matrix, signal, x0)
+	# print "Plateau linefit: ", _test_plateau(x_matrix, signal, x0)
 
 def main():
+	_test_fit_methods()
 	# _test_simple_line_fit()
-	_test_inverse_line_fit()
+	# _test_inverse_line_fit()
 
 if __name__ == '__main__':
 	main()
