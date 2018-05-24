@@ -35,14 +35,14 @@ def main():
 	# observables = list(set(set(observables) - set(obs_exlusions)))
 
 	# observables = observables_euclidean_time
-	observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
+	# observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["topc", "plaq", "energy", "topsus", "topcr"]
 	# observables = ["topcr", "qtq0eff"]
 	# observables = ["qtq0eff"]
 	# observables = observables_euclidean_time
 	# observables = ["topcr", "topsus"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
-	observables = ["topsus"]
+	# observables = ["topsus"]
 	# observables = []
 	# observables = ["qtq0eff", "qtq0e"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["qtq0e"]
@@ -132,8 +132,8 @@ def main():
 	# euclidean_time_percents = [0]
 	
 	# Data types to be looked at in the post-analysis.
-	# post_analysis_data_type = ["bootstrap", "jackknife", "unanalyzed"]
-	post_analysis_data_type = ["bootstrap"]
+	post_analysis_data_type = ["bootstrap", "jackknife", "unanalyzed"]
+	# post_analysis_data_type = ["bootstrap"]
 
 	#### Analysis batch setups
 	default_params = {
