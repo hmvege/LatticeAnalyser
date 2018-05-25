@@ -112,7 +112,7 @@ def main():
 	# Method of continuum extrapolation
 	# Options: plateau, plateau_mean, nearest, interpolate, bootstrap
 	extrapolation_method = "interpolate"
-	plot_continuum_fit = True
+	plot_continuum_fit = False
 
 	# Indexes to look at for topct.
 	num_t_euclidean_indexes = 5
@@ -211,9 +211,9 @@ def main():
 	# analysis_parameter_list = [databeta645]
 	# analysis_parameter_list = [smaug_data_beta61_analysis]
 
-	#### Submitting observable-batches
-	for analysis_parameters in analysis_parameter_list:
-		pre_analysis(analysis_parameters)
+	# #### Submitting observable-batches
+	# for analysis_parameters in analysis_parameter_list:
+	# 	pre_analysis(analysis_parameters)
 
 	#### Submitting post-analysis data
 	if len(analysis_parameter_list) >= 3:
