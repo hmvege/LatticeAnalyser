@@ -111,7 +111,7 @@ def main():
 
 	# Method of continuum extrapolation
 	# Options: plateau, plateau_mean, nearest, interpolate, bootstrap
-	# extrapolation_methods = ["plateau", "plateau_mean", "nearest", "interpolate", "bootstrap"]
+	extrapolation_methods = ["plateau", "plateau_mean", "nearest", "interpolate", "bootstrap"]
 	extrapolation_methods = ["plateau"]
 	plot_continuum_fit = False
 
@@ -134,7 +134,7 @@ def main():
 	
 	# Data types to be looked at in the post-analysis.
 	post_analysis_data_type = ["bootstrap", "jackknife", "unanalyzed"]
-	post_analysis_data_type = ["bootstrap"]
+	# post_analysis_data_type = ["bootstrap"]
 
 	#### Analysis batch setups
 	default_params = {

@@ -16,15 +16,32 @@ def _extract_inverse(fit_target, X, Y, Y_err):
         min(fit_target - X)
         error(min(fit_target - X))
     """
+    # Y_err = np.asarray(Y_err)
+
     # Finds the target value
     min_index = np.argmin(np.abs(fit_target - Y))
     x0 = X[min_index]
 
+    if len(Y_err.shape) != 2:
+        Y_err = np.asarray([Y-Y_err, Y+Y_err])
+
     # Finds the error bands
-    x_err_neg, x_err_pos = Y_err
-    x0_err_index_neg = np.argmin(np.abs(fit_target - x_err_pos))
-    x0_err_index_pos = np.argmin(np.abs(fit_target - x_err_neg))
+    y_err_neg, y_err_pos = Y_err
+
+    x0_err_index_neg = np.argmin(np.abs(fit_target - y_err_neg))
+    x0_err_index_pos = np.argmin(np.abs(fit_target - y_err_pos))
+
+    # If the indices are equal, i.e. the error is too small and we have the 
+    # same x_err for both positive and negative, we find the next error by 
+    # looking at the one closest to x_err.
+    if x0_err_index_pos == x0_err_index_neg:
+        if np.abs(y_err_neg[x0_err_index_neg-1] - fit_target) > np.abs(y_err_pos[x0_err_index_pos+1] - fit_target):
+            x0_err_index_pos += 1
+        else:
+            x0_err_index_neg -= 1
+
     x0_err = [X[x0_err_index_neg], X[x0_err_index_pos]]
+
     return x0, x0_err
 
 def _get_covariance_matrix_from_raw(y_raw):
@@ -76,13 +93,15 @@ def __plot_fit_target(x, y, yerr, x0, y0, y0err, title_string="",
     ax.errorbar(x, y, yerr=yerr, color="tab:orange", 
         label="Original data points", capsize=5, fmt="_", ls=":",
         ecolor="tab:orange")
-    fit_lab = "Fit target: %.2f" % x0
-    lab = r"$y_0 = %.2f \pm %g$" % (y0, y0err)
     if inverse_fit:
+        fit_lab = "$y_0 = %.2f$" % x0
+        lab = r"$x_0 = %.4f \pm %g$" % (y0, y0err)
         ax.axhline(x0, linestyle="dashed", color="tab:grey", label=fit_lab)
         ax.errorbar([y0, y0], [x0, x0], xerr=[y0err, y0err], fmt="o",
             capsize=10, color="tab:blue", ecolor="tab:blue", label=lab)
     else:
+        fit_lab = "$x_0 = %.2f$" % x0
+        lab = r"$y_0 = %.2f \pm %g$" % (y0, y0err)
         ax.axvline(x0, linestyle="dashed", color="tab:grey", label=fit_lab)
         ax.errorbar([x0, x0], [y0, y0], yerr=[y0err, y0err], fmt="o",
             capsize=10, color="tab:blue", ecolor="tab:blue", label=lab)
@@ -132,19 +151,18 @@ def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
         absolute_sigma=False, p0=[0.18, 0.0], maxfev=1200)
     pol_raw_err = np.sqrt(np.diag(polcov_raw))
 
-    print fit_target
-
     # Extract fit target values
     lfit_raw = lfit.LineFit(x, y, y_err)
     lfit_raw.set_fit_parameters(pol_raw[1], pol_raw_err[1], pol_raw[0],
         pol_raw_err[0], weighted=True)
+    y0, y0_error, _, chi_squared = lfit_raw.fit_weighted(fit_target)
+    
+    print fit_target
+
     if inverse_fit:
         y0, y0_error = lfit_raw.inverse_fit(fit_target, weighted=True)
-        _, _, chi_squared = lfit_raw(y0, weighted=True)
         y0_error = ((y0_error[1] - y0_error[0])/2)
     else:
-        y0, y0_error, _, chi_squared = lfit_raw.fit_weighted(fit_target)
-
         # Errors should be equal in positive and negative directions.
         if np.abs(np.abs(y0 - y0_error[0]) - np.abs(y0 - y0_error[1])) > 1e-15:
             print "Warning: uneven errors:\nlower: %.10f\nupper: %.10f" % (
@@ -159,17 +177,17 @@ def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
     # Gets the tau int. Asserted that is is provided.
     if not isinstance(tau_int, types.NoneType) and \
         not isinstance(tau_int_err, types.NoneType):
-        if not inverse_fit:
-            tau_int0 = __get_tau_int(fit_target, x, tau_int, tau_int_err)
-        else:
+        if inverse_fit:
             tau_int0 = __get_tau_int(y0, x, tau_int, tau_int_err)
+        else:
+            tau_int0 = __get_tau_int(fit_target, x, tau_int, tau_int_err)
     else:
         tau_int0 = 0.5
 
     # Corrects error with the tau int
     y0_error *= np.sqrt(2*tau_int0)
 
-    print y0, y0_error, tau_int0, chi_squared
+    exit("Error is here, in the inverse fit most likely somewhere")
 
     return y0, y0_error, tau_int0, chi_squared
 
@@ -273,7 +291,7 @@ def _extract_bootstrap_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
             # _x0_err is not needed, is error cannot be inflated by the 
             # autocorrelation. 
             y0_sample[i], _tmp_err = fit_sample.inverse_fit(fit_target)
-        else:   
+        else:
             y0_sample[i], _tmp_err = fit_sample(fit_target)
 
         y0_sample_err[i] = (_tmp_err[1] - _tmp_err[0])/2

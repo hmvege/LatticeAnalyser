@@ -73,8 +73,7 @@ class EnergyPostAnalysis(PostCore):
 			y0, x0, x0_err, _, _ = extract_fit_target(E0, bval["t"], bval["y"], 
 				y_err=bval["y_err"], y_raw=bval[self.analysis_data_type], 
 				tau_int=bval["tau_int"], tau_int_err=bval["tau_int_err"],
-				extrapolation_method=extrapolation_method, 
-				inverse_fit=True, **kwargs)
+				extrapolation_method=extrapolation_method, **kwargs)
 
 			a_values.append(bval["a"]**2/x0)
 			t0_values.append(x0)
@@ -90,7 +89,7 @@ class EnergyPostAnalysis(PostCore):
 
 		# Extrapolates t0 to continuum
 		N_cont = 1000
-		a_squared_cont = np.linspace(-0.1, a_values[-1]*1.1, N_cont)
+		a_squared_cont = np.linspace(-0.025, a_values[-1]*1.1, N_cont)
 
 		# Fits to continuum and retrieves values to be plotted
 		continuum_fit = LineFit(a_values, y, y_err=yerr)

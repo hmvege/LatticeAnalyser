@@ -248,8 +248,7 @@ class LineFit:
 				self._yw_hat(self.x))
 		else:
 			y_fit, y_fit_err = self._y_hat(x), self._y_hat_err(x)
-			return y_fit, y_fit_err, self.chi_squared(self.y, self.y_err, 
-				self._y_hat(self.x))
+			return y_fit, y_fit_err
 
 
 	def inverse_fit(self, y0, weighted=False):
@@ -491,25 +490,27 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 		if inverse_fit:
 			x0 = y[fit_index]
 			# Extracts x0 x0_error from y0
-			y0, y0_error, lfit_tools._extract_inverse(fit_target, x, y, y_err)
+			y0, y0_error = lfit_tools._extract_inverse(fit_target, x, y, y_err)
+			y0_error = (y0_error[-1] - y0_error[0])/2.0
 		else:
 			x0 = x[fit_index]
 			y0 = y[fit_index]
 			y0_error = y_err[fit_index]
 
-		if isinstance(y_raw, types.NoneType):
+		if not isinstance(y_raw, types.NoneType):
 			y0_raw = y_raw[fit_index]
 
-		if isinstance(tau_int, types.NoneType):
+		if not isinstance(tau_int, types.NoneType):
 			tau_int0 = tau_int[fit_index]
 
 	elif extrapolation_method == "interpolate":
 		y_spline = ErrorPropagationSpline(x[ilow:ihigh], y[ilow:ihigh],
 			y_err[ilow:ihigh], k=interpolation_rank)
 		if inverse_fit:
-			_x = np.linspace(x[low], x[high], 10000)
+			_x = np.linspace(x[ilow], x[ihigh], 10000)
 			_y, _y_err = y_spline(_x)
 			y0, y0_error = lfit_tools._extract_inverse(fit_target, _x, _y, _y_err)
+			y0_error = (y0_error[-1] - y0_error[0])/2.0
 			x0 = fit_target
 		else:
 			y0, y0_error = y_spline(fit_target)
