@@ -170,11 +170,12 @@ def post_analysis(beta_parameter_list, observables,
 
 				# energy_analysis.plot()
 
-				# energy_analysis.plot(x_limits=[-0.01,0.15], 
-				# 	y_limits=[-0.025, 0.4], plot_hline_at=0.3, 
-				# 	figure_name_appendix="_zoomed")
+				energy_analysis.plot(x_limits=[-0.01,0.15], 
+					y_limits=[-0.025, 0.4], plot_hline_at=0.3, 
+					figure_name_appendix="_zoomed")
 
-				t0 = energy_analysis.get_scale()
+				t0, t0err = energy_analysis.get_scale(
+					extrapolation_method=extrapolation_method, plot_fit=True)
 
 				# # Retrofits the energy for continiuum limit
 				# energy_analysis.plot_continuum(0.3, 0.015, 

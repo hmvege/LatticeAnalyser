@@ -218,6 +218,9 @@ class PostCore(object):
 			if self.with_autocorr:
 				values["tau_int"] = data[beta]["ac"]["tau_int"]
 				values["tau_int_err"] = data[beta]["ac"]["tau_int_err"]
+			else:
+				values["tau_int"] = None
+				values["tau_int_err"] = None
 			values["label"] = r"%s $\beta=%2.2f$" % (
 				self.size_labels[beta], beta)
 			values["color"] = self.colors[beta]
@@ -300,7 +303,7 @@ class PostCore(object):
 
 		# Plots a horizontal line at position "plot_hline_at"
 		if not isinstance(plot_hline_at, types.NoneType):
-			ax.axvline(plot_hline_at, linestyle="--", color="0", alpha=0.3)
+			ax.axhline(plot_hline_at, linestyle="--", color="0", alpha=0.3)
 
 		# Saves and closes figure
 		fname = self._get_plot_figure_name(output_folder=figure_folder, 
@@ -308,9 +311,6 @@ class PostCore(object):
 		plt.savefig(fname)
 		if self.verbose:
 			print "Figure saved in %s" % fname
-
-		# if self.observable_name_compact == "energy":
-		# 	plt.show()
 
 		plt.close(fig)
 

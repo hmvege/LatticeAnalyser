@@ -1,8 +1,7 @@
 #!/usr/bin/env python2
 
 from scipy.interpolate import InterpolatedUnivariateSpline as spline
-from linefit_tools import __plot_fit_target, _extract_bootstrap_fit, \
-	_extract_plateau_fit, _extract_plateau_mean_fit, _extract_inverse
+import linefit_tools as lfit_tools
 import scipy.optimize as sciopt
 import scipy.stats
 import numpy as np
@@ -97,11 +96,11 @@ class LineFit:
 		return self.y_fit, self.y_fit_err, fit_params, self.chi
 
 	def _y_hat(self, x):		
-		"""Unweigthed y(x), eq. 1."""
+		"""Unweighted y(x), eq. 1."""
 		return self.b0 + self.b1 * x
 
 	def _y_hat_err(self, x):
-		"""Unweigthed y(x) error, eq. 8b."""
+		"""Unweighted y(x) error, eq. 8b."""
 		_pt1 = self.b0 + self.b1 * x
 		_pt2 = scipy.stats.t.isf(0.32, self.n - 2) * np.sqrt(self.s_xy_err) 
 		_pt2 *= np.sqrt(1.0 / self.n + (x - self.x_mean)**2 / self.xi_xmean_sum)
@@ -134,7 +133,7 @@ class LineFit:
 
 		# # Temporary som contained in both eq. 4, eq. 6 and eq. 7
 		# self.xwi_xmean_sum = np.sum(self.w * (self.x - self.xw_mean)**2)
-		self.xw_mean, self.yw_mean, self.xwi_xmean_sum = self._get_means_weigthed()
+		self.xw_mean, self.yw_mean, self.xwi_xmean_sum = self._get_means_weighted()
 
 
 		# Eq. 18
@@ -169,7 +168,7 @@ class LineFit:
 		return self.yw_fit, self.yw_fit_err, fit_params, self.chi_w
 
 	def _yw_hat(self, x):
-		"""weigthed y(x), eq. 1"""
+		"""weighted y(x), eq. 1"""
 		return self.b0w + self.b1w * x
 
 	def _yw_hat_err(self, x):
@@ -192,13 +191,13 @@ class LineFit:
 		return s_xyw_err/(self.n - 2.0)
 
 	def _get_means(self):
-		""" Returns non-weigthed means."""
+		""" Returns non-weighted means."""
 		# Eq. 4, eq. 6 and eq. 7
 		x_mean = np.mean(self.x)
 		xi_xmean_sum = np.sum((self.x - x_mean)**2)
 		return x_mean, np.mean(self.y), xi_xmean_sum
 
-	def _get_means_weigthed(self):
+	def _get_means_weighted(self):
 		"""Sets weighted means."""
 		xw_mean = np.sum(self.w * self.x) / np.sum(self.w)
 		yw_mean = np.sum(self.w * self.y) / np.sum(self.w)
@@ -228,7 +227,7 @@ class LineFit:
 			self.b1w = b1
 			self.b1w_err = b1_err
 			self.xw_mean, self.yw_mean, self.xwi_xmean_sum \
-				= self._get_means_weigthed()
+				= self._get_means_weighted()
 			self.s_xyw_err = self._get_s_xyw()
 		else:
 			self.b0 = b0
@@ -249,16 +248,17 @@ class LineFit:
 				self._yw_hat(self.x))
 		else:
 			y_fit, y_fit_err = self._y_hat(x), self._y_hat_err(x)
-			return y_fit, y_fit_err
+			return y_fit, y_fit_err, self.chi_squared(self.y, self.y_err, 
+				self._y_hat(self.x))
 
 
-	def inverse_fit(self, y0, weigthed=False):
+	def inverse_fit(self, y0, weighted=False):
 		"""
 		Inverse fiting on the values we have performed a fit one.
 
 		Args:
 			y0: target fit at y-axis, float.
-			weigthed: bool, if we are to use weighted fit or not.
+			weighted: bool, if we are to use weighted fit or not.
 
 		Returns:
 			x0: targeted y0 fit
@@ -267,29 +267,12 @@ class LineFit:
 		n = 100000
 		x = np.linspace(self.x_lower, self.x_upper, n)
 
-		if weigthed:
-			_extract_inverse(y0, x, self._yw_hat(x), self._yw_hat_err(x))
-			# # Finds the target value
-			# x0_index = np.argmin(np.abs(y0 - self._yw_hat(x)))
-			# x0 = x[x0_index]
-
-			# # Finds the error bands
-			# x_err_neg, x_err_pos = self._yw_hat_err(x)
-			# x0_err_index_neg = np.argmin(np.abs(y0 - x_err_pos))
-			# x0_err_index_pos = np.argmin(np.abs(y0 - x_err_neg))
-			# x0_err = [x[x0_err_index_neg], x[x0_err_index_pos]]
-
+		if weighted:
+			x0, x0_err = lfit_tools._extract_inverse(y0, x, self._yw_hat(x), 
+				self._yw_hat_err(x))
 		else:
-			_extract_inverse(y0, x, self._y_hat(x), self._y_hat_err(x))
-			# # Finds the target value
-			# min_index = np.argmin(np.abs(y0 - self._y_hat(x)))
-			# x0 = x[min_index]
-
-			# # Finds the error bands
-			# x_err_neg, x_err_pos = self._y_hat_err(x)
-			# x0_err_index_neg = np.argmin(np.abs(y0 - x_err_pos))
-			# x0_err_index_pos = np.argmin(np.abs(y0 - x_err_neg))
-			# x0_err = [x[x0_err_index_neg], x[x0_err_index_pos]]
+			x0, x0_err = lfit_tools._extract_inverse(y0, x, self._y_hat(x), 
+				self._y_hat_err(x))
 
 		self.y0 = y0
 		self.x0 = x0
@@ -344,7 +327,7 @@ class LineFit:
 			y_hat = self.y_fit
 			y_hat_err = self.y_fit_err
 			chi = self.chi
-			fit_label = "Unweigthed fit"
+			fit_label = "Unweighted fit"
 			fit_target_label = r"$x_0\pm\sigma_{x_0}$"
 
 		fig1 = plt.figure()
@@ -471,7 +454,15 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 			(extrapolation_method, ", ".join(extrap_method_list))))
 	assert extrapolation_method in extrap_method_list, extrap_method_err
 
-	fit_index = np.argmin(np.abs(x - fit_target))
+	if isinstance(tau_int, types.NoneType):
+		tau_int = 0.5*np.ones(len(x))
+	if isinstance(tau_int_err, types.NoneType):
+		tau_int_err = np.zeros(len(x))
+
+	if inverse_fit:
+		fit_index = np.argmin(np.abs(y - fit_target))
+	else:
+		fit_index = np.argmin(np.abs(x - fit_target))
 	ilow = fit_index - plateau_size
 	ihigh = fit_index + plateau_size
 
@@ -479,25 +470,32 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 		return _x*a + b
 
 	if extrapolation_method == "plateau":
-		y0, y0_error, tau_int0, chi_squared = _extract_plateau_fit(x0, _f, 
-			x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh], 
-			y_raw[ilow:ihigh], tau_int[ilow:ihigh], tau_int_err[ilow:ihigh])
+		y0, y0_error, tau_int0, chi_squared = lfit_tools._extract_plateau_fit(fit_target, 
+			_f, x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh], 
+			y_raw[ilow:ihigh], tau_int[ilow:ihigh], tau_int_err[ilow:ihigh],
+			inverse_fit=inverse_fit)
 
 	elif extrapolation_method == "plateau_mean":
-		y0, y0_error, chi_squared = _extract_plateau_mean_fit(x0, _f, 
-			x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh])
+		y0, y0_error, chi_squared = lfit_tools._extract_plateau_mean_fit(fit_target,
+			_f, x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh],
+			inverse_fit=inverse_fit)
 
 	elif extrapolation_method == "bootstrap":
 		# Assumes that y_raw is the bootstrapped samples.
-		y0, y0_error, tau_int0 = _extract_bootstrap_fit(x0, _f, x[ilow:ihigh],
+		y0, y0_error, tau_int0 = lfit_tools._extract_bootstrap_fit(fit_target, _f, x[ilow:ihigh],
 			y[ilow:ihigh], y_err[ilow:ihigh], y_raw[ilow:ihigh], 
 			tau_int[ilow:ihigh], tau_int_err[ilow:ihigh], F=raw_func,
-			FDer=raw_func_der, plot_samples=False)
+			FDer=raw_func_der, plot_samples=False, inverse_fit=inverse_fit)
 
 	elif extrapolation_method == "nearest":
-		x0 = x[fit_index]
-		y0 = y[fit_index]
-		y0_error = y_err[fit_index]
+		if inverse_fit:
+			x0 = y[fit_index]
+			# Extracts x0 x0_error from y0
+			y0, y0_error, lfit_tools._extract_inverse(fit_target, x, y, y_err)
+		else:
+			x0 = x[fit_index]
+			y0 = y[fit_index]
+			y0_error = y_err[fit_index]
 
 		if isinstance(y_raw, types.NoneType):
 			y0_raw = y_raw[fit_index]
@@ -508,14 +506,21 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 	elif extrapolation_method == "interpolate":
 		y_spline = ErrorPropagationSpline(x[ilow:ihigh], y[ilow:ihigh],
 			y_err[ilow:ihigh], k=interpolation_rank)
-		y0, y0_error = y_spline(fit_target)
-		y0 = y0[0]
-		y0_error = y0_error[0]
+		if inverse_fit:
+			_x = np.linspace(x[low], x[high], 10000)
+			_y, _y_err = y_spline(_x)
+			y0, y0_error = lfit_tools._extract_inverse(fit_target, _x, _y, _y_err)
+			x0 = fit_target
+		else:
+			y0, y0_error = y_spline(fit_target)
+			x0 = fit_target
+			y0 = y0[0]
+			y0_error = y0_error[0]
 
 	if plot_fit:
-		title_string = "Fit: %s" % extrapolation_method
-		__plot_fit_target(x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh],
-			x0, y0, y0_error, title_string)
+		title_string = "Fit: %s" % extrapolation_method.replace("_", " ")
+		lfit_tools.__plot_fit_target(x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh],
+			x0, y0, y0_error, title_string, inverse_fit=inverse_fit)
 
 	if verbose:
 		msg = "Method:       %s" % extrapolation_method
@@ -531,137 +536,6 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 		print msg
 
 	return x0, y0, y0_error, y0_raw, tau_int0
-
-def extract_inverse_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
-	tau_int_err=None, extrapolation_method="bootstrap", plateau_size=20, 
-	interpolation_rank=3, plot_fit=False, raw_func=lambda y: y, 
-	raw_func_der=lambda y, yerr: yerr, verbose=False, 
-	**kwargs):
-	"""
-	Function for extracting a value at a specific point at the y-axis.
-
-	Args:
-		fit_target: float, value of where we extrapolate from.
-		x: numpy float array
-		y: numpy float array
-		y_err: numpy float array, errors of y.
-		y_raw: optional, numpy float array, raw values of y. E.g. unanalyzed,
-			bootstrapped or jackknifed values.
-		tau_int: numpy optional, float array, tau_int from autocorrelation.
-		tau_int_err: numpy optional, float array, tau_int error from full
-			autocorrelation.
-		extrapolation_method: str, optional, method of selecting the 
-			extrapolation point to do the continuum limit. Method will be used
-			on y values and tau int. Choices:
-			- plateau: line fits points neighbouring point in order to 
-				reduce the error bars. Covariance matrix will be automatically
-				included.
-			- plateau_mean: line fits points neighbouring point in order to 
-				reduce the error bars. Line will be weighted by the y_err.
-			- nearest: line fit from the point nearest to what we seek
-			- interpolate: linear interpolation in order to retrieve value
-				and error. Does not work in conjecture with use_raw_values.
-			- bootstrap: will create multiple line fits, and take average. 
-				Assumes y_raw is the bootstrapped or jackknifed samples.
-		plateau_size: int, optional. Number of points in positive and 
-			negative direction to extrapolate fit target value from. This value
-			also applies to the interpolation interval.	Default is 20.
-		interpolation_rank: int, optional. Interpolation rank to use if 
-			extrapolation method is interpolation Default is 3, cubic spline.
-		plot_fit: bool, optional. Will plot and show the extrapolation window.
-			Default is false.
-		raw_func: function, optional, will modify the bootstrap data after 
-			samples has been taken by this function.
-		raw_func_err: function, optional, will propagate the error of the 
-			bootstrapped line fitted data, raw_func_err(y, yerr). Calculated
-			by regular error propagation.
-
-	Raises:
-		AssertionError: if extrapolation_method, extrapolation_data or
-			ac_correction_method is not recognized among built in methods. 
-
-	Returns:
-		x0: x axis value at fit target
-		y0: y axis value at fit target
-		y0_error: y axis error at fit target, not corrected by tau_int
-		y0_raw: raw value at y axis fit target
-		tau_int0: tau int value at the fit target
-	"""
-
-	# Default values
-	# x0 = fit_target
-	y0_raw = None
-	tau_int0 = None
-	chi_squared = None
-
-	extrap_method_list = ["plateau", "plateau_mean", "nearest", "interpolate",
-		"bootstrap"]
-
-	extrap_method_err = ("%s not an available extrapolation type: %s" % (
-			(extrapolation_method, ", ".join(extrap_method_list))))
-	assert extrapolation_method in extrap_method_list, extrap_method_err
-
-	fit_index = np.argmin(np.abs(y - fit_target))
-	ilow = fit_index - plateau_size
-	ihigh = fit_index + plateau_size
-
-	def _f(_x, a, b):
-		return _x*a + b
-
-	if extrapolation_method == "plateau":
-		y0, y0_error, tau_int0, chi_squared = _extract_plateau_fit(x0, _f, 
-			x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh], 
-			y_raw[ilow:ihigh], tau_int[ilow:ihigh], tau_int_err[ilow:ihigh])
-
-	elif extrapolation_method == "plateau_mean":
-		y0, y0_error, chi_squared = _extract_plateau_mean_fit(x0, _f, 
-			x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh])
-
-	elif extrapolation_method == "bootstrap":
-		# Assumes that y_raw is the bootstrapped samples.
-		y0, y0_error, tau_int0 = _extract_bootstrap_fit(x0, _f, x[ilow:ihigh],
-			y[ilow:ihigh], y_err[ilow:ihigh], y_raw[ilow:ihigh], 
-			tau_int[ilow:ihigh], tau_int_err[ilow:ihigh], F=raw_func,
-			FDer=raw_func_der, plot_samples=False)
-
-	elif extrapolation_method == "nearest":
-		x0 = x[fit_index]
-		y0 = y[fit_index]
-		y0_error = y_err[fit_index]
-
-		if isinstance(y_raw, types.NoneType):
-			y0_raw = y_raw[fit_index]
-
-		if isinstance(tau_int, types.NoneType):
-			tau_int0 = tau_int[fit_index]
-
-	elif extrapolation_method == "interpolate":
-		y_spline = ErrorPropagationSpline(x[ilow:ihigh], y[ilow:ihigh],
-			y_err[ilow:ihigh], k=interpolation_rank)
-		y0, y0_error = y_spline(fit_target)
-		y0 = y0[0]
-		y0_error = y0_error[0]
-
-	if plot_fit:
-		title_string = "Fit: %s" % extrapolation_method
-		__plot_fit_target(x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh],
-			x0, y0, y0_error, title_string)
-
-	if verbose:
-		msg = "Method:       %s" % extrapolation_method
-		msg += "\nx0:       %16.10f" % x0
-		msg += "\ny0:       %16.10f" % y0
-		msg += "\ny0_error: %16.10f" % y0_error
-		if not isinstance(y0_raw, types.NoneType):
-			msg += "\ny0_raw:   %16.10f" % y0_raw
-		if not isinstance(tau_int0, types.NoneType):
-			msg += "\ntau_int0:  %16.10f" % tau_int0
-		if not isinstance(chi_squared, types.NoneType):
-			msg += "\nchi^2     %16.10f" % chi_squared
-		print msg
-
-	return x0, y0, y0_error, y0_raw, tau_int0
-
 
 if __name__ == '__main__':
-	exit()
+	exit("Not intended as a standalone module")
