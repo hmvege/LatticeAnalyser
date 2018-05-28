@@ -35,14 +35,14 @@ def main():
 	# observables = list(set(set(observables) - set(obs_exlusions)))
 
 	# observables = observables_euclidean_time
-	# observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
+	observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["topc", "plaq", "energy", "topsus", "topcr"]
 	# observables = ["topcr", "qtq0eff"]
 	# observables = ["qtq0eff"]
 	# observables = observables_euclidean_time
 	# observables = ["topcr", "topsus"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
-	# observables = ["topsus"]
+	observables = ["energy"]
 	# observables = []
 	# observables = ["qtq0eff", "qtq0e"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["qtq0e"]
@@ -75,8 +75,8 @@ def main():
 	run_post_analysis = True
 	line_fit_interval_points = 20
 	# topsus_fit_targets = [0.3,0.4,0.5,0.58]
-	# topsus_fit_targets = [0.3, 0.4, 0.5, 0.6]
-	topsus_fit_targets = [0.6]
+	topsus_fit_targets = [0.3, 0.4, 0.5, 0.6]
+	# topsus_fit_targets = [0.6]
 	energy_fit_target = 0.3
 
 	# Smearing gif parameters for qtq0e
@@ -111,7 +111,8 @@ def main():
 
 	# Method of continuum extrapolation
 	# Options: plateau, plateau_mean, nearest, interpolate, bootstrap
-	extrapolation_method = "interpolate"
+	extrapolation_methods = ["plateau", "plateau_mean", "nearest", "interpolate", "bootstrap"]
+	# extrapolation_method = "interpolate"
 	plot_continuum_fit = False
 
 	# Indexes to look at for topct.
@@ -220,7 +221,7 @@ def main():
 		post_analysis(analysis_parameter_list, observables,
 			topsus_fit_targets, line_fit_interval_points, energy_fit_target,
 			q0_flow_times, euclidean_time_percents,
-			extrapolation_method=extrapolation_method,
+			extrapolation_methods=extrapolation_methods,
 			plot_continuum_fit=plot_continuum_fit,
 			post_analysis_data_type=post_analysis_data_type,
 			figures_folder=figures_folder, gif_params=gif_params, 

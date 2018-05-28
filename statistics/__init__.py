@@ -1,1 +1,4 @@
-__all__ = ["autocorrelation","bootstrap","jackknife"]
+__all__ = [
+    "autocorrelation", "bootstrap", "jackknife", "linefit", 
+    "parallel_tools"
+]

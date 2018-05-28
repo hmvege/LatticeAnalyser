@@ -108,6 +108,23 @@ class EnergyPostAnalysis(PostCore):
 
 			self.plot_values[beta] = values
 
+	def get_scale(self):
+		"""
+		Method for retrieveing reference value t0 based on Luscher(2010),
+		Properties and uses of the Wilson flow in lattice QCD.
+		t^2<E_t>|_{t=t_0} = 0.3
+		Will return t0 values and make a plot of the continuum value 
+		extrapolation.
+
+		Returns:
+			t0: dictionary of t0 values for each of the betas, and a continuum
+				value extrapolation.
+		"""
+		for beta in self.plot_values:
+			print beta
+
+
+
 	def _linefit_to_continuum(self, x_points, y_points, y_points_error,
 		fit_type="least_squares"):
 		"""
@@ -143,8 +160,12 @@ class EnergyPostAnalysis(PostCore):
 		return x, y, y_std, a, b, a_err, b_err
 
 	def plot_continuum(self, fit_target, fit_interval, fit_type, 
-			plot_arrows=[0.05, 0.07, 0.1], legend_location="best",
-			line_fit_type="least_squares"):
+		plot_arrows=[0.05, 0.07, 0.1], legend_location="best",
+		line_fit_type="least_squares"):
+		"""
+		Continuum plotter for the energy.
+		"""
+
 		# Retrieves t0 values used to be used for continium fitting
 		self._get_beta_values_to_fit(
 			fit_target, fit_interval, axis="y",

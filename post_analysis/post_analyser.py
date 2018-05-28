@@ -1,6 +1,7 @@
 from observable_analysis import *
 from tools.postanalysisdatareader import PostAnalysisDataReader
 from collections import OrderedDict
+import types
 import numpy as np
 import os
 from tqdm import tqdm
@@ -89,7 +90,7 @@ def plaq_post_analysis(*args, **kwargs):
 
 def post_analysis(beta_parameter_list, observables,
 	topsus_fit_targets, line_fit_interval_points, energy_fit_target,
-	q0_flow_times, euclidean_time_percents, extrapolation_method=None,
+	q0_flow_times, euclidean_time_percents, extrapolation_methods=None,
 	plot_continuum_fit=False, figures_folder="figures", 
 	post_analysis_data_type=None, bval_to_plot="all", gif_params=None,
 	verbose=False):
@@ -97,13 +98,33 @@ def post_analysis(beta_parameter_list, observables,
 	Post analysis of the flow observables.
 
 	Args: 
-		beta_parameter_list: list of the beta batch parameters.
+		beta_parameter_list: list of dicts, beta batch parameters.
+		observables: list of str, which observables to plot for
 		topsus_fit_targets: list of x-axis points to line fit at.
 		line_fit_interval_points: int, number of points which we will use in 
 			line fit.
 		energy_fit_target: point of which we will perform a line fit at.
 		q0_flow_times: points where we perform qtq0 at.
 		euclidean_time_percents: points where we perform qtq0e at.
+		extrapolation_methods: list of str, optional, extrapolation methods 
+			to use for selecting topsus_fit_target point. Default is "nearest".
+		plot_continuum_fit: bool, optional. If we are to plot the point of 
+			topsus_fit_target extraction. Default is False.
+		figures_folder: str, optional. Where to place figures folder. Default 
+			is "figures".
+		post_analysis_data_type: list of str, what type of data to use in the 
+			post analysis. Default is ["bootstrap", "jackknife", "unanalyzed"].
+		bval_to_plot: str or list of beta floats. Which beta values to plot
+			together. Default is "all".
+		gif_params: dict, parameters to use in gif creation. Default is None.
+			dict = { 
+				"gif_observables": [list_of_observables],
+				"gif_euclidean_time": euclidean_time_to_plot_at, 
+				"gif_flow_range": [range of floats to plot for],
+				"betas_to_plot": "all",
+				"plot_together": False,
+				"error_shape": "band"}
+		verbose: bool, a more verbose run. Default is False.
 	"""
 
 	batch_folders = [os.path.join(b["batch_folder"], b["batch_name"]) \
@@ -113,8 +134,11 @@ def post_analysis(beta_parameter_list, observables,
 	print "Post-analysis: retrieving data from folders: %s" % (
 		", ".join(batch_folders))
 
-	if post_analysis_data_type == None:
+	if isinstance(post_analysis_data_type, types.NoneType):
 		post_analysis_data_type = ["bootstrap", "jackknife", "unanalyzed"]
+
+	if isinstance(extrapolation_methods, types.NoneType):
+		extrapolation_methods = ["nearest"]
 
 	# Loads data from post analysis folder
 	data = PostAnalysisDataReader(batch_folders)
@@ -132,20 +156,32 @@ def post_analysis(beta_parameter_list, observables,
 			plaq_analysis.plot()
 
 	if "energy" in observables:
-		# Plots energy
-		energy_analysis = EnergyPostAnalysis(data, 
-			figures_folder=figures_folder, verbose=verbose)
-		for analysis_type in post_analysis_data_type:
-			energy_analysis.set_analysis_data_type(analysis_type)
-			print energy_analysis
-			energy_analysis.plot()
+		for extrapolation_method in extrapolation_methods:
+			print "Energy extrapolation method: ", extrapolation_method
+			
+			energy_analysis = EnergyPostAnalysis(data, 
+				figures_folder=figures_folder, verbose=verbose)
 
-			# # Retrofits the energy for continiuum limit
-			# energy_analysis.plot_continuum(0.3, 0.015, 
-			# 	extrapolation_method=extrapolation_method)
+			for analysis_type in post_analysis_data_type:
+				print "Energy analysis type: ", analysis_type
 
-			# # Plot running coupling
-			# energy_analysis.coupling_fit()
+				energy_analysis.set_analysis_data_type(analysis_type)
+				print energy_analysis
+
+				# energy_analysis.plot()
+
+				# energy_analysis.plot(x_limits=[-0.01,0.15], 
+				# 	y_limits=[-0.025, 0.4], plot_hline_at=0.3, 
+				# 	figure_name_appendix="_zoomed")
+
+				t0 = energy_analysis.get_scale()
+
+				# # Retrofits the energy for continiuum limit
+				# energy_analysis.plot_continuum(0.3, 0.015, 
+				# 	extrapolation_method=extrapolation_method)
+
+				# # Plot running coupling
+				# energy_analysis.coupling_fit()
 
 	if "topc" in observables:
 		topc_analysis = TopcPostAnalysis(data, 
@@ -213,22 +249,6 @@ def post_analysis(beta_parameter_list, observables,
 				topcmc_analysis.plot_interval(i)
 			topcmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
-	if "topsus" in observables:
-		topsus_analysis = TopsusPostAnalysis(data, 
-			figures_folder=figures_folder, verbose=verbose)
-		for analysis_type in post_analysis_data_type:
-			topsus_analysis.set_analysis_data_type(analysis_type)
-			print topsus_analysis
-			topsus_analysis.plot()
-			for cont_target in continuum_targets:
-				topsus_analysis.plot_continuum(cont_target, 
-					extrapolation_method=extrapolation_method,
-					plot_continuum_fit=plot_continuum_fit)
-
-				fit_parameters = append_fit_params(fit_parameters, 
-					topsus_analysis.observable_name_compact, analysis_type,
-					topsus_analysis.get_linefit_parameters())
-
 	if "topsus4" in observables:
 		topsus4_analysis = Topsus4PostAnalysis(data, 
 			figures_folder=figures_folder, verbose=verbose)
@@ -237,82 +257,100 @@ def post_analysis(beta_parameter_list, observables,
 			print topsus4_analysis
 			topsus4_analysis.plot()
 
-	if "topsusqtq0" in observables:
-		topsusqtq0_analysis = TopsusQtQ0PostAnalysis(data,
-			figures_folder=figures_folder, verbose=verbose)
-		for analysis_type in post_analysis_data_type:
-			topsusqtq0_analysis.set_analysis_data_type(analysis_type)
-			print topsusqtq0_analysis
-			N_int, intervals = topsusqtq0_analysis.get_N_intervals()
-			for i in range(N_int):
-				topsusqtq0_analysis.plot_interval(i)
+	# Loops over different extrapolation methods
+	for extrapolation_method in extrapolation_methods:
+		if "topsus" in observables:
+			topsus_analysis = TopsusPostAnalysis(data, 
+				figures_folder=figures_folder, verbose=verbose)
+			for analysis_type in post_analysis_data_type:
+				topsus_analysis.set_analysis_data_type(analysis_type)
+				print topsus_analysis
+				topsus_analysis.plot()
 				for cont_target in continuum_targets:
-					topsusqtq0_analysis.plot_continuum(cont_target, i)
+					topsus_analysis.plot_continuum(cont_target, 
+						extrapolation_method=extrapolation_method,
+						plot_continuum_fit=plot_continuum_fit)
 
 					fit_parameters = append_fit_params(fit_parameters, 
-						topsusqtq0_analysis.observable_name_compact, 
-						analysis_type,
-						topsusqtq0_analysis.get_linefit_parameters())
+						topsus_analysis.observable_name_compact, analysis_type,
+						topsus_analysis.get_linefit_parameters())
 
-			topsusqtq0_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
-			topsusqtq0_analysis.plot_series([3,4,5,6], beta=bval_to_plot)
+		if "topsusqtq0" in observables:
+			topsusqtq0_analysis = TopsusQtQ0PostAnalysis(data,
+				figures_folder=figures_folder, verbose=verbose)
+			for analysis_type in post_analysis_data_type:
+				topsusqtq0_analysis.set_analysis_data_type(analysis_type)
+				print topsusqtq0_analysis
+				N_int, intervals = topsusqtq0_analysis.get_N_intervals()
+				for i in range(N_int):
+					topsusqtq0_analysis.plot_interval(i)
+					for cont_target in continuum_targets:
+						topsusqtq0_analysis.plot_continuum(cont_target, i)
 
-	if "topsust" in observables:
-		topsust_analysis = TopsustPostAnalysis(data,
-			figures_folder=figures_folder, verbose=verbose)
-		for analysis_type in post_analysis_data_type:
-			topsust_analysis.set_analysis_data_type(analysis_type)
-			print topsust_analysis
-			N_int, intervals = topsust_analysis.get_N_intervals()
-			for i in range(N_int):
-				topsust_analysis.plot_interval(i)
-				for cont_target in continuum_targets:
-					topsust_analysis.plot_continuum(cont_target, i)
+						fit_parameters = append_fit_params(fit_parameters, 
+							topsusqtq0_analysis.observable_name_compact, 
+							analysis_type,
+							topsusqtq0_analysis.get_linefit_parameters())
 
-					fit_parameters = append_fit_params(fit_parameters, 
-						topsust_analysis.observable_name_compact, 
-						analysis_type,
-						topsust_analysis.get_linefit_parameters())
+				topsusqtq0_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+				topsusqtq0_analysis.plot_series([3,4,5,6], beta=bval_to_plot)
 
-			topsust_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+		if "topsust" in observables:
+			topsust_analysis = TopsustPostAnalysis(data,
+				figures_folder=figures_folder, verbose=verbose)
+			for analysis_type in post_analysis_data_type:
+				topsust_analysis.set_analysis_data_type(analysis_type)
+				print topsust_analysis
+				N_int, intervals = topsust_analysis.get_N_intervals()
+				for i in range(N_int):
+					topsust_analysis.plot_interval(i)
+					for cont_target in continuum_targets:
+						topsust_analysis.plot_continuum(cont_target, i)
 
-	if "topsuste" in observables:
-		topsuste_analysis = TopsusteIntervalPostAnalysis(data, 
-			figures_folder=figures_folder, verbose=verbose)
-		for analysis_type in post_analysis_data_type:
-			topsuste_analysis.set_analysis_data_type(analysis_type)
-			print topsuste_analysis
-			N_int, intervals = topsuste_analysis.get_N_intervals()
-			for i in range(N_int):
-				topsuste_analysis.plot_interval(i)
-				for cont_target in continuum_targets:
-					topsuste_analysis.plot_continuum(cont_target, i)
+						fit_parameters = append_fit_params(fit_parameters, 
+							topsust_analysis.observable_name_compact, 
+							analysis_type,
+							topsust_analysis.get_linefit_parameters())
 
-					fit_parameters = append_fit_params(fit_parameters, 
-						topsuste_analysis.observable_name_compact, 
-						analysis_type,
-						topsuste_analysis.get_linefit_parameters())
+				topsust_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
-			topsuste_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+		if "topsuste" in observables:
+			topsuste_analysis = TopsusteIntervalPostAnalysis(data, 
+				figures_folder=figures_folder, verbose=verbose)
+			for analysis_type in post_analysis_data_type:
+				topsuste_analysis.set_analysis_data_type(analysis_type)
+				print topsuste_analysis
+				N_int, intervals = topsuste_analysis.get_N_intervals()
+				for i in range(N_int):
+					topsuste_analysis.plot_interval(i)
+					for cont_target in continuum_targets:
+						topsuste_analysis.plot_continuum(cont_target, i)
 
-	if "topsusMC" in observables:
-		topsusmc_analysis = TopsusMCIntervalPostAnalysis(data,
-			figures_folder=figures_folder, verbose=verbose)
-		for analysis_type in post_analysis_data_type:
-			topsusmc_analysis.set_analysis_data_type(analysis_type)
-			print topsusmc_analysis
-			N_int, intervals = topsusmc_analysis.get_N_intervals()
-			for i in range(N_int):
-				topsusmc_analysis.plot_interval(i)
-				for cont_target in continuum_targets:
-					topsusmc_analysis.plot_continuum(cont_target, i)
+						fit_parameters = append_fit_params(fit_parameters, 
+							topsuste_analysis.observable_name_compact, 
+							analysis_type,
+							topsuste_analysis.get_linefit_parameters())
 
-					fit_parameters = append_fit_params(fit_parameters, 
-						topsusmc_analysis.observable_name_compact, 
-						analysis_type,
-						topsusmc_analysis.get_linefit_parameters())
+				topsuste_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
-			topsusmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+		if "topsusMC" in observables:
+			topsusmc_analysis = TopsusMCIntervalPostAnalysis(data,
+				figures_folder=figures_folder, verbose=verbose)
+			for analysis_type in post_analysis_data_type:
+				topsusmc_analysis.set_analysis_data_type(analysis_type)
+				print topsusmc_analysis
+				N_int, intervals = topsusmc_analysis.get_N_intervals()
+				for i in range(N_int):
+					topsusmc_analysis.plot_interval(i)
+					for cont_target in continuum_targets:
+						topsusmc_analysis.plot_continuum(cont_target, i)
+
+						fit_parameters = append_fit_params(fit_parameters, 
+							topsusmc_analysis.observable_name_compact, 
+							analysis_type,
+							topsusmc_analysis.get_linefit_parameters())
+
+				topsusmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
 	if "qtq0e" in observables:
 		qtq0e_analysis = QtQ0EuclideanPostAnalysis(data, 
@@ -363,7 +401,7 @@ def post_analysis(beta_parameter_list, observables,
 
 	for obs in observables:
 		if "topsus" in obs:
-			skip_values = ["a", "a_err", "b", "b_err", "analysis_type"]
+			skip_values = ["a", "a_err", "b", "b_err"]
 			write_fit_parameters_to_file(fit_parameters, 
 				os.path.join("param_file.txt"), skip_values=skip_values, 
 				verbose=verbose)

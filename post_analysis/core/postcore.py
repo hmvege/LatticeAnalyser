@@ -225,7 +225,8 @@ class PostCore(object):
 			self.plot_values[beta] = values
 
 	def plot(self, x_limits=False, y_limits=False, plot_with_formula=False,
-		error_shape="band", figure_folder=None, plot_vline_at=None):
+		error_shape="band", figure_folder=None, plot_vline_at=None,
+		plot_hline_at=None, figure_name_appendix=""):
 		"""
 		Function for making a basic plot of all the different beta values
 		together.
@@ -239,6 +240,10 @@ class PostCore(object):
 				figures in figures/{batch_name}/post_analysis/{observable_name}
 			plot_vline_at: optional, float. If present, will plot a vline at 
 				position given position.
+			plot_hline_at: optional, float. If present, will plot a hline at 
+				position given position.
+			figure_name_appendix: optional, str, adds provided string to 
+				filename. Default is adding nothing.
 		"""
 
 		if self.verbose:
@@ -293,8 +298,13 @@ class PostCore(object):
 		if not isinstance(plot_vline_at, types.NoneType):
 			ax.axvline(plot_vline_at, linestyle="--", color="0", alpha=0.3)
 
+		# Plots a horizontal line at position "plot_hline_at"
+		if not isinstance(plot_hline_at, types.NoneType):
+			ax.axvline(plot_hline_at, linestyle="--", color="0", alpha=0.3)
+
 		# Saves and closes figure
-		fname = self._get_plot_figure_name(output_folder=figure_folder)
+		fname = self._get_plot_figure_name(output_folder=figure_folder, 
+			figure_name_appendix=figure_name_appendix)
 		plt.savefig(fname)
 		if self.verbose:
 			print "Figure saved in %s" % fname
@@ -304,12 +314,12 @@ class PostCore(object):
 
 		plt.close(fig)
 
-	def _get_plot_figure_name(self, output_folder=None):
+	def _get_plot_figure_name(self, output_folder=None, figure_name_appendix=""):
 		"""Retrieves appropriate figure file name."""
 		if isinstance(output_folder, types.NoneType):
 			output_folder = self.output_folder_path
-		fname = "post_analysis_%s_%s.png" % (self.observable_name_compact,
-			self.analysis_data_type)
+		fname = "post_analysis_%s_%s%s.png" % (self.observable_name_compact,
+			self.analysis_data_type, figure_name_appendix)
 		return os.path.join(output_folder, fname)
 
 	def __str__(self):
