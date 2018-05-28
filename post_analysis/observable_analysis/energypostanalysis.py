@@ -73,7 +73,8 @@ class EnergyPostAnalysis(PostCore):
 			y0, x0, x0_err, _, _ = extract_fit_target(E0, bval["t"], bval["y"], 
 				y_err=bval["y_err"], y_raw=bval[self.analysis_data_type], 
 				tau_int=bval["tau_int"], tau_int_err=bval["tau_int_err"],
-				extrapolation_method=extrapolation_method, **kwargs)
+				extrapolation_method=extrapolation_method, 
+				inverse_fit=True, **kwargs)
 
 			a_values.append(bval["a"]**2/x0)
 			t0_values.append(x0)
@@ -120,6 +121,7 @@ class EnergyPostAnalysis(PostCore):
 			print "t0: %s\nt0 error: %s" % (t0_values, t0err_values)
 			print "Target: %.16f +/- %.16f" % (self.t0_cont,
 				self.t0_cont_error)
+			exit("These errors should not be negative!!")
 
 		# Saves figure
 		fname = os.path.join(self.output_folder_path, 

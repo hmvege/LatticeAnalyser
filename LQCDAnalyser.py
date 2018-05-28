@@ -112,7 +112,7 @@ def main():
 	# Method of continuum extrapolation
 	# Options: plateau, plateau_mean, nearest, interpolate, bootstrap
 	extrapolation_methods = ["plateau", "plateau_mean", "nearest", "interpolate", "bootstrap"]
-	extrapolation_methods = ["plateau"]
+	# extrapolation_methods = ["plateau"]
 	plot_continuum_fit = False
 
 	# Indexes to look at for topct.

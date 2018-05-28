@@ -22,6 +22,8 @@ def _extract_inverse(fit_target, X, Y, Y_err):
     min_index = np.argmin(np.abs(fit_target - Y))
     x0 = X[min_index]
 
+    Y_err = np.asarray(Y_err)
+
     if len(Y_err.shape) != 2:
         Y_err = np.asarray([Y-Y_err, Y+Y_err])
 
@@ -156,8 +158,6 @@ def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
     lfit_raw.set_fit_parameters(pol_raw[1], pol_raw_err[1], pol_raw[0],
         pol_raw_err[0], weighted=True)
     y0, y0_error, _, chi_squared = lfit_raw.fit_weighted(fit_target)
-    
-    print fit_target
 
     if inverse_fit:
         y0, y0_error = lfit_raw.inverse_fit(fit_target, weighted=True)
@@ -186,8 +186,6 @@ def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
 
     # Corrects error with the tau int
     y0_error *= np.sqrt(2*tau_int0)
-
-    exit("Error is here, in the inverse fit most likely somewhere")
 
     return y0, y0_error, tau_int0, chi_squared
 
