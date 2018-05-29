@@ -4,6 +4,7 @@ from collections import OrderedDict
 import types
 import numpy as np
 import os
+import cPickle as pickle
 from tqdm import tqdm
 
 def append_fit_params(fplist, obs_name, analysis_name, fparams):
@@ -141,11 +142,33 @@ def post_analysis(beta_parameter_list, observables,
 		extrapolation_methods = ["nearest"]
 
 	# Loads data from post analysis folder
-	data = PostAnalysisDataReader(batch_folders)
+	data_batch_folder_name = \
+		os.path.split(beta_parameter_list[0]["batch_folder"])[-1]
+	pickle_file_name = os.path.join(figures_folder,
+		data_batch_folder_name,
+		"post_analysis", "post_analysis_data.p")
+
+	data = PostAnalysisDataReader(batch_folders,
+		observables_to_load=observables)
+
+	# if os.path.isfile(pickle_file_name):
+	# 	print "Pickle file found. Loading %s" % pickle_file_name
+	# 	data = pickle.load(open(pickle_file_name, "rb"))
+	# else:
+	# 	# data = PostAnalysisDataReader(batch_folders)
+	# 	print "No pickle file found. Loading data from files."
+	# 	# pickle.dump(data, open(pickle_file_name, "wb"))
+	# 	print "Pickle dumping done: %s" % pickle_file_name
+	# exit("Done reading")
 
 	continuum_targets = topsus_fit_targets
 
 	fit_parameters = []
+
+	t0_reference_scale = {
+		extrap_method: {atype: {} for atype in post_analysis_data_type}
+		for extrap_method in extrapolation_methods
+	}
 
 	if "plaq" in observables:
 		plaq_analysis = PlaqPostAnalysis(data,
@@ -174,8 +197,10 @@ def post_analysis(beta_parameter_list, observables,
 					y_limits=[-0.025, 0.4], plot_hline_at=0.3, 
 					figure_name_appendix="_zoomed")
 
-				t0, t0err = energy_analysis.get_scale(
+				t0_dict = energy_analysis.get_scale(
 					extrapolation_method=extrapolation_method, plot_fit=False)
+				t0_reference_scale[extrapolation_method][analysis_type] = \
+					t0_dict
 
 				# # Retrofits the energy for continiuum limit
 				# energy_analysis.plot_continuum(0.3, 0.015, 

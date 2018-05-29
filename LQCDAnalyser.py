@@ -134,7 +134,7 @@ def main():
 	
 	# Data types to be looked at in the post-analysis.
 	post_analysis_data_type = ["bootstrap", "jackknife", "unanalyzed"]
-	# post_analysis_data_type = ["bootstrap"]
+	# post_analysis_data_type = ["unanalyzed"]
 
 	#### Analysis batch setups
 	default_params = {

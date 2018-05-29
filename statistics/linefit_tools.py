@@ -7,6 +7,7 @@ import scipy.stats
 import numpy as np
 import matplotlib.pyplot as plt
 import types
+# from tqdm import tqdm
 
 def _extract_inverse(fit_target, X, Y, Y_err):
     """
@@ -30,8 +31,8 @@ def _extract_inverse(fit_target, X, Y, Y_err):
     # Finds the error bands
     y_err_neg, y_err_pos = Y_err
 
-    x0_err_index_neg = np.argmin(np.abs(fit_target - y_err_neg))
-    x0_err_index_pos = np.argmin(np.abs(fit_target - y_err_pos))
+    x0_err_index_neg = np.argmin(np.abs(fit_target - y_err_pos))
+    x0_err_index_pos = np.argmin(np.abs(fit_target - y_err_neg))
 
     # If the indices are equal, i.e. the error is too small and we have the 
     # same x_err for both positive and negative, we find the next error by 
@@ -43,6 +44,7 @@ def _extract_inverse(fit_target, X, Y, Y_err):
             x0_err_index_neg -= 1
 
     x0_err = [X[x0_err_index_neg], X[x0_err_index_pos]]
+
 
     return x0, x0_err
 
@@ -288,7 +290,12 @@ def _extract_bootstrap_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
             # Performs an inverse fit where y0 is the target value, and not x0.
             # _x0_err is not needed, is error cannot be inflated by the 
             # autocorrelation. 
-            y0_sample[i], _tmp_err = fit_sample.inverse_fit(fit_target)
+            try:
+                y0_sample[i], _tmp_err = fit_sample.inverse_fit(fit_target)
+            except IndexError as err:
+                print "Points included: %s" % y0_raw.shape
+                fit_sample.plot()
+                exit(err)
         else:
             y0_sample[i], _tmp_err = fit_sample(fit_target)
 
@@ -339,6 +346,9 @@ def _extract_bootstrap_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
     y0_std = np.std(F(y0_sample))*np.sqrt(2*tau_int0)
     # print y0_std
 
+    # print y0_std
+    # exit(1)
+
     if plot_samples:
         sample_mean = F(np.mean(plot_ymean, axis=1))
         sample_std = FDer(np.mean(plot_ymean, axis=1), 
@@ -357,7 +367,7 @@ def _extract_bootstrap_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
 
         # Plots original data with error bars
         ax_samples.errorbar(x, y, yerr=y_err, marker=".", 
-            linestyle="none", color="tab:orange", label="Original")
+            linestyle="-", color="tab:orange", label="Original")
 
         ax_samples.title(r"$\chi^2: %g$" % 
             lfit.LineFit.chi_squared(y, y_err, sample_mean))
@@ -816,8 +826,8 @@ def _test_fit_methods():
     # print "Plateau linefit: ", _test_plateau(x_matrix, signal, x0)
 
 def main():
-    _test_fit_methods()
-    # _test_simple_line_fit()
+    # _test_fit_methods()
+    _test_simple_line_fit()
     # _test_inverse_line_fit()
 
 if __name__ == '__main__':

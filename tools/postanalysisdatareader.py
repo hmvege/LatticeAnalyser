@@ -4,6 +4,7 @@ import re
 import numpy as np
 import copy
 import json
+import types
 
 __all__ = ["PostAnalysisDataReader", "getLatticeSpacing"]
 
@@ -11,7 +12,7 @@ class PostAnalysisDataReader:
 	"""
 	Small class for reading post analysis data
 	"""
-	def __init__(self, batch_folders, verbose=False):
+	def __init__(self, batch_folders, observables_to_load=None, verbose=False):
 		"""
 		Class for loading the post analysis data.
 
@@ -35,6 +36,9 @@ class PostAnalysisDataReader:
 
 		# Observable list
 		self.observable_list = []
+
+		# Observables to load, enables fast load times when only analysing few
+		self.observables_to_load = observables_to_load
 
 		# Number of betas variable
 		self.N_betas = 0
@@ -67,6 +71,14 @@ class PostAnalysisDataReader:
 
 				if obs not in self.observable_list:
 					self.observable_list.append(obs)
+
+				if not isinstance(self.observables_to_load, types.NoneType):
+					if not obs in self.observables_to_load:
+						self.observable_list.remove(obs)
+						if self.verbose:
+							print "Skipping loading observable %s" % obs
+						continue
+
 				if self._check_is_content_dir(obs_dir_path):
 					# In case we have an observable that contains sub folders 
 					# with the same observable but at different points in 

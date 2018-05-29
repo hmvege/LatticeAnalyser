@@ -39,7 +39,8 @@ class EnergyPostAnalysis(PostCore):
 				values["tau_int_err"] = None
 
 			values[self.analysis_data_type] = \
-				data_raw[beta][self.observable_name_compact]
+				(data_raw[beta][self.observable_name_compact].T \
+					*(data[beta]["x"]**2)).T
 
 			values["label"] = (r"%s $\beta=%2.2f$" %
 				(self.size_labels[beta], beta))
@@ -62,6 +63,8 @@ class EnergyPostAnalysis(PostCore):
 			t0: dictionary of t0 values for each of the betas, and a continuum
 				value extrapolation.
 		"""
+		print "Scale t0 extraction method:      " + extrapolation_method
+		print "Scale t0 extraction data:        " + self.analysis_data_type
 		E0 = 0.3
 
 		# Retrieves t0 values from data
@@ -73,7 +76,7 @@ class EnergyPostAnalysis(PostCore):
 			y0, x0, x0_err, _, _ = extract_fit_target(E0, bval["t"], bval["y"], 
 				y_err=bval["y_err"], y_raw=bval[self.analysis_data_type], 
 				tau_int=bval["tau_int"], tau_int_err=bval["tau_int_err"],
-				extrapolation_method=extrapolation_method, 
+				extrapolation_method=extrapolation_method, plateau_size=55,
 				inverse_fit=True, **kwargs)
 
 			a_values.append(bval["a"]**2/x0)
@@ -84,21 +87,38 @@ class EnergyPostAnalysis(PostCore):
 		t0_values = np.asarray(t0_values[::-1])
 		t0err_values = np.asarray(t0err_values[::-1])		
 
+		# Functions for t0 and propagating uncertainty
+		t0_func = lambda _t0: np.sqrt(8*_t0)/self.r0
+		t0err_func = lambda _t0, _t0_err: _t0_err*np.sqrt(8/_t0)/(2.0*self.r0)
+
 		# Sets up t0 and t0_error values to plot
-		y = np.sqrt(8*t0_values)/self.r0
-		yerr = t0err_values*np.sqrt(8/t0_values)/(2.0*self.r0)
+		# y = np.sqrt(8*t0_values)/self.r0
+		# yerr = t0err_values*np.sqrt(8/t0_values)/(2.0*self.r0)
+		y = t0_func(t0_values)
+		yerr = t0err_func(t0_values, t0err_values)
 
 		# Extrapolates t0 to continuum
 		N_cont = 1000
 		a_squared_cont = np.linspace(-0.025, a_values[-1]*1.1, N_cont)
 
 		# Fits to continuum and retrieves values to be plotted
-		continuum_fit = LineFit(a_values, y, y_err=yerr)
+		# continuum_fit = LineFit(a_values, y, y_err=yerr)
+		continuum_fit = LineFit(a_values, t0_values, y_err=t0err_values)
 		y_cont, y_cont_err, fit_params, chi_squared = \
 			continuum_fit.fit_weighted(a_squared_cont)
+
 		res = continuum_fit(0, weighted=True)
 		self.t0_cont = res[0][0]
 		self.t0_cont_error = (res[1][-1][0] - res[1][0][0])/2
+		self.sqrt_t0_cont = t0_func(self.t0_cont)
+		self.sqrt_t0_cont_error = t0err_func(self.t0_cont, self.t0_cont_error)
+
+		# A bit naughty, but the simplest and quickest way of getting the 
+		# error propagation.
+		continuum_fit = LineFit(a_values, t0_func(t0_values), 
+			y_err=t0err_func(t0_values, t0err_values))
+		y_cont, y_cont_err, fit_params, chi_squared = \
+			continuum_fit.fit_weighted(a_squared_cont)
 
 		# Creates figure and plot window
 		fig = plt.figure()
@@ -106,8 +126,9 @@ class EnergyPostAnalysis(PostCore):
 		# Plots linefit with errorband
 		ax.plot(a_squared_cont, y_cont, color="tab:red", alpha=0.5,
 			label=r"$\chi=%.2f$" % chi_squared)
-		ax.fill_between(a_squared_cont, y_cont_err[0], y_cont_err[1],
-			alpha=0.5, edgecolor='', facecolor="tab:red")
+		ax.fill_between(a_squared_cont, y_cont_err[0], 
+			y_cont_err[1], alpha=0.5, edgecolor='',
+			facecolor="tab:red")
 		ax.axvline(0, linestyle="dashed", color="tab:red")
 		ax.errorbar(a_values, y, yerr=yerr, fmt="o", capsize=5,
 			capthick=1, color="#000000", ecolor="#000000")
@@ -119,9 +140,10 @@ class EnergyPostAnalysis(PostCore):
 
 		if self.verbose:
 			print "t0: %s\nt0 error: %s" % (t0_values, t0err_values)
-			print "Target: %.16f +/- %.16f" % (self.t0_cont,
+			print "sqrt(8t0)/r0 = %.16f +/- %.16f" % (self.sqrt_t0_cont,
+				self.sqrt_t0_cont_error)
+			print "t0 = %.16f +/- %.16f" % (self.t0_cont,
 				self.t0_cont_error)
-			exit("These errors should not be negative!!")
 
 		# Saves figure
 		fname = os.path.join(self.output_folder_path, 
@@ -133,7 +155,16 @@ class EnergyPostAnalysis(PostCore):
 
 		plt.close(fig)
 
-		return self.t0_cont, self.t0_cont_error
+		self.extrapolation_method = extrapolation_method
+
+		_tmp_beta_dict = {
+			beta: {"t0": t0_values[i], "t0err": t0err_values[i]}
+			for i, beta in enumerate(self.beta_values)
+		}
+
+		t0_dict = {"t0_cont": self.t0_cont, "t0err_cont": self.t0_cont_error}
+		t0_dict.update(_tmp_beta_dict)
+		return t0_dict
 
 		# exit("Done in energy post analysis")
 
@@ -333,6 +364,18 @@ class EnergyPostAnalysis(PostCore):
 	# 	print "Finding Lambda"
 
 	# 	pass
+
+	def __str__(self):
+		"""Class string representation method."""
+		msg = "\n" +"="*100
+		msg += "\nPost analaysis for:        " + self.observable_name_compact
+		msg += "\n" + self.__doc__
+		msg += "\nAnalysis-type:             " + self.analysis_data_type
+		# msg += "\nE0 extraction method:      " + self.extrapolation_method
+		msg += "\nIncluding autocorrelation: " + self.ac
+		msg += "\nOutput folder:             " + self.output_folder_path
+		msg += "\n" + "="*100
+		return msg
 
 def main():
 	exit("Exit: EnergyPostAnalysis not intended to be a standalone module.")

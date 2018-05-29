@@ -31,6 +31,9 @@ class LineFit:
 		# Sets weigths regardless if they are to be used or not.
 		if not isinstance(y_err, types.NoneType):
 			self.w = self._get_weights(self.y_err)
+		# 	self.weighted = True
+		# else:
+		# 	self.weighted = False
 
 		self.inverse_fit_performed = False
 
@@ -304,9 +307,9 @@ class LineFit:
 
 		# Gets the line fitted and its errors
 		if self.inverse_fit_performed:
-			fit_target = self.y0
-			x_fit = self.x0
-			x_fit_err = self.x0_err
+			inv_fit_target = self.y0
+			x_inv_fit = self.x0
+			x_inv_fit_err = self.x0_err
 
 		# Gets the signal
 		x = self.x
@@ -315,19 +318,33 @@ class LineFit:
 
 		# Gets the fitted line
 		if weighted:
-			x_hat = self.xw_fit
-			y_hat = self.yw_fit
-			y_hat_err = self.yw_fit_err
-			chi = self.chi_w
-			fit_label = "Weigthed fit"
-			fit_target_label = r"$x_{0,w}\pm\sigma_{x_0,w}$"
+			if hasattr(self, "xw_fit"):
+				x_hat = self.xw_fit
+				y_hat = self.yw_fit
+				y_hat_err = self.yw_fit_err
+				chi = self.chi_w
+			else:
+				x_hat = self.x
+				y_hat = self._yw_hat(x_hat)
+				y_hat_err = self._yw_hat_err(x_hat)
+				chi = self.chi_squared(self.y, self.y_err, y_hat)
 		else:
-			x_hat = self.x_fit
-			y_hat = self.y_fit
-			y_hat_err = self.y_fit_err
-			chi = self.chi
+			if hasattr(self, "x_fit"):
+				x_hat = self.x_fit
+				y_hat = self.y_fit
+				y_hat_err = self.y_fit_err
+			else:
+				x_hat = self.x
+				y_hat = self._y_hat(x_hat)
+				y_hat_err = self._y_hat_err(x_hat)
+
+		# Assigns correct labels
+		if weighted:
+			title_string = r"$\chi^2 = %.2f, " % chi 
+			fit_label = "Weighted fit"
+		else:
+			title_string = ""
 			fit_label = "Unweighted fit"
-			fit_target_label = r"$x_0\pm\sigma_{x_0}$"
 
 		fig1 = plt.figure()
 		ax1 = fig1.add_subplot(111)
@@ -336,16 +353,20 @@ class LineFit:
 			color="tab:blue")
 		ax1.errorbar(x, signal, yerr=signal_err, marker="o", label="Signal", 
 			linestyle="none", color="tab:orange")
-		title_string = r"$\chi^2 = %.2f" % chi 
 
 		if self.inverse_fit_performed:
-			ax1.axhline(fit_target, linestyle="dashed", color="tab:grey")
-			ax1.axvline(x_fit, color="tab:orange")
+			if weighted:
+				inv_fit_target_label = r"$x_{0,w}\pm\sigma_{x_0,w}$"
+			else:
+				inv_fit_target_label = r"$x_0\pm\sigma_{x_0}$"
+
+			ax1.axhline(inv_fit_target, linestyle="dashed", color="tab:grey")
+			ax1.axvline(x_inv_fit, color="tab:orange")
 			ax1.fill_betweenx(np.linspace(np.min(y_hat),np.max(y_hat),100),
-				x_fit_err[0], x_fit_err[1], label=fit_target_label, alpha=0.5, 
-				color="tab:orange")
-			title_string += r", x_0 = %.2f \pm%.2f$" % (x_fit,
-			(x_fit_err[1] - x_fit_err[0]) / 2.0)
+				x_inv_fit_err[0], x_inv_fit_err[1], label=inv_fit_target_label,
+				alpha=0.5, color="tab:orange")
+			title_string += r"$x_0 = %.2f \pm%.2f$" % (x_inv_fit,
+			(x_inv_fit_err[1] - x_inv_fit_err[0]) / 2.0)
 
 		ax1.legend(loc="best", prop={"size":8})
 		ax1.set_title(title_string)
@@ -484,7 +505,7 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 		y0, y0_error, tau_int0 = lfit_tools._extract_bootstrap_fit(fit_target, _f, x[ilow:ihigh],
 			y[ilow:ihigh], y_err[ilow:ihigh], y_raw[ilow:ihigh], 
 			tau_int[ilow:ihigh], tau_int_err[ilow:ihigh], F=raw_func,
-			FDer=raw_func_der, plot_samples=False, inverse_fit=inverse_fit)
+			FDer=raw_func_der, inverse_fit=inverse_fit)
 
 	elif extrapolation_method == "nearest":
 		if inverse_fit:
