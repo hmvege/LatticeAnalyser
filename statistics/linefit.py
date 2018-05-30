@@ -304,13 +304,6 @@ class LineFit:
 
 	def plot(self, weighted=False):
 		"""Use full function for quickly checking the fit."""
-
-		# Gets the line fitted and its errors
-		if self.inverse_fit_performed:
-			inv_fit_target = self.y0
-			x_inv_fit = self.x0
-			x_inv_fit_err = self.x0_err
-
 		# Gets the signal
 		x = self.x
 		signal = self.y
@@ -318,29 +311,18 @@ class LineFit:
 
 		# Gets the fitted line
 		if weighted:
-			if hasattr(self, "xw_fit"):
-				x_hat = self.xw_fit
-				y_hat = self.yw_fit
-				y_hat_err = self.yw_fit_err
-				chi = self.chi_w
-			else:
-				x_hat = self.x
-				y_hat = self._yw_hat(x_hat)
-				y_hat_err = self._yw_hat_err(x_hat)
-				chi = self.chi_squared(self.y, self.y_err, y_hat)
+			x_hat = self.x
+			y_hat = self._yw_hat(x_hat)
+			y_hat_err = self._yw_hat_err(x_hat)
+			chi = self.chi_squared(self.y, self.y_err, y_hat)
 		else:
-			if hasattr(self, "x_fit"):
-				x_hat = self.x_fit
-				y_hat = self.y_fit
-				y_hat_err = self.y_fit_err
-			else:
-				x_hat = self.x
-				y_hat = self._y_hat(x_hat)
-				y_hat_err = self._y_hat_err(x_hat)
+			x_hat = self.x
+			y_hat = self._y_hat(x_hat)
+			y_hat_err = self._y_hat_err(x_hat)
 
 		# Assigns correct labels
 		if weighted:
-			title_string = r"$\chi^2 = %.2f, " % chi 
+			title_string = r"$\chi^2 = %.2g$, " % chi 
 			fit_label = "Weighted fit"
 		else:
 			title_string = ""
@@ -359,14 +341,13 @@ class LineFit:
 				inv_fit_target_label = r"$x_{0,w}\pm\sigma_{x_0,w}$"
 			else:
 				inv_fit_target_label = r"$x_0\pm\sigma_{x_0}$"
-
-			ax1.axhline(inv_fit_target, linestyle="dashed", color="tab:grey")
-			ax1.axvline(x_inv_fit, color="tab:orange")
+			ax1.axhline(self.y0, linestyle="dashed", color="tab:grey")
+			ax1.axvline(self.x0, color="tab:orange")
 			ax1.fill_betweenx(np.linspace(np.min(y_hat),np.max(y_hat),100),
-				x_inv_fit_err[0], x_inv_fit_err[1], label=inv_fit_target_label,
+				self.x0_err[0], self.x0_err[1], label=inv_fit_target_label,
 				alpha=0.5, color="tab:orange")
-			title_string += r"$x_0 = %.2f \pm%.2f$" % (x_inv_fit,
-			(x_inv_fit_err[1] - x_inv_fit_err[0]) / 2.0)
+			title_string += r"$x_0 = %.2f \pm%.2f$" % (self.x0,
+			(self.x0_err[1] - self.x0_err[0]) / 2.0)
 
 		ax1.legend(loc="best", prop={"size":8})
 		ax1.set_title(title_string)

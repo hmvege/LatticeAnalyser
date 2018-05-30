@@ -76,7 +76,7 @@ class EnergyPostAnalysis(PostCore):
 			y0, x0, x0_err, _, _ = extract_fit_target(E0, bval["t"], bval["y"], 
 				y_err=bval["y_err"], y_raw=bval[self.analysis_data_type], 
 				tau_int=bval["tau_int"], tau_int_err=bval["tau_int_err"],
-				extrapolation_method=extrapolation_method, plateau_size=55,
+				extrapolation_method=extrapolation_method, plateau_size=10,
 				inverse_fit=True, **kwargs)
 
 			a_values.append(bval["a"]**2/x0)

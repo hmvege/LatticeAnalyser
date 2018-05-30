@@ -3,6 +3,7 @@
 from scipy.interpolate import InterpolatedUnivariateSpline as spline
 import linefit as lfit
 import scipy.optimize as sciopt
+import scipy.odr as sciodr
 import scipy.stats
 import numpy as np
 import matplotlib.pyplot as plt
@@ -23,7 +24,7 @@ def _extract_inverse(fit_target, X, Y, Y_err):
     min_index = np.argmin(np.abs(fit_target - Y))
     x0 = X[min_index]
 
-    Y_err = np.asarray(Y_err)
+    X, Y, Y_err = map(np.asarray, (X, Y, Y_err))
 
     if len(Y_err.shape) != 2:
         Y_err = np.asarray([Y-Y_err, Y+Y_err])
@@ -55,6 +56,7 @@ def _get_covariance_matrix_from_raw(y_raw):
 
     # Uses bootstrap, jackknifed or analyzed values directly.
     cov_raw = np.cov(y_raw)
+    # cov_raw = np.corrcoef(y_raw)
 
     # Get eigenvalues for covariance matrix
     eig = np.linalg.eigvals(cov_raw)
@@ -148,12 +150,36 @@ def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
     assert not isinstance(tau_int_err, types.NoneType), \
         "missing tau_int_err values."
 
+    def _f(B, x):
+        return B[0]*x + B[1]
+
     cov_raw = _get_covariance_matrix_from_raw(y_raw)
+
+    # print y_raw.shape
+    # C = []
+    # for i, iy in enumerate(y_raw):
+        # C.append(np.cov(iy, y_raw))
+
+    # C = np.asarray(C)
+    # print C.shape
+
+    # linear_model = sciodr.Model(_f)
+    # # data = sciodr.RealData(x, y, sy=y_err)
+    # data = sciodr.RealData(x, y, covy=np.cov(y_raw))
+    # odr_fit = sciodr.ODR(data, linear_model, beta0=[0.18, 0.0])
+    # odr_output = odr_fit.run()
+    # # odr_output.pprint()
+    # pol_raw = odr_output.beta
+    # pol_raw_err = odr_output.sd_beta
+    # print pol_raw
+    # print pol_raw_err
+    # # exit("IMPLEMENT SCIPY TLS HERE")
 
     # Line fit from the mean values and the raw values covariance matrix
     pol_raw, polcov_raw = sciopt.curve_fit(f, x, y, sigma=cov_raw,
         absolute_sigma=False, p0=[0.18, 0.0], maxfev=1200)
     pol_raw_err = np.sqrt(np.diag(polcov_raw))
+
 
     # Extract fit target values
     lfit_raw = lfit.LineFit(x, y, y_err)
@@ -175,7 +201,6 @@ def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
         y0_error = y0_error[0]
 
     # Perform line fit for tau int as well to error correct
-
     # Gets the tau int. Asserted that is is provided.
     if not isinstance(tau_int, types.NoneType) and \
         not isinstance(tau_int_err, types.NoneType):
@@ -185,6 +210,7 @@ def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
             tau_int0 = __get_tau_int(fit_target, x, tau_int, tau_int_err)
     else:
         tau_int0 = 0.5
+
 
     # Corrects error with the tau int
     y0_error *= np.sqrt(2*tau_int0)

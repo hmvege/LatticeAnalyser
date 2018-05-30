@@ -208,6 +208,11 @@ def post_analysis(beta_parameter_list, observables,
 
 				# # Plot running coupling
 				# energy_analysis.coupling_fit()
+	else:
+		t0_reference_scale = {
+		extrap_method: {atype: None for atype in post_analysis_data_type}
+		for extrap_method in extrapolation_methods
+	}
 
 	if "topc" in observables:
 		topc_analysis = TopcPostAnalysis(data, 
@@ -295,7 +300,9 @@ def post_analysis(beta_parameter_list, observables,
 				for cont_target in continuum_targets:
 					topsus_analysis.plot_continuum(cont_target, 
 						extrapolation_method=extrapolation_method,
-						plot_continuum_fit=plot_continuum_fit)
+						plot_continuum_fit=plot_continuum_fit,
+						reference_value=t0_reference_scale \
+							[extrapolation_method][analysis_type])
 
 					fit_parameters = append_fit_params(fit_parameters, 
 						topsus_analysis.observable_name_compact, analysis_type,
@@ -311,7 +318,9 @@ def post_analysis(beta_parameter_list, observables,
 				for i in range(N_int):
 					topsusqtq0_analysis.plot_interval(i)
 					for cont_target in continuum_targets:
-						topsusqtq0_analysis.plot_continuum(cont_target, i)
+						topsusqtq0_analysis.plot_continuum(cont_target, i,
+							reference_value=t0_reference_scale \
+								[extrapolation_method][analysis_type])
 
 						fit_parameters = append_fit_params(fit_parameters, 
 							topsusqtq0_analysis.observable_name_compact, 
@@ -331,7 +340,9 @@ def post_analysis(beta_parameter_list, observables,
 				for i in range(N_int):
 					topsust_analysis.plot_interval(i)
 					for cont_target in continuum_targets:
-						topsust_analysis.plot_continuum(cont_target, i)
+						topsust_analysis.plot_continuum(cont_target, i,
+							reference_value=t0_reference_scale \
+								[extrapolation_method][analysis_type])
 
 						fit_parameters = append_fit_params(fit_parameters, 
 							topsust_analysis.observable_name_compact, 
@@ -350,7 +361,9 @@ def post_analysis(beta_parameter_list, observables,
 				for i in range(N_int):
 					topsuste_analysis.plot_interval(i)
 					for cont_target in continuum_targets:
-						topsuste_analysis.plot_continuum(cont_target, i)
+						topsuste_analysis.plot_continuum(cont_target, i,
+							reference_value=t0_reference_scale \
+								[extrapolation_method][analysis_type])
 
 						fit_parameters = append_fit_params(fit_parameters, 
 							topsuste_analysis.observable_name_compact, 
@@ -369,7 +382,9 @@ def post_analysis(beta_parameter_list, observables,
 				for i in range(N_int):
 					topsusmc_analysis.plot_interval(i)
 					for cont_target in continuum_targets:
-						topsusmc_analysis.plot_continuum(cont_target, i)
+						topsusmc_analysis.plot_continuum(cont_target, i, 
+							reference_value=t0_reference_scale \
+								[extrapolation_method][analysis_type])
 
 						fit_parameters = append_fit_params(fit_parameters, 
 							topsusmc_analysis.observable_name_compact, 

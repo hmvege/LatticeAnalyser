@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import copy
+import types
 
 class TopsusCore(PostCore):
 	observable_name = "topsus_core"
@@ -76,7 +77,8 @@ class TopsusCore(PostCore):
 
 	def plot_continuum(self, fit_target, title_addendum="",
 		extrapolation_method="plateau", plateau_fit_size=10,
-		interpolation_rank=3, plot_continuum_fit=False):
+		interpolation_rank=3, plot_continuum_fit=False,
+		reference_value=None):
 		"""
 		Method for plotting the continuum limit of topsus at a given 
 		fit_target.
@@ -107,9 +109,12 @@ class TopsusCore(PostCore):
 			raw_func_err: function, optional, will propagate the error of the 
 				bootstrapped line fitted data, raw_func_err(y, yerr). Calculated
 				by regular error propagation.
+			reference_value: dict, optional. Uses line fitted continuum limit 
+				of t0 at t^2<E>|_t0 = 0.3. Default is using extrapolation point.
 		"""
 
 		self.extrapolation_method = extrapolation_method
+		self.t0_values = reference_value
 
 		# Retrieves data for analysis.
 		if fit_target == -1:
@@ -139,8 +144,14 @@ class TopsusCore(PostCore):
 				verbose=False)
 
 			_x0, _y0, _y0_error, _y0_raw, _tau_int0 = res
+			if isinstance(self.t0_values, types.NoneType):
+				a_squared.append(self.plot_values[beta]["a"]**2/_x0)
+			else:
+				a_squared.append(
+					self.plot_values[beta]["a"]**2/self.t0_values[beta]["t0"])
 
-			a_squared.append(self.plot_values[beta]["a"]**2/_x0)
+				print "PRINTING t0 reference value: %f" % (self.t0_values[beta]["t0"]/(self.plot_values[beta]["a"]**2))
+
 			obs.append(_y0)
 			obs_err.append(_y0_error)
 			obs_raw.append(_y0_raw)

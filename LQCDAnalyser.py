@@ -42,6 +42,7 @@ def main():
 	# observables = observables_euclidean_time
 	# observables = ["topcr", "topsus"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
+	observables = ["energy", "topsus"]
 	observables = ["energy"]
 	# observables = []
 	# observables = ["qtq0eff", "qtq0e"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
@@ -76,7 +77,7 @@ def main():
 	line_fit_interval_points = 20
 	# topsus_fit_targets = [0.3,0.4,0.5,0.58]
 	topsus_fit_targets = [0.3, 0.4, 0.5, 0.6]
-	# topsus_fit_targets = [0.6]
+	topsus_fit_targets = [0.6]
 	energy_fit_target = 0.3
 
 	# Smearing gif parameters for qtq0e
@@ -112,7 +113,7 @@ def main():
 	# Method of continuum extrapolation
 	# Options: plateau, plateau_mean, nearest, interpolate, bootstrap
 	extrapolation_methods = ["plateau", "plateau_mean", "nearest", "interpolate", "bootstrap"]
-	# extrapolation_methods = ["plateau"]
+	extrapolation_methods = ["plateau"]
 	plot_continuum_fit = False
 
 	# Indexes to look at for topct.
@@ -134,7 +135,7 @@ def main():
 	
 	# Data types to be looked at in the post-analysis.
 	post_analysis_data_type = ["bootstrap", "jackknife", "unanalyzed"]
-	# post_analysis_data_type = ["unanalyzed"]
+	post_analysis_data_type = ["bootstrap"]
 
 	#### Analysis batch setups
 	default_params = {

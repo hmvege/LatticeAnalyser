@@ -206,6 +206,13 @@ class PostCore(object):
 		self._initiate_plot_values(self.data[analysis_data_type],
 			self.data_raw[analysis_data_type])
 
+	def print_estimates(self, flow_times=[]):
+		"""
+		Prints the topsus values given the flow time.
+		"""
+		for bval, tf0 in zip(self.beta_values, flow_times):
+			print self.beta_values[bval]["y"][tf0]
+
 	def _initiate_plot_values(self, data, data_raw):
 		"""Sorts data into a format specific for the plotting method."""
 		for beta in sorted(data.keys()):
