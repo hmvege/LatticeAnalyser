@@ -49,13 +49,20 @@ def _extract_inverse(fit_target, X, Y, Y_err):
 
     return x0, x0_err
 
-def _get_covariance_matrix_from_raw(y_raw):
+def _get_covariance_matrix_from_raw(y_raw, autocorr=None):
     """
     Returns a covariance matrix that is guaranteed to not be singular.
     """
+    if isinstance(autocorr, types.NoneType):
+        autocorr = np.eye(len(y_raw))
+    else:
+        autocorr = np.eye(len(y_raw))*autocorr
 
     # Uses bootstrap, jackknifed or analyzed values directly.
     cov_raw = np.cov(y_raw)
+    for i in xrange(len(cov_raw)):
+        cov_raw[i,i] *= autocorr[i,i]
+    # cov_raw *= autocorr
     # cov_raw = np.corrcoef(y_raw)
 
     # Get eigenvalues for covariance matrix
@@ -67,10 +74,9 @@ def _get_covariance_matrix_from_raw(y_raw):
         magnitude = np.floor(np.log10(np.absolute(np.min(eig))))
         # Increments magnitude til we have positive definite cov-matrix
         eps = 10**(magnitude + counter)
-        eps_matrix = np.zeros(cov_raw.shape)
+        eps_matrix = np.eye(cov_raw.shape[0])*eps
 
         # Adds a small diagonal epsilon to make it positive definite
-        np.fill_diagonal(eps_matrix, eps)
         cov_raw += eps_matrix
 
         eig = np.linalg.eigvals(cov_raw)
@@ -143,6 +149,17 @@ def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
         y0, y0_error, tau_int0, chi_squared
     """
 
+    # # Gets the tau int using a line fit, given it is provide.
+    # if not isinstance(tau_int, types.NoneType) and \
+    #     not isinstance(tau_int_err, types.NoneType):
+    #     if inverse_fit:
+    #         _y0 = y[np.argmin(np.abs(y - fit_target))]
+    #         tau_int0 = __get_tau_int(_y0, x, tau_int, tau_int_err)
+    #     else:
+    #         tau_int0 = __get_tau_int(fit_target, x, tau_int, tau_int_err)
+    # else:
+    #     tau_int0 = 0.5
+
     assert not isinstance(y_raw, types.NoneType), \
         "missing y_raw values."
     assert not isinstance(tau_int, types.NoneType), \
@@ -153,7 +170,7 @@ def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
     def _f(B, x):
         return B[0]*x + B[1]
 
-    cov_raw = _get_covariance_matrix_from_raw(y_raw)
+    cov_raw = _get_covariance_matrix_from_raw(y_raw, autocorr=np.sqrt(2*tau_int))
 
     # print y_raw.shape
     # C = []
@@ -199,8 +216,7 @@ def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
         y0_error = ((y0_error[1] - y0_error[0])/2)
         y0_error = y0_error[0]
 
-    # Perform line fit for tau int as well to error correct
-    # Gets the tau int. Asserted that is is provided.
+    # Gets the tau int using a line fit, given it is provide.
     if not isinstance(tau_int, types.NoneType) and \
         not isinstance(tau_int_err, types.NoneType):
         if inverse_fit:
@@ -210,11 +226,11 @@ def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
     else:
         tau_int0 = 0.5
 
-
     # Corrects error with the tau int
-    y0_error *= np.sqrt(2*tau_int0)
+    # y0_error *= np.sqrt(2*tau_int0)
 
     return y0, y0_error, tau_int0, chi_squared
+
 
 def _extract_plateau_mean_fit(fit_target, f, x, y, y_err, inverse_fit=False):
     """
@@ -251,13 +267,13 @@ def _extract_plateau_mean_fit(fit_target, f, x, y, y_err, inverse_fit=False):
         y0, y0_error, chi_squared = lfit_default(fit_target, weighted=True)
         y0_error = ((y0_error[1] - y0_error[0])/2)
 
-
     if isinstance(y0, (tuple, list, np.ndarray)):
         y0 = y0[0]
     if isinstance(y0_error, (tuple, list, np.ndarray)):
         y0_error = y0_error[0]
 
     return y0, y0_error, chi_squared
+
 
 def _extract_bootstrap_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
     tau_int_err=None, plot_samples=False, F=lambda _y: _y, FDer=lambda _y, 
@@ -338,11 +354,10 @@ def _extract_bootstrap_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
 
     # Gets the tau int. Asserted that is is provided.
     if not isinstance(tau_int, types.NoneType) and \
-        not isinstance(tau_int_err, types.NoneType):
-        if not inverse_fit:
+        not isinstance(tau_int_err, types.NoneType) and \
+        not inverse_fit:
             tau_int0 = __get_tau_int(fit_target, x, tau_int, tau_int_err)
-        else:
-            tau_int0 = __get_tau_int(y0_mean, x, tau_int, tau_int_err)
+            # tau_int0 = __get_tau_int(y0_mean, x, tau_int, tau_int_err)
     else:
         tau_int0 = 0.5
 

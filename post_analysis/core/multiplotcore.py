@@ -54,6 +54,7 @@ class MultiPlotCore(PostCore):
 				# Modulo division in order to avoid going out of range in 
 				# intervals.
 				int_key = sorted_intervals[interval_index % len(sorted_intervals)]
+				self.interval.append(int_key)
 
 				values["a"] = get_lattice_spacing(beta)
 				values["x"] = values["a"] * np.sqrt(8*data[beta][int_key]["x"])
@@ -87,6 +88,7 @@ class MultiPlotCore(PostCore):
 	def plot_interval(self, interval_index, **kwargs):
 		"""Sets and plots only one interval."""
 		self.interval_index = interval_index
+		self.interval = [] # Resets interval list
 		self.plot_values = {}
 		# data, _ = self._get_analysis_data(self.analysis_data_type)
 		self._initiate_plot_values(self.data[self.analysis_data_type],
@@ -95,13 +97,13 @@ class MultiPlotCore(PostCore):
 		# Makes it a global constant so it can be added in plot figure name
 		self.plot(**kwargs)
 
-	def _get_plot_figure_name(self, output_folder=None):
+	def _get_plot_figure_name(self, output_folder=None, figure_name_appendix=""):
 		"""Retrieves appropriate figure file name."""
 		if isinstance(output_folder, types.NoneType):
 			output_folder = os.path.join(self.output_folder_path, "slices")
 		check_folder(output_folder, False, True)
-		fname = "post_analysis_%s_%s_int%d.png" % (self.observable_name_compact,
-			self.analysis_data_type, self.interval_index)
+		fname = "post_analysis_%s_%s_int%d%s.png" % (self.observable_name_compact,
+			self.analysis_data_type, self.interval_index, figure_name_appendix)
 		return os.path.join(output_folder, fname)
 
 	def get_N_intervals(self):

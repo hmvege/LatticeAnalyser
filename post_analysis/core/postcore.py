@@ -55,7 +55,7 @@ class PostCore(object):
 	# 	6.45: "#ff3333" # purple
 	# }
 
-	interval = None
+	interval = []
 
 	def __init__(self, data, with_autocorr=True, figures_folder="../figures",
 		verbose=False, dryrun=False):

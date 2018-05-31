@@ -26,7 +26,7 @@ def append_fit_params(fplist, obs_name, analysis_name, fparams):
 		"topsus_err": topsus_err,
 		"N_F": N_F,
 		"N_F_err": N_F_err,
-		"interval": interval,
+		"interval": ", ".join(interval),
 	})
 	return fplist
 
@@ -40,11 +40,11 @@ def write_fit_parameters_to_file(fparams, fname, skip_values=None, verbose=False
 		fw = 14
 		dict_keys = OrderedDict([
 			("observable_type", {"name": "obs", "w": 14, "type": "s"}),
-			("descr", {"name": "description", "w": 40, "type": "s"}),
-			("fit_target", {"name": "sqrt(8t_0)", "w": 15, "type": ".2f"}),
-			("extrap_method", {"name": "extrapolation-method", "w": 25, "type": "s"}),
-			("interval", {"name": "int", "w": 12, "type": "s"}),
-			("analysis_type", {"name": "atype", "w": 14, "type": "s"}),
+			("descr", {"name": "description", "w": 35, "type": "s"}),
+			("fit_target", {"name": "sqrt(8t_0)", "w": 11, "type": ".2f"}),
+			("extrap_method", {"name": "extrap.-method", "w": 15, "type": "s"}),
+			("interval", {"name": "int", "w": 80, "type": "s"}),
+			("analysis_type", {"name": "atype", "w": 12, "type": "s"}),
 			("chi_squared", {"name": "Chi^2", "w": 25, "type": ".8f"}),
 			("a", {"name": "a", "w": fw, "type": ".8f"}),
 			("a_err", {"name": "aerr", "w": fw, "type": ".8f"}),

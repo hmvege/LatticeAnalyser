@@ -42,12 +42,12 @@ def main():
 	# observables = observables_euclidean_time
 	# observables = ["topcr", "topsus"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
-	observables = ["energy", "topsus"]
-	observables = ["energy"]
+	# observables = ["energy", "topsus"]
+	# observables = ["energy"]
 	# observables = []
 	# observables = ["qtq0eff", "qtq0e"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["qtq0e"]
-	# observables = ["topsusMC"]
+	observables = ["topsusMC"]
 	# observables = ["topcr"]
 
 	#### Base parameters
@@ -113,7 +113,7 @@ def main():
 	# Method of continuum extrapolation
 	# Options: plateau, plateau_mean, nearest, interpolate, bootstrap
 	extrapolation_methods = ["plateau", "plateau_mean", "nearest", "interpolate", "bootstrap"]
-	extrapolation_methods = ["plateau"]
+	extrapolation_methods = ["plateau_mean"]
 	plot_continuum_fit = False
 
 	# Indexes to look at for topct.
@@ -124,7 +124,7 @@ def main():
 	intervals_eucl = None
 
 	# Number of different sectors we will analyse in monte carlo time
-	MC_time_splits = 2
+	MC_time_splits = 5
  
 	# Extraction point in flow time a*t_f for q0 in qtq0
 	q0_flow_times = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6] # [fermi]

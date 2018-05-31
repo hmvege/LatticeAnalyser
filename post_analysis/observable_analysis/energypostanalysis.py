@@ -73,15 +73,15 @@ class EnergyPostAnalysis(PostCore):
 		t0err_values = []
 
 		for beta, bval in sorted(self.plot_values.items(), key=lambda i: i[0]):
-			y0, x0, x0_err, _, _ = extract_fit_target(E0, bval["t"], bval["y"], 
+			y0, t0, t0_err, _, _ = extract_fit_target(E0, bval["t"], bval["y"], 
 				y_err=bval["y_err"], y_raw=bval[self.analysis_data_type], 
 				tau_int=bval["tau_int"], tau_int_err=bval["tau_int_err"],
 				extrapolation_method=extrapolation_method, plateau_size=10,
 				inverse_fit=True, **kwargs)
 
-			a_values.append(bval["a"]**2/x0)
-			t0_values.append(x0)
-			t0err_values.append(x0_err)
+			a_values.append(bval["a"]**2/t0)
+			t0_values.append(t0)
+			t0err_values.append(t0_err)
 
 		a_values = np.asarray(a_values[::-1])
 		t0_values = np.asarray(t0_values[::-1])

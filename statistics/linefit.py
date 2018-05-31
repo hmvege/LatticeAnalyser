@@ -242,16 +242,29 @@ class LineFit:
 				= self._get_means()
 			self.s_xy_err = self._get_s_xy()
 
-	def __call__(self, x, weighted=False):
+	def __call__(self, x, x_err=None, weighted=False):
 		"""Returns the fitted function at x."""
 		x = np.atleast_1d(x)
-		if weighted:
-			y_fit, y_fit_err = self._yw_hat(x), self._yw_hat_err(x)
-			return y_fit, y_fit_err, self.chi_squared(self.y, self.y_err, 
-				self._yw_hat(self.x))
+		if isinstance(x_err, types.NoneType):
+			if weighted:
+				y_fit, y_fit_err = self._yw_hat(x), self._yw_hat_err(x)
+				return y_fit, y_fit_err, self.chi_squared(self.y, self.y_err, 
+					self._yw_hat(self.x))
+			else:
+				y_fit, y_fit_err = self._y_hat(x), self._y_hat_err(x)
+				return y_fit, y_fit_err
 		else:
-			y_fit, y_fit_err = self._y_hat(x), self._y_hat_err(x)
-			return y_fit, y_fit_err
+			if weighted:
+				y_fit, _y_fit_err = self._yw_hat(x), self._yw_hat_err(x)
+
+				v1 = np.array([x*self.b1w_err, self.b1w*x_err, self.b0w_err])
+				y_fit_err = np.sqrt(np.sum(np.outer(v1, v1)))
+
+				return y_fit, y_fit_err, self.chi_squared(self.y, self.y_err, 
+					self._yw_hat(self.x))
+			else:
+				y_fit, y_fit_err = self._y_hat(x), self._y_hat_err(x)
+				return y_fit, y_fit_err
 
 
 	def inverse_fit(self, y0, weighted=False):
@@ -273,26 +286,18 @@ class LineFit:
 
 		# b1 = a
 		# b0 = b
+		# y = a*x + b --> x = (y - b)/a = y/a - b/a = t1 + t2
 
-		if weighted: # THIS IS WRONG!!! SHOULD SOLVE ANALYTICALLY NOT NUMERICALLY OFCOURSE!!!
-			# x0, x0_err = lfit_tools._extract_inverse(y0, x, self._yw_hat(x), 
-			# 	self._yw_hat_err(x))
-			x0 = (y0 - self.b0w) / self.b1w
-			_term1 = self.b1w_err / (self.b1w**2)*(self.b0w - y0)
-			_term2 = self.b0w_err / self.b1w
-			_cross_term = 2*self.b0w_err*self.b1w_err \
-				/ (self.b1w**3)*(self.b1w - y0)
+		if weighted:
+			x0 = (y0 - self.b0w)/self.b1w
+			_t1 = - y0 * self.b1w_err/self.b1w**2
+			_t2 = - self.b0w_err/self.b1w  + self.b0w*self.b1w_err/self.b1w**2
 		else:
-			# x0, x0_err = lfit_tools._extract_inverse(y0, x, self._y_hat(x), 
-			# 	self._y_hat_err(x))
-			x0 = (y0 - self.b0w) / self.b1w
-			_term1 = self.b1_err / (self.b1**2)*(self.b0 - y0)
-			_term2 = self.b0_err / self.b1
-			_cross_term = 2*self.b0_err*self.b1_err \
-				/ (self.b1**3)*(self.b1 - y0)
-		
-		x0_err = np.sqrt(_term1**2 + _term2**2 - _cross_term)
-		print _term1**2, _term2**2, _cross_term, _term1**2 + _term2**2 - _cross_term, x0_err
+			x0 = (y0 - self.b0) / self.b1
+			_t1 = - y0 * self.b1_err/self.b1**2
+			_t2 = - self.b0_err/self.b1  + self.b0*self.b1_err/self.b1**2
+
+		x0_err = np.sqrt(_t1**2 + _t2**2 + 2*_t1*_t2)
 
 		self.y0 = y0
 		self.x0 = x0

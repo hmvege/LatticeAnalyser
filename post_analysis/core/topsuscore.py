@@ -76,7 +76,7 @@ class TopsusCore(PostCore):
 				0.25*self.chi_const[6.45]*qqerr/qq**(0.75)
 
 	def plot_continuum(self, fit_target, title_addendum="",
-		extrapolation_method="plateau", plateau_fit_size=10,
+		extrapolation_method="plateau", plateau_fit_size=20,
 		interpolation_rank=3, plot_continuum_fit=False,
 		reference_value=None):
 		"""
@@ -148,10 +148,12 @@ class TopsusCore(PostCore):
 				a_squared.append(self.plot_values[beta]["a"]**2/_x0)
 			else:
 				a_squared.append(
-					self.plot_values[beta]["a"]**2/self.t0_values[beta]["t0"])
+					self.plot_values[beta]["a"]**2/self.t0_values["t0_cont"])
 
-				print "PRINTING t0 reference value: %f" % (self.t0_values[beta]["t0"]/(self.plot_values[beta]["a"]**2))
+				print "PRINTING t0 reference value: %f" % (self.t0_values["t0_cont"]/(self.plot_values[beta]["a"]**2))
 
+
+			print _y0, _y0_error
 			obs.append(_y0)
 			obs_err.append(_y0_error)
 			obs_raw.append(_y0_raw)
