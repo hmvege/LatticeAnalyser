@@ -16,6 +16,10 @@ def get_lattice_spacing(beta):
 	r = 0.5
 	bval = (beta - 6)
 	a = np.exp(-1.6805 - 1.7139*bval + 0.8155*bval**2 - 0.6667*bval**3)*0.5
+
+	a_err = np.linspace(0.3, 0.6, 1000)
+	a_err_func = (0.6 - 0.3) / (6.57 - 5.7)
+	fix feilledd her
 	return a # fermi
 
 def witten_veneziano(chi, chi_error):

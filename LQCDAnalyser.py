@@ -174,6 +174,7 @@ def main():
 	databeta60["NCfgs"] = get_num_observables(data_batch_folder,
 		databeta60["batch_name"])
 	databeta60["obs_file"] = "24_6.00"
+	databeta60["MCInt"] = []
 	databeta60["lattice_size"] = {6.0: 24**3*48}
 
 	databeta61 = copy.deepcopy(default_params)
@@ -181,6 +182,7 @@ def main():
 	databeta61["NCfgs"] = get_num_observables(data_batch_folder,
 		databeta61["batch_name"])
 	databeta61["obs_file"] = "28_6.10"
+	databeta61["MCInt"] = []
 	databeta61["lattice_size"] = {6.1: 28**3*56}
 
 	databeta62 = copy.deepcopy(default_params)
@@ -188,6 +190,7 @@ def main():
 	databeta62["NCfgs"] = get_num_observables(data_batch_folder, 
 		databeta62["batch_name"])
 	databeta62["obs_file"] = "32_6.20"
+	databeta62["MCInt"] = []
 	databeta62["lattice_size"] = {6.2: 32**3*64}
 
 	default_params["flow_epsilon"] = 0.02
@@ -196,6 +199,7 @@ def main():
 	databeta645["NCfgs"] = get_num_observables(data_batch_folder,
 		databeta645["batch_name"])
 	databeta645["obs_file"] = "48_6.45"
+	databeta645["MCInt"] = []
 	databeta645["lattice_size"] = {6.45: 48**3*96}
 
 	# smaug_data_beta60_analysis = copy.deepcopy(default_params)
