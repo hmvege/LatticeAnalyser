@@ -180,7 +180,6 @@ def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
         absolute_sigma=False, p0=[0.18, 0.0], maxfev=1200)
     pol_raw_err = np.sqrt(np.diag(polcov_raw))
 
-
     # Extract fit target values
     lfit_raw = lfit.LineFit(x, y, y_err)
     lfit_raw.set_fit_parameters(pol_raw[1], pol_raw_err[1], pol_raw[0],
@@ -189,7 +188,7 @@ def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
 
     if inverse_fit:
         y0, y0_error = lfit_raw.inverse_fit(fit_target, weighted=True)
-        y0_error = ((y0_error[1] - y0_error[0])/2)
+        # y0_error = ((y0_error[1] - y0_error[0])/2)
     else:
         # Errors should be equal in positive and negative directions.
         if np.abs(np.abs(y0 - y0_error[0]) - np.abs(y0 - y0_error[1])) > 1e-15:
@@ -250,8 +249,8 @@ def _extract_plateau_mean_fit(fit_target, f, x, y, y_err, inverse_fit=False):
         _, _, chi_squared = lfit_default(fit_target, weighted=True)
     else:
         y0, y0_error, chi_squared = lfit_default(fit_target, weighted=True)
+        y0_error = ((y0_error[1] - y0_error[0])/2)
 
-    y0_error = ((y0_error[1] - y0_error[0])/2)
 
     if isinstance(y0, (tuple, list, np.ndarray)):
         y0 = y0[0]
@@ -317,15 +316,14 @@ def _extract_bootstrap_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
             # _x0_err is not needed, is error cannot be inflated by the 
             # autocorrelation. 
             try:
-                y0_sample[i], _tmp_err = fit_sample.inverse_fit(fit_target)
+                y0_sample[i], y0_sample_err[i] = fit_sample.inverse_fit(fit_target)
             except IndexError as err:
                 print "Points included: %s" % y0_raw.shape
                 fit_sample.plot()
                 exit(err)
         else:
             y0_sample[i], _tmp_err = fit_sample(fit_target)
-
-        y0_sample_err[i] = (_tmp_err[1] - _tmp_err[0])/2
+            y0_sample_err[i] = (_tmp_err[1] - _tmp_err[0])/2
 
         if plot_samples:
             plot_ymean[:,i], _p_err = fit_sample(x)
@@ -476,7 +474,7 @@ def _test_simple_line_fit():
         linestyle="none", color="tab:orange")
     ax1.set_ylim(0.5, 5)
     ax1.axvline(x_fit, color="tab:orange")
-    ax1.fill_betweenx(np.linspace(0,6,100), x_fit_err[0], x_fit_err[1], 
+    ax1.fill_betweenx(np.linspace(0,6,100), x_fit - x_fit_err, x_fit + x_fit_err, 
         label=r"$x_0\pm\sigma_{x_0}$", alpha=0.5, color="tab:orange")
     ax1.legend(loc="best", prop={"size":8})
     ax1.set_title("Fit test - unweighted")
@@ -510,15 +508,16 @@ def _test_simple_line_fit():
 
     ax2 = fig1.add_subplot(212)
     ax2.axhline(fit_target, linestyle="dashed", color="tab:grey")
-    ax2.errorbar(x, signal, yerr=signal_err, marker="o", label="Signal", 
+    ax2.errorbar(x, signal, yerr=signal_err, marker="o", label="Signal",
         linestyle="none", color="tab:orange")
     ax2.plot(x_hat, yw_hat, label="Weighted fit", color="tab:blue")
     ax2.fill_between(x_hat, yw_hat_err[0], yw_hat_err[1], alpha=0.5, 
         color="tab:blue")
     ax2.set_ylim(0.5, 5)
     ax2.axvline(xw_fit, color="tab:orange")
-    ax2.fill_betweenx(np.linspace(0,6,100), xw_fit_error[0], xw_fit_error[1], 
-        label=r"$x_{0,w}\pm\sigma_{x_0,w}$", alpha=0.5, color="tab:orange")
+    ax2.fill_betweenx(np.linspace(0,6,100), xw_fit - xw_fit_error, 
+        xw_fit + xw_fit_error, label=r"$x_{0,w}\pm\sigma_{x_0,w}$", 
+        alpha=0.5, color="tab:orange")
     ax2.legend(loc="best", prop={"size":8})
     fig1.savefig("tests/line_fit_example.png", dpi=400)
     plt.show()

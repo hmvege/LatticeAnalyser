@@ -261,6 +261,8 @@ class LineFit:
 		Args:
 			y0: target fit at y-axis, float.
 			weighted: bool, if we are to use weighted fit or not.
+			xycov: float, optional. Covariance between fit parameters obtained
+				from curve_fit. Default is 1.0
 
 		Returns:
 			x0: targeted y0 fit
@@ -269,12 +271,28 @@ class LineFit:
 		n = 100000
 		x = np.linspace(self.x_lower, self.x_upper, n)
 
-		if weighted:
-			x0, x0_err = lfit_tools._extract_inverse(y0, x, self._yw_hat(x), 
-				self._yw_hat_err(x))
+		# b1 = a
+		# b0 = b
+
+		if weighted: # THIS IS WRONG!!! SHOULD SOLVE ANALYTICALLY NOT NUMERICALLY OFCOURSE!!!
+			# x0, x0_err = lfit_tools._extract_inverse(y0, x, self._yw_hat(x), 
+			# 	self._yw_hat_err(x))
+			x0 = (y0 - self.b0w) / self.b1w
+			_term1 = self.b1w_err / (self.b1w**2)*(self.b0w - y0)
+			_term2 = self.b0w_err / self.b1w
+			_cross_term = 2*self.b0w_err*self.b1w_err \
+				/ (self.b1w**3)*(self.b1w - y0)
 		else:
-			x0, x0_err = lfit_tools._extract_inverse(y0, x, self._y_hat(x), 
-				self._y_hat_err(x))
+			# x0, x0_err = lfit_tools._extract_inverse(y0, x, self._y_hat(x), 
+			# 	self._y_hat_err(x))
+			x0 = (y0 - self.b0w) / self.b1w
+			_term1 = self.b1_err / (self.b1**2)*(self.b0 - y0)
+			_term2 = self.b0_err / self.b1
+			_cross_term = 2*self.b0_err*self.b1_err \
+				/ (self.b1**3)*(self.b1 - y0)
+		
+		x0_err = np.sqrt(_term1**2 + _term2**2 - _cross_term)
+		print _term1**2, _term2**2, _cross_term, _term1**2 + _term2**2 - _cross_term, x0_err
 
 		self.y0 = y0
 		self.x0 = x0
