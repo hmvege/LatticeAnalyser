@@ -44,7 +44,7 @@ class TopsusCore(PostCore):
 		"""Sets the constant in the topsus function for found beta values."""
 		for beta in self.beta_values:
 			V = self.lattice_sizes[beta][0]**3 * self.lattice_sizes[beta][1]
-			self.chi_const[beta] = self.hbarc/get_lattice_spacing(beta)\
+			self.chi_const[beta] = self.hbarc/get_lattice_spacing(beta)[0]\
 				/float(V)**(0.25)
 			# self.chi[beta] = lambda qq: self.chi_const[beta]*qq**(0.25)
 

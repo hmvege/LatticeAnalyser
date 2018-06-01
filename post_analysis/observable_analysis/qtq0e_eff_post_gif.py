@@ -22,7 +22,7 @@ class QtQ0EffPostGif(QtQ0EffectiveMassPostAnalysis, FlowGif):
         # self.data[atype][beta][flow_time][euclidean_time]
         for atype in self.analysis_types:
             for beta in self.beta_values:
-                norm = self.r0/get_lattice_spacing(beta)
+                norm = self.r0/get_lattice_spacing(beta)[0]
 
                 for ftime in flow_times:
 

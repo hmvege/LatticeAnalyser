@@ -26,7 +26,8 @@ class MultiPlotCore(PostCore):
 				# euclidean time.
 				for sub_obs in self.observable_intervals[beta]:
 					sub_values = {}
-					sub_values["a"] = get_lattice_spacing(beta)
+					sub_values["a"], sub_values["a_err"] = \
+						get_lattice_spacing(beta)
 					sub_values["x"] = sub_values["a"] * \
 						np.sqrt(8*data[beta][sub_obs]["x"])
 					sub_values["y"] = data[beta][sub_obs]["y"]
@@ -56,7 +57,7 @@ class MultiPlotCore(PostCore):
 				int_key = sorted_intervals[interval_index % len(sorted_intervals)]
 				self.interval.append(int_key)
 
-				values["a"] = get_lattice_spacing(beta)
+				values["a"], values["a_err"] = get_lattice_spacing(beta)
 				values["x"] = values["a"] * np.sqrt(8*data[beta][int_key]["x"])
 				values["y"] = data[beta][int_key]["y"]
 				values["y_err"] = data[beta][int_key]["y_error"]

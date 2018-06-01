@@ -24,7 +24,7 @@ class EnergyPostAnalysis(PostCore):
 		for beta in sorted(data.keys()):
 			values = {}
 			values["beta"] = beta
-			values["a"] = get_lattice_spacing(beta)
+			values["a"], values["a_err"] = get_lattice_spacing(beta)
 
 			values["x"] = data[beta]["x"]/self.r0**2*values["a"]**2
 			values["t"] = data[beta]["x"]*values["a"]**2

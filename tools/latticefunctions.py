@@ -18,9 +18,16 @@ def get_lattice_spacing(beta):
 	a = np.exp(-1.6805 - 1.7139*bval + 0.8155*bval**2 - 0.6667*bval**3)*0.5
 
 	a_err = np.linspace(0.3, 0.6, 1000)
-	a_err_func = (0.6 - 0.3) / (6.57 - 5.7)
-	fix feilledd her
-	return a # fermi
+	beta_low = 5.7
+	beta_high = 6.57
+	a_err_rise = ((0.6 - 0.3)/100.0)/(6.57 - 5.7) # err% / beta
+	a_err = (a_err_rise + 0.3/100.0)*beta
+
+	if beta < beta_low or beta > beta_high:
+		raise Warning("Beta value of %f is outside of defined area [%f, %f]."
+			% (beta, beta_low, beta_high))
+
+	return a, a_err # fermi
 
 def witten_veneziano(chi, chi_error):
 	"""

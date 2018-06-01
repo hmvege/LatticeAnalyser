@@ -160,7 +160,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 				# euclidean time.
 				for sub_obs in self.observable_intervals[beta]:
 					sub_values = {}
-					sub_values["a"] = get_lattice_spacing(beta)
+					sub_values["a"], sub_values["a_err"] = get_lattice_spacing(beta)
 					sub_values["x"] = np.linspace(0, 
 						self.lattice_sizes[beta][1] * sub_values["a"], 
 						self.lattice_sizes[beta][1])
@@ -201,7 +201,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 
 			else:
 				tf_index = "tflow%04.4f" % flow_index
-				values["a"] = get_lattice_spacing(beta)
+				values["a"], values["a_err"] = get_lattice_spacing(beta)
 				
 				# For exact box sizes
 				values["x"] = np.linspace(0,

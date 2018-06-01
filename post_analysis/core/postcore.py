@@ -217,7 +217,7 @@ class PostCore(object):
 		"""Sorts data into a format specific for the plotting method."""
 		for beta in sorted(data.keys()):
 			values = {}
-			values["a"] = get_lattice_spacing(beta)
+			values["a"], values["a_err"] = get_lattice_spacing(beta)
 			values["x"] = values["a"]* np.sqrt(8*data[beta]["x"])
 			values["y"] = data[beta]["y"]
 			values["y_err"] = data[beta]["y_error"]
