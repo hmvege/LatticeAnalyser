@@ -12,7 +12,7 @@ class TopsusMCIntervalPostAnalysis(MultiPlotCore, TopsusCore):
 	sub_obs = True
 	descr = "Intervals in Monte Carlo time"
 
-	def plot_continuum(self, fit_target, interval_index, **kwargs):
+	def plot_continuum(self, fit_target, interval_keys, **kwargs):
 		"""
 		Continuum plotter for topsus in intervals in MC-time.
 
@@ -29,10 +29,10 @@ class TopsusMCIntervalPostAnalysis(MultiPlotCore, TopsusCore):
 		# Sets plot values
 		self._initiate_plot_values(self.data[self.analysis_data_type],
 			self.data_raw[self.analysis_data_type],
-			interval_index=interval_index)
+			interval_keys=interval_keys)
 
 		self.output_folder_path = os.path.join(self.output_folder_path,
-			"int%d" % interval_index)
+			"int%s" % "_".join(interval_keys))
 
 		check_folder(self.output_folder_path, False, self.verbose)
 

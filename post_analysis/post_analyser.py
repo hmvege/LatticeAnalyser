@@ -1,82 +1,12 @@
 from observable_analysis import *
 from tools.postanalysisdatareader import PostAnalysisDataReader
-from collections import OrderedDict
+from tools.analysis_setup_tools import append_fit_params, \
+	write_fit_parameters_to_file, get_intervals, MC_interval_setup
 import types
 import numpy as np
 import os
 import cPickle as pickle
 from tqdm import tqdm
-
-def append_fit_params(fplist, obs_name, analysis_name, fparams):
-	"""Function for appending fit parameters."""
-	chi_squared, fit_params, topsus, topsus_err, N_F, N_F_err, \
-		fit_target, interval, descr, extrap_method = fparams
-	fplist.append({
-		"observable_type": obs_name,
-		"descr": descr,
-		"extrap_method": extrap_method,
-		"analysis_type": analysis_name,
-		"fit_target": fit_target,
-		"chi_squared": chi_squared,
-		"a": fit_params[2],
-		"a_err": fit_params[3],
-		"b": fit_params[0],
-		"b_err": fit_params[1],
-		"topsus": topsus,
-		"topsus_err": topsus_err,
-		"N_F": N_F,
-		"N_F_err": N_F_err,
-		"interval": ", ".join(interval),
-	})
-	return fplist
-
-def write_fit_parameters_to_file(fparams, fname, skip_values=None, verbose=False):
-	"""Function for writing fit parameters to file."""
-	with open(fname, "w") as f:
-		sorted_parameter_list = sorted(fparams, key=lambda d: \
-			(d["fit_target"], d["analysis_type"]))
-
-		# Default float width
-		fw = 14
-		dict_keys = OrderedDict([
-			("observable_type", {"name": "obs", "w": 14, "type": "s"}),
-			("descr", {"name": "description", "w": 35, "type": "s"}),
-			("fit_target", {"name": "sqrt(8t_0)", "w": 11, "type": ".2f"}),
-			("extrap_method", {"name": "extrap.-method", "w": 15, "type": "s"}),
-			("interval", {"name": "int", "w": 80, "type": "s"}),
-			("analysis_type", {"name": "atype", "w": 12, "type": "s"}),
-			("chi_squared", {"name": "Chi^2", "w": 25, "type": ".8f"}),
-			("a", {"name": "a", "w": fw, "type": ".8f"}),
-			("a_err", {"name": "aerr", "w": fw, "type": ".8f"}),
-			("b", {"name": "b", "w": fw, "type": ".8f"}),
-			("b_err", {"name": "berr", "w": fw, "type": ".8f"}),
-			("topsus", {"name": "topsus", "w": fw, "type": ".8f"}),
-			("topsus_err", {"name": "topsuserr", "w": fw, "type": ".8f"}),
-			("N_F", {"name": "N_F", "w": fw, "type": ".8f"}),
-			("N_F_err", {"name": "N_F_err", "w": fw, "type": ".8f"}),
-		])
-
-		# Sets header in text file
-		header_string = ""
-		create_str = lambda _val, _width, _fcode: "{0:<{w}{t}}".format(
-			_val, w=_width, t=_fcode)
-		for k in dict_keys.items():
-			if not k[0] in skip_values:
-				header_string += create_str(k[-1]["name"], k[-1]["w"], "s")
-		if verbose: 
-			print header_string
-		f.write(header_string + "\n")
-
-		# Writes out analysis values to text file
-		for fp in sorted_parameter_list:
-			line_values = ""
-			for k in dict_keys.items():
-				if not k[0] in skip_values:
-					line_values += create_str(fp[k[0]], k[-1]["w"],
-						k[-1]["type"])
-			if verbose:
-				print line_values
-			f.write(line_values + "\n")
 
 def default_post_analysis(PostAnalysis, data, figures_folder, analysis_type,
 	verbose=False):
@@ -272,12 +202,17 @@ def post_analysis(beta_parameter_list, observables,
 	if "topcMC" in observables:
 		topcmc_analysis = TopcMCIntervalPostAnalysis(data, 
 			figures_folder=figures_folder, verbose=verbose)
+
+		interval_dict_list = topcmc_analysis.setup_intervals(
+			intervals=MC_interval_setup(beta_parameter_list))
+
 		for analysis_type in post_analysis_data_type:
 			topcmc_analysis.set_analysis_data_type(analysis_type)
 			print topcmc_analysis
-			N_int, intervals = topcmc_analysis.get_N_intervals()
-			for i in range(N_int):
-				topcmc_analysis.plot_interval(i)
+
+			for int_key in interval_dict_list:
+				topcmc_analysis.plot_interval(int_key)
+
 			topcmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
 	if "topsus4" in observables:
@@ -333,14 +268,17 @@ def post_analysis(beta_parameter_list, observables,
 		if "topsust" in observables:
 			topsust_analysis = TopsustPostAnalysis(data,
 				figures_folder=figures_folder, verbose=verbose)
+			
+			intervals = topsust_analysis.setup_intervals()
+
 			for analysis_type in post_analysis_data_type:
 				topsust_analysis.set_analysis_data_type(analysis_type)
 				print topsust_analysis
-				N_int, intervals = topsust_analysis.get_N_intervals()
-				for i in range(N_int):
-					topsust_analysis.plot_interval(i)
+
+				for int_keys in intervals:
+					topsust_analysis.plot_interval(int_keys)
 					for cont_target in continuum_targets:
-						topsust_analysis.plot_continuum(cont_target, i,
+						topsust_analysis.plot_continuum(cont_target, int_keys,
 							reference_value=t0_reference_scale \
 								[extrapolation_method][analysis_type])
 
@@ -375,14 +313,18 @@ def post_analysis(beta_parameter_list, observables,
 		if "topsusMC" in observables:
 			topsusmc_analysis = TopsusMCIntervalPostAnalysis(data,
 				figures_folder=figures_folder, verbose=verbose)
+
+			interval_dict_list = topsusmc_analysis.setup_intervals(
+			intervals=MC_interval_setup(beta_parameter_list))
+
 			for analysis_type in post_analysis_data_type:
 				topsusmc_analysis.set_analysis_data_type(analysis_type)
 				print topsusmc_analysis
-				N_int, intervals = topsusmc_analysis.get_N_intervals()
-				for i in range(N_int):
-					topsusmc_analysis.plot_interval(i)
+			
+				for int_key in interval_dict_list:
+					topsusmc_analysis.plot_interval(int_key)
 					for cont_target in continuum_targets:
-						topsusmc_analysis.plot_continuum(cont_target, i, 
+						topsusmc_analysis.plot_continuum(cont_target, int_key,
 							reference_value=t0_reference_scale \
 								[extrapolation_method][analysis_type])
 
@@ -397,15 +339,12 @@ def post_analysis(beta_parameter_list, observables,
 		qtq0e_analysis = QtQ0EuclideanPostAnalysis(data, 
 			figures_folder=figures_folder, verbose=verbose)
 
-		# Checks that we have similar flow times
-		N_tf, flow_intervals = qtq0e_analysis.get_N_intervals()
-		clean_string = lambda s: float(s[-4:])
+		# Retrieves flow times
+		flow_times = qtq0e_analysis.setup_intervals()
 
-		# Retrieves flow times for each beta value.
-		flow_times = np.asarray([b[1].keys() \
-			for b in flow_intervals.items()]).T
-
+		# Checks that we have similar flow times.
 		# +1 in order to ensure the zeroth flow time does not count as false.
+		clean_string = lambda s: float(s[-4:])
 		assert np.all([np.all([clean_string(i)+1 for i in ft]) \
 			for ft in flow_times]), "q0 times differ."
 

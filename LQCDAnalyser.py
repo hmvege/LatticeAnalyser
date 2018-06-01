@@ -45,9 +45,9 @@ def main():
 	# observables = ["energy", "topsus"]
 	# observables = ["energy"]
 	# observables = []
-	# observables = ["qtq0eff", "qtq0e"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
-	# observables = ["qtq0e"]
-	observables = ["topsusMC"]
+	observables = ["qtq0eff", "qtq0e"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
+	observables = ["qtq0e"]
+	# observables = ["topsusMC"]
 	# observables = ["topcr"]
 
 	#### Base parameters
@@ -121,10 +121,12 @@ def main():
 
 	# Number of different sectors we will analyse in euclidean time
 	numsplits_eucl = 4
-	intervals_eucl = None
+	intervals_eucl = [None, None, None, None]
 
 	# Number of different sectors we will analyse in monte carlo time
-	MC_time_splits = 5
+	MC_time_splits = 2
+	MC_intervals = [[0, 1000], [500, 1000,], [500, 1000], [150, 250]]
+	MC_intervals = [None, None, None, None]
  
 	# Extraction point in flow time a*t_f for q0 in qtq0
 	q0_flow_times = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6] # [fermi]
@@ -155,6 +157,7 @@ def main():
 		"numsplits_eucl": numsplits_eucl,
 		"intervals_eucl": intervals_eucl,
 		"MC_time_splits": MC_time_splits,
+		"MCInt": None,
 		# Gif smearing parameters in the qtq0e observable
 		"gif": gif_params,
 		# Passing on lattice sizes
@@ -171,35 +174,39 @@ def main():
 
 	databeta60 = copy.deepcopy(default_params)
 	databeta60["batch_name"] = "beta60"
+	databeta60["beta"] = 6.0
 	databeta60["NCfgs"] = get_num_observables(data_batch_folder,
 		databeta60["batch_name"])
 	databeta60["obs_file"] = "24_6.00"
-	databeta60["MCInt"] = []
+	databeta60["MCInt"] = MC_intervals[0]
 	databeta60["lattice_size"] = {6.0: 24**3*48}
 
 	databeta61 = copy.deepcopy(default_params)
 	databeta61["batch_name"] = "beta61"
+	databeta60["beta"] = 6.1
 	databeta61["NCfgs"] = get_num_observables(data_batch_folder,
 		databeta61["batch_name"])
 	databeta61["obs_file"] = "28_6.10"
-	databeta61["MCInt"] = []
+	databeta61["MCInt"] = MC_intervals[1]
 	databeta61["lattice_size"] = {6.1: 28**3*56}
 
 	databeta62 = copy.deepcopy(default_params)
 	databeta62["batch_name"] = "beta62"
+	databeta60["beta"] = 6.2
 	databeta62["NCfgs"] = get_num_observables(data_batch_folder, 
 		databeta62["batch_name"])
 	databeta62["obs_file"] = "32_6.20"
-	databeta62["MCInt"] = []
+	databeta62["MCInt"] = MC_intervals[2]
 	databeta62["lattice_size"] = {6.2: 32**3*64}
 
 	default_params["flow_epsilon"] = 0.02
 	databeta645 = copy.deepcopy(default_params)
 	databeta645["batch_name"] = "beta645"
+	databeta60["beta"] = 6.45
 	databeta645["NCfgs"] = get_num_observables(data_batch_folder,
 		databeta645["batch_name"])
 	databeta645["obs_file"] = "48_6.45"
-	databeta645["MCInt"] = []
+	databeta645["MCInt"] = MC_intervals[3]
 	databeta645["lattice_size"] = {6.45: 48**3*96}
 
 	# smaug_data_beta60_analysis = copy.deepcopy(default_params)
@@ -220,6 +227,11 @@ def main():
 	# #### Submitting observable-batches
 	# for analysis_parameters in analysis_parameter_list:
 	# 	pre_analysis(analysis_parameters)
+
+	if not analysis_parameter_list[0]["MCInt"] is None:
+		assert sum([len(plist["MCInt"]) - len(analysis_parameter_list[0]["MCInt"]) 
+			for plist in analysis_parameter_list]) == 0, \
+			"unequal amount of MC intervals"
 
 	#### Submitting post-analysis data
 	if len(analysis_parameter_list) >= 3:

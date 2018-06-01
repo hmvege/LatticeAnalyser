@@ -16,12 +16,12 @@ class MultiPlotCore(PostCore):
 	sub_obs = True
 	analysis_data_type = "bootstrap"
 
-	def _initiate_plot_values(self, data, data_raw, interval_index=None):
+	def _initiate_plot_values(self, data, data_raw, interval_keys=None):
 		"""Sorts data into a format specific for the plotting method."""
 
-		for beta in sorted(data.keys()):
+		for ib, beta in enumerate(sorted(data.keys())):
 			values = {}
-			if interval_index == None:
+			if isinstance(interval_keys, types.NoneType):
 				# Case where we have sub sections of observables, e.g. in 
 				# euclidean time.
 				for sub_obs in self.observable_intervals[beta]:
@@ -42,21 +42,17 @@ class MultiPlotCore(PostCore):
 					# Retrieves raw data
 					sub_values["y_raw"] = \
 						data_raw[beta][self.observable_name_compact][sub_obs]
-					# sub_values[self.analysis_data_type] = \
-					# 	data_raw[beta][self.observable_name_compact][sub_obs]
 					
 					sub_values["label"] = r"%s $\beta=%2.2f$ %s" % (
 						self.size_labels[beta], beta, 
 						self._convert_label(sub_obs))
 					values[sub_obs] = sub_values
 			else:
-				sorted_intervals = sorted(data[beta].keys())
+				# sorted_intervals = sorted(data[beta].keys())
 
 				# Modulo division in order to avoid going out of range in 
 				# intervals.
-				int_key = sorted_intervals[interval_index % len(sorted_intervals)]
-				self.interval.append(int_key)
-
+				int_key = interval_keys[ib]
 				values["a"], values["a_err"] = get_lattice_spacing(beta)
 				values["x"] = values["a"] * np.sqrt(8*data[beta][int_key]["x"])
 				values["y"] = data[beta][int_key]["y"]
@@ -86,15 +82,15 @@ class MultiPlotCore(PostCore):
 		"""Sets a global analysis type."""
 		self.analysis_data_type = analysis_data_type
 
-	def plot_interval(self, interval_index, **kwargs):
+	def plot_interval(self, interval_keys, **kwargs):
 		"""Sets and plots only one interval."""
-		self.interval_index = interval_index
-		self.interval = [] # Resets interval list
+		self.intervals_string = "_".join(interval_keys)
+
 		self.plot_values = {}
 		# data, _ = self._get_analysis_data(self.analysis_data_type)
 		self._initiate_plot_values(self.data[self.analysis_data_type],
 			self.data_raw[self.analysis_data_type],
-			interval_index=interval_index)
+			interval_keys=interval_keys)
 		# Makes it a global constant so it can be added in plot figure name
 		self.plot(**kwargs)
 
@@ -103,12 +99,19 @@ class MultiPlotCore(PostCore):
 		if isinstance(output_folder, types.NoneType):
 			output_folder = os.path.join(self.output_folder_path, "slices")
 		check_folder(output_folder, False, True)
-		fname = "post_analysis_%s_%s_int%d%s.png" % (self.observable_name_compact,
-			self.analysis_data_type, self.interval_index, figure_name_appendix)
+		fname = "post_analysis_%s_%s_int%s%s.png" % (self.observable_name_compact,
+			self.analysis_data_type, self.intervals_string, figure_name_appendix)
 		return os.path.join(output_folder, fname)
 
-	def get_N_intervals(self):
-		"""Returns possible intervals for us to plot."""
+	def setup_intervals(self, intervals=None):
+		"""
+		Sets up intervals. If intervals is provided, will assert that they are
+		viable.
+
+		Args:
+			intervals: list of ordered beta values to check.
+		"""
+
 		if self.verbose:
 			print "Intervals N=%d, possible for %s: " % (
 				len(self.observable_intervals),
@@ -116,8 +119,37 @@ class MultiPlotCore(PostCore):
 
 			print self.observable_intervals
 
-		return (len(self.observable_intervals.values()[0]), 
-			self.observable_intervals)
+		if isinstance(intervals, types.NoneType):
+			# For cases with no intervals provided, or we have sliced into 
+			# specific interval values.
+			sorted_intervals = [self.observable_intervals[b] 
+				for b in self.beta_values]
+			intervals = np.asarray([sorted(i) for i in sorted_intervals]).T
+		else:
+			# When a specific interval has been provided.
+			for b_intervals in intervals:
+				for l, beta in zip(b_intervals, self.beta_values):
+					assert l in self.observable_intervals[beta], \
+						"%s has not been computed. Available intervals: %s" % (
+							l, self.observable_intervals[beta])
+
+			intervals = np.asarray(intervals)
+
+		return intervals
+
+	# def get_N_intervals(self):
+	# 	"""
+	# 	Old method for retrieveing intervals.
+	# 	"""
+	# 	if self.verbose:
+	# 		print "Intervals N=%d, possible for %s: " % (
+	# 			len(self.observable_intervals),
+	# 			self.observable_name_compact),
+
+	# 		print self.observable_intervals
+
+	# 	return (len(self.observable_intervals), self.observable_intervals)
+
 
 	def plot_series(self, indexes, beta="all", x_limits=False, 
 		y_limits=False, plot_with_formula=False, error_shape="band"):

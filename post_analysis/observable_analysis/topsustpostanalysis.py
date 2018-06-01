@@ -20,11 +20,11 @@ class TopsustPostAnalysis(MultiPlotCore, TopsusCore):
 		"""Sets the constant in the topsus function for found beta values."""
 		for beta in self.beta_values:
 			V = self.lattice_sizes[beta][0]**3
-			self.chi_const[beta] = self.hbarc/get_lattice_spacing(beta)\
+			self.chi_const[beta] = self.hbarc/get_lattice_spacing(beta)[0]\
 				/float(V)**(0.25)
 			# self.chi[beta] = lambda qq: self.chi_const[beta]*qq**(0.25)
 
-	def plot_continuum(self, fit_target, interval_index, **kwargs):
+	def plot_continuum(self, fit_target, interval_keys, **kwargs):
 		# Backs up old variables
 		self.plot_values_old = self.plot_values
 		self.output_folder_path_old = self.output_folder_path
@@ -32,7 +32,7 @@ class TopsustPostAnalysis(MultiPlotCore, TopsusCore):
 		# Sets plot values
 		self._initiate_plot_values(self.data[self.analysis_data_type],
 			self.data_raw[self.analysis_data_type],
-			interval_index=interval_index)
+			interval_keys=interval_keys)
 
 		t_euclidean = int(sorted(self.plot_values.values())[0]["interval"])
 		self.interval = str(t_euclidean)

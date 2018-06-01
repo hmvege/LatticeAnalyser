@@ -36,6 +36,9 @@ class TopsusCore(PostCore):
 	# Description for the extrapolation method in fit
 	extrapolation_method = ""
 
+	# String for intervals
+	intervals_str = ""
+
 	def __init__(self, *args, **kwargs):
 		super(TopsusCore, self).__init__(*args, **kwargs)
 		self._initialize_topsus_func()
@@ -252,7 +255,7 @@ class TopsusCore(PostCore):
 		"""Returns the chi^2, a, a_err, b, b_err."""
 		return self.chi_squared, self.fit_params, self.topsus_continuum, \
 			self.topsus_continuum_error, self.NF, self.NF_error, \
-			self.fit_target, self.interval, self.descr, \
+			self.fit_target, self.intervals_str, self.descr, \
 			self.extrapolation_method
 
 	def print_continuum_estimate(self):

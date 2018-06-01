@@ -85,7 +85,7 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 				# e.g. in euclidean time.
 				for sub_obs in self.observable_intervals[beta]:
 					sub_values = {}
-					sub_values["a"] = get_lattice_spacing(beta)
+					sub_values["a"], sub_values["a_err"] = get_lattice_spacing(beta)
 					sub_values["x"] = np.linspace(0, 
 						self.lattice_sizes[beta][1] * sub_values["a"], 
 						self.lattice_sizes[beta][1])
@@ -111,7 +111,7 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 			else:
 				tf_index = "tflow%04.4f" % q0_flow_time
 				values = {}
-				values["a"] = get_lattice_spacing(beta)
+				values["a"], values["a_err"] = get_lattice_spacing(beta)
 				
 				# FOR EXACT BOX SIZE:
 				values["x"] = np.linspace(0,
@@ -144,7 +144,7 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 			self.data_raw[self.analysis_data_type],
 			euclidean_percent=euclidean_percent)
 
-	def _get_plot_figure_name(self, output_folder=None):
+	def _get_plot_figure_name(self, output_folder=None, figure_name_appendix=""):
 		"""Retrieves appropriate figure file name."""
 		if isinstance(output_folder, types.NoneType):
 			# Sets up slices folder containing all euclidean times
@@ -157,8 +157,8 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 
 		check_folder(output_folder, False, True)
 
-		fname = "post_analysis_%s_%s_tf%4.4f.png" % (self.observable_name_compact,
-			self.analysis_data_type, self.interval_index[0])
+		fname = "post_analysis_%s_%s_tf%4.4f%s.png" % (self.observable_name_compact,
+			self.analysis_data_type, self.interval_index[0], figure_name_appendix)
 		return os.path.join(output_folder, fname)
 
 	def plot_interval(self, q0_flow_time, euclidean_percent, **kwargs):
@@ -210,3 +210,9 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 
 		self._series_plot_core(indexes, beta="all", x_limits=False, 
 		y_limits=False, plot_with_formula=False, fname=fname)
+
+def main():
+	exit("%s not intendd for standalone usage." % __name__)
+
+if __name__ == '__main__':
+	main()

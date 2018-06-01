@@ -1,53 +1,10 @@
 from observable_analysis import *
 from tools.folderreadingtools import DataReader
+from tools.analysis_setup_tools import get_intervals
 import time
 import numpy as np
 import types
 from tqdm import tqdm
-
-def _check_splits(N, numsplits):
-	"""Checks if the temporal dimension has been split into good .intervals"""
-	assert N % numsplits == 0, ("Bad number of splits: N %% "
-			"numplits = %d" % (N % numsplits))
-
-def _check_intervals(intervals, numsplits):
-	"""Sets up the intervals"""
-	if (intervals == numsplits == None) or \
-		(intervals != None and numsplits != None):
-
-		raise ValueError(("Either provide MC intervals to plot for or the "
-			"number of MC intervals to split into."))
-
-def get_intervals(N, numsplits=None, intervals=None):
-	"""
-	Method for retrieving the monte carlo time intervals.
-
-	Args:
-		N: int, number of points.
-		numsplits: int, optional, number of splits to make in N.
-		intervals: int, optional, excact intervals to make in N.
-
-	Returns:
-		List of intervals, list of tuples
-		Size of interval, int
-
-	Raises:
-		ValueError: if no intervals or numsplits is provided, or if both is
-			provided.
-		AssertionError: if number of splits lead to an uneven split N.
-			(THIS FEATURE SHOULD PERHAPS BE REMOVED IN FUTURE??)
-	"""
-	_check_intervals(intervals, numsplits)
-
-	if isinstance(intervals, types.NoneType):
-		split_interval = N/numsplits
-		intervals = zip(
-			range(0, N+1, split_interval), 
-			range(split_interval, N+1, split_interval)
-		)
-		_check_splits(N, numsplits)
-
-	return intervals, intervals[0][1] - intervals[0][0]
 
 
 def analyse_default(analysis_object, N_bs, NBins=None, skip_histogram=False,
@@ -405,7 +362,8 @@ def pre_analysis(parameters):
 		analyse_topcte_intervals(params, parameters["numsplits_eucl"], 
 			parameters["intervals_eucl"])
 	if "topcMC" in parameters["observables"]:
-		analyse_topcMCTime(params, parameters["MC_time_splits"])
+		analyse_topcMCTime(params, numsplits=parameters["MC_time_splits"],
+			intervals=parameters["MCInt"])
 
 	# Topological susceptibility definitions
 	if "topsus" in parameters["observables"]:
@@ -418,7 +376,8 @@ def pre_analysis(parameters):
 		analyse_topsuste_intervals(params, parameters["numsplits_eucl"], 
 			parameters["intervals_eucl"])
 	if "topsusMC" in parameters["observables"]:
-		analyse_topsusMCTime(params, parameters["MC_time_splits"])
+		analyse_topsusMCTime(params, numsplits=parameters["MC_time_splits"],
+			intervals=parameters["MCInt"])
 	if "topsusqtq0" in parameters["observables"]:
 		analyse_topsus_qtq0(params, parameters["q0_flow_times"])
 
