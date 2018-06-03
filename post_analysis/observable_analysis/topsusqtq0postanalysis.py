@@ -15,14 +15,14 @@ class TopsusQtQ0PostAnalysis(MultiPlotCore, TopsusCore):
 	# Continuum plot variables
 	y_label_continuum = r"$\chi^{1/4}(\langle Q_{t} Q_{t_0} \rangle)[GeV]$"
 
-	def plot_continuum(self, fit_target, interval_index, **kwargs):
+	def plot_continuum(self, fit_target, interval_keys, **kwargs):
 		"""
 		Continuum plotter for topsus qtq0 in fixed flow time.
 
 		Args:
 			fit_target: float value at which we extrapolate to continuum from.
-			interval_index: int for a given interval euclidean specified from
-				set_interval().
+			interval_keys: list of str, for a given interval euclidean specified from
+				setup_interval().
 		"""
 
 		# Backs up old variables
@@ -32,10 +32,11 @@ class TopsusQtQ0PostAnalysis(MultiPlotCore, TopsusCore):
 		# All flow times should be the same for every beta
 		self._initiate_plot_values(self.data[self.analysis_data_type],
 			self.data_raw[self.analysis_data_type],
-			interval_index=interval_index)
+			interval_keys=interval_keys)
 
 		# Gets the exact interval
 		self.interval = str(sorted(self.plot_values.values())[0]["interval"])
+		self.intervals_str = ", ".join([str(i) for i in interval_keys])
 
 		# Sets up interval folder 
 		self.output_folder_path = os.path.join(self.output_folder_path,

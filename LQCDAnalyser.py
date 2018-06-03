@@ -46,8 +46,9 @@ def main():
 	# observables = ["energy"]
 	# observables = []
 	observables = ["qtq0eff", "qtq0e"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
-	observables = ["qtq0e"]
-	# observables = ["topsusMC"]
+	observables = ["qtq0eff", "qtq0e"] + ["topsust", "topsuste", "topsusMC", "topsusqtq0"]
+	# observables = ["topcMC"]
+	# observables = ["topsusqtq0"]
 	# observables = ["topcr"]
 
 	#### Base parameters
@@ -155,18 +156,11 @@ def main():
 		"q0_flow_times": q0_flow_times,
 		"euclidean_time_percents": euclidean_time_percents,
 		"numsplits_eucl": numsplits_eucl,
-		"intervals_eucl": intervals_eucl,
+		"intervals_eucl": None,
 		"MC_time_splits": MC_time_splits,
 		"MCInt": None,
 		# Gif smearing parameters in the qtq0e observable
 		"gif": gif_params,
-		# Passing on lattice sizes
-		"lattice_sizes": {
-			6.0: 24**3*48,
-			6.1: 28**3*56,
-			6.2: 32**3*64,
-			6.45: 48**3*96,
-		},
 	}
 
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
@@ -179,7 +173,9 @@ def main():
 		databeta60["batch_name"])
 	databeta60["obs_file"] = "24_6.00"
 	databeta60["MCInt"] = MC_intervals[0]
-	databeta60["lattice_size"] = {6.0: 24**3*48}
+	databeta60["N"] = 24
+	databeta60["NT"] = 2*databeta60["N"]
+	databeta60["lattice_size"] = {6.0: databeta60["N"]**3*databeta60["NT"]}
 
 	databeta61 = copy.deepcopy(default_params)
 	databeta61["batch_name"] = "beta61"
@@ -188,7 +184,9 @@ def main():
 		databeta61["batch_name"])
 	databeta61["obs_file"] = "28_6.10"
 	databeta61["MCInt"] = MC_intervals[1]
-	databeta61["lattice_size"] = {6.1: 28**3*56}
+	databeta61["N"] = 28
+	databeta61["NT"] = 2*databeta61["N"]
+	databeta61["lattice_size"] = {6.1: databeta61["N"]**3*databeta61["NT"]}
 
 	databeta62 = copy.deepcopy(default_params)
 	databeta62["batch_name"] = "beta62"
@@ -197,7 +195,9 @@ def main():
 		databeta62["batch_name"])
 	databeta62["obs_file"] = "32_6.20"
 	databeta62["MCInt"] = MC_intervals[2]
-	databeta62["lattice_size"] = {6.2: 32**3*64}
+	databeta62["N"] = 32
+	databeta62["NT"] = 2*databeta62["N"]
+	databeta62["lattice_size"] = {6.2: databeta62["N"]**3*databeta62["NT"]}
 
 	default_params["flow_epsilon"] = 0.02
 	databeta645 = copy.deepcopy(default_params)
@@ -207,7 +207,10 @@ def main():
 		databeta645["batch_name"])
 	databeta645["obs_file"] = "48_6.45"
 	databeta645["MCInt"] = MC_intervals[3]
-	databeta645["lattice_size"] = {6.45: 48**3*96}
+	databeta645["N"] = 48
+	databeta645["NT"] = 2*databeta645["N"]
+	databeta645["lattice_size"] = {
+		6.45: databeta645["N"]**3*databeta645["NT"]}
 
 	# smaug_data_beta60_analysis = copy.deepcopy(default_params)
 	# smaug_data_beta60_analysis["batch_name"] = beta_folders[0]

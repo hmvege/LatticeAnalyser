@@ -5,7 +5,7 @@ import types
 def _check_splits(N, numsplits):
     """Checks if the temporal dimension has been split into good .intervals"""
     assert N % numsplits == 0, ("Bad number of splits: N %% "
-            "numplits = %d" % (N % numsplits))
+            "numsplits = %d" % (N % numsplits))
 
 
 def _check_intervals(intervals, numsplits):
@@ -16,13 +16,14 @@ def _check_intervals(intervals, numsplits):
         raise ValueError(("Either provide MC intervals to plot for or the "
             "number of MC intervals to split into."))
 
-def MC_interval_setup(beta_param_list):
+def interval_setup(beta_param_list, int_type):
     """
-    Sets up the intervals to analyse for in Monte Carlo time.
+    Sets up the intervals to analyse for in Monte Carlo or Euclidean time.
 
     Args:
         beta_param_list: list of beta dictionary parameters. List assumed to 
             be ordered for the different beta values.
+        int_type: str, either "MC" or "Eucl"
 
     Returns:
         list of dictionaries for the different beta values containing list 
@@ -31,7 +32,15 @@ def MC_interval_setup(beta_param_list):
 
     _create_int = lambda l: "-".join(["%03d" % i for i in l])
     N_betas = len(beta_param_list)
-    # beta_values = [b["beta"] for b in beta_param_list]
+
+    if int_type == "Eucl":
+        NTot_arg = "NT"
+        numsplits_arg = "numsplits_eucl"
+        intervals_arg = "intervals_eucl"
+    else:
+        NTot_arg = "NCfgs"
+        numsplits_arg = "MC_time_splits"
+        intervals_arg = "MCInt"
 
     # If we have provided exact intervals, will create a dictionary
     if not isinstance(beta_param_list[0]["MCInt"], types.NoneType):
@@ -42,25 +51,14 @@ def MC_interval_setup(beta_param_list):
         _temp = []
         for plist in beta_param_list:
             _temp.append([_create_int(i) for i in get_intervals(
-                            plist["NCfgs"], 
-                            numsplits=plist["MC_time_splits"], 
-                            intervals=plist["MCInt"])[0]])
+                            plist[NTot_arg], 
+                            numsplits=plist[numsplits_arg], 
+                            intervals=plist[intervals_arg])[0]])
 
-        _num_splits = beta_param_list[0]["MC_time_splits"]
+        _num_splits = beta_param_list[0][numsplits_arg]
         interval_dict_list = np.asarray(_temp).T
 
     return interval_dict_list
-
-
-# def Euclidean_times_setup(beta_param_list):
-#     """
-#     Sets up euclidean intervals
-#     """
-#     beta_param_list
-#     indexes = np.linspace(0, topct_analysis.NT, numsplits, dtype=int) - 1
-#     indexes[0] += 1
-#     return ["%04d" % i for i in indexes]
-
 
 def get_intervals(N, numsplits=None, intervals=None):
     """
@@ -92,6 +90,7 @@ def get_intervals(N, numsplits=None, intervals=None):
         _check_splits(N, numsplits)
 
     if isinstance(intervals[0], (list, tuple)):
+        # If we have a list of interval tuples/lists
         return intervals, intervals[0][1] - intervals[0][0]
     else:
         return [tuple(intervals)], intervals[1] - intervals[0]
@@ -134,7 +133,7 @@ def write_fit_parameters_to_file(fparams, fname, skip_values=None, verbose=False
             ("descr", {"name": "description", "w": 35, "type": "s"}),
             ("fit_target", {"name": "sqrt(8t_0)", "w": 11, "type": ".2f"}),
             ("extrap_method", {"name": "extrap.-method", "w": 15, "type": "s"}),
-            ("interval", {"name": "int", "w": 80, "type": "s"}),
+            ("interval", {"name": "interval/slice", "w": 60, "type": "s"}),
             ("analysis_type", {"name": "atype", "w": 12, "type": "s"}),
             ("chi_squared", {"name": "Chi^2", "w": 25, "type": ".8f"}),
             ("a", {"name": "a", "w": fw, "type": ".8f"}),

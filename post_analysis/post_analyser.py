@@ -1,7 +1,7 @@
 from observable_analysis import *
 from tools.postanalysisdatareader import PostAnalysisDataReader
 from tools.analysis_setup_tools import append_fit_params, \
-	write_fit_parameters_to_file, get_intervals, MC_interval_setup
+	write_fit_parameters_to_file, get_intervals, interval_setup
 import types
 import numpy as np
 import os
@@ -121,8 +121,7 @@ def post_analysis(beta_parameter_list, observables,
 				energy_analysis.set_analysis_data_type(analysis_type)
 				print energy_analysis
 
-				# energy_analysis.plot()
-
+				energy_analysis.plot()
 				energy_analysis.plot(x_limits=[-0.01,0.15], 
 					y_limits=[-0.025, 0.4], plot_hline_at=0.3, 
 					figure_name_appendix="_zoomed")
@@ -180,23 +179,30 @@ def post_analysis(beta_parameter_list, observables,
 	if "topct" in observables:
 		topct_analysis = TopctPostAnalysis(data, 
 			figures_folder=figures_folder, verbose=verbose)
+
+		interval_dict_list = topct_analysis.setup_intervals(
+			intervals=interval_setup(beta_parameter_list, "Eucl"))
+
 		for analysis_type in post_analysis_data_type:
 			topct_analysis.set_analysis_data_type(analysis_type)
 			print topct_analysis
-			N_int, intervals = topct_analysis.get_N_intervals()
-			for i in range(N_int):
-				topct_analysis.plot_interval(i)
+			for int_keys in interval_dict_list:
+				topcte_analysis.plot_interval(int_keys)
 			topct_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
 	if "topcte" in observables:
 		topcte_analysis = TopcteIntervalPostAnalysis(data, 
 			figures_folder=figures_folder, verbose=verbose)
+
+		interval_dict_list = topcte_analysis.setup_intervals(
+			intervals=interval_setup(beta_parameter_list, "Eucl"))
+
 		for analysis_type in post_analysis_data_type:
 			topcte_analysis.set_analysis_data_type(analysis_type)
 			print topcte_analysis
-			N_int, intervals = topcte_analysis.get_N_intervals()
-			for i in range(N_int):
-				topcte_analysis.plot_interval(i)
+			for int_keys in interval_dict_list:
+				topcte_analysis.plot_interval(int_keys)
+
 			topcte_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
 	if "topcMC" in observables:
@@ -204,7 +210,7 @@ def post_analysis(beta_parameter_list, observables,
 			figures_folder=figures_folder, verbose=verbose)
 
 		interval_dict_list = topcmc_analysis.setup_intervals(
-			intervals=MC_interval_setup(beta_parameter_list))
+			intervals=interval_setup(beta_parameter_list, "MC"))
 
 		for analysis_type in post_analysis_data_type:
 			topcmc_analysis.set_analysis_data_type(analysis_type)
@@ -230,7 +236,6 @@ def post_analysis(beta_parameter_list, observables,
 				figures_folder=figures_folder, verbose=verbose)
 			for analysis_type in post_analysis_data_type:
 				topsus_analysis.set_analysis_data_type(analysis_type)
-				print topsus_analysis
 				topsus_analysis.plot()
 				for cont_target in continuum_targets:
 					topsus_analysis.plot_continuum(cont_target, 
@@ -246,15 +251,18 @@ def post_analysis(beta_parameter_list, observables,
 		if "topsusqtq0" in observables:
 			topsusqtq0_analysis = TopsusQtQ0PostAnalysis(data,
 				figures_folder=figures_folder, verbose=verbose)
+
+			interval_dict_list = topsusqtq0_analysis.setup_intervals()
+
 			for analysis_type in post_analysis_data_type:
 				topsusqtq0_analysis.set_analysis_data_type(analysis_type)
 				print topsusqtq0_analysis
-				N_int, intervals = topsusqtq0_analysis.get_N_intervals()
-				for i in range(N_int):
-					topsusqtq0_analysis.plot_interval(i)
+
+				for int_keys in interval_dict_list:
+					topsusqtq0_analysis.plot_interval(int_keys)
 					for cont_target in continuum_targets:
-						topsusqtq0_analysis.plot_continuum(cont_target, i,
-							reference_value=t0_reference_scale \
+						topsusqtq0_analysis.plot_continuum(cont_target, 
+							int_keys, reference_value=t0_reference_scale \
 								[extrapolation_method][analysis_type])
 
 						fit_parameters = append_fit_params(fit_parameters, 
@@ -268,14 +276,14 @@ def post_analysis(beta_parameter_list, observables,
 		if "topsust" in observables:
 			topsust_analysis = TopsustPostAnalysis(data,
 				figures_folder=figures_folder, verbose=verbose)
-			
-			intervals = topsust_analysis.setup_intervals()
+
+			interval_dict_list = topsust_analysis.setup_intervals()
 
 			for analysis_type in post_analysis_data_type:
 				topsust_analysis.set_analysis_data_type(analysis_type)
 				print topsust_analysis
 
-				for int_keys in intervals:
+				for int_keys in interval_dict_list:
 					topsust_analysis.plot_interval(int_keys)
 					for cont_target in continuum_targets:
 						topsust_analysis.plot_continuum(cont_target, int_keys,
@@ -292,14 +300,17 @@ def post_analysis(beta_parameter_list, observables,
 		if "topsuste" in observables:
 			topsuste_analysis = TopsusteIntervalPostAnalysis(data, 
 				figures_folder=figures_folder, verbose=verbose)
+
+			interval_dict_list = topsuste_analysis.setup_intervals(
+				intervals=interval_setup(beta_parameter_list, "Eucl"))
+
 			for analysis_type in post_analysis_data_type:
 				topsuste_analysis.set_analysis_data_type(analysis_type)
 				print topsuste_analysis
-				N_int, intervals = topsuste_analysis.get_N_intervals()
-				for i in range(N_int):
-					topsuste_analysis.plot_interval(i)
+				for int_key in interval_dict_list:
+					topsuste_analysis.plot_interval(int_key)
 					for cont_target in continuum_targets:
-						topsuste_analysis.plot_continuum(cont_target, i,
+						topsuste_analysis.plot_continuum(cont_target, int_key,
 							reference_value=t0_reference_scale \
 								[extrapolation_method][analysis_type])
 
@@ -315,7 +326,7 @@ def post_analysis(beta_parameter_list, observables,
 				figures_folder=figures_folder, verbose=verbose)
 
 			interval_dict_list = topsusmc_analysis.setup_intervals(
-			intervals=MC_interval_setup(beta_parameter_list))
+				intervals=interval_setup(beta_parameter_list, "MC"))
 
 			for analysis_type in post_analysis_data_type:
 				topsusmc_analysis.set_analysis_data_type(analysis_type)
