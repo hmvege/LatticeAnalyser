@@ -207,6 +207,7 @@ class PostAnalysisDataReader:
 	def _set_lattice_parameters(self, batch_parameters):
 		"""Sets the correct labels, colors and lattice sizes."""
 		self.lattice_sizes = {}
+		self.lattice_volumes = {}
 		self.N = {}
 		self.NT = {}
 		self.colors = {}
@@ -215,6 +216,7 @@ class PostAnalysisDataReader:
 			self.N[b["beta"]] = b["N"]
 			self.NT[b["beta"]] = b["NT"]
 			self.lattice_sizes[b["beta"]] = [b["N"], b["NT"]]
+			self.lattice_volumes[b["beta"]] = b["N"]**3*b["NT"]
 			self.colors[b["beta"]] = b["color"]
 			self.labels[b["beta"]] = r"$%d^3 \times %d$" % (b["N"], b["NT"])
 

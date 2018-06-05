@@ -64,8 +64,16 @@ def post_analysis(beta_parameter_list, observables,
 			", ".join([os.path.join(b["batch_folder"], b["batch_name"]) \
 		for b in beta_parameter_list]))
 
+	# Topcr requires a few more observables to be fully utilized.
+	old_obs = observables
+	if "topcr" in observables:
+		observables += ["topc2", "topc4"]
+
 	data = PostAnalysisDataReader(beta_parameter_list,
 		observables_to_load=observables)
+
+	# Resets to the old observables, as not to analyze topc2 and topc4.
+	observables = old_obs 
 
 	fit_parameters = []
 	t0_reference_scale = {
@@ -124,6 +132,9 @@ def post_analysis(beta_parameter_list, observables,
 
 	data.set_reference_values(t0_reference_scale)
 
+	print t0_reference_scale
+	exit("Time to go")
+
 	if "topc" in observables:
 		topc_analysis = TopcPostAnalysis(data, 
 			figures_folder=figures_folder,verbose=verbose)
@@ -131,7 +142,7 @@ def post_analysis(beta_parameter_list, observables,
 			topc_analysis.set_analysis_data_type(analysis_type)
 			print topc_analysis
 			topc_analysis.plot(y_limits=[-5,5])
-			topc_analysis.get_values()
+			# topc_analysis.get_values()
 
 	if "topc2" in observables:
 		topc2_analysis = Topc2PostAnalysis(data, 

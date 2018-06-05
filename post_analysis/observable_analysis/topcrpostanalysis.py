@@ -20,9 +20,7 @@ class TopcRPostAnalysis(PostCore):
 
 	dpi=400
 
-	total_lattice_sizes = {
-		6.0: 24**3*48, 6.1: 28**3*56, 6.2: 32**3*64, 6.45: 48**3*96
-	}
+	lattice_sizes = {}
 
 	def __init__(self, data, with_autocorr=True, figures_folder="../figures", 
 		verbose=False, dryrun=False):
@@ -41,9 +39,9 @@ class TopcRPostAnalysis(PostCore):
 		self.dryrun = dryrun
 
 		self.beta_values = sorted(data.beta_values)
-
-		self._setup_flow_times()
-
+		self.colors = data.colors
+		self.lattice_sizes = data.lattice_volumes
+		self.size_labels = data.labels
 		self._setup_analysis_types(data.analysis_types)
 
 		# Q^2
@@ -128,7 +126,7 @@ class TopcRPostAnalysis(PostCore):
 
 	def _setup_volumes(self):
 		"""Sets up lattice volumes."""
-		vol = lambda b: self.total_lattice_sizes[b]*get_lattice_spacing(b)**4
+		vol = lambda b: self.lattice_sizes[b]*get_lattice_spacing(b)[0]**4
 		self.V = {b: vol(b) for b in self.beta_values}
 
 		# print self.V
@@ -242,11 +240,11 @@ class TopcRPostAnalysis(PostCore):
 		# 		_R_mean = R(_q4c_mean, _q2_mean)
 		# 		_R_err = R_error(_q4c_mean, _q4c_err, _q2_mean, _q2_err)
 
-		# 		scaling = self.total_lattice_sizes[beta] / float(comp_lattices[beta]["size"])
+		# 		scaling = self.lattice_sizes[beta] / float(comp_lattices[beta]["size"])
 		# 		msg =  "\nBeta         %.2f" % beta
 		# 		msg += "\nBeta_article %.2f" % comp_lattices[beta]["beta_article"]
 		# 		msg += "\nFlow time 9.99"
-		# 		msg += "\nScaling = Volume / Volume article = 2*%d^4 / %d^4 = %d / %d = %f" % ((self.total_lattice_sizes[beta]/2.)**(0.25), comp_lattices[beta]["L"], self.total_lattice_sizes[beta], comp_lattices[beta]["size"], scaling)
+		# 		msg += "\nScaling = Volume / Volume article = 2*%d^4 / %d^4 = %d / %d = %f" % ((self.lattice_sizes[beta]/2.)**(0.25), comp_lattices[beta]["L"], self.lattice_sizes[beta], comp_lattices[beta]["size"], scaling)
 		# 		q2_scaled = _q2_mean[-1]/scaling
 		# 		msg += "\nQ^2   %-14.4f" % self.topc2[beta][atype]["y"][-1]
 		# 		msg += "   Q^2_scaled   %10.4f  Q^2_article   %10.4f  Difference(scaled-article): %10.4f  Factor_difference(scaled/article) %10.4f" % (q2_scaled, comp_lattices[beta]["q2"], q2_scaled-comp_lattices[beta]["q2"], q2_scaled/comp_lattices[beta]["q2"])
@@ -346,7 +344,7 @@ Q4_err: %10.5f Q4C: %10.5f Q4C_err: %10.5f R: %10.5f R_err: %10.5f" % (beta,
 		"""Sorts data into a format specific for the plotting method."""
 		for beta in self.beta_values:
 			values = {}
-			values["a"] = get_lattice_spacing(beta)
+			values["a"] = get_lattice_spacing(beta)[0]
 			values["x"] = values["a"]* np.sqrt(8*data[beta]["x"])
 			values["y"] = data[beta]["y"]
 			values["y_err"] = data[beta]["y_error"]

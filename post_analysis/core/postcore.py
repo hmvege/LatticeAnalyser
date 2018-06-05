@@ -320,6 +320,7 @@ class PostCore(object):
 		Returns:
 			{beta: {t0, y0, y0_error}
 		"""
+
 		values = {}
 		print self.reference_values
 		if reference_time:
