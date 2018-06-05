@@ -47,7 +47,7 @@ def main():
 	# observables = []
 	# observables = ["qtq0eff", "qtq0e"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["qtq0eff", "qtq0e"] + ["topsust", "topsuste", "topsusMC", "topsusqtq0"]
-	# observables = ["energy"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
+	observables = ["energy"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["topsusqtq0"]
 	# observables = ["topcr"]
 

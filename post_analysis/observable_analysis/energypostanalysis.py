@@ -160,13 +160,22 @@ class EnergyPostAnalysis(PostCore):
 
 		_tmp_beta_dict = {
 			beta: {"t0": t0_values[i], "t0err": t0err_values[i],
-				"t0/a": t0_values[i]/self.plot_values[beta]["a"]**2,
-				"t0_err/a": t0err_values[i]/self.plot_values[beta]["a"]**2}
+				"t0a2": t0_values[i]/self.plot_values[beta]["a"]**2,
+				"t0_erra2": t0err_values[i]/self.plot_values[beta]["a"]**2,
+				"t0r02": t0_values[i]/self.r0**2,
+				"t0_errr02": t0err_values[i]/self.r0**2}
 			for i, beta in enumerate(self.beta_values)
 		}
 
 		t0_dict = {"t0_cont": self.t0_cont, "t0err_cont": self.t0_cont_error}
 		t0_dict.update(_tmp_beta_dict)
+
+		# for b in self.beta_values:
+		# 	msg = "beta = %.2f || t0 = %10f +/- %-10f" % (b, t0_dict[b]["t0"], t0_dict[b]["t0err"])
+		# 	msg += " || t0/a^2 = %10f +/- %-10f" % (t0_dict[b]["t0a2"], t0_dict[b]["t0_erra2"])
+		# 	msg += " || t0/r0^2 = %10f +/- %-10f" % (t0_dict[b]["t0r02"], t0_dict[b]["t0_errr02"])
+		# 	print msg
+		# exit(1)
 		return t0_dict
 
 		# exit("Done in energy post analysis")
