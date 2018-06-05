@@ -80,8 +80,7 @@ class TopsusCore(PostCore):
 
 	def plot_continuum(self, fit_target, title_addendum="",
 		extrapolation_method="plateau", plateau_fit_size=20,
-		interpolation_rank=3, plot_continuum_fit=False,
-		reference_value=None):
+		interpolation_rank=3, plot_continuum_fit=False):
 		"""
 		Method for plotting the continuum limit of topsus at a given 
 		fit_target.
@@ -112,12 +111,19 @@ class TopsusCore(PostCore):
 			raw_func_err: function, optional, will propagate the error of the 
 				bootstrapped line fitted data, raw_func_err(y, yerr). Calculated
 				by regular error propagation.
-			reference_value: dict, optional. Uses line fitted continuum limit 
-				of t0 at t^2<E>|_t0 = 0.3. Default is using extrapolation point.
 		"""
-
 		self.extrapolation_method = extrapolation_method
-		self.t0_values = reference_value
+		if not isinstance(self.reference_values, types.NoneType):
+			if extrapolation_method in self.reference_values.keys():
+				# Checking that the extrapolation method selected can be used.
+				t0_values = self.reference_values[self.extrapolation_method]\
+					[self.analysis_data_type]
+			else:
+				# If the extrapolation method is not among the used methods.
+				t0_values = self.reference_values.values()[0]\
+					[self.analysis_data_type]
+		else:
+			t0_values = None
 
 		# Retrieves data for analysis.
 		if fit_target == -1:
@@ -147,22 +153,28 @@ class TopsusCore(PostCore):
 				verbose=False)
 
 			_x0, _y0, _y0_error, _y0_raw, _tau_int0 = res
-			if isinstance(self.t0_values, types.NoneType):
+			
+			if self.verbose:
+				msg = "Beta = %4.2f Topsus = %14.12f +/- %14.12f" % (
+					beta, _y0, _y0_error)
+			
+			if isinstance(t0_values, types.NoneType):
 				a_squared.append(self.plot_values[beta]["a"]**2/_x0)
 			else:
 				a_squared.append(
-					self.plot_values[beta]["a"]**2/self.t0_values["t0_cont"])
+					self.plot_values[beta]["a"]**2/t0_values["t0_cont"])
 
-				print "PRINTING t0 reference value: %f" % (self.t0_values["t0_cont"]/(self.plot_values[beta]["a"]**2))
+				if self.verbose:
+					msg += "t0 = %14.12f" % (t0_values["t0_cont"]\
+						/ (self.plot_values[beta]["a"]**2))
 
+			if self.verbose:
+				print msg
 
-			print _y0, _y0_error
 			obs.append(_y0)
 			obs_err.append(_y0_error)
 			obs_raw.append(_y0_raw)
 			tau_int_corr.append(_tau_int0)
-
-		# exit("exits after topsus extrap")
 
 		# Makes lists into arrays
 		a_squared = np.asarray(a_squared)[::-1]
@@ -200,7 +212,7 @@ class TopsusCore(PostCore):
 		y0_err = [self.topsus_continuum_error, self.topsus_continuum_error]
 
 		# Sets of title string with the chi squared and fit target
-		title_string = r"$t_{flow,0} = %.2f[fm], \chi^2 = %.2f$" % (
+		title_string = r"$t_{f,0} = %.2f[fm], \chi^2 = %.2f$" % (
 			self.fit_target, self.chi_squared)
 		title_string += title_addendum
 

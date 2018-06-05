@@ -12,15 +12,19 @@ class PostAnalysisDataReader:
 	"""
 	Small class for reading post analysis data
 	"""
-	def __init__(self, batch_folders, observables_to_load=None, verbose=False):
+	def __init__(self, batch_parameters, observables_to_load=None, 
+		verbose=False):
 		"""
 		Class for loading the post analysis data.
 
 		Args:
 			batch_folders: list of strings of beta folder paths.
+			observables_to_load: list of str, optional. Will only load those
+				specified.
 			verbose: optional more verbose output. Default is False.
 		"""
-		self._set_batch_name(batch_folders)
+		self._set_batch_name(batch_parameters)
+		self._set_lattice_parameters(batch_parameters)
 
 		self.verbose = verbose
 
@@ -41,8 +45,10 @@ class PostAnalysisDataReader:
 		self.observables_to_load = observables_to_load
 
 		# Number of betas variable
-		self.N_betas = 0
 		self.beta_values = []
+
+		# Reference Scale, must be set after initial loading if it to be used
+		self.reference_values = None
 
 		# Iterates over the different beta value folders
 		for beta_folder in self.beta_folders:
@@ -145,9 +151,6 @@ class PostAnalysisDataReader:
 			# Stores the binary data
 			self.data_raw[beta] = obs_data_raw
 
-			# Add another beta value
-			self.N_betas += 1
-
 			# Frees memory
 			del observables_data
 
@@ -156,19 +159,39 @@ class PostAnalysisDataReader:
 		self._reorganize_raw_data()
 
 	def __call__(self, observable):
+		"""Returns observable with all relevant data."""
 		return self.data_observables[observable]
 
 	def get_observables(self):
+		"""Returns list of observables."""
 		return self.observable_list
 
-	def _set_batch_name(self, batch_folders):
-		"""Sets batch name and batch folder."""	
+	def set_reference_values(self, reference_values):
+		"""
+		Sets the reference scale usually obtained from the energy.
 
+		Args:
+			reference_values: dict. 
+				
+				Structure:
+				reference_values[extrapolation_method][analysis_type]
+					["t0_cont", "t0_cont_err", beta]
+
+				Beta dictionary contains:
+					[beta]["t0", "t0err"]
+		"""
+		self.reference_values = reference_values
+
+	def _set_batch_name(self, batch_parameters):
+		"""Sets batch name and batch folder."""	
+		self.beta_folders = [os.path.join(b["batch_folder"], b["batch_name"])\
+			for b in batch_parameters]
+		
 		# Splits all of the paths
-		_folders = [os.path.split(bf) for bf in batch_folders]
+		_folders = [os.path.split(b["batch_folder"]) for b in batch_parameters]
 
 		# Gets the batch folder names
-		_bfolders = set([_f[0] for _f in _folders])
+		_bfolders = set([b["batch_folder"] for b in batch_parameters])
 		assert len(_bfolders)==1, "Multiple batch folders detected: %s" \
 			% ", ".join(list(_bfolders))
 
@@ -178,9 +201,22 @@ class PostAnalysisDataReader:
 			% ", ".join(list(_bnames))
 
 		# Sets the final results
-		self.beta_folders = batch_folders
 		self.batch_name = list(_bnames)[0]
 		self.batch_folder = list(_bfolders)[0]
+
+	def _set_lattice_parameters(self, batch_parameters):
+		"""Sets the correct labels, colors and lattice sizes."""
+		self.lattice_sizes = {}
+		self.N = {}
+		self.NT = {}
+		self.colors = {}
+		self.labels = {}
+		for b in batch_parameters:
+			self.N[b["beta"]] = b["N"]
+			self.NT[b["beta"]] = b["NT"]
+			self.lattice_sizes[b["beta"]] = [b["N"], b["NT"]]
+			self.colors[b["beta"]] = b["color"]
+			self.labels[b["beta"]] = r"$%d^3 \times %d$" % (b["N"], b["NT"])
 
 	def _get_obs_data(self, obs, obs_path, sub_obs=None, sub_obs_path=None):
 		"""Method for retrieving data associated with an observable."""

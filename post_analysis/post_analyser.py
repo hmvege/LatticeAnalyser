@@ -5,7 +5,6 @@ from tools.analysis_setup_tools import append_fit_params, \
 import types
 import numpy as np
 import os
-import cPickle as pickle
 from tqdm import tqdm
 
 def default_post_analysis(PostAnalysis, data, figures_folder, analysis_type,
@@ -16,15 +15,17 @@ def default_post_analysis(PostAnalysis, data, figures_folder, analysis_type,
 	print analysis
 	analysis.plot()
 
+
 def plaq_post_analysis(*args, **kwargs):
 	default_post_analysis(PlaqPostAnalysis, *args, **kwargs)
 
+
 def post_analysis(beta_parameter_list, observables,
 	topsus_fit_targets, line_fit_interval_points, energy_fit_target,
-	q0_flow_times, euclidean_time_percents, extrapolation_methods=None,
+	q0_flow_times, euclidean_time_percents, extrapolation_methods="nearest",
 	plot_continuum_fit=False, figures_folder="figures", 
-	post_analysis_data_type=None, bval_to_plot="all", gif_params=None,
-	verbose=False):
+	post_analysis_data_type=["bootstrap", "jackknife", "unanalyzed"], 
+	bval_to_plot="all", gif_params=None, verbose=False):
 	"""
 	Post analysis of the flow observables.
 
@@ -58,46 +59,23 @@ def post_analysis(beta_parameter_list, observables,
 		verbose: bool, a more verbose run. Default is False.
 	"""
 
-	batch_folders = [os.path.join(b["batch_folder"], b["batch_name"]) \
-		for b in beta_parameter_list]
-
 	print "="*100 
 	print "Post-analysis: retrieving data from folders: %s" % (
-		", ".join(batch_folders))
+			", ".join([os.path.join(b["batch_folder"], b["batch_name"]) \
+		for b in beta_parameter_list]))
 
-	if isinstance(post_analysis_data_type, types.NoneType):
-		post_analysis_data_type = ["bootstrap", "jackknife", "unanalyzed"]
-
-	if isinstance(extrapolation_methods, types.NoneType):
-		extrapolation_methods = ["nearest"]
-
-	# Loads data from post analysis folder
-	data_batch_folder_name = \
-		os.path.split(beta_parameter_list[0]["batch_folder"])[-1]
-	pickle_file_name = os.path.join(figures_folder,
-		data_batch_folder_name,
-		"post_analysis", "post_analysis_data.p")
-
-	data = PostAnalysisDataReader(batch_folders,
+	data = PostAnalysisDataReader(beta_parameter_list,
 		observables_to_load=observables)
 
-	# if os.path.isfile(pickle_file_name):
-	# 	print "Pickle file found. Loading %s" % pickle_file_name
-	# 	data = pickle.load(open(pickle_file_name, "rb"))
-	# else:
-	# 	# data = PostAnalysisDataReader(batch_folders)
-	# 	print "No pickle file found. Loading data from files."
-	# 	# pickle.dump(data, open(pickle_file_name, "wb"))
-	# 	print "Pickle dumping done: %s" % pickle_file_name
-	# exit("Done reading")
-
-	continuum_targets = topsus_fit_targets
-
 	fit_parameters = []
-
 	t0_reference_scale = {
 		extrap_method: {atype: {} for atype in post_analysis_data_type}
 		for extrap_method in extrapolation_methods
+	}
+	comparison_values = {obs: {extrap_method: {atype: {} 
+				for atype in post_analysis_data_type}
+			for extrap_method in extrapolation_methods} 
+		for obs in observables
 	}
 
 	if "plaq" in observables:
@@ -110,13 +88,15 @@ def post_analysis(beta_parameter_list, observables,
 
 	if "energy" in observables:
 		for extrapolation_method in extrapolation_methods:
-			print "Energy extrapolation method: ", extrapolation_method
+			if verbose:
+				print "Energy extrapolation method: ", extrapolation_method
 			
 			energy_analysis = EnergyPostAnalysis(data, 
 				figures_folder=figures_folder, verbose=verbose)
 
 			for analysis_type in post_analysis_data_type:
-				print "Energy analysis type: ", analysis_type
+				if verbose:
+					print "Energy analysis type: ", analysis_type
 
 				energy_analysis.set_analysis_data_type(analysis_type)
 				print energy_analysis
@@ -127,7 +107,9 @@ def post_analysis(beta_parameter_list, observables,
 					figure_name_appendix="_zoomed")
 
 				t0_dict = energy_analysis.get_scale(
-					extrapolation_method=extrapolation_method, plot_fit=False)
+					extrapolation_method=extrapolation_method, 
+					E0=energy_fit_target, plot_fit=False)
+
 				t0_reference_scale[extrapolation_method][analysis_type] = \
 					t0_dict
 
@@ -138,10 +120,9 @@ def post_analysis(beta_parameter_list, observables,
 				# # Plot running coupling
 				# energy_analysis.coupling_fit()
 	else:
-		t0_reference_scale = {
-		extrap_method: {atype: None for atype in post_analysis_data_type}
-		for extrap_method in extrapolation_methods
-	}
+		t0_reference_scale = None
+
+	data.set_reference_values(t0_reference_scale)
 
 	if "topc" in observables:
 		topc_analysis = TopcPostAnalysis(data, 
@@ -150,6 +131,7 @@ def post_analysis(beta_parameter_list, observables,
 			topc_analysis.set_analysis_data_type(analysis_type)
 			print topc_analysis
 			topc_analysis.plot(y_limits=[-5,5])
+			topc_analysis.get_values()
 
 	if "topc2" in observables:
 		topc2_analysis = Topc2PostAnalysis(data, 
@@ -216,8 +198,8 @@ def post_analysis(beta_parameter_list, observables,
 			topcmc_analysis.set_analysis_data_type(analysis_type)
 			print topcmc_analysis
 
-			for int_key in interval_dict_list:
-				topcmc_analysis.plot_interval(int_key)
+			for int_keys in interval_dict_list:
+				topcmc_analysis.plot_interval(int_keys)
 
 			topcmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
@@ -237,12 +219,10 @@ def post_analysis(beta_parameter_list, observables,
 			for analysis_type in post_analysis_data_type:
 				topsus_analysis.set_analysis_data_type(analysis_type)
 				topsus_analysis.plot()
-				for cont_target in continuum_targets:
+				for cont_target in topsus_fit_targets:
 					topsus_analysis.plot_continuum(cont_target, 
 						extrapolation_method=extrapolation_method,
-						plot_continuum_fit=plot_continuum_fit,
-						reference_value=t0_reference_scale \
-							[extrapolation_method][analysis_type])
+						plot_continuum_fit=plot_continuum_fit)
 
 					fit_parameters = append_fit_params(fit_parameters, 
 						topsus_analysis.observable_name_compact, analysis_type,
@@ -260,10 +240,10 @@ def post_analysis(beta_parameter_list, observables,
 
 				for int_keys in interval_dict_list:
 					topsusqtq0_analysis.plot_interval(int_keys)
-					for cont_target in continuum_targets:
+					for cont_target in topsus_fit_targets:
 						topsusqtq0_analysis.plot_continuum(cont_target, 
-							int_keys, reference_value=t0_reference_scale \
-								[extrapolation_method][analysis_type])
+							int_keys,
+							extrapolation_method=extrapolation_method)
 
 						fit_parameters = append_fit_params(fit_parameters, 
 							topsusqtq0_analysis.observable_name_compact, 
@@ -285,10 +265,9 @@ def post_analysis(beta_parameter_list, observables,
 
 				for int_keys in interval_dict_list:
 					topsust_analysis.plot_interval(int_keys)
-					for cont_target in continuum_targets:
+					for cont_target in topsus_fit_targets:
 						topsust_analysis.plot_continuum(cont_target, int_keys,
-							reference_value=t0_reference_scale \
-								[extrapolation_method][analysis_type])
+							extrapolation_method=extrapolation_method)
 
 						fit_parameters = append_fit_params(fit_parameters, 
 							topsust_analysis.observable_name_compact, 
@@ -307,12 +286,11 @@ def post_analysis(beta_parameter_list, observables,
 			for analysis_type in post_analysis_data_type:
 				topsuste_analysis.set_analysis_data_type(analysis_type)
 				print topsuste_analysis
-				for int_key in interval_dict_list:
-					topsuste_analysis.plot_interval(int_key)
-					for cont_target in continuum_targets:
-						topsuste_analysis.plot_continuum(cont_target, int_key,
-							reference_value=t0_reference_scale \
-								[extrapolation_method][analysis_type])
+				for int_keys in interval_dict_list:
+					topsuste_analysis.plot_interval(int_keys)
+					for cont_target in topsus_fit_targets:
+						topsuste_analysis.plot_continuum(cont_target, int_keys,
+							extrapolation_method=extrapolation_method)
 
 						fit_parameters = append_fit_params(fit_parameters, 
 							topsuste_analysis.observable_name_compact, 
@@ -332,12 +310,11 @@ def post_analysis(beta_parameter_list, observables,
 				topsusmc_analysis.set_analysis_data_type(analysis_type)
 				print topsusmc_analysis
 			
-				for int_key in interval_dict_list:
-					topsusmc_analysis.plot_interval(int_key)
-					for cont_target in continuum_targets:
-						topsusmc_analysis.plot_continuum(cont_target, int_key,
-							reference_value=t0_reference_scale \
-								[extrapolation_method][analysis_type])
+				for int_keys in interval_dict_list:
+					topsusmc_analysis.plot_interval(int_keys)
+					for cont_target in topsus_fit_targets:
+						topsusmc_analysis.plot_continuum(cont_target, int_keys,
+							extrapolation_method=extrapolation_method)
 
 						fit_parameters = append_fit_params(fit_parameters, 
 							topsusmc_analysis.observable_name_compact, 
@@ -390,6 +367,7 @@ def post_analysis(beta_parameter_list, observables,
 			qtq0e_analysis.plot_series([0,2,3,4], beta=bval_to_plot,
 				error_shape=error_shape, y_limits=y_limits)
 
+	# Prints and writes fit parameters to file.
 	for obs in observables:
 		if "topsus" in obs:
 			skip_values = ["a", "a_err", "b", "b_err"]
@@ -416,8 +394,6 @@ def post_analysis(beta_parameter_list, observables,
 				plot_together=gif_params["plot_together"],
 				error_shape="bars")
 			
-
-
 
 
 def main():

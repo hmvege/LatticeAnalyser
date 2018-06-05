@@ -47,7 +47,7 @@ class EnergyPostAnalysis(PostCore):
 
 			self.plot_values[beta] = values
 
-	def get_scale(self, extrapolation_method="plateau_mean", **kwargs):
+	def get_scale(self, extrapolation_method="plateau_mean", E0=0.3, **kwargs):
 		"""
 		Method for retrieveing reference value t0 based on Luscher(2010),
 		Properties and uses of the Wilson flow in lattice QCD.
@@ -58,14 +58,15 @@ class EnergyPostAnalysis(PostCore):
 		Args:
 			extrapolation_method: str, optional. Method of t0 extraction. 
 				Default is plateau_mean.
+			E0: float, optional. Default is 0.3.
 
 		Returns:
 			t0: dictionary of t0 values for each of the betas, and a continuum
 				value extrapolation.
 		"""
-		print "Scale t0 extraction method:      " + extrapolation_method
-		print "Scale t0 extraction data:        " + self.analysis_data_type
-		E0 = 0.3
+		if self.verbose:
+			print "Scale t0 extraction method:      " + extrapolation_method
+			print "Scale t0 extraction data:        " + self.analysis_data_type
 
 		# Retrieves t0 values from data
 		a_values = []
@@ -158,7 +159,9 @@ class EnergyPostAnalysis(PostCore):
 		self.extrapolation_method = extrapolation_method
 
 		_tmp_beta_dict = {
-			beta: {"t0": t0_values[i], "t0err": t0err_values[i]}
+			beta: {"t0": t0_values[i], "t0err": t0err_values[i],
+				"t0/a": t0_values[i]/self.plot_values[beta]["a"]**2,
+				"t0_err/a": t0err_values[i]/self.plot_values[beta]["a"]**2}
 			for i, beta in enumerate(self.beta_values)
 		}
 

@@ -42,12 +42,12 @@ def main():
 	# observables = observables_euclidean_time
 	# observables = ["topcr", "topsus"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
-	# observables = ["energy", "topsus"]
+	observables = ["energy", "topc"]
 	# observables = ["energy"]
 	# observables = []
-	observables = ["qtq0eff", "qtq0e"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
-	observables = ["qtq0eff", "qtq0e"] + ["topsust", "topsuste", "topsusMC", "topsusqtq0"]
-	# observables = ["topcMC"]
+	# observables = ["qtq0eff", "qtq0e"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
+	# observables = ["qtq0eff", "qtq0e"] + ["topsust", "topsuste", "topsusMC", "topsusqtq0"]
+	# observables = ["energy"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["topsusqtq0"]
 	# observables = ["topcr"]
 
@@ -175,43 +175,42 @@ def main():
 	databeta60["MCInt"] = MC_intervals[0]
 	databeta60["N"] = 24
 	databeta60["NT"] = 2*databeta60["N"]
-	databeta60["lattice_size"] = {6.0: databeta60["N"]**3*databeta60["NT"]}
+	databeta60["color"] = "#e41a1c"
 
 	databeta61 = copy.deepcopy(default_params)
 	databeta61["batch_name"] = "beta61"
-	databeta60["beta"] = 6.1
+	databeta61["beta"] = 6.1
 	databeta61["NCfgs"] = get_num_observables(data_batch_folder,
 		databeta61["batch_name"])
 	databeta61["obs_file"] = "28_6.10"
 	databeta61["MCInt"] = MC_intervals[1]
 	databeta61["N"] = 28
 	databeta61["NT"] = 2*databeta61["N"]
-	databeta61["lattice_size"] = {6.1: databeta61["N"]**3*databeta61["NT"]}
+	databeta61["color"] = "#377eb8"
 
 	databeta62 = copy.deepcopy(default_params)
 	databeta62["batch_name"] = "beta62"
-	databeta60["beta"] = 6.2
+	databeta62["beta"] = 6.2
 	databeta62["NCfgs"] = get_num_observables(data_batch_folder, 
 		databeta62["batch_name"])
 	databeta62["obs_file"] = "32_6.20"
 	databeta62["MCInt"] = MC_intervals[2]
 	databeta62["N"] = 32
 	databeta62["NT"] = 2*databeta62["N"]
-	databeta62["lattice_size"] = {6.2: databeta62["N"]**3*databeta62["NT"]}
+	databeta62["color"] = "#4daf4a"
 
 	default_params["flow_epsilon"] = 0.02
 	databeta645 = copy.deepcopy(default_params)
 	databeta645["batch_name"] = "beta645"
-	databeta60["beta"] = 6.45
+	databeta645["beta"] = 6.45
 	databeta645["NCfgs"] = get_num_observables(data_batch_folder,
 		databeta645["batch_name"])
 	databeta645["obs_file"] = "48_6.45"
 	databeta645["MCInt"] = MC_intervals[3]
 	databeta645["N"] = 48
 	databeta645["NT"] = 2*databeta645["N"]
-	databeta645["lattice_size"] = {
-		6.45: databeta645["N"]**3*databeta645["NT"]}
-
+	databeta645["color"] = "#984ea3"
+	
 	# smaug_data_beta60_analysis = copy.deepcopy(default_params)
 	# smaug_data_beta60_analysis["batch_name"] = beta_folders[0]
 	# smaug_data_beta60_analysis["NCfgs"] = get_num_observables(data_batch_folder,

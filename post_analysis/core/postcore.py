@@ -11,70 +11,50 @@ rc("text", usetex=True)
 rc("font", **{"family": "serif", "serif": ["Computer Modern"]})
 
 class PostCore(object):
-	"""Post analysis base class. Based on paper DOI 10.1002/mas.20100."""
+	"""Post analysis base class."""
 	observable_name = "Observable"
 	observable_name_compact = "obs"
 	formula = ""
 	x_label = r""
 	y_label = r""
 	dpi = 350
-	size_labels = {
-		6.0  : r"$24^3 \times 48$",
-		6.1  : r"$28^3 \times 56$",
-		6.2  : r"$32^3 \times 64$",
-		6.45 : r"$48^3 \times 96$",
-	}
-	lattice_sizes = {
-		6.0  : [24, 48],
-		6.1  : [28, 56],
-		6.2  : [32, 64],
-		6.45 : [48, 96],
-	}
 	r0 = 0.5
 	sub_obs = False
 	sub_sub_obs = False
-	# colors = { # http://colorbrewer2.org
-	# 	6.0: "#d7191c", # blue
-	# 	6.1: "#fdae61", # green
-	# 	6.2: "#abd9e9", # red
-	# 	6.45: "#2c7bb6" # purple
-	# }
-	colors = { # http://colorbrewer2.org
-		6.0: "#e41a1c",
-		6.1: "#377eb8",
-		6.2: "#4daf4a",
-		6.45: "#984ea3"
-	}
-
-	# font_type = {"fontname": "modern"}
-
-	# colors = {
-	# 	6.0: "#3366ff", # blue
-	# 	6.1: "#00ffff", # green
-	# 	6.2: "#ffff33", # red
-	# 	6.45: "#ff3333" # purple
-	# }
-
 	interval = []
 
 	def __init__(self, data, with_autocorr=True, figures_folder="../figures",
 		verbose=False, dryrun=False):
-		
+		"""
+		Base class for analysing beta values together after initial analysis.
+
+		Args:
+			data: PostAnalysisDataReader object, contains all of the 
+				observable data.
+			with_autocorr: bool, optional. Will perform analysis on data
+				corrected by autocorrelation sqrt(2*tau_int). Default is True.
+			figures_folder: str, optional. Default output folder is ../figures.
+			verbose: bool, optional. A more verbose output. Default is False.
+			dryrun: bool, optional. No major changes will be performed. 
+				Default is False.
+		"""
+
 		if with_autocorr:
 			self.ac = "with_autocorr"
 		else:
 			self.ac = "without_autocorr"
 		
 		self.with_autocorr = with_autocorr
+		self.reference_values = data.reference_values
 		observable = self.observable_name_compact
 
 		self.verbose = verbose
 		self.dryrun = dryrun
 
 		self.beta_values = sorted(data.beta_values)
-
-		# self._setup_flow_times()
-
+		self.colors = data.colors
+		self.lattice_sizes = data.lattice_sizes
+		self.size_labels = data.labels
 		self._setup_analysis_types(data.analysis_types)
 
 		self.data = {atype: {beta: {} for beta in self.beta_values} \
@@ -177,11 +157,6 @@ class PostCore(object):
 		check_folder(self.output_folder_path, dryrun=self.dryrun, 
 			verbose=self.verbose)
 
-	def _setup_flow_times(self):
-		"""Initializes flow times to be used by others."""
-		self.flow_times = {b: np.arange(0, 10, 0.01) for b in self.beta_values}
-		self.flow_times[6.45] = np.arange(0, 20, 0.02)
-
 	def _setup_analysis_types(self, atypes):
 		"""
 		Stores the number of analysis types from the data container, while 
@@ -195,6 +170,10 @@ class PostCore(object):
 		"""Checks if we have set the analysis data type yet."""
 		if not hasattr(self, "plot_values"):
 			raise AttributeError("set_analysis_data_type() has not been set yet.")
+
+	# def get_observable_at(self, tf):
+	# 	return self.
+
 
 	def set_analysis_data_type(self, analysis_data_type="bootstrap"):
 		"""Sets the analysis type and retrieves correct analysis data."""
@@ -283,14 +262,14 @@ class PostCore(object):
 			else:
 				raise KeyError("%s not a recognized plot type" % error_shape)
 
-		# Sets the title string
-		title_string = r"%s" % self.observable_name
-		if plot_with_formula:
-			title_string += r" %s" % self.formula
+		# # Sets the title string
+		# title_string = r"%s" % self.observable_name
+		# if plot_with_formula:
+		# 	title_string += r" %s" % self.formula
 
 		# Basic plotting commands
 		ax.grid(True)
-		ax.set_title(r"%s" % title_string)
+		# ax.set_title(r"%s" % title_string)
 		ax.set_xlabel(r"%s" % self.x_label)
 		ax.set_ylabel(r"%s" % self.y_label)
 		ax.legend(loc="lower right", prop={"size": 8})
@@ -328,6 +307,28 @@ class PostCore(object):
 		fname = "post_analysis_%s_%s%s.png" % (self.observable_name_compact,
 			self.analysis_data_type, figure_name_appendix)
 		return os.path.join(output_folder, fname)
+
+	def get_values(self, t0, reference_time=False, atype=None, extrap_method=None):
+		"""
+		Method for retrieving values a given flow time t0.
+
+		Args:
+			t0: float, flow time at a given t_f/a^2.
+			reference_time: bool, if True, will retrun flow time at reference
+				value t0/a^2 from t^2<E>=0.3 for a given beta.
+
+		Returns:
+			{beta: {t0, y0, y0_error}
+		"""
+		values = {}
+		print self.reference_values
+		if reference_time:
+			# for b in self.beta_values:
+				# values[b] = {"t0": self.reference_values, "y0", "y0_error"}
+			# return self.y
+			pass
+		exit("woop")
+		raise NotImplementedError("Not implemented method for retrieving values yet.")
 
 	def __str__(self):
 		"""Class string representation method."""

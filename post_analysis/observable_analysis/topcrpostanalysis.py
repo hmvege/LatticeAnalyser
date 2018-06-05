@@ -286,7 +286,6 @@ class TopcRPostAnalysis(PostCore):
 			for size in sorted(self.data_article[data_set].keys()):
 				article_data2[size][data_set] = self.data_article[data_set][size]
 
-
 		# for size in sorted(self.data_article[data_set].keys()):
 		for size in sorted(article_data2.keys()):
 			t0 = self.data_article["B"][size]["t0"]
@@ -357,6 +356,7 @@ Q4_err: %10.5f Q4C: %10.5f Q4C_err: %10.5f R: %10.5f R_err: %10.5f" % (beta,
 				self.size_labels[beta], beta)
 			self.plot_values[beta] = values
 
+
 	def plot(self, *args, **kwargs):
 		"""Ensuring I am plotting with formule in title."""
 		kwargs["plot_with_formula"] = True
@@ -426,6 +426,7 @@ Q4_err: %10.5f Q4C: %10.5f Q4C_err: %10.5f R: %10.5f R_err: %10.5f" % (beta,
 		# 		print "R: %10.5f %10.5f" % (
 		# 			self.data_article[data_set][size]["R_norm"],
 		# 			self.data_article[data_set][size]["RErr_norm"])
+
 
 	def _setup_article_values(self):
 		"""
