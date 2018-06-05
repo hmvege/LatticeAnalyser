@@ -165,7 +165,7 @@ class TopsusCore(PostCore):
 					self.plot_values[beta]["a"]**2/t0_values["t0_cont"])
 
 				if self.verbose:
-					msg += "t0 = %14.12f" % (t0_values["t0_cont"]\
+					msg += " t0 = %14.12f" % (t0_values["t0_cont"]\
 						/ (self.plot_values[beta]["a"]**2))
 
 			if self.verbose:

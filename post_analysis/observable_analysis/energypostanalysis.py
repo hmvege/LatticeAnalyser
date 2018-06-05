@@ -167,6 +167,8 @@ class EnergyPostAnalysis(PostCore):
 			for i, beta in enumerate(self.beta_values)
 		}
 
+		shopalopa fix t0  feil  her!
+
 		t0_dict = {"t0_cont": self.t0_cont, "t0err_cont": self.t0_cont_error}
 		t0_dict.update(_tmp_beta_dict)
 

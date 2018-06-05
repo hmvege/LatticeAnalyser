@@ -132,9 +132,6 @@ def post_analysis(beta_parameter_list, observables,
 
 	data.set_reference_values(t0_reference_scale)
 
-	print t0_reference_scale
-	exit("Time to go")
-
 	if "topc" in observables:
 		topc_analysis = TopcPostAnalysis(data, 
 			figures_folder=figures_folder,verbose=verbose)
