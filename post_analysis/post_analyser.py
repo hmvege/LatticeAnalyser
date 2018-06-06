@@ -96,18 +96,18 @@ def post_analysis(beta_parameter_list, observables,
 
 	if "energy" in observables:
 		for extrapolation_method in extrapolation_methods:
-			if verbose:
-				print "Energy extrapolation method: ", extrapolation_method
 			
 			energy_analysis = EnergyPostAnalysis(data, 
 				figures_folder=figures_folder, verbose=verbose)
 
 			for analysis_type in post_analysis_data_type:
+				energy_analysis.set_analysis_data_type(analysis_type)
+				
+				print energy_analysis
 				if verbose:
+					print "Energy extrapolation method: ", extrapolation_method
 					print "Energy analysis type: ", analysis_type
 
-				energy_analysis.set_analysis_data_type(analysis_type)
-				print energy_analysis
 
 				energy_analysis.plot()
 				energy_analysis.plot(x_limits=[-0.01,0.15], 

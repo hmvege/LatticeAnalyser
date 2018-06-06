@@ -36,20 +36,21 @@ def main():
 
 	# observables = observables_euclidean_time
 	observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
-	# observables = ["topc", "plaq", "energy", "topsus", "topcr"]
+	# observables = ["topc", "plaq", "topsus", "topcr"]
 	# observables = ["topcr", "qtq0eff"]
 	# observables = ["qtq0eff"]
 	# observables = observables_euclidean_time
 	# observables = ["topcr", "topsus"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
-	observables = ["energy", "topcr"]
-	# observables = ["energy"]
+	observables = ["topcr"]
 	# observables = []
 	# observables = ["qtq0eff", "qtq0e"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["qtq0eff", "qtq0e"] + ["topsust", "topsuste", "topsusMC", "topsusqtq0"]
-	observables = ["energy"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
-	# observables = ["topsusqtq0"]
+	observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
+	observables = ["topsusqtq0"]
 	# observables = ["topcr"]
+
+	observables += ["energy"]
 
 	#### Base parameters
 	N_bs = 500
@@ -114,7 +115,8 @@ def main():
 	# Method of continuum extrapolation
 	# Options: plateau, plateau_mean, nearest, interpolate, bootstrap
 	extrapolation_methods = ["plateau", "plateau_mean", "nearest", "interpolate", "bootstrap"]
-	extrapolation_methods = ["plateau_mean"]
+	# extrapolation_methods = ["plateau_mean"]
+	extrapolation_methods.remove("bootstrap") # Not viable for our methods, as data is strongly autocorrelated
 	plot_continuum_fit = False
 
 	# Indexes to look at for topct.

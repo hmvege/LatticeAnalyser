@@ -25,7 +25,6 @@ class EnergyPostAnalysis(PostCore):
 			values = {}
 			values["beta"] = beta
 			values["a"], values["a_err"] = get_lattice_spacing(beta)
-
 			values["x"] = data[beta]["x"]/self.r0**2*values["a"]**2
 			values["t"] = data[beta]["x"]*values["a"]**2
 			values["y"] = data[beta]["y"]*data[beta]["x"]**2
@@ -93,8 +92,6 @@ class EnergyPostAnalysis(PostCore):
 		t0err_func = lambda _t0, _t0_err: _t0_err*np.sqrt(8/_t0)/(2.0*self.r0)
 
 		# Sets up t0 and t0_error values to plot
-		# y = np.sqrt(8*t0_values)/self.r0
-		# yerr = t0err_values*np.sqrt(8/t0_values)/(2.0*self.r0)
 		y = t0_func(t0_values)
 		yerr = t0err_func(t0_values, t0err_values)
 
@@ -103,23 +100,15 @@ class EnergyPostAnalysis(PostCore):
 		a_squared_cont = np.linspace(-0.025, a_values[-1]*1.1, N_cont)
 
 		# Fits to continuum and retrieves values to be plotted
-		# continuum_fit = LineFit(a_values, y, y_err=yerr)
-		continuum_fit = LineFit(a_values, t0_values, y_err=t0err_values)
+		continuum_fit = LineFit(a_values, y, y_err=yerr)
 		y_cont, y_cont_err, fit_params, chi_squared = \
 			continuum_fit.fit_weighted(a_squared_cont)
 
 		res = continuum_fit(0, weighted=True)
-		self.t0_cont = res[0][0]
-		self.t0_cont_error = (res[1][-1][0] - res[1][0][0])/2
-		self.sqrt_t0_cont = t0_func(self.t0_cont)
-		self.sqrt_t0_cont_error = t0err_func(self.t0_cont, self.t0_cont_error)
-
-		# A bit naughty, but the simplest and quickest way of getting the 
-		# error propagation.
-		continuum_fit = LineFit(a_values, t0_func(t0_values), 
-			y_err=t0err_func(t0_values, t0err_values))
-		y_cont, y_cont_err, fit_params, chi_squared = \
-			continuum_fit.fit_weighted(a_squared_cont)
+		self.sqrt_8t0_cont = res[0][0]
+		self.sqrt_8t0_cont_error = (res[1][-1][0] - res[1][0][0])/2
+		self.t0_cont = self.sqrt_8t0_cont**2/8
+		self.t0_cont_error = self.sqrt_8t0_cont_error*np.sqrt(self.t0_cont/2.0)
 
 		# Creates figure and plot window
 		fig = plt.figure()
@@ -139,13 +128,6 @@ class EnergyPostAnalysis(PostCore):
 		ax.legend()
 		ax.grid(True)
 
-		if self.verbose:
-			print "t0: %s\nt0 error: %s" % (t0_values, t0err_values)
-			print "sqrt(8t0)/r0 = %.16f +/- %.16f" % (self.sqrt_t0_cont,
-				self.sqrt_t0_cont_error)
-			print "t0 = %.16f +/- %.16f" % (self.t0_cont,
-				self.t0_cont_error)
-
 		# Saves figure
 		fname = os.path.join(self.output_folder_path, 
 			"post_analysis_extrapmethod%s_t0reference_continuum_%s.png" % (
@@ -159,7 +141,9 @@ class EnergyPostAnalysis(PostCore):
 		self.extrapolation_method = extrapolation_method
 
 		_tmp_beta_dict = {
-			beta: {"t0": t0_values[i], "t0err": t0err_values[i],
+			beta: {
+				"t0": t0_values[i],
+				"t0err": t0err_values[i],
 				"t0a2": t0_values[i]/self.plot_values[beta]["a"]**2,
 				"t0_erra2": t0err_values[i]/self.plot_values[beta]["a"]**2,
 				"t0r02": t0_values[i]/self.r0**2,
@@ -167,17 +151,22 @@ class EnergyPostAnalysis(PostCore):
 			for i, beta in enumerate(self.beta_values)
 		}
 
-		shopalopa fix t0  feil  her!
-
 		t0_dict = {"t0_cont": self.t0_cont, "t0err_cont": self.t0_cont_error}
 		t0_dict.update(_tmp_beta_dict)
 
-		# for b in self.beta_values:
-		# 	msg = "beta = %.2f || t0 = %10f +/- %-10f" % (b, t0_dict[b]["t0"], t0_dict[b]["t0err"])
-		# 	msg += " || t0/a^2 = %10f +/- %-10f" % (t0_dict[b]["t0a2"], t0_dict[b]["t0_erra2"])
-		# 	msg += " || t0/r0^2 = %10f +/- %-10f" % (t0_dict[b]["t0r02"], t0_dict[b]["t0_errr02"])
-		# 	print msg
-		# exit(1)
+		if self.verbose:
+			print "t0 reference values table: "
+			print "sqrt(8t0)/r0 = %.16f +/- %.16f" % (self.sqrt_8t0_cont,
+				self.sqrt_8t0_cont_error)
+			print "t0 = %.16f +/- %.16f" % (self.t0_cont,
+				self.t0_cont_error)
+			for b in self.beta_values:
+				msg = "beta = %.2f || t0 = %10f +/- %-10f" % (b, t0_dict[b]["t0"], t0_dict[b]["t0err"])
+				msg += " || t0/a^2 = %10f +/- %-10f" % (t0_dict[b]["t0a2"], t0_dict[b]["t0_erra2"])
+				msg += " || t0/a^2 = %10f +/- %-10f" % (t0_dict[b]["t0a2"], t0_dict[b]["t0_erra2"])
+				msg += " || t0/r0^2 = %10f +/- %-10f" % (t0_dict[b]["t0r02"], t0_dict[b]["t0_errr02"])
+				print msg
+
 		return t0_dict
 
 		# exit("Done in energy post analysis")

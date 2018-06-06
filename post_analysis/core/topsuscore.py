@@ -153,7 +153,7 @@ class TopsusCore(PostCore):
 				verbose=False)
 
 			_x0, _y0, _y0_error, _y0_raw, _tau_int0 = res
-			
+
 			if self.verbose:
 				msg = "Beta = %4.2f Topsus = %14.12f +/- %14.12f" % (
 					beta, _y0, _y0_error)
@@ -166,7 +166,7 @@ class TopsusCore(PostCore):
 
 				if self.verbose:
 					msg += " t0 = %14.12f" % (t0_values["t0_cont"]\
-						/ (self.plot_values[beta]["a"]**2))
+						/ (self.plot_values[beta]["a"]**2) * self.r0**2)
 
 			if self.verbose:
 				print msg
@@ -256,7 +256,7 @@ class TopsusCore(PostCore):
 
 		if self.verbose:
 			print "Continuum plot of %s created in %s" % (
-				self.observable_name.lower(), fname)
+				self.observable_name_compact, fname)
 
 		# plt.show()
 		plt.close(fig)
