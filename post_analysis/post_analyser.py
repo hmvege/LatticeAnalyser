@@ -80,11 +80,18 @@ def post_analysis(beta_parameter_list, observables,
 		extrap_method: {atype: {} for atype in post_analysis_data_type}
 		for extrap_method in extrapolation_methods
 	}
-	comparison_values = {obs: {extrap_method: {atype: {} 
-				for atype in post_analysis_data_type}
-			for extrap_method in extrapolation_methods} 
+	# comparison_values = {obs: {extrap_method: {atype: {} 
+	# 			for atype in post_analysis_data_type}
+	# 		for extrap_method in extrapolation_methods} 
+	# 	for obs in observables
+	# }
+	comparison_values = {obs: {atype: {} 
+			for atype in post_analysis_data_type}
 		for obs in observables
 	}
+
+	# print comparison_values
+	# exit(1)
 
 	if "plaq" in observables:
 		plaq_analysis = PlaqPostAnalysis(data,
@@ -139,7 +146,6 @@ def post_analysis(beta_parameter_list, observables,
 			topc_analysis.set_analysis_data_type(analysis_type)
 			print topc_analysis
 			topc_analysis.plot(y_limits=[-5,5])
-			# topc_analysis.get_values()
 
 	if "topc2" in observables:
 		topc2_analysis = Topc2PostAnalysis(data, 
@@ -211,14 +217,6 @@ def post_analysis(beta_parameter_list, observables,
 
 			topcmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
-	if "topsus4" in observables:
-		topsus4_analysis = Topsus4PostAnalysis(data, 
-			figures_folder=figures_folder, verbose=verbose)
-		for analysis_type in post_analysis_data_type:
-			topsus4_analysis.set_analysis_data_type(analysis_type)
-			print topsus4_analysis
-			topsus4_analysis.plot()
-
 	# Loops over different extrapolation methods
 	for extrapolation_method in extrapolation_methods:
 		if "topsus" in observables:
@@ -235,6 +233,7 @@ def post_analysis(beta_parameter_list, observables,
 					fit_parameters = append_fit_params(fit_parameters, 
 						topsus_analysis.observable_name_compact, analysis_type,
 						topsus_analysis.get_linefit_parameters())
+
 
 		if "topsusqtq0" in observables:
 			topsusqtq0_analysis = TopsusQtQ0PostAnalysis(data,

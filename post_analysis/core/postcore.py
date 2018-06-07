@@ -338,7 +338,7 @@ class PostCore(object):
 
 		if tf == "t0":
 			for b in self.beta_values:
-				tf0 = self.plot_values["beta"]["x "]
+				tf0 = self.plot_values["beta"]["x"]
 				values[b] = {}
 			# return self.y
 			np.argmin()

@@ -319,6 +319,7 @@ def pre_analysis(parameters):
 	figures_folder = parameters["figures_folder"]
 
 	_bp = parameters["base_parameters"]
+	print parameters.keys() fixe her for å teste etterpå i autocrr for hvordan array ser ut
 	_latsize = parameters["lattice_size"].items()[0]
 	parameters["lattice_sizes"][_latsize[0]] = _latsize[1]
 

@@ -38,19 +38,19 @@ def main():
 	observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["topc", "plaq", "topsus", "topcr"]
 	# observables = ["topcr", "qtq0eff"]
-	# observables = ["qtq0eff"]
+	observables = ["topc4"]
 	# observables = observables_euclidean_time
 	# observables = ["topcr", "topsus"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
-	observables = ["topcr"]
+	# observables = ["topcr"]
 	# observables = []
 	# observables = ["qtq0eff", "qtq0e"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["qtq0eff", "qtq0e"] + ["topsust", "topsuste", "topsusMC", "topsusqtq0"]
-	observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
-	observables = ["topsusqtq0"]
-	observables = ["topsus"]
+	# observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
+	# observables = ["topsusqtq0"]
+	# observables = ["topsus"]
 
-	observables += ["energy"]
+	# observables += ["energy"]
 
 	#### Base parameters
 	N_bs = 500
@@ -115,9 +115,9 @@ def main():
 	# Method of continuum extrapolation
 	# Options: plateau, plateau_mean, nearest, interpolate, bootstrap
 	extrapolation_methods = ["plateau", "plateau_mean", "nearest", "interpolate", "bootstrap"]
-	extrapolation_methods = ["plateau_mean"]
+	extrapolation_methods = ["plateau"]
 	# extrapolation_methods.remove("bootstrap") # Not viable for our methods, as data is strongly autocorrelated
-	plot_continuum_fit = False
+	plot_continuum_fit = True
 
 	# Indexes to look at for topct.
 	num_t_euclidean_indexes = 5
@@ -228,9 +228,9 @@ def main():
 	# analysis_parameter_list = [databeta645]
 	# analysis_parameter_list = [smaug_data_beta61_analysis]
 
-	# #### Submitting observable-batches
-	# for analysis_parameters in analysis_parameter_list:
-	# 	pre_analysis(analysis_parameters)
+	#### Submitting observable-batches
+	for analysis_parameters in analysis_parameter_list:
+		pre_analysis(analysis_parameters)
 
 	if not analysis_parameter_list[0]["MCInt"] is None:
 		assert sum([len(plist["MCInt"]) - len(analysis_parameter_list[0]["MCInt"]) 

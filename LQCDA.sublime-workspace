@@ -1,0 +1,1515 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"analy",
+				"analysis_type"
+			],
+			[
+				"t0err",
+				"t0err_values"
+			],
+			[
+				"t0_val",
+				"t0err_values"
+			],
+			[
+				"t0",
+				"t0_dict"
+			],
+			[
+				"t0_",
+				"t0_reference_scale"
+			],
+			[
+				"obs",
+				"observables"
+			],
+			[
+				"interval",
+				"interval_index"
+			],
+			[
+				"plat",
+				"plateau_mean"
+			],
+			[
+				"auto",
+				"autocorr"
+			],
+			[
+				"inverse",
+				"inverse_fit"
+			],
+			[
+				"b0w",
+				"b0w_err〔variable〕"
+			],
+			[
+				"b1w",
+				"b1w_err〔variable〕"
+			],
+			[
+				"new",
+				"new_file_path"
+			],
+			[
+				"file",
+				"file_path"
+			],
+			[
+				"file_",
+				"file_ext"
+			],
+			[
+				"files",
+				"files_stripped"
+			],
+			[
+				"folde",
+				"folder_looper"
+			],
+			[
+				"ITAL",
+				"ITALIC_START"
+			],
+			[
+				"fold",
+				"folder_list〔variable〕"
+			],
+			[
+				"cfg",
+				"cfg_number〔variable〕"
+			],
+			[
+				"latti",
+				"lattice_size_b62〔variable〕"
+			],
+			[
+				"autocorr",
+				"autocorrelation_error_correction〔variable〕"
+			],
+			[
+				"batch",
+				"batch_name"
+			],
+			[
+				"obser",
+				"observable_strings〔variable〕"
+			],
+			[
+				"cl",
+				"close〔function〕"
+			],
+			[
+				"ener",
+				"energy_analysis〔variable〕"
+			],
+			[
+				"flow",
+				"flow_time"
+			],
+			[
+				"un",
+				"unanalyzed_y_std"
+			],
+			[
+				"bs",
+				"bs_y_std"
+			],
+			[
+				"ene",
+				"energy_analysis〔variable〕"
+			],
+			[
+				"unanalyzed_y_",
+				"unanalyzed_y_hist_data"
+			],
+			[
+				"bs_y_",
+				"bs_y_hist_data"
+			],
+			[
+				"jk_",
+				"jk_y_hist_data"
+			],
+			[
+				"unaa",
+				"unanalyzed_y_hist_data"
+			],
+			[
+				"tit",
+				"title_string〔variable〕"
+			],
+			[
+				"pl",
+				"plot_histogram〔function〕"
+			],
+			[
+				"jk",
+				"jk_y_std"
+			],
+			[
+				"meta",
+				"meta_data"
+			],
+			[
+				"Jack",
+				"Jackknifed"
+			],
+			[
+				"topsus",
+				"topsus_analysis〔variable〕"
+			],
+			[
+				"Analyse",
+				"AnalyseTopologicalSusceptibility〔class〕"
+			],
+			[
+				"N_",
+				"N_sample_points〔variable〕"
+			],
+			[
+				"cpu",
+				"cpu_memory"
+			],
+			[
+				"autoc",
+				"autocorrelations〔variable〕"
+			],
+			[
+				"title",
+				"title_string"
+			],
+			[
+				"jack",
+				"jackknife_performed"
+			],
+			[
+				"bootstra",
+				"bootstrap_performed"
+			],
+			[
+				"autco",
+				"autocorrelations〔variable〕"
+			],
+			[
+				"data",
+				"data_statistics"
+			],
+			[
+				"stati",
+				"statistics"
+			],
+			[
+				"stat",
+				"statistics"
+			],
+			[
+				"autoco",
+				"autocorrelation"
+			],
+			[
+				"plaq",
+				"plaq_analysis〔variable〕"
+			],
+			[
+				"plot",
+				"plot_boot〔function〕"
+			],
+			[
+				"bs_da",
+				"bs_data_raw"
+			],
+			[
+				"me",
+				"meta_data"
+			],
+			[
+				"unana",
+				"unanalyzed_y_std"
+			],
+			[
+				"data_",
+				"data_y"
+			],
+			[
+				"retri",
+				"retrieved_indexing〔variable〕"
+			],
+			[
+				"beta",
+				"beta_value"
+			],
+			[
+				"set",
+				"set_size"
+			],
+			[
+				"lattice",
+				"lattice_size"
+			],
+			[
+				"out",
+				"output_folder"
+			],
+			[
+				"write",
+				"write_complex_to_cpp〔function〕"
+			],
+			[
+				"conj",
+				"conjugate"
+			],
+			[
+				"com",
+				"complex〔class〕"
+			],
+			[
+				"wri",
+				"write_complex_to_cpp〔function〕"
+			],
+			[
+				"Y1",
+				"Y1Inverse〔variable〕"
+			],
+			[
+				"im",
+				"imshow"
+			],
+			[
+				"datas",
+				"data_set"
+			],
+			[
+				"jackkni",
+				"jackknifed_data〔variable〕"
+			],
+			[
+				"mean",
+				"mean_biased〔variable〕"
+			],
+			[
+				"dataset",
+				"data_set〔argument〕"
+			],
+			[
+				"run",
+				"run_jackknife_analysis〔function〕"
+			],
+			[
+				"add",
+				"add_argument"
+			],
+			[
+				"unit",
+				"unit_test_parser〔variable〕"
+			],
+			[
+				"cold",
+				"colWidths"
+			],
+			[
+				"print",
+				"print_neighbours"
+			],
+			[
+				"sub",
+				"subDims"
+			],
+			[
+				"col",
+				"colWidths"
+			],
+			[
+				"storeTherm",
+				"storeThermCfgs"
+			],
+			[
+				"job",
+				"job_config〔variable〕"
+			],
+			[
+				"neigh",
+				"neighbor_list"
+			],
+			[
+				"neg",
+				"negative_index"
+			],
+			[
+				"po",
+				"positive_n"
+			],
+			[
+				"posi",
+				"positive_index"
+			],
+			[
+				"negative",
+				"negative_n"
+			],
+			[
+				"nie",
+				"neighbor_list"
+			],
+			[
+				"raw_",
+				"raw_neighbor_lists"
+			],
+			[
+				"raw",
+				"raw_neighbor_lists"
+			],
+			[
+				"index",
+				"index_error"
+			],
+			[
+				"printp",
+				"print_processor_positions"
+			],
+			[
+				"num",
+				"numprocs〔argument〕"
+			],
+			[
+				"Np",
+				"Np_y"
+			],
+			[
+				"_getT",
+				"_getTPlusOne"
+			],
+			[
+				"_getZ",
+				"_getZPlusOne"
+			],
+			[
+				"_getY",
+				"_getYPlusOne"
+			],
+			[
+				"_get",
+				"_getXMinusOne"
+			],
+			[
+				"Pro",
+				"Processor〔class〕"
+			],
+			[
+				"proc",
+				"proc_pos"
+			],
+			[
+				"par",
+				"parallel16core"
+			],
+			[
+				"para",
+				"parallel32core"
+			],
+			[
+				"paral",
+				"parallelIndicesFromCpp"
+			],
+			[
+				"mega",
+				"mega_array[:,1"
+			],
+			[
+				"parall",
+				"parallelIndecesFromCpp〔variable〕"
+			],
+			[
+				"i",
+				"indexTot〔variable〕"
+			],
+			[
+				"mem",
+				"memoryDifferences"
+			],
+			[
+				"scalar",
+				"scalarLocations"
+			],
+			[
+				"scal",
+				"scalarLocations"
+			],
+			[
+				"ind",
+				"indices"
+			],
+			[
+				"dimen",
+				"dimensions"
+			],
+			[
+				"parll",
+				"parallel"
+			],
+			[
+				"sca",
+				"scalarVersionIndices"
+			],
+			[
+				"n",
+				"n_lists"
+			],
+			[
+				"get",
+				"getNeighbourLists〔function〕"
+			],
+			[
+				"prin",
+				"print_processor_lattice〔function〕"
+			],
+			[
+				"hotst",
+				"hotStartFile〔variable〕"
+			],
+			[
+				"fi",
+				"filename"
+			],
+			[
+				"output",
+				"output_file〔variable〕"
+			],
+			[
+				"N_Bloc",
+				"N_block_sizes"
+			],
+			[
+				"varian",
+				"variance_values〔variable〕"
+			],
+			[
+				"block_si",
+				"block_sizes〔variable〕"
+			],
+			[
+				"N_blo",
+				"N_block_sizes"
+			],
+			[
+				"N_block",
+				"N_block_sizes"
+			],
+			[
+				"block",
+				"block_sizes"
+			],
+			[
+				"N_e",
+				"N_electron"
+			],
+			[
+				"N_electr",
+				"N_electron_values"
+			],
+			[
+				"figure",
+				"figure_name"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "LQCDAnalyser.py",
+			"settings":
+			{
+				"buffer_size": 8499,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "post_analysis/core/multiplotcore.py",
+			"settings":
+			{
+				"buffer_size": 11861,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "post_analysis/core/postcore.py",
+			"settings":
+			{
+				"buffer_size": 12257,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "post_analysis/observable_analysis/energypostanalysis.py",
+			"settings":
+			{
+				"buffer_size": 12881,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "statistics/linefit.py",
+			"settings":
+			{
+				"buffer_size": 17853,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "statistics/linefit_tools.py",
+			"settings":
+			{
+				"buffer_size": 32332,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/home/mathias/.config/sublime-text-3/Packages/TodoReview/TodoReview.sublime-settings",
+			"settings":
+			{
+				"buffer_size": 673,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "tools/latticefunctions.py",
+			"settings":
+			{
+				"buffer_size": 1787,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "post_analysis/observable_analysis/topcrpostanalysis.py",
+			"settings":
+			{
+				"buffer_size": 19015,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "tools/postanalysisdatareader.py",
+			"settings":
+			{
+				"buffer_size": 17052,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "post_analysis/core/topsuscore.py",
+			"settings":
+			{
+				"buffer_size": 10070,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "post_analysis/post_analyser.py",
+			"settings":
+			{
+				"buffer_size": 14538,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+		[
+			[
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					"Run"
+				]
+			],
+			[
+				"Packages/C++/C++ Single File.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/User/c++11.sublime-build",
+					""
+				],
+				[
+					"Packages/User/c++11.sublime-build",
+					"Run"
+				]
+			],
+			[
+				"Packages/User/c++11.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/LaTeXing/LaTeX.sublime-build",
+					""
+				],
+				[
+					"Packages/LaTeXing/LaTeX.sublime-build",
+					"Clean up Files"
+				],
+				[
+					"Packages/LaTeXTools/LaTeX.sublime-build",
+					""
+				],
+				[
+					"Packages/LaTeXTools/LaTeX.sublime-build",
+					"Traditional"
+				],
+				[
+					"Packages/LaTeXTools/LaTeX.sublime-build",
+					"PdfLaTeX"
+				],
+				[
+					"Packages/LaTeXTools/LaTeX.sublime-build",
+					"XeLaTeX"
+				],
+				[
+					"Packages/LaTeXTools/LaTeX.sublime-build",
+					"LuaLaTeX"
+				],
+				[
+					"Packages/LaTeXTools/LaTeX.sublime-build",
+					"Basic Builder"
+				],
+				[
+					"Packages/LaTeXTools/LaTeX.sublime-build",
+					"Basic Builder - PdfLaTeX"
+				],
+				[
+					"Packages/LaTeXTools/LaTeX.sublime-build",
+					"Basic Builder - XeLaTeX"
+				],
+				[
+					"Packages/LaTeXTools/LaTeX.sublime-build",
+					"Basic Builder - LuaLaTeX"
+				],
+				[
+					"Packages/LaTeXTools/LaTeX.sublime-build",
+					"Script Builder"
+				]
+			],
+			[
+				"Packages/LaTeXTools/LaTeX.sublime-build",
+				"Basic Builder - LuaLaTeX"
+			]
+		],
+		[
+			[
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				]
+			],
+			[
+				"Packages/Python/Python.sublime-build",
+				""
+			]
+		]
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 357.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"TodoReview",
+				"TodoReview: Project Files"
+			],
+			[
+				"pac",
+				"Package Control: Install Package"
+			],
+			[
+				"package",
+				"Package Control: Disable Package"
+			],
+			[
+				"bocy",
+				"Boxy Theme: Activation"
+			],
+			[
+				"boxy",
+				"Boxy Theme: Activation"
+			],
+			[
+				"packa",
+				"Package Control: Install Package"
+			],
+			[
+				"PACKAGE",
+				"Package Control: List Packages"
+			],
+			[
+				"package dis",
+				"Package Control: Disable Package"
+			],
+			[
+				"package ds",
+				"Package Control: Disable Package"
+			],
+			[
+				"anaconda",
+				"Anaconda: Set Python interpreter"
+			],
+			[
+				"packag",
+				"Package Control: Install Package"
+			],
+			[
+				"pa",
+				"Package Control: List Packages"
+			],
+			[
+				"pack",
+				"Package Control: Install Package"
+			],
+			[
+				"PA",
+				"Package Control: Install Package"
+			],
+			[
+				"latex",
+				"LaTeXTools: Check system"
+			],
+			[
+				"instalk",
+				"Package Control: Install Package"
+			]
+		],
+		"width": 623.0
+	},
+	"console":
+	{
+		"height": 391.0,
+		"history":
+		[
+			"import urllib.request,os,hashlib; h = 'df21e130d211cfc94d9b0905775a7c0f' + '1e3d39e33b79698005270310898eea76'; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); by = urllib.request.urlopen( 'http://packagecontrol.io/' + pf.replace(' ', '%20')).read(); dh = hashlib.sha256(by).hexdigest(); print('Error validating download (got %s instead of %s), please try manual install' % (dh, h)) if dh != h else open(os.path.join( ipp, pf), 'wb' ).write(by)",
+			" import urllib.request,os,hashlib; h = 'df21e130d211cfc94d9b0905775a7c0f' + '1e3d39e33b79698005270310898eea76'; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); by = urllib.request.urlopen( 'http://packagecontrol.io/' + pf.replace(' ', '%20')).read(); dh = hashlib.sha256(by).hexdigest(); print('Error validating download (got %s instead of %s), please try manual install' % (dh, h)) if dh != h else open(os.path.join( ipp, pf), 'wb' ).write(by) ",
+			"t",
+			" import urllib.request,os,hashlib; h = 'df21e130d211cfc94d9b0905775a7c0f' + '1e3d39e33b79698005270310898eea76'; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); by = urllib.request.urlopen( 'http://packagecontrol.io/' + pf.replace(' ', '%20')).read(); dh = hashlib.sha256(by).hexdigest(); print('Error validating download (got %s instead of %s), please try manual install' % (dh, h)) if dh != h else open(os.path.join( ipp, pf), 'wb' ).write(by) ",
+			" import urllib.request,os,hashlib; h = 'df21e130d211cfc94d9b0905775a7c0f' + '1e3d39e33b79698005270310898eea76'; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); by = urllib.request.urlopen( 'http://packagecontrol.io/' + pf.replace(' ', '%20')).read(); dh = hashlib.sha256(by).hexdigest(); print('Error validating download (got %s instead of %s), please try manual install' % (dh, h)) if dh != h else open(os.path.join( ipp, pf), 'wb' ).write(by)"
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/home/mathias/Programming/FYSSP100/LatticeAnalyser/LQCDA.sublime-project",
+		"/home/mathias/.config/sublime-text-3/Packages/TodoReview/TodoReview.sublime-settings",
+		"/home/mathias/.config/sublime-text-3/Packages/TodoReview/Default.sublime-keymap",
+		"/home/mathias/.config/sublime-text-3/Packages/User/TodoReview.sublime-settings",
+		"/home/mathias/Programming/FYSSP100/LatticeAnalyser/statistics/linefit_tools.py",
+		"/home/mathias/Programming/FYSSP100/LatticeAnalyser/statistics/linefit.py",
+		"/home/mathias/Programming/FYSSP100/LatticeAnalyser/tools/postanalysisdatareader.py",
+		"/home/mathias/.ssh/config",
+		"/home/mathias/Programming/FYSSP100/LatticeAnalyser/post_analysis/observable_analysis/topsuspostanalysis.py",
+		"/home/mathias/Programming/FYSSP100/LatticeAnalyser/statistics/line_fitting.py",
+		"/home/mathias/Programming/FYSSP100/GluonAction/LatticeAnalyser",
+		"/home/mathias/Programming/FYSSP100/GluonAction/input/config_perfTest.json",
+		"/home/mathias/Programming/FYSSP100/GluonAction/createJobs.py",
+		"/home/mathias/Programming/FYSSP100/LatticeAnalyser/.gitignore",
+		"/home/mathias/Programming/FYSSP100/GluonAction/README.md",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/createJobs.py",
+		"/home/mathias/Programming/FYSSP100/LatticeAnalyser/LatticeAnalyser",
+		"/home/mathias/Programming/FYSSP100/LatticeAnalyser/statistics/tests/LatticeAnalyser",
+		"/usr/lib/valgrind/default.supp",
+		"/home/mathias/Programming/Master/LQCDIntroPaper/doc/metropolis/metropolis.tex",
+		"/home/mathias/Programming/Master/LQCDIntroPaper/doc/LQCDIntroPaper.tex",
+		"/home/mathias/Programming/Master/LQCDIntroPaper/doc/quantumMechanics/quantumMechanics.tex",
+		"/home/mathias/Programming/Master/LQCDIntroPaper/doc/pathIntegrals/pathIntegrals.tex",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/analysis/tools/folderreadingtools.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/analysis/statistics/jackknife.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/analysis/statistics/bootstrap.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/analysis/statistics/autocorrelation.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/analysis/analyse.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/output/defaultRun/flow_observables/topc/defaultRun_topc_flow_config0.dat",
+		"/home/mathias/Programming/LQCDPresentationGiovanni/LQCDPresentation.tex",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/config_number_renamer.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/output/defaultRun/flow_observables/energy/defaultRun_energy_flow_config0.dat",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/output/defaultRun/flow_observables/plaq/defaultRun_plaq_flow_config0.dat",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/duplicate_finder.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/time_estimates.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/.gitignore",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/config_folder/test_config_file.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/analysis/chi_analysis.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/topChargeQuickAnalyser.py",
+		"/home/mathias/Programming/FYSSP100/LQCDDataAnalysis/bootstrapping_example.py",
+		"/home/mathias/Programming/FYSSP100/indexes_scalar.txt",
+		"/home/mathias/.zshrc",
+		"/home/mathias/Programming/FYSSP100/LQCDDataAnalysis/chi_analysis.py",
+		"/home/mathias/.bashrc",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/config_folder/config_beta6_0.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/complex_unit_tests.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/analysis/LQCDAnalyser.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/analysis/statistics/__init__.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/analysis/tools/FolderTools.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/plotPlaquette.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/flowed_plaquette_plot.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/gellmann_matrix_multiplication.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/h_j.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/findYInverses.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/makeJobs.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/analysis/LQCDAnalyser.pyc",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/sympyTest.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/matrixMultiplier.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/print_matrix_multiplication_trace.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/gellmann_matrix_multiplication.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/parallel_setup.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/dimensionFinder.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/config_folder/processor_scaling_configs/config_proc512.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/config_folder/processor_scaling_configs/config_proc256.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/config_folder/processor_scaling_configs/config_proc128.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/config_folder/processor_scaling_configs/config_proc64.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/config_folder/processor_scaling_configs/config_proc32.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/config_folder/size_scaling_configs/config_32cube64.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/config_folder/config_beta6_1.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/config_folder/config_beta6_2.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/config_folder/config_beta6_45.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/config_folder/size_scaling_configs/config_24cube48.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/config_folder/size_scaling_configs/config_28cube56.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/config_folder/size_scaling_configs/config_16cube32.py",
+		"/home/mathias/Programming/FYSSP100/LQCDDataAnalysis/prodRun1.dat",
+		"/home/mathias/Programming/FYSSP100/LQCDDataAnalysis/.gitignore",
+		"/home/mathias/Programming/FYS4411/FYS4411-Project-2/blocking.py",
+		"/home/mathias/Programming/FYS4411/Project1/HFEnergyToLatex.py",
+		"/mnt/Second HDD/PROJECT2-DATA/output_2el_run2/NElectron0_Particle2_MC10000000_omega1.000000_alpha0.995623_beta0.396456",
+		"/tmp/mozilla_mathias0/makeJobs.py",
+		"/tmp/mozilla_mathias0/makeJobs-1.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/n_list_raw.txt",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/contigious_visualiser.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/file_comparison.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/para32ranks.txt",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/para16ranks.txt",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/lattice.txt",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/all_sub_lattices.txt",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/pros_pos_TEMP.txt",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/neighbourlists.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/getting_face_indices.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/parallel_index_file_16cores.txt",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/parallel_index_file_32cores.txt",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/scalar16cubed16_indexes.txt",
+		"/home/mathias/Programming/makeJobs.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/indexes_scalar.txt",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/scalar16cubed16_indexes.txt",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/python_scripts/parallel_indexes_from_cpp.txt",
+		"/home/mathias/Programming/FYSSP100/LatticeQCDTraining/plotter.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/contigious_visualiser.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/plotPlaquette.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/getting_face_indices.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/complex_unit_tests.py",
+		"/home/mathias/Programming/FYSSP100/GluonicLQCD/neighbourlists.py",
+		"/usr/share/texlive/texmf-dist/tex/latex/fontspec/fontspec.sty",
+		"/home/mathias/Programming/FYSSP100/LatticeQCDTraining/main.cpp",
+		"/home/mathias/Programming/FYSSP100/presentation.tex",
+		"/home/mathias/Qt5.7.0/Tools/QtCreator/share/qtcreator/cplusplus/clang/3.6.2/include/altivec.h",
+		"/home/mathias/.git-credentials",
+		"/home/mathias/.git-credential",
+		"/home/mathias/Programming/FYS4411/FYS4411-Project-2/output_terminal/run2_terminal_output.txt",
+		"/home/mathias/Programming/FYS4411/FYS4411-Project-2/output_terminal/no_imp.txt",
+		"/home/mathias/Programming/FYS4411/FYS4411-Project-2/output_terminal/no_imp_run2e_mc1e8.txt",
+		"/home/mathias/Programming/FYS4411/FYS4411-Project-2/output_blocking_imp/optimal_variance_output.txt",
+		"/home/mathias/Programming/FYS4411/FYS4411-Project-2/.gitignore",
+		"/home/mathias/Programming/FYS4411/FYS4411-Project-2/output_blocking/optimal_variance_output.txt",
+		"/home/mathias/Programming/ElementSound/ElementSound.py",
+		"/home/mathias/Programming/FYS4411/FYS4411-Project-2/doc/rapport2.tex",
+		"/home/mathias/Programming/FYS4411/FYS4411-Project-2/output_terminal/no_imp_run2e_6e.txt",
+		"/home/mathias/Dropbox/Universitetsmappe/FYS4170/formula_paper/formulas.tex",
+		"/home/mathias/Dropbox/Universitetsmappe/FYS5120/topics.tex",
+		"/home/mathias/Dropbox/Universitetsmappe/Fys4170/formula_paper/formulas.tex",
+		"/home/mathias/Downloads/MPIvmcqdot.cpp",
+		"/home/mathias/Programming/FYS3150/Prosjekter/Prosjekt 5/src/system.cpp",
+		"/home/mathias/Programming/FYS4411/FYS4411-Project-2/2_electron_run.txt",
+		"/home/mathias/Dropbox/Fysmek1100 - Gruppelærer/oblig6/kommentarer.txt",
+		"/tmp/mozilla_mathias0/oblig6_1.py",
+		"/tmp/mozilla_mathias0/oblig6_2.py"
+	],
+	"find":
+	{
+		"height": 61.0
+	},
+	"find_in_files":
+	{
+		"height": 130.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			")\n",
+			"comparison_values[\"",
+			"comparison_values",
+			"t0_values",
+			"continuum",
+			"reference_values",
+			"_t",
+			"_term1",
+			"_term2",
+			"_term3",
+			"self.r0",
+			"r_0",
+			"t0",
+			"get_lattice_spacing",
+			"total_lattice_sizes",
+			"flow",
+			"self.interval",
+			"self.interval\nself.interval",
+			"self.interval"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 6,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "LQCDAnalyser.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 8499,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3358,
+								3358
+							]
+						],
+						"settings":
+						{
+							"auto_complete": false,
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 1386.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "post_analysis/core/multiplotcore.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 11861,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2997,
+								2997
+							]
+						],
+						"settings":
+						{
+							"auto_complete": false,
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 423.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 10,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "post_analysis/core/postcore.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 12257,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								11498,
+								11498
+							]
+						],
+						"settings":
+						{
+							"auto_complete": false,
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 4076.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 7,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "post_analysis/observable_analysis/energypostanalysis.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 12881,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								453,
+								453
+							]
+						],
+						"settings":
+						{
+							"auto_complete": false,
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 1470.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 9,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "statistics/linefit.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 17853,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								9371,
+								9371
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 4039.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 5,
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "statistics/linefit_tools.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 32332,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								6325,
+								6325
+							]
+						],
+						"settings":
+						{
+							"auto_complete": false,
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 2296.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "/home/mathias/.config/sublime-text-3/Packages/TodoReview/TodoReview.sublime-settings",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 673,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								341,
+								341
+							]
+						],
+						"settings":
+						{
+							"auto_complete": true,
+							"syntax": "Packages/JavaScript/JSON.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "tools/latticefunctions.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1787,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1539,
+								1539
+							]
+						],
+						"settings":
+						{
+							"auto_complete": false,
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 8,
+					"file": "post_analysis/observable_analysis/topcrpostanalysis.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 19015,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								12152,
+								12152
+							]
+						],
+						"settings":
+						{
+							"auto_complete": false,
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 5970.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 11,
+					"type": "text"
+				},
+				{
+					"buffer": 9,
+					"file": "tools/postanalysisdatareader.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 17052,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								6157,
+								6157
+							]
+						],
+						"settings":
+						{
+							"auto_complete": false,
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 2541.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 10,
+					"file": "post_analysis/core/topsuscore.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 10070,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"auto_complete": false,
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 8,
+					"type": "text"
+				},
+				{
+					"buffer": 11,
+					"file": "post_analysis/post_analyser.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 14538,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3487,
+								3487
+							]
+						],
+						"settings":
+						{
+							"auto_complete": false,
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 840.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 6,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 27.0
+	},
+	"input":
+	{
+		"height": 42.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 490.0
+	},
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"output.latextools":
+	{
+		"height": 380.0
+	},
+	"output.unsaved_changes":
+	{
+		"height": 94.0
+	},
+	"pinned_build_system": "",
+	"project": "LQCDA.sublime-project",
+	"replace":
+	{
+		"height": 50.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"pot",
+				"potentials/lennardjones.cpp"
+			],
+			[
+				"syst",
+				"~/Programming/FYS3150/Prosjekter/Prosjekt 5/src/system.h"
+			],
+			[
+				"s",
+				"~/Programming/FYS3150/Prosjekter/Prosjekt 5/src/system.h"
+			],
+			[
+				"sy",
+				"~/Programming/FYS3150/Prosjekter/Prosjekt 5/src/system.cpp"
+			],
+			[
+				"vec",
+				"math/vec3.cpp"
+			],
+			[
+				"main",
+				"~/Programming/FYS3150/Prosjekter/Prosjekt 5/src/main.cpp"
+			],
+			[
+				"mian",
+				"~/Programming/FYS3150/Prosjekter/Prosjekt 5/src/main.cpp"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 500.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 380.0
+	},
+	"select_symbol":
+	{
+		"height": 357.0,
+		"last_filter": "jack",
+		"selected_items":
+		[
+			[
+				"jack",
+				"Jackknife"
+			]
+		],
+		"width": 574.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": true,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 240.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
