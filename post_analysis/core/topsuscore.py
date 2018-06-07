@@ -144,8 +144,10 @@ class TopsusCore(PostCore):
 				tau_int_err = None
 
 			# Extrapolation of point to use in continuum extrapolation
-			res = extract_fit_target(fit_target, x, y, y_err, y_raw=y_raw,
-				tau_int=tau_int, tau_int_err=tau_int_err, 
+			res = extract_fit_target(fit_target, x, y, y_err, 
+				y_raw=self.chi[beta](y_raw), tau_int=tau_int, 
+				# y_raw=y_raw, tau_int=tau_int, 
+				tau_int_err=tau_int_err, 
 				extrapolation_method=extrapolation_method, 
 				plateau_size=plateau_fit_size, interpolation_rank=3, 
 				plot_fit=plot_continuum_fit, raw_func=self.chi[beta],

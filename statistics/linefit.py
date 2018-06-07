@@ -9,11 +9,14 @@ import matplotlib.pyplot as plt
 import types
 from tqdm import tqdm
 
+
 __all__ = ["LineFit", "extract_fit_target"]
+
 
 from matplotlib import rc
 rc("text", usetex=True)
 rc("font", **{"family": "serif", "serif": ["Computer Modern"]})
+
 
 class LineFit:
 	"""
@@ -36,6 +39,30 @@ class LineFit:
 		# 	self.weighted = False
 
 		self.inverse_fit_performed = False
+
+	def __call__(self, x, x_err=None, weighted=False):
+		"""Returns the fitted function at x."""
+		x = np.atleast_1d(x)
+		if isinstance(x_err, types.NoneType):
+			if weighted:
+				y_fit, y_fit_err = self._yw_hat(x), self._yw_hat_err(x)
+				return y_fit, y_fit_err, self.chi_squared(self.y, self.y_err, 
+					self._yw_hat(self.x))
+			else:
+				y_fit, y_fit_err = self._y_hat(x), self._y_hat_err(x)
+				return y_fit, y_fit_err
+		else:
+			if weighted:
+				y_fit, _y_fit_err = self._yw_hat(x), self._yw_hat_err(x)
+
+				v1 = np.array([x*self.b1w_err, self.b1w*x_err, self.b0w_err])
+				y_fit_err = np.sqrt(np.sum(np.outer(v1, v1)))
+
+				return y_fit, y_fit_err, self.chi_squared(self.y, self.y_err, 
+					self._yw_hat(self.x))
+			else:
+				y_fit, y_fit_err = self._y_hat(x), self._y_hat_err(x)
+				return y_fit, y_fit_err
 
 	def fit(self, x_arr=None):
 		"""
@@ -242,31 +269,6 @@ class LineFit:
 				= self._get_means()
 			self.s_xy_err = self._get_s_xy()
 
-	def __call__(self, x, x_err=None, weighted=False):
-		"""Returns the fitted function at x."""
-		x = np.atleast_1d(x)
-		if isinstance(x_err, types.NoneType):
-			if weighted:
-				y_fit, y_fit_err = self._yw_hat(x), self._yw_hat_err(x)
-				return y_fit, y_fit_err, self.chi_squared(self.y, self.y_err, 
-					self._yw_hat(self.x))
-			else:
-				y_fit, y_fit_err = self._y_hat(x), self._y_hat_err(x)
-				return y_fit, y_fit_err
-		else:
-			if weighted:
-				y_fit, _y_fit_err = self._yw_hat(x), self._yw_hat_err(x)
-
-				v1 = np.array([x*self.b1w_err, self.b1w*x_err, self.b0w_err])
-				y_fit_err = np.sqrt(np.sum(np.outer(v1, v1)))
-
-				return y_fit, y_fit_err, self.chi_squared(self.y, self.y_err, 
-					self._yw_hat(self.x))
-			else:
-				y_fit, y_fit_err = self._y_hat(x), self._y_hat_err(x)
-				return y_fit, y_fit_err
-
-
 	def inverse_fit(self, y0, weighted=False):
 		"""
 		Inverse fiting on the values we have performed a fit one.
@@ -376,6 +378,7 @@ class LineFit:
 		ax1.set_title(title_string)
 		plt.show()
 		plt.close(fig1)
+
 
 class ErrorPropagationSpline(object):
 	"""
@@ -562,6 +565,7 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 		print msg
 
 	return x0, y0, y0_error, y0_raw, tau_int0
+
 
 if __name__ == '__main__':
 	exit("Not intended as a standalone module")

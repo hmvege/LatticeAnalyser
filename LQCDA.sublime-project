@@ -1,12 +1,12 @@
 {
-	"folders":
-	[
-		{
-			"path": ".",
-		}
-	],
-	"settings": {
-	   "todoreview": {
+    "folders":
+    [
+        {
+            "path": ".",
+        }
+    ],
+    "settings": {
+       "todoreview": {
             "patterns": {
                 "TODO": "TODO[\\s]*?:[\\s]*(?P<todo>.*)$",
                 "NOTE": "NOTE[\\s]*?:[\\s]*(?P<note>.*)$",
@@ -19,9 +19,9 @@
                 "*build*",
             ],
             "exclude_files": [
-            	"*.txt",
-            	"*.png",
-            	"*.dat",
+                "*.txt",
+                "*.png",
+                "*.dat",
                 "*.pyc",
             ],
             "render_folder_depth": 5,

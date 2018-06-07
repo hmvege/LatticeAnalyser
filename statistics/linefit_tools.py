@@ -170,7 +170,8 @@ def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
     def _f(B, x):
         return B[0]*x + B[1] 
 
-    cov_raw = _get_covariance_matrix_from_raw(y_raw, autocorr=np.sqrt(2*tau_int))
+    print y_raw.shape fortsett her
+    cov_raw = _get_covariance_matrix_from_raw(y_raw)#, autocorr=np.sqrt(2*tau_int))
 
     # print y_raw.shape
     # C = []
@@ -192,37 +193,46 @@ def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
     # print pol_raw_err
     # # exit("IMPLEMENT SCIPY TLS HERE")
 
-    ## TODO: investigate the cov here.
-
+    # TODO: investigate the cov here.
 
     # Line fit from the mean values and the raw values covariance matrix
     pol_raw, polcov_raw = sciopt.curve_fit(f, x, y, sigma=cov_raw,
         absolute_sigma=True, p0=[0.18, 0.0], maxfev=1200) 
     pol_raw_err = np.sqrt(np.diag(polcov_raw))
 
-    print np.diag(cov_raw)
-
-    exit("exits in linefit_tools.py")
-
     # Extract fit target values
     lfit_raw = lfit.LineFit(x, y, y_err)
     lfit_raw.set_fit_parameters(pol_raw[1], pol_raw_err[1], pol_raw[0],
         pol_raw_err[0], weighted=True)
+    y0, y0_error, _, chi_squared = lfit_raw.fit_weighted(fit_target)
 
     if inverse_fit:
         y0, y0_error = lfit_raw.inverse_fit(fit_target, weighted=True)
+        # chi_squared = lfit_raw.chi_squared(y0, y0_error, fit_target)
         # y0_error = ((y0_error[1] - y0_error[0])/2)
     else:
-        y0, y0_error, _, chi_squared = lfit_raw.fit_weighted(fit_target)
         
-        # Errors should be equal in positive and negative directions.
-        if np.abs(np.abs(y0 - y0_error[0]) - np.abs(y0 - y0_error[1])) > 1e-15:
-            print "Warning: uneven errors:\nlower: %.10f\nupper: %.10f" % (
-                y0_error[0], y0_error[1])
+        # # Errors should be equal in positive and negative directions.
+        # if np.abs(np.abs(y0 - y0_error[0]) - np.abs(y0 - y0_error[1])) > 1e-15:
+        #     print "Warning: uneven errors:\nlower: %.10f\nupper: %.10f" % (
+        #         y0_error[0], y0_error[1])
 
         y0 = y0[0] #  y0 and y0_error both comes in form of arrays
         y0_error = ((y0_error[1] - y0_error[0])/2)
         y0_error = y0_error[0]
+        print "OLD METHOD: ", y0, y0_error
+
+        _a, _a_err = lfit_raw.b1w, lfit_raw.b1w_err
+        _b, _b_err = lfit_raw.b0w, lfit_raw.b0w_err
+        y_func = lambda _x: _a*_x + _b
+        y_error_func = lambda _x: np.sqrt(
+            (_a_err*_x)**2 + (_b_err)**2 + 2*_a_err*_x*_b_err)
+        chi_squared = lfit_raw.chi_squared(y_func(x), y_error_func(x), x)
+        y0 = y_func(fit_target)
+        y0_error = y_error_func(fit_target)
+
+        print _a, _a_err, _b, _b_err
+        print "WITH COVARIANCE TERM", y0, y0_error
 
     # Gets the tau int using a line fit, given it is provide.
     if not isinstance(tau_int, types.NoneType) and \
@@ -274,6 +284,21 @@ def _extract_plateau_mean_fit(fit_target, f, x, y, y_err, inverse_fit=False):
     else:
         y0, y0_error, chi_squared = lfit_default(fit_target, weighted=True)
         y0_error = ((y0_error[1] - y0_error[0])/2)
+
+        # print "OLD METHOD: ", y0, y0_error
+
+        # _a, _a_err = lfit_default.b1w, lfit_default.b1w_err
+        # _b, _b_err = lfit_default.b0w, lfit_default.b0w_err
+        # y_func = lambda _x: _a*_x + _b
+        # y_error_func = lambda _x: np.sqrt(
+        #     (_a_err*_x)**2 + (_b_err)**2 + 2*_a_err*_x*_b_err)
+        # chi_squared = lfit_default.chi_squared(y_func(x), y_error_func(x), x)
+        # y0 = y_func(fit_target)
+        # y0_error = y_error_func(fit_target)
+
+        # print _a, _a_err, _b, _b_err
+        # print "WITH COVARIANCE TERM", y0, y0_error
+
 
     if isinstance(y0, (tuple, list, np.ndarray)):
         y0 = y0[0]
@@ -501,7 +526,7 @@ def _test_simple_line_fit():
     print "SciPy curve_fit:"
     print _fit_var_printer("a", pol1[0], polcov1[0,0])
     print _fit_var_printer("b", pol1[1], polcov1[1,1])
-    print y_scipy[0], (y_scipy[-1][-1] - y_scipy[-1][0])/2.0
+    print "Extraction point x0 value: ", y_scipy[0][0], ((y_scipy[-1][-1] - y_scipy[-1][0])/2.0)[0]
 
     print "lfit.LineFit:"
     print _fit_var_printer("a", b1, b1_err)
@@ -522,13 +547,14 @@ def _test_simple_line_fit():
     ax1.fill_betweenx(np.linspace(0,6,100), x_fit - x_fit_err, x_fit + x_fit_err, 
         label=r"$x_0\pm\sigma_{x_0}$", alpha=0.5, color="tab:orange")
     ax1.legend(loc="best", prop={"size":8})
-    ax1.set_title("Fit test - unweighted")
+    ax1.set_title("Fit test")
 
     # Weighted curve_fit
     print "WEIGTHED LINE FIT"
 
     # Numpy polyfit
-    polyfit1, polyfitcov1 = np.polyfit(x, signal_mean, 1, cov=True, w=1/signal_err)
+    polyfit1, polyfitcov1 = np.polyfit(x, signal_mean, 1, cov=True, 
+        w=1/signal_err)
     polyfit_err = np.sqrt(np.diag(polyfitcov1))
     print "Numpy polyfit:"
     print _fit_var_printer("a", polyfit1[0], polyfit_err[0])
@@ -544,42 +570,38 @@ def _test_simple_line_fit():
     print "SciPy curve_fit:"
     print _fit_var_printer("a", polw[0], polcovw[0,0])
     print _fit_var_printer("b", polw[1], polcovw[1,1])
-    print y_scipy_w[0], (y_scipy_w[1][-1] - y_scipy_w[1][0])/2.0
+    print "Extraction point x0 value: ", y_scipy_w[0][0], \
+        ((y_scipy_w[1][-1] - y_scipy_w[1][0])/2.0)[0]
 
     signal_cov = _get_covariance_matrix_from_raw(signal.T)
 
-
-    x = signal.T
-    y = signal.T
-    print x
-    print x.mean()
-    x = x-x.mean()
-    y = y-y.mean()
-    print x.shape
-    print y.shape
-    G = np.correlate(x, y, mode="full")[-N:]
-    G /= np.arange(N, 0, -1)
-    G = G[:M/2]
-    print G.shape
-
-
-    polwc, polcovwc = sciopt.curve_fit(lambda _x, _a, _b : _x*_a + _b, x, signal_mean, 
-        sigma=signal_cov)
+    polwc, polcovwc = sciopt.curve_fit(lambda _x, _a, _b : _x*_a + _b, x, 
+        signal_mean, sigma=signal_cov)
     scipy_lfit_wc = lfit.LineFit(x, signal_mean, y_err=signal_err)
-    scipy_lfit_wc.set_fit_parameters(polwc[1], np.sqrt(polcovwc[1,1]), polwc[0], 
-        np.sqrt(polcovwc[0,0]), weighted=True)
-    y_scipy_wc = scipy_lfit_wc(fit_target, weighted=True)
+    scipy_lfit_wc.set_fit_parameters(polwc[1], np.sqrt(polcovwc[1,1]), 
+        polwc[0], np.sqrt(polcovwc[0,0]), weighted=True)
+
+    _a, _a_err = scipy_lfit_wc.b1w, scipy_lfit_wc.b1w_err
+    _b, _b_err = scipy_lfit_wc.b0w, scipy_lfit_wc.b0w_err
+    # y = a*x + b
+    # dy = da*x + db
+    # dy**2 = np.sqrt((da*x)**2 + db**2 + 2*da*x*db)
+    _y = _a*fit_target + _b
+    _y_err = np.sqrt(
+        (_a_err*fit_target)**2 + (_b_err)**2 + 2*_a_err*fit_target*_b_err)
+    y_scipy_wc = [_y, [_y-_y_err, _y+_y_err]]
+    # y_scipy_wc = scipy_lfit_wc(fit_target, weighted=True)
+
     print "SciPy curve_fit with covariance:"
     print _fit_var_printer("a", polwc[0], polcovwc[0,0])
     print _fit_var_printer("b", polwc[1], polcovwc[1,1])
-    print y_scipy_wc[0], (y_scipy_wc[1][-1] - y_scipy_wc[1][0])/2.0
-
+    print "Extraction point x0 value: ", y_scipy_wc[0], \
+        ((y_scipy_wc[1][-1] - y_scipy_wc[1][0])/2.0)
 
     # Weighted lfit.LineFit
     yw_hat, yw_hat_err, f_params_weighted, chi_weighted = fit.fit_weighted(x_hat)
     b0, b0_err, b1, b1_err = f_params_weighted
     xw_fit, xw_fit_error = fit.inverse_fit(fit_target, weighted=True)
-
     print "lfit.LineFit:"
     print _fit_var_printer("a", b1, b1_err)
     print _fit_var_printer("b", b0, b0_err)
