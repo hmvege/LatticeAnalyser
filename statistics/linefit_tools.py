@@ -168,7 +168,7 @@ def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
         "missing tau_int_err values."
 
     def _f(B, x):
-        return B[0]*x + B[1]
+        return B[0]*x + B[1] 
 
     cov_raw = _get_covariance_matrix_from_raw(y_raw, autocorr=np.sqrt(2*tau_int))
 

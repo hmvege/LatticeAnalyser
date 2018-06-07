@@ -308,26 +308,45 @@ class PostCore(object):
 			self.analysis_data_type, figure_name_appendix)
 		return os.path.join(output_folder, fname)
 
-	def get_values(self, t0, reference_time=False, atype=None, extrap_method=None):
+	def get_values(self, tf, atype=None, extrap_method=None):
 		"""
-		Method for retrieving values a given flow time t0.
+		Method for retrieving values a given flow time t_f.
 
 		Args:
-			t0: float, flow time at a given t_f/a^2.
-			reference_time: bool, if True, will retrun flow time at reference
-				value t0/a^2 from t^2<E>=0.3 for a given beta.
+			tf: float or str. (float) flow time at a given t_f/a^2. If 
+				string is "t0", will return the flow time at reference value
+				t0/a^2 from t^2<E>=0.3 for a given beta.
+			atype: str, type of analysis we have performed.
+			extrap_method: str, type of extrapolation technique used.
 
 		Returns:
 			{beta: {t0, y0, y0_error}
 		"""
 
+		if isinstance(atype, types.NoneType):
+			atype = self.analysis_data_type
+		if isinstance(extrap_method, types.NoneType):
+			if hasattr(self, "extrapolation_method"):
+				extrap_method = self.extrapolation_method
+			else:
+				raise KeyError("Missing extrapolation method.")
+
 		values = {}
-		print self.reference_values
-		if reference_time:
-			# for b in self.beta_values:
-				# values[b] = {"t0": self.reference_values, "y0", "y0_error"}
+
+		print self.reference_values.keys()
+		print self.reference_values[atype].keys()
+
+		if tf == "t0":
+			for b in self.beta_values:
+				tf0 = self.plot_values["beta"]["x "]
+				values[b] = {}
 			# return self.y
+			np.argmin()
 			pass
+		else:
+			assert isinstance(tf, float), "tf not of type float"
+
+
 		exit("woop")
 		raise NotImplementedError("Not implemented method for retrieving values yet.")
 
