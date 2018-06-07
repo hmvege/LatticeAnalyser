@@ -42,7 +42,7 @@ class TopsusAnalyserCore(FlowAnalyser):
 		"""Function that sets the lattice size deepending on the beta value."""
 		# Sets up constants used in the chi function for topsus
 		self.function_derivative = ptools._chi_derivative
-		self.V = self.lattice_sizes[self.beta]
+		self.V = self.lattice_size
 		self.const = self.hbarc/self.a/self.V**(1./4)
 		self.function_derivative_parameters = {"const": self.const}
 

@@ -71,7 +71,6 @@ class _AutocorrelationCore(object):
 
 		# Autocorrelation variables
 		self.data = data
-		print data.shape
 		self.N = len(self.data)
 		self.C0 = np.var(self.data)
 		self.R = np.zeros(self.N/2)

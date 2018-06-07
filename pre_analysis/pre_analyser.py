@@ -319,9 +319,7 @@ def pre_analysis(parameters):
 	figures_folder = parameters["figures_folder"]
 
 	_bp = parameters["base_parameters"]
-	print parameters.keys() fixe her for å teste etterpå i autocrr for hvordan array ser ut
-	_latsize = parameters["lattice_size"].items()[0]
-	parameters["lattice_sizes"][_latsize[0]] = _latsize[1]
+	parameters["lattice_size"] = parameters["N"]**3*parameters["NT"]
 
 	# Retrieves data
 	obs_data = DataReader(batch_name, batch_folder, figures_folder, 
@@ -330,7 +328,7 @@ def pre_analysis(parameters):
 		flow_epsilon=parameters["flow_epsilon"], NCfgs=parameters["NCfgs"],
 		create_perflow_data=parameters["create_perflow_data"],
 		correct_energy=parameters["correct_energy"],
-		lattice_sizes=parameters["lattice_sizes"], verbose=_bp["verbose"],
+		lattice_size=parameters["lattice_size"], verbose=_bp["verbose"],
 		dryrun=_bp["dryrun"])
 
 	# Writes a parameters file for the post analysis

@@ -30,7 +30,6 @@ class FlowAnalyser(object):
 	autocorrelations_limits = 1
 	figures_folder = "figures"
 	fname_addon = ""
-	# lattice_sizes = {6.0: 24**3*48, 6.1: 28**3*56, 6.2: 32**3*64, 6.45: 48**3*96}
 	hbarc = 0.19732697 #eV micro m
 
 	# Function derivative to be used in the autocorrelation class
@@ -84,7 +83,7 @@ class FlowAnalyser(object):
 		self.r0 = 0.5 # Sommer Parameters
 
 		# Sets the lattice sizes if one is provided
-		self.lattice_sizes = data["lattice_sizes"]
+		self.lattice_size = data["lattice_size"]
 
 		# Sets up the function derivative parameters as an empty dictionary
 		self.function_derivative_parameters = {}
@@ -1008,12 +1007,13 @@ class FlowAnalyser(object):
 		fig = plt.figure()
 		ax = fig.add_subplot(111)
 		ax.plot(correction_function(self.unanalyzed_y_data[flow_time_index]),
-			color="0", label=self.fig_label)
+			color="0")
 		ax.set_xlabel(r"Monte Carlo time")
 		ax.set_ylabel(self.y_label)
 		ax.set_title(title_string)
 		ax.grid(True)
-		ax.legend()
+		if not isinstance(self.fig_label, types.NoneType):
+			ax.legend([self.fig_label])
 		if not self.dryrun: 
 			fig.savefig(fname_path, dpi=self.dpi)
 		if self.verbose or self.dryrun:

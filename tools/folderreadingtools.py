@@ -343,7 +343,7 @@ class DataReader:
 	def __init__(self, batch_name, batch_folder, figures_folder, 
 			load_binary_file=None, save_to_binary=False, flow_epsilon=0.01, 
 			NCfgs=None, create_perflow_data=False, correct_energy=False, 
-			lattice_sizes=None,	verbose=True, dryrun=False):
+			lattice_size=None,	verbose=True, dryrun=False):
 		"""
 		Class that reads and loads the observable data.
 
@@ -360,7 +360,7 @@ class DataReader:
 			create_perflow_data: boolean if we are to create a folder containing 
 				per-flow data(as opposite of per-config).
 			correct_energy: Optional, bool. If try, energy is by dividing by 64.
-			lattice_sizes: optional, dictionary with lattice sizes.
+			lattice_size: optional, dictionary with lattice sizes.
 				Format: {[beta_values]: size}
 			verbose: bool, a more verbose run. Default is True.
 			dryrun: bool, dryrun option. Default is False.
@@ -373,12 +373,7 @@ class DataReader:
 		self.batch_name = batch_name
 		self.batch_folder = batch_folder
 		self.figures_folder = figures_folder
-
-		if lattice_sizes != None:
-			self.lattice_sizes = lattice_sizes
-		else:
-			self.lattice_sizes = {
-				6.0: 24**3*48, 6.1: 28**3*56, 6.2: 32**3*64, 6.45: 48**3*96}
+		self.lattice_size = lattice_size
 
 		self.__print_load_info()
 
@@ -515,7 +510,7 @@ class DataReader:
 			self.data[obs]["t"] = _data_obj.data_x
 			self.data[obs]["obs"] = _data_obj.data_y
 			self.data[obs]["beta"] = _data_obj.meta_data["beta"]
-			self.data[obs]["lattice_sizes"] = self.lattice_sizes
+			self.data[obs]["lattice_size"] = self.lattice_size
 			self.data[obs]["FlowEpsilon"] = _data_obj.meta_data["FlowEpsilon"]
 			self.data[obs]["NFlows"] = _data_obj.meta_data["NFlows"]
 			self.data[obs]["batch_name"] = self.file_tree.batch_name
@@ -593,7 +588,7 @@ class DataReader:
 			self.data[obs]["NFlows"] = self.data[obs]["obs"].shape[1]
 			self.data[obs]["batch_name"] = self.batch_name
 			self.data[obs]["batch_data_folder"] = self.batch_folder
-			self.data[obs]["lattice_sizes"] = self.lattice_sizes
+			self.data[obs]["lattice_size"] = self.lattice_size
 
 			_NFlows.append(self.data[obs]["NFlows"])
 			_betas.append(beta)
