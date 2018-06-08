@@ -116,7 +116,7 @@ def main():
 	# Options: plateau, plateau_mean, nearest, interpolate, bootstrap
 	extrapolation_methods = ["plateau", "plateau_mean", "nearest", "interpolate", "bootstrap"]
 	extrapolation_methods = ["plateau"]
-	# extrapolation_methods = ["plateau_mean"]
+	extrapolation_methods = ["plateau_mean"]
 	# extrapolation_methods.remove("bootstrap") # Not viable for our methods, as data is strongly autocorrelated
 	plot_continuum_fit = True
 
@@ -129,7 +129,7 @@ def main():
 
 	# Number of different sectors we will analyse in monte carlo time
 	MC_time_splits = 2
-	MC_intervals = [[0, 1000], [500, 1000,], [500, 1000], [150, 250]]
+	MC_intervals = [[0, 1000], [500, 1000,], [500, 1000], [175, 250]]
 	# MC_intervals = [None, None, None, None]
  
 	# Extraction point in flow time a*t_f for q0 in qtq0

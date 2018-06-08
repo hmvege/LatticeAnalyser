@@ -201,6 +201,8 @@ class PostCore(object):
 			values["y"] = data[beta]["y"]
 			values["y_err"] = data[beta]["y_error"]
 			values["y_raw"] = data_raw[beta][self.observable_name_compact]
+			values["y_uraw"] = self.data_raw["unanalyzed"][beta]\
+				[self.observable_name_compact]
 			if self.with_autocorr:
 				values["tau_int"] = data[beta]["ac"]["tau_int"]
 				values["tau_int_err"] = data[beta]["ac"]["tau_int_err"]

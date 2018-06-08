@@ -170,7 +170,7 @@ def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
     def _f(B, x):
         return B[0]*x + B[1] 
 
-    print y_raw.shape fortsett her
+    # print y_raw.shape fortsett her
     cov_raw = _get_covariance_matrix_from_raw(y_raw)#, autocorr=np.sqrt(2*tau_int))
 
     # print y_raw.shape
@@ -285,19 +285,19 @@ def _extract_plateau_mean_fit(fit_target, f, x, y, y_err, inverse_fit=False):
         y0, y0_error, chi_squared = lfit_default(fit_target, weighted=True)
         y0_error = ((y0_error[1] - y0_error[0])/2)
 
-        # print "OLD METHOD: ", y0, y0_error
+        print "OLD METHOD: ", y0, y0_error
 
-        # _a, _a_err = lfit_default.b1w, lfit_default.b1w_err
-        # _b, _b_err = lfit_default.b0w, lfit_default.b0w_err
-        # y_func = lambda _x: _a*_x + _b
-        # y_error_func = lambda _x: np.sqrt(
-        #     (_a_err*_x)**2 + (_b_err)**2 + 2*_a_err*_x*_b_err)
-        # chi_squared = lfit_default.chi_squared(y_func(x), y_error_func(x), x)
-        # y0 = y_func(fit_target)
-        # y0_error = y_error_func(fit_target)
+        _a, _a_err = lfit_default.b1w, lfit_default.b1w_err
+        _b, _b_err = lfit_default.b0w, lfit_default.b0w_err
+        y_func = lambda _x: _a*_x + _b
+        y_error_func = lambda _x: np.sqrt(
+            (_a_err*_x)**2 + (_b_err)**2 + 2*_a_err*_x*_b_err)
+        chi_squared = lfit_default.chi_squared(y_func(x), y_error_func(x), x)
+        y0 = y_func(fit_target)
+        y0_error = y_error_func(fit_target)
 
-        # print _a, _a_err, _b, _b_err
-        # print "WITH COVARIANCE TERM", y0, y0_error
+        print _a, _a_err, _b, _b_err
+        print "WITH COVARIANCE TERM", y0, y0_error
 
 
     if isinstance(y0, (tuple, list, np.ndarray)):

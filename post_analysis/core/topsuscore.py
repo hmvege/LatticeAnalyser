@@ -134,7 +134,8 @@ class TopsusCore(PostCore):
 			x = self.plot_values[beta]["x"]
 			y = self.plot_values[beta]["y"]
 			y_err = self.plot_values[beta]["y_err"]
-			y_raw = self.plot_values[beta]["y_raw"]
+			# y_raw = self.plot_values[beta]["y_raw"]
+			y_raw = self.plot_values[beta]["y_uraw"]
 
 			if self.with_autocorr:
 				tau_int = self.plot_values[beta]["tau_int"]
@@ -145,8 +146,8 @@ class TopsusCore(PostCore):
 
 			# Extrapolation of point to use in continuum extrapolation
 			res = extract_fit_target(fit_target, x, y, y_err, 
-				y_raw=self.chi[beta](y_raw), tau_int=tau_int, 
-				# y_raw=y_raw, tau_int=tau_int, 
+				# y_raw=self.chi[beta](y_raw), tau_int=tau_int, 
+				y_raw=y_raw, tau_int=tau_int, 
 				tau_int_err=tau_int_err, 
 				extrapolation_method=extrapolation_method, 
 				plateau_size=plateau_fit_size, interpolation_rank=3, 
