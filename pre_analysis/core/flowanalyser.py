@@ -368,6 +368,7 @@ class FlowAnalyser(object):
 		# print F(np.mean(self.bs_y_data, axis=1)[100])
 		# exit(1)
 
+
 		if store_raw_bs_values:
 			self.save_raw_analysis_data(self.bs_y_data, "bootstrap")
 			self.save_raw_analysis_data(self.unanalyzed_y_data, "unanalyzed")

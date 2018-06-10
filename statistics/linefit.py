@@ -493,13 +493,25 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 	ilow = fit_index - plateau_size
 	ihigh = fit_index + plateau_size
 
+	# import scipy.io as sio
+
+	# matlab_data = {
+	# 	"x": x[ilow:ihigh],
+	# 	"y": y[ilow:ihigh], 
+	# 	"y_err": y_err[ilow:ihigh], 
+	# 	"y_raw": y_raw[ilow:ihigh],
+	# 	"tau_int": tau_int[ilow:ihigh],
+	# }
+
+	# sio.savemat("line_fit_data", matlab_data)
+
 	def _f(_x, a, b):
 		return _x*a + b
 
 	if extrapolation_method == "plateau":
 		y0, y0_error, tau_int0, chi_squared = lfit_tools._extract_plateau_fit(fit_target, 
 			_f, x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh], 
-			raw_func(y_raw[ilow:ihigh]), tau_int[ilow:ihigh], tau_int_err[ilow:ihigh],
+			y_raw[ilow:ihigh], tau_int[ilow:ihigh], tau_int_err[ilow:ihigh],
 			inverse_fit=inverse_fit)
 
 	elif extrapolation_method == "plateau_mean":

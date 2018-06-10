@@ -196,9 +196,9 @@ def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
     # TODO: investigate the cov here.
 
     # Line fit from the mean values and the raw values covariance matrix
-    pol_raw, polcov_raw = sciopt.curve_fit(f, x, y, sigma=cov_raw,
-        absolute_sigma=True, p0=[0.18, 0.0], maxfev=1200) 
+    pol_raw, polcov_raw = sciopt.curve_fit(f, x, y, sigma=cov_raw, p0=[0.18, 0.0], maxfev=1200) 
     pol_raw_err = np.sqrt(np.diag(polcov_raw))
+    print pol_raw, pol_raw_err
 
     # Extract fit target values
     lfit_raw = lfit.LineFit(x, y, y_err)
@@ -206,33 +206,71 @@ def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
         pol_raw_err[0], weighted=True)
     y0, y0_error, _, chi_squared = lfit_raw.fit_weighted(fit_target)
 
+    # print "params: ", lfit_raw.b0w, lfit_raw.b0w_err, lfit_raw.b1w, lfit_raw.b1w_err
+
     if inverse_fit:
         y0, y0_error = lfit_raw.inverse_fit(fit_target, weighted=True)
         # chi_squared = lfit_raw.chi_squared(y0, y0_error, fit_target)
         # y0_error = ((y0_error[1] - y0_error[0])/2)
+
     else:
-        
-        # # Errors should be equal in positive and negative directions.
-        # if np.abs(np.abs(y0 - y0_error[0]) - np.abs(y0 - y0_error[1])) > 1e-15:
-        #     print "Warning: uneven errors:\nlower: %.10f\nupper: %.10f" % (
-        #         y0_error[0], y0_error[1])
+
+        # print "with cov: ", y0, y0_error
+
+        # Errors should be equal in positive and negative directions.
+        if np.abs(np.abs(y0 - y0_error[0]) - np.abs(y0 - y0_error[1])) > 1e-15:
+            print "Warning: uneven errors:\nlower: %.10f\nupper: %.10f" % (
+                y0_error[0], y0_error[1])
 
         y0 = y0[0] #  y0 and y0_error both comes in form of arrays
-        y0_error = ((y0_error[1] - y0_error[0])/2)
-        y0_error = y0_error[0]
-        print "OLD METHOD: ", y0, y0_error
+        y0_error = ((y0_error[1] - y0_error[0])/2)[0]
 
-        _a, _a_err = lfit_raw.b1w, lfit_raw.b1w_err
-        _b, _b_err = lfit_raw.b0w, lfit_raw.b0w_err
-        y_func = lambda _x: _a*_x + _b
-        y_error_func = lambda _x: np.sqrt(
-            (_a_err*_x)**2 + (_b_err)**2 + 2*_a_err*_x*_b_err)
-        chi_squared = lfit_raw.chi_squared(y_func(x), y_error_func(x), x)
-        y0 = y_func(fit_target)
-        y0_error = y_error_func(fit_target)
+        f_err = lambda _x, a_err, b_err: np.sqrt((_x*a_err)**2 + (b_err)**2 + 2*a_err*_x*b_err)
+        y0_error = f_err(fit_target, pol_raw_err[0], pol_raw_err[1])
+        # print "Plateau fit: %20.16f +/- %-21.20f, chi^2 %g" % (y0, y0_error, chi_squared)
+        # print y0_error
+        # # # METHOD WITH COVARIANCE
+        # _a, _a_err = lfit_raw.b1w, lfit_raw.b1w_err
+        # _b, _b_err = lfit_raw.b0w, lfit_raw.b0w_err
+        # y_func = lambda _x: _a*_x + _b
+        # y_error_func = lambda _x: np.sqrt(
+        #     (_a_err*_x)**2 + (_b_err)**2 + 2*_a_err*_x*_b_err*polcov_raw[0][1])
+        # chi_squared = lfit_raw.chi_squared(y, y_err, y_func(x))
+        # y0_error = y_error_func(fit_target)
+        # print y0_error
 
-        print _a, _a_err, _b, _b_err
-        print "WITH COVARIANCE TERM", y0, y0_error
+        # print "INCLUDING COVARIANCE AND COV-MATRIX TERM %20.16f +/- %-18.16f, chi^2 %g" % (y0, y0_error, chi_squared)
+
+        # # METHOD WITH ONLY ERROR TERM
+        # # Line fit from the mean values and the raw values covariance matrix
+        # pol_raw1, polcov_raw1 = sciopt.curve_fit(f, x, y, sigma=y_err, p0=[0.18, 0.0], maxfev=1200) 
+        # pol_raw_err1 = np.sqrt(np.diag(polcov_raw1))
+        # # Extract fit target values
+        # lfit_raw1 = lfit.LineFit(x, y, y_err)
+        # lfit_raw1.set_fit_parameters(pol_raw1[1], pol_raw_err1[1], pol_raw1[0],
+        #     pol_raw_err1[0], weighted=True)
+
+        # print "params: ", lfit_raw1.b0w, lfit_raw1.b0w_err, lfit_raw1.b1w, lfit_raw1.b1w_err
+
+        # y01, y0_error1, _, chi_squared1 = lfit_raw1.fit_weighted(fit_target)
+        # print "no cov: ", (y01, y0_error1)
+        # print "ONLY Y ERROR:             %20.16f +/- %-21.20f, chi^2 %g" % (y01[0], ((y0_error1[1] - y0_error1[0])/2)[0], chi_squared1)
+
+
+        # # METHOD WITH COVARIANCE
+        # _a, _a_err = lfit_raw1.b1w, lfit_raw1.b1w_err
+        # _b, _b_err = lfit_raw1.b0w, lfit_raw1.b0w_err
+        # y_func2 = lambda _x: _a*_x + _b
+        # y_error_func2 = lambda _x: np.sqrt(
+        #     (_a_err*_x)**2 + (_b_err)**2 + 2*_a_err*_x*_b_err*polcov_raw1[0][1])
+        # chi_squared = lfit_raw1.chi_squared(y, y_err, y_func(x))
+        # y0 = y_func2(fit_target)
+        # y0_error = y_error_func2(fit_target)
+
+        # print "INCLUDING COVARIANCE AND NO COV-MATRIX TERM %20.16f +/- %-18.16f, chi^2 %g" % (y0, y0_error, chi_squared)
+
+
+        # exit(1)
 
     # Gets the tau int using a line fit, given it is provide.
     if not isinstance(tau_int, types.NoneType) and \
@@ -285,19 +323,19 @@ def _extract_plateau_mean_fit(fit_target, f, x, y, y_err, inverse_fit=False):
         y0, y0_error, chi_squared = lfit_default(fit_target, weighted=True)
         y0_error = ((y0_error[1] - y0_error[0])/2)
 
-        print "OLD METHOD: ", y0, y0_error
+        # print "OLD METHOD:               %20.16f +/- %-18.16f, chi^2 %g" % (y0, y0_error, chi_squared)
 
-        _a, _a_err = lfit_default.b1w, lfit_default.b1w_err
-        _b, _b_err = lfit_default.b0w, lfit_default.b0w_err
-        y_func = lambda _x: _a*_x + _b
-        y_error_func = lambda _x: np.sqrt(
-            (_a_err*_x)**2 + (_b_err)**2 + 2*_a_err*_x*_b_err)
-        chi_squared = lfit_default.chi_squared(y_func(x), y_error_func(x), x)
-        y0 = y_func(fit_target)
-        y0_error = y_error_func(fit_target)
+        # _a, _a_err = lfit_default.b1w, lfit_default.b1w_err
+        # _b, _b_err = lfit_default.b0w, lfit_default.b0w_err
+        # y_func = lambda _x: _a*_x + _b
+        # y_error_func = lambda _x: np.sqrt(
+        #     (_a_err*_x)**2 + (_b_err)**2 + 2*_a_err*_x*_b_err)
+        # chi_squared = lfit_default.chi_squared(y_func(x), y_error_func(x), x)
+        # y0 = y_func(fit_target)
+        # y0_error = y_error_func(fit_target)
 
-        print _a, _a_err, _b, _b_err
-        print "WITH COVARIANCE TERM", y0, y0_error
+        # print _a, _a_err, _b, _b_err
+        # print "WITH COVARIANCE TERM", y0, y0_error
 
 
     if isinstance(y0, (tuple, list, np.ndarray)):
@@ -480,7 +518,7 @@ def _test_simple_line_fit():
     x_end = 5
     x = np.linspace(x_start, x_end, N)
     x_matrix = np.ones((M, N)) * x
-    signal_spread = 0.3
+    signal_spread = 0.7
     signal = a*x + b + np.random.uniform(-signal_spread, signal_spread, (M, N))
     signal_err = np.std(signal, axis=0)
     signal_mean = np.mean(signal, axis=0)
@@ -590,7 +628,8 @@ def _test_simple_line_fit():
     _y_err = np.sqrt(
         (_a_err*fit_target)**2 + (_b_err)**2 + 2*_a_err*fit_target*_b_err)
     y_scipy_wc = [_y, [_y-_y_err, _y+_y_err]]
-    # y_scipy_wc = scipy_lfit_wc(fit_target, weighted=True)
+
+    y_scipy_wc = scipy_lfit_wc(fit_target, weighted=True)
 
     print "SciPy curve_fit with covariance:"
     print _fit_var_printer("a", polwc[0], polcovwc[0,0])

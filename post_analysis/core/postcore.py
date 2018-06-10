@@ -203,6 +203,12 @@ class PostCore(object):
 			values["y_raw"] = data_raw[beta][self.observable_name_compact]
 			values["y_uraw"] = self.data_raw["unanalyzed"][beta]\
 				[self.observable_name_compact]
+
+			# print values["y_raw"].shape, values["y_uraw"].shape
+			# print "%s beta: %f" % (self.observable_name_compact, beta)
+			# print np.mean(values["y_raw"][-1,:]), np.std(values["y_raw"][-1,:])
+			# print np.mean(values["y_uraw"][-1,:]), np.std(values["y_uraw"][-1,:])
+
 			if self.with_autocorr:
 				values["tau_int"] = data[beta]["ac"]["tau_int"]
 				values["tau_int_err"] = data[beta]["ac"]["tau_int_err"]

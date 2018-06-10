@@ -3,6 +3,7 @@
 *.txt
 *.dat
 *.zip
+*.mat
 
 # Binary files
 *.pyc

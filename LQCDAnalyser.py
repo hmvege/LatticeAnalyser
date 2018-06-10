@@ -116,7 +116,7 @@ def main():
 	# Options: plateau, plateau_mean, nearest, interpolate, bootstrap
 	extrapolation_methods = ["plateau", "plateau_mean", "nearest", "interpolate", "bootstrap"]
 	extrapolation_methods = ["plateau"]
-	extrapolation_methods = ["plateau_mean"]
+	# extrapolation_methods = ["plateau_mean"]
 	# extrapolation_methods.remove("bootstrap") # Not viable for our methods, as data is strongly autocorrelated
 	plot_continuum_fit = True
 

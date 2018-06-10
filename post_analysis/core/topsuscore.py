@@ -135,7 +135,11 @@ class TopsusCore(PostCore):
 			y = self.plot_values[beta]["y"]
 			y_err = self.plot_values[beta]["y_err"]
 			# y_raw = self.plot_values[beta]["y_raw"]
+			# print self.chi[beta](y_raw)[-1,:]
 			y_raw = self.plot_values[beta]["y_uraw"]
+			# print self.chi[beta](y_uraw)[-1,:]
+			# print y_raw[-1,:]
+			# exit(1)
 
 			if self.with_autocorr:
 				tau_int = self.plot_values[beta]["tau_int"]
