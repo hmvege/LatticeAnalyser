@@ -50,7 +50,7 @@ def main():
 	# observables = ["topsusqtq0"]
 	observables = ["topsus"]
 
-	observables += ["energy"]
+	# observables += ["energy"]
 
 	#### Base parameters
 	N_bs = 500
@@ -116,7 +116,7 @@ def main():
 	# Options: plateau, plateau_mean, nearest, interpolate, bootstrap
 	extrapolation_methods = ["plateau", "plateau_mean", "nearest", "interpolate", "bootstrap"]
 	extrapolation_methods = ["plateau"]
-	# extrapolation_methods = ["plateau_mean"]
+	extrapolation_methods = ["bootstrap"]
 	# extrapolation_methods.remove("bootstrap") # Not viable for our methods, as data is strongly autocorrelated
 	plot_continuum_fit = True
 

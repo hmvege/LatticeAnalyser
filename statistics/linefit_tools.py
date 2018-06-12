@@ -3,11 +3,10 @@
 from scipy.interpolate import InterpolatedUnivariateSpline as spline
 import linefit as lfit
 import scipy.optimize as sciopt
-import scipy.odr as sciodr
-import scipy.stats
 import numpy as np
 import matplotlib.pyplot as plt
 import types
+import copy
 # from tqdm import tqdm
 
 def _extract_inverse(fit_target, X, Y, Y_err):
@@ -49,44 +48,40 @@ def _extract_inverse(fit_target, X, Y, Y_err):
 
     return x0, x0_err
 
-def _get_covariance_matrix_from_raw(y_raw, autocorr=None):
+
+def _get_covariance_matrix_from_raw(y_raw, iscov=False):
     """
     Returns a covariance matrix that is guaranteed to not be singular.
     """
-    if isinstance(autocorr, types.NoneType):
-        autocorr = np.eye(len(y_raw))
+    if not iscov:
+        # cov_raw = np.cov(copy.deepcopy(y_raw))
+        cov_raw = np.cov(y_raw)
+        # y_mean = np.mean(y_raw, axis=1)
+        # cov_raw = np.dot(y_raw - y_mean[:, None], (y_raw - y_mean[:, None]).T)/(len(y_raw) - 1)
     else:
-        autocorr = np.eye(len(y_raw))*autocorr
+        cov_raw = y_raw
 
-    # Uses bootstrap, jackknifed or analyzed values directly.
-    cov_raw = np.cov(y_raw)
-    for i in xrange(len(cov_raw)):
-        cov_raw[i,i] *= autocorr[i,i]
-    # cov_raw *= autocorr
-    # cov_raw = np.corrcoef(y_raw)
+    # min_eig = np.min(np.real(np.linalg.eigvals(cov_raw)))
+    # print min_eig
+    # min_eig = np.min(np.linalg.eigh(cov_raw)[0])
+    # if min_eig <= 0:
+    #     cov_raw -= 1*min_eig * np.eye(*cov_raw.shape)
 
-    # Get eigenvalues for covariance matrix
-    eig = np.linalg.eigvals(cov_raw)
+    # min_eig = np.min(np.linalg.eigh(cov_raw)[0])
+    # counter = 0
+    # print "BEFORE: ",min_eig, "%10.16f" % cov_raw[10,10], min_eig * np.eye(*cov_raw.shape)[0,0]
+    # print 
+    # while min_eig < 0 and counter < 10000:
+    #     cov_raw -= 0.1*min_eig * np.eye(*cov_raw.shape)
+    #     min_eig = np.min(np.linalg.eigh(cov_raw)[0])
+    #     counter += 1
+    #     # print counter, min_eig, "%10.16f" % cov_raw[10,10], 0.01*min_eig * np.eye(*cov_raw.shape)[0,0]
 
-    counter = 1
-    while np.min(eig) <= 1e-15:
-        # Gets the magnitude of the smallest eigenvalue
-        magnitude = np.floor(np.log10(np.absolute(np.min(eig))))
-        # Increments magnitude til we have positive definite cov-matrix
-        eps = 10**(magnitude + counter)
-        eps_matrix = np.eye(cov_raw.shape[0])*eps
-
-        # Adds a small diagonal epsilon to make it positive definite
-        cov_raw += eps_matrix
-
-        eig = np.linalg.eigvals(cov_raw)
-
-        # In order no to get stuck at a particular place
-        counter += 1
-        if counter >= 10:
-            raise ValueError("Exceeding maximum iteration 10.")
+    # min_eig = np.min(np.real(np.linalg.eigvals(cov_raw)))
+    # print min_eig
 
     return cov_raw
+
 
 def __plot_fit_target(x, y, yerr, x0, y0, y0err, title_string="", 
     inverse_fit=False):
@@ -113,7 +108,7 @@ def __plot_fit_target(x, y, yerr, x0, y0, y0err, title_string="",
             capsize=10, color="tab:blue", ecolor="tab:blue", label=lab)
     else:
         fit_lab = "$x_0 = %.2f$" % x0
-        lab = r"$y_0 = %.2f \pm %g$" % (y0, y0err)
+        lab = r"$y_0 = %.4f \pm %g$" % (y0, y0err)
         ax.axvline(x0, linestyle="dashed", color="tab:grey", label=fit_lab)
         ax.errorbar([x0, x0], [y0, y0], yerr=[y0err, y0err], fmt="o",
             capsize=10, color="tab:blue", ecolor="tab:blue", label=lab)
@@ -125,7 +120,7 @@ def __plot_fit_target(x, y, yerr, x0, y0, y0err, title_string="",
     plt.close(fig)
 
 def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
-    tau_int_err=None, inverse_fit=False):
+    tau_int_err=None, inverse_fit=False, fraw=None, ferrraw=None):
     """
     Extract y0 with y0err at a given x0 by using a line fit with the 
     covariance matrix from the raw y data.
@@ -149,17 +144,6 @@ def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
         y0, y0_error, tau_int0, chi_squared
     """
 
-    # # Gets the tau int using a line fit, given it is provide.
-    # if not isinstance(tau_int, types.NoneType) and \
-    #     not isinstance(tau_int_err, types.NoneType):
-    #     if inverse_fit:
-    #         _y0 = y[np.argmin(np.abs(y - fit_target))]
-    #         tau_int0 = __get_tau_int(_y0, x, tau_int, tau_int_err)
-    #     else:
-    #         tau_int0 = __get_tau_int(fit_target, x, tau_int, tau_int_err)
-    # else:
-    #     tau_int0 = 0.5
-
     assert not isinstance(y_raw, types.NoneType), \
         "missing y_raw values."
     assert not isinstance(tau_int, types.NoneType), \
@@ -167,35 +151,72 @@ def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
     assert not isinstance(tau_int_err, types.NoneType), \
         "missing tau_int_err values."
 
-    def _f(B, x):
-        return B[0]*x + B[1] 
-
-    # print y_raw.shape fortsett her
-    cov_raw = _get_covariance_matrix_from_raw(y_raw)#, autocorr=np.sqrt(2*tau_int))
+    # import scipy.io as sio
 
     # print y_raw.shape
-    # C = []
-    # for i, iy in enumerate(y_raw):
-        # C.append(np.cov(iy, y_raw))
+    # print y_raw.mean(axis=1)
+    # exit(1)
 
-    # C = np.asarray(C)
-    # print C.shape
+    # # cov_raw1 = _get_covariance_matrix_from_raw(y_raw)
+    # y_raw1 = y_raw
+    # y_err1 = y_err
+    # tau_int1 = tau_int
+    # y1 = y
+    # x1 = x
 
-    # linear_model = sciodr.Model(_f)
-    # # data = sciodr.RealData(x, y, sy=y_err)
-    # data = sciodr.RealData(x, y, covy=np.cov(y_raw))
-    # odr_fit = sciodr.ODR(data, linear_model, beta0=[0.18, 0.0])
-    # odr_output = odr_fit.run()
-    # # odr_output.pprint()
-    # pol_raw = odr_output.beta
-    # pol_raw_err = odr_output.sd_beta
-    # print pol_raw
-    # print pol_raw_err
-    # # exit("IMPLEMENT SCIPY TLS HERE")
+    # print "%16.30f" % y_raw1[0,0]
 
-    # TODO: investigate the cov here.
+    # data = sio.loadmat("../../MATLAB-TEST/line_fit_data4.mat")
+    # data = sio.loadmat("../../../MATLAB-TEST/line_fit_data2.mat")
+
+    # x = copy.deepcopy(data["x"][0])
+    # y = copy.deepcopy(data["y"][0])
+    # y_err = copy.deepcopy(data["y_err"][0])
+    # y_raw = copy.deepcopy(data["y_raw"])
+    # tau_int = copy.deepcopy(data["tau_int"][0])
+
+    # y_raw = np.load("../raw_vals.npy")
+
+    # x = np.load("../x.npy")
+    # y = np.load("../y.npy")
+    # y_err = np.load("../y_err.npy")
+    # y_raw = np.load("../y_raw.npy")
+    # tau_int = np.load("../tau_int.npy")
+
+    # print "%16.30f" % y_raw[0,0]
+
+    # print np.all(y_raw == y_raw1)
+    # print np.all(y == y1)
+    # print np.all(y_err == y_err1)
+    # print np.all(x == x1)
+    # print np.all(tau_int == tau_int1)
+
+    # TODO: Investegate why there is a discrepancy between getting covariance here and in least_squares_fit.py
+    # TODO: Figure out why my linefit y values is shifted by such a large amount
+    # temp = copy.deepcopy(y_raw)
+    # cov_raw = copy.deepcopy(_get_covariance_matrix_from_raw(temp))
+    # temp1 = copy.deepcopy(y_raw1)
+    # cov_raw1 = copy.deepcopy(_get_covariance_matrix_from_raw(temp1))
+    cov_raw = _get_covariance_matrix_from_raw(y_raw)
+
+    # her burde de bli likt!!!
+    # print np.all(cov_raw == cov_raw1)
+
+    # print cov_raw == cov_raw1
+
+    # matlab_data = {
+    #   "x": x,
+    #   "y": y,
+    #   "y_err": y_err,
+    #   "y_raw": y_raw,
+    #   "tau_int": tau_int,
+    #   "covmat": cov_raw,
+    # }
+    # sio.savemat("line_fit_data2", matlab_data)
+    # exit(1)
 
     # Line fit from the mean values and the raw values covariance matrix
+    # pol_raw, polcov_raw = sciopt.curve_fit(f, x, y, sigma=copy.deepcopy(cov_raw), p0=[0.18, 0.0], maxfev=1200) 
     pol_raw, polcov_raw = sciopt.curve_fit(f, x, y, sigma=cov_raw, p0=[0.18, 0.0], maxfev=1200) 
     pol_raw_err = np.sqrt(np.diag(polcov_raw))
     print pol_raw, pol_raw_err
@@ -204,72 +225,19 @@ def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
     lfit_raw = lfit.LineFit(x, y, y_err)
     lfit_raw.set_fit_parameters(pol_raw[1], pol_raw_err[1], pol_raw[0],
         pol_raw_err[0], weighted=True)
-    y0, y0_error, _, chi_squared = lfit_raw.fit_weighted(fit_target)
+    y0, y0_error, chi_squared = lfit_raw(fit_target, weighted=True)
 
-    # print "params: ", lfit_raw.b0w, lfit_raw.b0w_err, lfit_raw.b1w, lfit_raw.b1w_err
+    print "params: ", [lfit_raw.b1w, lfit_raw.b0w], [lfit_raw.b1w_err, lfit_raw.b0w_err]
 
     if inverse_fit:
         y0, y0_error = lfit_raw.inverse_fit(fit_target, weighted=True)
-        # chi_squared = lfit_raw.chi_squared(y0, y0_error, fit_target)
-        # y0_error = ((y0_error[1] - y0_error[0])/2)
-
     else:
-
-        # print "with cov: ", y0, y0_error
-
-        # Errors should be equal in positive and negative directions.
-        if np.abs(np.abs(y0 - y0_error[0]) - np.abs(y0 - y0_error[1])) > 1e-15:
-            print "Warning: uneven errors:\nlower: %.10f\nupper: %.10f" % (
-                y0_error[0], y0_error[1])
-
         y0 = y0[0] #  y0 and y0_error both comes in form of arrays
-        y0_error = ((y0_error[1] - y0_error[0])/2)[0]
 
         f_err = lambda _x, a_err, b_err: np.sqrt((_x*a_err)**2 + (b_err)**2 + 2*a_err*_x*b_err)
         y0_error = f_err(fit_target, pol_raw_err[0], pol_raw_err[1])
-        # print "Plateau fit: %20.16f +/- %-21.20f, chi^2 %g" % (y0, y0_error, chi_squared)
-        # print y0_error
-        # # # METHOD WITH COVARIANCE
-        # _a, _a_err = lfit_raw.b1w, lfit_raw.b1w_err
-        # _b, _b_err = lfit_raw.b0w, lfit_raw.b0w_err
-        # y_func = lambda _x: _a*_x + _b
-        # y_error_func = lambda _x: np.sqrt(
-        #     (_a_err*_x)**2 + (_b_err)**2 + 2*_a_err*_x*_b_err*polcov_raw[0][1])
-        # chi_squared = lfit_raw.chi_squared(y, y_err, y_func(x))
-        # y0_error = y_error_func(fit_target)
-        # print y0_error
-
-        # print "INCLUDING COVARIANCE AND COV-MATRIX TERM %20.16f +/- %-18.16f, chi^2 %g" % (y0, y0_error, chi_squared)
-
-        # # METHOD WITH ONLY ERROR TERM
-        # # Line fit from the mean values and the raw values covariance matrix
-        # pol_raw1, polcov_raw1 = sciopt.curve_fit(f, x, y, sigma=y_err, p0=[0.18, 0.0], maxfev=1200) 
-        # pol_raw_err1 = np.sqrt(np.diag(polcov_raw1))
-        # # Extract fit target values
-        # lfit_raw1 = lfit.LineFit(x, y, y_err)
-        # lfit_raw1.set_fit_parameters(pol_raw1[1], pol_raw_err1[1], pol_raw1[0],
-        #     pol_raw_err1[0], weighted=True)
-
-        # print "params: ", lfit_raw1.b0w, lfit_raw1.b0w_err, lfit_raw1.b1w, lfit_raw1.b1w_err
-
-        # y01, y0_error1, _, chi_squared1 = lfit_raw1.fit_weighted(fit_target)
-        # print "no cov: ", (y01, y0_error1)
-        # print "ONLY Y ERROR:             %20.16f +/- %-21.20f, chi^2 %g" % (y01[0], ((y0_error1[1] - y0_error1[0])/2)[0], chi_squared1)
-
-
-        # # METHOD WITH COVARIANCE
-        # _a, _a_err = lfit_raw1.b1w, lfit_raw1.b1w_err
-        # _b, _b_err = lfit_raw1.b0w, lfit_raw1.b0w_err
-        # y_func2 = lambda _x: _a*_x + _b
-        # y_error_func2 = lambda _x: np.sqrt(
-        #     (_a_err*_x)**2 + (_b_err)**2 + 2*_a_err*_x*_b_err*polcov_raw1[0][1])
-        # chi_squared = lfit_raw1.chi_squared(y, y_err, y_func(x))
-        # y0 = y_func2(fit_target)
-        # y0_error = y_error_func2(fit_target)
-
-        # print "INCLUDING COVARIANCE AND NO COV-MATRIX TERM %20.16f +/- %-18.16f, chi^2 %g" % (y0, y0_error, chi_squared)
-
-
+        
+        print "Plateau fit: %20.16f +/- %-20.16f, chi^2 %g" % (y0, y0_error, chi_squared)
         # exit(1)
 
     # Gets the tau int using a line fit, given it is provide.
@@ -283,7 +251,7 @@ def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
         tau_int0 = 0.5
 
     # Corrects error with the tau int
-    # y0_error *= np.sqrt(2*tau_int0)
+    y0_error *= np.sqrt(2*tau_int0)
 
     return y0, y0_error, tau_int0, chi_squared
 
@@ -323,7 +291,11 @@ def _extract_plateau_mean_fit(fit_target, f, x, y, y_err, inverse_fit=False):
         y0, y0_error, chi_squared = lfit_default(fit_target, weighted=True)
         y0_error = ((y0_error[1] - y0_error[0])/2)
 
+        # f_err = lambda _x, a_err, b_err: np.sqrt((_x*a_err)**2 + (b_err)**2 + 2*a_err*_x*b_err)
+        # y0_error = f_err(fit_target, pol_line_err[0], pol_line_err[1])
+
         # print "OLD METHOD:               %20.16f +/- %-18.16f, chi^2 %g" % (y0, y0_error, chi_squared)
+
 
         # _a, _a_err = lfit_default.b1w, lfit_default.b1w_err
         # _b, _b_err = lfit_default.b0w, lfit_default.b0w_err
@@ -409,7 +381,7 @@ def _extract_bootstrap_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
                 fit_sample.plot()
                 exit(err)
         else:
-            y0_sample[i], _tmp_err = fit_sample(fit_target)
+            y0_sample[i], _tmp_err, _ = fit_sample(fit_target)
             y0_sample_err[i] = (_tmp_err[1] - _tmp_err[0])/2
 
         if plot_samples:
@@ -486,6 +458,7 @@ def _extract_bootstrap_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
         plt.close(fig_samples)
 
     return y0_mean, y0_std, tau_int0
+
 
 def __get_tau_int(x0, x, tau_int, tau_int_err):
     """Smal internal function for getting tau int at x0."""
@@ -564,7 +537,7 @@ def _test_simple_line_fit():
     print "SciPy curve_fit:"
     print _fit_var_printer("a", pol1[0], polcov1[0,0])
     print _fit_var_printer("b", pol1[1], polcov1[1,1])
-    print "Extraction point x0 value: ", y_scipy[0][0], ((y_scipy[-1][-1] - y_scipy[-1][0])/2.0)[0]
+    print "Extraction point x0 value: ", y_scipy[0][0], ((y_scipy[1][-1] - y_scipy[1][0])/2.0)[0]
 
     print "lfit.LineFit:"
     print _fit_var_printer("a", b1, b1_err)

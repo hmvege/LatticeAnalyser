@@ -34,23 +34,30 @@ class LineFit:
 		# Sets weigths regardless if they are to be used or not.
 		if not isinstance(y_err, types.NoneType):
 			self.w = self._get_weights(self.y_err)
-		# 	self.weighted = True
-		# else:
-		# 	self.weighted = False
-
+		
 		self.inverse_fit_performed = False
 
+		# If this is True, we will not allow certain function calls, as that
+		# overrides the paramater that has been set.
+		self._param_is_set = False
+		
 	def __call__(self, x, x_err=None, weighted=False):
 		"""Returns the fitted function at x."""
 		x = np.atleast_1d(x)
+
+		if not isinstance(self.y_err, types.NoneType) and weighted:
+			chi_squared = self.chi_squared(self.y, self.y_err, 
+				self._yw_hat(self.x))
+		else:
+			chi_squared = None
+
 		if isinstance(x_err, types.NoneType):
 			if weighted:
 				y_fit, y_fit_err = self._yw_hat(x), self._yw_hat_err(x)
-				return y_fit, y_fit_err, self.chi_squared(self.y, self.y_err, 
-					self._yw_hat(self.x))
+				return y_fit, y_fit_err, chi_squared
 			else:
 				y_fit, y_fit_err = self._y_hat(x), self._y_hat_err(x)
-				return y_fit, y_fit_err
+				return y_fit, y_fit_err, chi_squared
 		else:
 			if weighted:
 				y_fit, _y_fit_err = self._yw_hat(x), self._yw_hat_err(x)
@@ -58,11 +65,10 @@ class LineFit:
 				v1 = np.array([x*self.b1w_err, self.b1w*x_err, self.b0w_err])
 				y_fit_err = np.sqrt(np.sum(np.outer(v1, v1)))
 
-				return y_fit, y_fit_err, self.chi_squared(self.y, self.y_err, 
-					self._yw_hat(self.x))
+				return y_fit, y_fit_err, chi_squared
 			else:
 				y_fit, y_fit_err = self._y_hat(x), self._y_hat_err(x)
-				return y_fit, y_fit_err
+				return y_fit, y_fit_err, chi_squared
 
 	def fit(self, x_arr=None):
 		"""
@@ -79,21 +85,17 @@ class LineFit:
 			fit_params: list containing b0, b0_err, b1, b1_err
 			chi_squared: goodness of fit
 		"""
+		if self._param_is_set:
+			raise StandardError("Parameter has been set. fit() will "
+				"override those, which is prohibited.")
 
 		if isinstance(x_arr, types.NoneType):
 			x_arr = np.linspace(self.x[self.x_lower], self.x[self.x_upper], 100)
 		else:
 			x_arr = np.atleast_1d(x_arr)
 
-		# self.x_mean = np.mean(self.x)
-		# self.y_mean = np.mean(self.y)
-
-		# # Temporary sum contained in both eq. 4, eq. 6 and eq. 7
-		# self.xi_xmean_sum = np.sum((self.x - self.x_mean)**2)
-		
+		# Temporary sum contained in both eq. 4, eq. 6 and eq. 7
 		self.x_mean, self.y_mean, self.xi_xmean_sum = self._get_means()
-
-		# self.s_xy_err = np.sum((self.y - self._y_hat(self.x))**2) / (self.n - 2)
 
 		# Eq. 4
 		self.b1 = np.sum((self.x - self.x_mean) * self.y) / self.xi_xmean_sum
@@ -151,6 +153,10 @@ class LineFit:
 			chi_squared: goodness of fit
 		"""
 
+		if self._param_is_set:
+			raise StandardError("Parameter has been set. fit_weighted()"
+				" will override those, which is prohibited.")
+
 		if isinstance(x_arr, types.NoneType):
 			x_arr = np.linspace(self.x[0], self.x[-1], 100)
 		else:
@@ -158,13 +164,8 @@ class LineFit:
 
 		assert not isinstance(self.y_err, types.NoneType), "Missing y_err."
 
-		# self.xw_mean = np.sum(self.w * self.x) / np.sum(self.w)
-		# self.yw_mean = np.sum(self.w * self.y) / np.sum(self.w)
-
-		# # Temporary som contained in both eq. 4, eq. 6 and eq. 7
-		# self.xwi_xmean_sum = np.sum(self.w * (self.x - self.xw_mean)**2)
+		# Temporary som contained in both eq. 4, eq. 6 and eq. 7
 		self.xw_mean, self.yw_mean, self.xwi_xmean_sum = self._get_means_weighted()
-
 
 		# Eq. 18
 		self.b1w = np.sum(self.w * (self.x - self.xw_mean) * self.y)
@@ -174,8 +175,6 @@ class LineFit:
 		self.b0w = self.yw_mean - self.b1w * self.xw_mean
 
 		# # Eq. 21
-		# self.s_xyw_err = np.sum(self.w * (self.y - self._yw_hat(self.x))**2)
-		# self.s_xyw_err /= (self.n - 2.0) 
 		self.s_xyw_err = self._get_s_xyw()
 
 		# Eq. 19
@@ -245,12 +244,15 @@ class LineFit:
 		Method for setting fit parameters if they have been retrieved by 
 		another method, such as scipy.optimize.curve_fit.
 
+		y = a*x + b  <--> y = b[1]*x + b[0]
+
 		Args:
 			b0: constant term in line fit.
 			b0: error of constant term in line fit.
 			b1: slope term in line fit.
 			b1: error of slope term in line fit.
 		"""
+		self._param_is_set = True
 		if weighted:
 			self.b0w = b0
 			self.b0w_err = b0_err
@@ -450,8 +452,8 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 			Default is false.
 		raw_func: function, optional, will modify the bootstrap data after 
 			samples has been taken by this function.
-		raw_func_err: function, optional, will propagate the error of the 
-			bootstrapped line fitted data, raw_func_err(y, yerr). Calculated
+		raw_func_der: function, optional, will propagate the error of the 
+			bootstrapped line fitted data, raw_func_der(y, yerr). Calculated
 			by regular error propagation.
 		inverse_fit: bool, optional. If True, will return the x0 value with 
 			x0_errors instead of y0 and its errors. Default is False.
@@ -493,17 +495,23 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 	ilow = fit_index - plateau_size
 	ihigh = fit_index + plateau_size
 
+	# import copy
 	# import scipy.io as sio
 
 	# matlab_data = {
 	# 	"x": x[ilow:ihigh],
 	# 	"y": y[ilow:ihigh], 
 	# 	"y_err": y_err[ilow:ihigh], 
-	# 	"y_raw": y_raw[ilow:ihigh],
+	# 	"y_raw": copy.deepcopy(y_raw[ilow:ihigh]),
 	# 	"tau_int": tau_int[ilow:ihigh],
 	# }
 
-	# sio.savemat("line_fit_data", matlab_data)
+	# sio.savemat("../../MATLAB-TEST/line_fit_data4.mat", matlab_data)
+	# np.save("../x", x[ilow:ihigh])
+	# np.save("../y", y[ilow:ihigh])
+	# np.save("../y_err", y_err[ilow:ihigh])
+	# np.save("../y_raw", y_raw[ilow:ihigh])
+	# np.save("../tau_int", tau_int[ilow:ihigh])
 
 	def _f(_x, a, b):
 		return _x*a + b
@@ -512,7 +520,11 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 		y0, y0_error, tau_int0, chi_squared = lfit_tools._extract_plateau_fit(fit_target, 
 			_f, x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh], 
 			y_raw[ilow:ihigh], tau_int[ilow:ihigh], tau_int_err[ilow:ihigh],
-			inverse_fit=inverse_fit)
+			inverse_fit=inverse_fit, fraw=raw_func, ferrraw=raw_func_der)
+		# y0, y0_error, tau_int0, chi_squared = lfit_tools._extract_plateau_fit(fit_target, 
+		# 	_f, copy.deepcopy(x[ilow:ihigh]), copy.deepcopy(y[ilow:ihigh]), copy.deepcopy(y_err[ilow:ihigh]),
+		# 	copy.deepcopy(y_raw[ilow:ihigh]), copy.deepcopy(tau_int[ilow:ihigh]), copy.deepcopy(tau_int_err[ilow:ihigh]),
+		# 	inverse_fit=inverse_fit)
 
 	elif extrapolation_method == "plateau_mean":
 		y0, y0_error, chi_squared = lfit_tools._extract_plateau_mean_fit(fit_target,
@@ -575,6 +587,8 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 		if not isinstance(chi_squared, types.NoneType):
 			msg += "\nchi^2     %16.10f" % chi_squared
 		print msg
+
+	# exit("Exiting @ 594 in linefit.py")
 
 	return x0, y0, y0_error, y0_raw, tau_int0
 

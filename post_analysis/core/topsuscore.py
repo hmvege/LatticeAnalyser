@@ -79,7 +79,7 @@ class TopsusCore(PostCore):
 				0.25*self.chi_const[6.45]*qqerr/qq**(0.75)
 
 	def plot_continuum(self, fit_target, title_addendum="",
-		extrapolation_method="plateau", plateau_fit_size=20,
+		extrapolation_method="bootstrap", plateau_fit_size=20,
 		interpolation_rank=3, plot_continuum_fit=False):
 		"""
 		Method for plotting the continuum limit of topsus at a given 
@@ -134,9 +134,9 @@ class TopsusCore(PostCore):
 			x = self.plot_values[beta]["x"]
 			y = self.plot_values[beta]["y"]
 			y_err = self.plot_values[beta]["y_err"]
-			# y_raw = self.plot_values[beta]["y_raw"]
+			y_raw = self.plot_values[beta]["y_raw"]
 			# print self.chi[beta](y_raw)[-1,:]
-			y_raw = self.plot_values[beta]["y_uraw"]
+			# y_raw = self.plot_values[beta]["y_uraw"]
 			# print self.chi[beta](y_uraw)[-1,:]
 			# print y_raw[-1,:]
 			# exit(1)
