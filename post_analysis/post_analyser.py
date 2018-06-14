@@ -25,7 +25,8 @@ def post_analysis(beta_parameter_list, observables,
 	q0_flow_times, euclidean_time_percents, extrapolation_methods="nearest",
 	plot_continuum_fit=False, figures_folder="figures", 
 	post_analysis_data_type=["bootstrap", "jackknife", "unanalyzed"], 
-	bval_to_plot="all", gif_params=None, verbose=False):
+	bval_to_plot="all", gif_params=None, t0_value_extraction=None, 
+	verbose=False):
 	"""
 	Post analysis of the flow observables.
 
@@ -56,6 +57,8 @@ def post_analysis(beta_parameter_list, observables,
 				"betas_to_plot": "all",
 				"plot_together": False,
 				"error_shape": "band"}
+		t0_value_extraction: bool, will write values at given t0 to file 
+			if True.
 		verbose: bool, a more verbose run. Default is False.
 	"""
 
@@ -85,21 +88,12 @@ def post_analysis(beta_parameter_list, observables,
 	# 		for extrap_method in extrapolation_methods} 
 	# 	for obs in observables
 	# }
+
+	# Dictionary to store values we are to write out to file in.
 	comparison_values = {obs: {atype: {} 
 			for atype in post_analysis_data_type}
 		for obs in observables
 	}
-
-	# print comparison_values
-	# exit(1)
-
-	if "plaq" in observables:
-		plaq_analysis = PlaqPostAnalysis(data,
-			figures_folder=figures_folder, verbose=verbose)
-		for analysis_type in post_analysis_data_type:
-			plaq_analysis.set_analysis_data_type(analysis_type)
-			print plaq_analysis
-			plaq_analysis.plot()
 
 	if "energy" in observables:
 		for extrapolation_method in extrapolation_methods:
@@ -139,6 +133,15 @@ def post_analysis(beta_parameter_list, observables,
 
 	data.set_reference_values(t0_reference_scale)
 
+	if "plaq" in observables:
+		plaq_analysis = PlaqPostAnalysis(data,
+			figures_folder=figures_folder, verbose=verbose)
+		for analysis_type in post_analysis_data_type:
+			plaq_analysis.set_analysis_data_type(analysis_type)
+			print plaq_analysis
+			plaq_analysis.plot()
+
+
 	if "topc" in observables:
 		topc_analysis = TopcPostAnalysis(data, 
 			figures_folder=figures_folder,verbose=verbose)
@@ -146,6 +149,8 @@ def post_analysis(beta_parameter_list, observables,
 			topc_analysis.set_analysis_data_type(analysis_type)
 			print topc_analysis
 			topc_analysis.plot(y_limits=[-5,5])
+			comparison_values[obs][analysis_type] = \
+				topc_analysis.get_values("t0", analysis_type)
 
 	if "topc2" in observables:
 		topc2_analysis = Topc2PostAnalysis(data, 

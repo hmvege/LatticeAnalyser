@@ -13,7 +13,7 @@ class TopsusCore(PostCore):
 	observable_name_compact = "topsus_core"
 
 	# Regular plot variables
-	x_label = r"$\sqrt{8t_{flow}}[fm]$"
+	x_label = r"$\sqrt{8t_f}[fm]$"
 
 	# Continuum plot variables
 	y_label_continuum = r"$\chi^{1/4}[GeV]$"

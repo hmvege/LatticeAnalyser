@@ -16,9 +16,10 @@ import types
 
 __all__ = ["FlowAnalyser"]
 
-from matplotlib import rc
+from matplotlib import rc, rcParams
 rc("text", usetex=True)
-rc("font", **{"family": "serif", "serif": ["Computer Modern"]})
+# rc("font", **{"family": "sans-serif", "serif": ["Computer Modern"]})
+rcParams["font.family"] += ["serif"]
 
 class FlowAnalyser(object):
 	observable_name = "Missing_Observable_Name"
@@ -735,7 +736,7 @@ class FlowAnalyser(object):
 		y_std = self.autocorrelations_errors[flow_time_index,:]
 
 		# Sets up the title and filename strings
-		title_string = r"Autocorrelation of %s, $t_{flow}=%.2f$" % (
+		title_string = r"Autocorrelation of %s, $t_f=%.2f$" % (
 			self.observable_name, flow_time_index*self.flow_epsilon)
 		fname_path = os.path.join(self.observable_output_folder_path,
 			"{0:<s}_autocorrelation_flowt{1:<d}_beta{2:<s}{3:<s}.png".format(
@@ -787,7 +788,7 @@ class FlowAnalyser(object):
 		ax.plot(x,y,color="0")
 		ax.fill_between(x, y - y_std, y + y_std, 
 			alpha=0.5, edgecolor='', facecolor='#6699ff')
-		ax.set_xlabel(r"$\sqrt{8t_{flow}}$")
+		ax.set_xlabel(r"$\sqrt{8t_f}$")
 		ax.set_ylabel(r"$\tau_{int}$")
 		ax.set_title(title_string)
 		ax.grid(True)
@@ -842,7 +843,7 @@ class FlowAnalyser(object):
 		assert flow_time_index < N_unanalyzed, assertion_str
 
 		# Sets up title and file name strings
-		title_string = r"Spread of %s, $t_{flow}=%.2f$" % (self.observable_name,
+		title_string = r"Spread of %s, $t_f=%.2f$" % (self.observable_name,
 			flow_time_index*self.flow_epsilon)
 		fname_path = os.path.join(self.observable_output_folder_path,
 			"{0:<s}_histogram_flowt{1:>04d}_beta{2:<s}{3:<s}.png".format(
@@ -997,7 +998,7 @@ class FlowAnalyser(object):
 		assert flow_time_index < len(self.unanalyzed_y_data), assertion_str
 
 		# Sets up title and file name strings
-		title_string = r"Monte Carlo history at $t_{flow} = %.2f$" % (
+		title_string = r"Monte Carlo history at $t_f = %.2f$" % (
 			flow_time_index*self.flow_epsilon)
 		fname_path = os.path.join(self.observable_output_folder_path,
 			"{0:<s}_mchistory_flowt{1:>04d}_beta{2:<s}{3:<s}.png".format(

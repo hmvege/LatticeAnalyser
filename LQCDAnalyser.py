@@ -43,14 +43,14 @@ def main():
 	# observables = ["topcr", "topsus"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
 	# observables = ["topcr"]
-	# observables = []
+	observables = ["topc"]
 	# observables = ["qtq0eff", "qtq0e"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["qtq0eff", "qtq0e"] + ["topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["topsusqtq0"]
-	observables = ["topsus"]
+	# observables = ["topsus"]
 
-	# observables += ["energy"]
+	observables += ["energy"]
 
 	#### Base parameters
 	N_bs = 500
@@ -78,7 +78,7 @@ def main():
 	run_post_analysis = True
 	line_fit_interval_points = 20
 	# topsus_fit_targets = [0.3,0.4,0.5,0.58]
-	topsus_fit_targets = [0.3, 0.4, 0.5, 0.6]
+	topsus_fit_targets = [0.3, 0.4, 0.5, 0.6] # tf = sqrt(8*t0)
 	topsus_fit_targets = [0.6]
 	energy_fit_target = 0.3
 

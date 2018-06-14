@@ -9,6 +9,7 @@ import types
 import copy
 # from tqdm import tqdm
 
+
 def _extract_inverse(fit_target, X, Y, Y_err):
     """
     Simple method for finding the x axis value to a target value.
@@ -54,10 +55,7 @@ def _get_covariance_matrix_from_raw(y_raw, iscov=False):
     Returns a covariance matrix that is guaranteed to not be singular.
     """
     if not iscov:
-        # cov_raw = np.cov(copy.deepcopy(y_raw))
         cov_raw = np.cov(y_raw)
-        # y_mean = np.mean(y_raw, axis=1)
-        # cov_raw = np.dot(y_raw - y_mean[:, None], (y_raw - y_mean[:, None]).T)/(len(y_raw) - 1)
     else:
         cov_raw = y_raw
 
@@ -120,7 +118,7 @@ def __plot_fit_target(x, y, yerr, x0, y0, y0err, title_string="",
     plt.close(fig)
 
 def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
-    tau_int_err=None, inverse_fit=False, fraw=None, ferrraw=None):
+    tau_int_err=None, inverse_fit=False):
     """
     Extract y0 with y0err at a given x0 by using a line fit with the 
     covariance matrix from the raw y data.
@@ -151,75 +149,12 @@ def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
     assert not isinstance(tau_int_err, types.NoneType), \
         "missing tau_int_err values."
 
-    # import scipy.io as sio
-
-    # print y_raw.shape
-    # print y_raw.mean(axis=1)
-    # exit(1)
-
-    # # cov_raw1 = _get_covariance_matrix_from_raw(y_raw)
-    # y_raw1 = y_raw
-    # y_err1 = y_err
-    # tau_int1 = tau_int
-    # y1 = y
-    # x1 = x
-
-    # print "%16.30f" % y_raw1[0,0]
-
-    # data = sio.loadmat("../../MATLAB-TEST/line_fit_data4.mat")
-    # data = sio.loadmat("../../../MATLAB-TEST/line_fit_data2.mat")
-
-    # x = copy.deepcopy(data["x"][0])
-    # y = copy.deepcopy(data["y"][0])
-    # y_err = copy.deepcopy(data["y_err"][0])
-    # y_raw = copy.deepcopy(data["y_raw"])
-    # tau_int = copy.deepcopy(data["tau_int"][0])
-
-    # y_raw = np.load("../raw_vals.npy")
-
-    # x = np.load("../x.npy")
-    # y = np.load("../y.npy")
-    # y_err = np.load("../y_err.npy")
-    # y_raw = np.load("../y_raw.npy")
-    # tau_int = np.load("../tau_int.npy")
-
-    # print "%16.30f" % y_raw[0,0]
-
-    # print np.all(y_raw == y_raw1)
-    # print np.all(y == y1)
-    # print np.all(y_err == y_err1)
-    # print np.all(x == x1)
-    # print np.all(tau_int == tau_int1)
-
-    # TODO: Investegate why there is a discrepancy between getting covariance here and in least_squares_fit.py
-    # TODO: Figure out why my linefit y values is shifted by such a large amount
-    # temp = copy.deepcopy(y_raw)
-    # cov_raw = copy.deepcopy(_get_covariance_matrix_from_raw(temp))
-    # temp1 = copy.deepcopy(y_raw1)
-    # cov_raw1 = copy.deepcopy(_get_covariance_matrix_from_raw(temp1))
     cov_raw = _get_covariance_matrix_from_raw(y_raw)
 
-    # her burde de bli likt!!!
-    # print np.all(cov_raw == cov_raw1)
-
-    # print cov_raw == cov_raw1
-
-    # matlab_data = {
-    #   "x": x,
-    #   "y": y,
-    #   "y_err": y_err,
-    #   "y_raw": y_raw,
-    #   "tau_int": tau_int,
-    #   "covmat": cov_raw,
-    # }
-    # sio.savemat("line_fit_data2", matlab_data)
-    # exit(1)
-
     # Line fit from the mean values and the raw values covariance matrix
-    # pol_raw, polcov_raw = sciopt.curve_fit(f, x, y, sigma=copy.deepcopy(cov_raw), p0=[0.18, 0.0], maxfev=1200) 
-    pol_raw, polcov_raw = sciopt.curve_fit(f, x, y, sigma=cov_raw, p0=[0.18, 0.0], maxfev=1200) 
+    pol_raw, polcov_raw = sciopt.curve_fit(f, x, y, sigma=cov_raw, 
+        p0=[0.18, 0.0], maxfev=1200) 
     pol_raw_err = np.sqrt(np.diag(polcov_raw))
-    print pol_raw, pol_raw_err
 
     # Extract fit target values
     lfit_raw = lfit.LineFit(x, y, y_err)
@@ -227,17 +162,28 @@ def _extract_plateau_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
         pol_raw_err[0], weighted=True)
     y0, y0_error, chi_squared = lfit_raw(fit_target, weighted=True)
 
-    print "params: ", [lfit_raw.b1w, lfit_raw.b0w], [lfit_raw.b1w_err, lfit_raw.b0w_err]
-
     if inverse_fit:
         y0, y0_error = lfit_raw.inverse_fit(fit_target, weighted=True)
     else:
         y0 = y0[0] #  y0 and y0_error both comes in form of arrays
 
-        f_err = lambda _x, a_err, b_err: np.sqrt((_x*a_err)**2 + (b_err)**2 + 2*a_err*_x*b_err)
-        y0_error = f_err(fit_target, pol_raw_err[0], pol_raw_err[1])
+        f_err = lambda _x, a_err, b_err: np.sqrt(
+            (_x*a_err)**2 + (b_err)**2 + 2*a_err*_x*b_err)
+        err = f_err(fit_target, pol_raw_err[0], pol_raw_err[1])
         
-        print "Plateau fit: %20.16f +/- %-20.16f, chi^2 %g" % (y0, y0_error, chi_squared)
+        # If I want to include covariances in old fit model, assuming that 
+        # y0_error is only a combination of a and b errors.
+        y0_error = (y0_error[1][0] - y0_error[0][0])/2
+        y0_error = np.sqrt(
+            y0_error**2 + 2*fit_target*pol_raw_err[0]*pol_raw_err[1])
+        
+        # print y0_error, err, y0_error - err
+
+        y0_error = f_err(fit_target, pol_raw_err[0], pol_raw_err[1])
+        # y0_error = err
+        
+        # print "Plateau fit: %20.16f +/- %-20.16f, chi^2 %g" % (
+        #     y0, y0_error, chi_squared)
         # exit(1)
 
     # Gets the tau int using a line fit, given it is provide.
@@ -320,7 +266,7 @@ def _extract_plateau_mean_fit(fit_target, f, x, y, y_err, inverse_fit=False):
 
 def _extract_bootstrap_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
     tau_int_err=None, plot_samples=False, F=lambda _y: _y, FDer=lambda _y, 
-    _yerr: _yerr, inverse_fit=False):
+    _yerr: _yerr, inverse_fit=False, full=False):
     """
     Extract y0 with y0err at a given x0 by using line fitting the y_raw data.
     Error will be corrected by line fitting tau int and getting the exact
@@ -344,21 +290,27 @@ def _extract_bootstrap_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
             propagation.
         inverse_fit: bool, optional. If True, will perform an inverse fit, with
             the fit target as a y axis value. Default is False.
+        full: bool, optional. If True, returns the entire line, and not just 
+            y0 with its errors.
 
     Returns:
         y0, y0_error, tau_int0, chi_squared
     """
 
-    y0_sample = np.zeros(y_raw.shape[-1])
-    y0_sample_err = np.zeros(y_raw.shape[-1])
+    N, M = y_raw.shape # Points, samples
+    y0_sample = np.zeros(M)
+    y0_sample_err = np.zeros(M)
 
     if plot_samples:
+        N_plot_values = 1000
+        x_plot = np.linspace(x[0], x[-1], N_plot_values)
         fig_samples = plt.figure()
         ax_samples = fig_samples.add_subplot(111)
 
         # Empty arrays for storing plot means and errors        
-        plot_ymean = np.zeros(y_raw.shape)
-        plot_yerr = np.zeros((y_raw.shape[0], y_raw.shape[1], 2))
+        y_plot_points = np.zeros((N, M))
+        plot_ymean = np.zeros((N_plot_values, M))
+        plot_yerr = np.zeros((N_plot_values, M, 2))
 
     # Gets the bootstrapped line fits
     # for i, y_sample in enumerate(tqdm(y_raw.T, desc="Sample line fitting")):
@@ -375,7 +327,8 @@ def _extract_bootstrap_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
             # _x0_err is not needed, is error cannot be inflated by the 
             # autocorrelation. 
             try:
-                y0_sample[i], y0_sample_err[i] = fit_sample.inverse_fit(fit_target)
+                y0_sample[i], y0_sample_err[i] = \
+                    fit_sample.inverse_fit(fit_target)
             except IndexError as err:
                 print "Points included: %s" % y0_raw.shape
                 fit_sample.plot()
@@ -385,13 +338,16 @@ def _extract_bootstrap_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
             y0_sample_err[i] = (_tmp_err[1] - _tmp_err[0])/2
 
         if plot_samples:
-            plot_ymean[:,i], _p_err = fit_sample(x)
+            # Retrieves at exactly sample values x
+            y_plot_points[:,i], _, _ = fit_sample(x)
+
+            # Retrieves a smooth set of y values.
+            plot_ymean[:,i], _p_err, _ = fit_sample(x_plot)
             plot_yerr[:,i] = np.asarray(_p_err).T
 
-            ax_samples.fill_between(x, plot_yerr[:,i,0], plot_yerr[:,i,1], 
+            ax_samples.fill_between(x_plot, plot_yerr[:,i,0], plot_yerr[:,i,1],
                 alpha=0.01, color="tab:red")
-            ax_samples.plot(x, plot_ymean, label="Scipy curve fit",
-                color="tab:red", alpha=0.1)
+            ax_samples.plot(x_plot, plot_ymean[:,i], color="tab:red", alpha=0.1)
 
     y0_mean = F(np.mean(y0_sample, axis=0))
 
@@ -435,29 +391,36 @@ def _extract_bootstrap_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
         sample_mean = F(np.mean(plot_ymean, axis=1))
         sample_std = FDer(np.mean(plot_ymean, axis=1), 
             np.std(plot_ymean, axis=1) * np.sqrt(2*tau_int0))
+        
+        y_sample_points = F(np.mean(y_plot_points, axis=1))
+
+        bs_chi2 = lfit.LineFit.chi_squared(y, y_err, y_sample_points)
 
         # sample_mean = np.mean(plot_ymean, axis=1)
         # sample_std = np.std(plot_ymean, axis=1)*np.sqrt(2*tau_int0)
 
         # Sets up sample std edges
-        ax_samples.plot(x, sample_mean - sample_std, x, 
+        ax_samples.plot(x_plot, sample_mean - sample_std, x_plot, 
             sample_mean + sample_std, color="tab:blue", alpha=0.6)
 
         # Plots sample mean
-        ax_samples.plot(x, sample_mean, label="Averaged samples fit", 
+        ax_samples.plot(x_plot, sample_mean, label="Averaged samples fit", 
             color="tab:blue")
 
         # Plots original data with error bars
         ax_samples.errorbar(x, y, yerr=y_err, marker=".", 
-            linestyle="-", color="tab:orange", label="Original")
+            linestyle="none", color="tab:orange", label="Original")
 
-        ax_samples.title(r"$\chi^2: %g$" % 
-            lfit.LineFit.chi_squared(y, y_err, sample_mean))
+        ax_samples.set_title(r"$\chi^2: %g$" % bs_chi2)
 
         plt.show()
         plt.close(fig_samples)
 
-    return y0_mean, y0_std, tau_int0
+    
+    if full:
+        return y0_mean, y0_std, tau_int0, bs_chi2, x_plot, sample_mean, sample_std
+    else:
+        return y0_mean, y0_std, tau_int0
 
 
 def __get_tau_int(x0, x, tau_int, tau_int_err):
@@ -553,7 +516,7 @@ def _test_simple_line_fit():
         color="tab:blue")
     ax1.errorbar(x, signal_mean, yerr=signal_err, marker="o", label="Signal", 
         linestyle="none", color="tab:orange")
-    ax1.set_ylim(0.5, 5)
+    ax1.set_ylim(0, 5)
     ax1.axvline(x_fit, color="tab:orange")
     ax1.fill_betweenx(np.linspace(0,6,100), x_fit - x_fit_err, x_fit + x_fit_err, 
         label=r"$x_0\pm\sigma_{x_0}$", alpha=0.5, color="tab:orange")
@@ -626,7 +589,7 @@ def _test_simple_line_fit():
     ax2.plot(x_hat, yw_hat, label="Weighted fit", color="tab:blue")
     ax2.fill_between(x_hat, yw_hat_err[0], yw_hat_err[1], alpha=0.5, 
         color="tab:blue")
-    ax2.set_ylim(0.5, 5)
+    ax2.set_ylim(0, 5)
     ax2.axvline(xw_fit, color="tab:orange")
     ax2.fill_betweenx(np.linspace(0,6,100), xw_fit - xw_fit_error, 
         xw_fit + xw_fit_error, label=r"$x_{0,w}\pm\sigma_{x_0,w}$", 
@@ -738,49 +701,63 @@ def _test_bootstrap(x, y, x0, _f=lambda _x, a, b: _x*a + b, N_bs=50):
     x_hat = x[0,:]
     y_mean, y_err = y.mean(axis=0), y.std(axis=0)
 
-    M, N = y.shape
-    random_fit_indexes = np.random.randint(0, M, size=(N_bs, M, N))
-    y_bs = np.zeros((N_bs, N))
-    for i_bs in xrange(N_bs):
-        for j in xrange(N):
-            y_bs[i_bs,j] = y[random_fit_indexes[i_bs,:,j], j].mean()
+    # M, N = y.shape
+    # random_fit_indexes = np.random.randint(0, M, size=(N_bs, M, N))
+    # y_bs = np.zeros((N_bs, N))
+    # for i_bs in xrange(N_bs):
+    #     for j in xrange(N):
+    #         y_bs[i_bs,j] = y[random_fit_indexes[i_bs,:,j], j].mean()
 
     tau_int, tau_int_err = np.ones(len(x_hat))*0.5, np.zeros(len(x_hat))+0.001
 
     # Gets values to plot
-    bs_mean, bs_err = np.zeros(len(x_hat)), np.zeros(len(x_hat))
-    for i, _x0 in enumerate(x_hat):
-        res = _extract_bootstrap_fit(_x0, _f, x_hat, y_mean, y_err, y_bs.T, tau_int,
-            tau_int_err)
-        bs_mean[i] = res[0]
-        bs_err[i] = res[1]
+    # bs_mean, bs_err = np.zeros(len(x_hat)), np.zeros(len(x_hat))
+    # for i, _x0 in enumerate(x_hat):
+    #     res = _extract_bootstrap_fit(_x0, _f, x_hat, y_mean, y_err, y_bs.T, tau_int,
+    #         tau_int_err)
+    #     bs_mean[i] = res[0]
+    #     bs_err[i] = res[1]
+
+    y0, y0err, _, bs_chi2, bs_x, bs_mean, bs_err = _extract_bootstrap_fit(x0, _f, x_hat, y_mean, 
+        y_err, y.T, tau_int, tau_int_err, plot_samples=True, full=True)
+
+    # bs_mean, bs_err = np.zeros(len(x_hat)), np.zeros(len(x_hat))
+    # for i, _x0 in enumerate(x_hat):
+    #     res = _extract_bootstrap_fit(_x0, _f, x_hat, y_mean, y_err, y.T, tau_int,
+    #         tau_int_err, plot_samples=True)
+    #     bs_mean[i] = res[0]
+    #     bs_err[i] = res[1]
+
+    # skaff en kontinuerlig linje her!
+
+        # return_value[i] = _extract_bootstrap_fit(_x0, _f, x_hat, y_mean, y_err, y.T, tau_int,
+        #     tau_int_err)
 
     fig_bs = plt.figure()
     ax_bs = fig_bs.add_subplot(111)
 
     # Sets up bs std edges
-    ax_bs.fill_between(x_hat, bs_mean-bs_err, bs_mean+bs_err, alpha=0.5,
+    ax_bs.fill_between(bs_x, bs_mean-bs_err, bs_mean+bs_err, alpha=0.5,
         color="tab:blue")
 
     # Plots bs mean
-    ax_bs.plot(x_hat, bs_mean, label="Bootstrap fit", color="tab:blue")
+    ax_bs.plot(bs_x, bs_mean, label="Bootstrap fit", color="tab:blue")
 
     # Plots original data with error bars
     ax_bs.errorbar(x_hat, y_mean, yerr=y_err, marker=".", linestyle="none", 
         color="tab:orange", label=r"Signal")
-    ax_bs.set_title(r"$\chi^2=%g$" % 
-        lfit.LineFit.chi_squared(y_mean, y_err, bs_mean))
+    ax_bs.set_title(r"$\chi^2=%g$" % bs_chi2)
     ax_bs.axvline(x0, color="tab:grey", linestyle=":",
         label=r"$x_0$ fit target")
     ax_bs.legend(loc="best")
+    ax_bs.set_ylim(0, 5)
     fig_name = "tests/bootstrap_inverse_fit.png"
     # print "%s saved." % fig_name
     fig_bs.savefig(fig_name, dpi=400)
     # plt.show()
     plt.close(fig_bs)
 
-    return _extract_bootstrap_fit(x0, _f, x_hat, y_mean, y_err, y_bs.T, tau_int,
-            tau_int_err)[:2]
+    return y0, y0err
 
 def _test_plateau(x, y, x0, _f=lambda _x, a, b: _x*a + b):
     """
@@ -790,6 +767,8 @@ def _test_plateau(x, y, x0, _f=lambda _x, a, b: _x*a + b):
     y_mean, y_err = y.mean(axis=0), y.std(axis=0)
 
     tau_int, tau_int_err = np.ones(len(x_hat))*0.5, np.zeros(len(x_hat))+0.001
+
+    _extract_plateau_fit
 
     # Gets values to plot
     x0_plot = np.linspace(x_hat[0], x_hat[-1], 1000)
@@ -814,7 +793,7 @@ def _test_plateau(x, y, x0, _f=lambda _x, a, b: _x*a + b):
         color="tab:blue")
     ax.errorbar(x_hat, y_mean, yerr=y_err, marker=".", linestyle="none",
         color="tab:orange", label=r"Signal")
-    ax.set_ylim(0.5, 5)
+    ax.set_ylim(0, 5)
     ax.set_title(r"$\chi^2=%g$" % 
         lfit.LineFit.chi_squared(y_mean, y_err, y0_mean_chi2))
     ax.axvline(x0, color="tab:grey", linestyle=":", label=r"$x_0$ fit target")
@@ -857,7 +836,7 @@ def _test_plateau_mean(x, y, x0, _f=lambda _x, a, b: _x*a + b):
         y_fit_mean+y_fit_err, alpha=0.5, color="tab:blue")
     ax.errorbar(x_hat, y_mean, yerr=y_err, marker=".", linestyle="none",
         color="tab:orange", label=r"Signal")
-    ax.set_ylim(0.5, 5)
+    ax.set_ylim(0, 5)
     ax.set_title(r"$\chi^2=%g$" % lfit.LineFit.chi_squared(y_mean, y_err, y_hat))
     ax.axvline(x0, color="tab:grey", linestyle=":", label=r"$x_0$ fit target")
     ax.legend(loc="best", prop={"size": 8})
@@ -886,7 +865,7 @@ def _test_interpolation(x, y, x0, _f=lambda _x, a, b: _x*a + b, k_spline=1):
         spline_mean+spline_err, alpha=0.5, color="tab:blue")
     ax_spl.errorbar(x_hat, signal_mean, yerr=signal_err, marker=".", 
         linestyle="none", color="tab:orange", label=r"Signal")
-    ax_spl.set_ylim(0.5, 5)
+    ax_spl.set_ylim(0, 5)
     ax_spl.set_title(r"$\chi^2=%g$" % 
         lfit.LineFit.chi_squared(signal_mean, signal_err, spl_fit))
     ax_spl.axvline(x0, color="tab:grey", linestyle=":",
@@ -908,12 +887,13 @@ def _test_nearest(x, y, x0, _f=lambda _x, a, b: _x*a + b):
     ax = fig.add_subplot(111)
     ax.errorbar(x_hat, y_mean, yerr=y_err, marker=".", 
         linestyle="none", color="tab:orange", label=r"Signal")
-    ax.set_ylim(0.5, 5)
+    ax.set_ylim(0, 5)
     ax.axvline(x0, color="tab:grey", linestyle=":",
         label=r"$x_0$ fit target")
 
     # Plots hline to illustrate error bars
-    ax.axhline(y_mean[fit_index], color="tab:blue", label=r"$y(x_0)$ value estimation")
+    ax.axhline(y_mean[fit_index], color="tab:blue", 
+        label=r"$y(x_0)$ value estimation")
     err_upper = (y_mean[fit_index]+y_err[fit_index])*np.ones(len(x_hat))
     err_lower = (y_mean[fit_index]-y_err[fit_index])*np.ones(len(x_hat))
     ax.fill_between(x_hat, err_lower, err_upper, alpha=0.5, color="tab:blue")
@@ -952,7 +932,7 @@ def _test_fit_methods():
     tab_print("Nearest", _test_nearest(x_matrix, signal, x0))
     tab_print("Interpolation", _test_interpolation(x_matrix, signal, x0, 
         k_spline=3))
-    tab_print("Bootstrap", _test_bootstrap(x_matrix, signal, x0))
+    tab_print("Bootstrap", _test_bootstrap(x_matrix, signal, x0))    
     tab_print("Plateau mean", _test_plateau_mean(x_matrix, signal, x0))
     tab_print("Plateau", _test_plateau(x_matrix, signal, x0))
 
@@ -964,8 +944,8 @@ def _test_fit_methods():
     # print "Plateau linefit: ", _test_plateau(x_matrix, signal, x0)
 
 def main():
-    # _test_fit_methods()
-    _test_simple_line_fit()
+    _test_fit_methods()
+    # _test_simple_line_fit()
     # _test_inverse_line_fit()
 
 if __name__ == '__main__':

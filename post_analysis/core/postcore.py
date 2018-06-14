@@ -6,9 +6,11 @@ import numpy as np
 import os
 import types
 
-from matplotlib import rc
+from matplotlib import rc, rcParams
 rc("text", usetex=True)
-rc("font", **{"family": "serif", "serif": ["Computer Modern"]})
+# rc("font", **{"family": "serif", "serif": ["Computer Modern"]})
+rcParams["font.family"] += ["serif"]
+
 
 class PostCore(object):
 	"""Post analysis base class."""
@@ -169,11 +171,8 @@ class PostCore(object):
 	def _check_plot_values(self):
 		"""Checks if we have set the analysis data type yet."""
 		if not hasattr(self, "plot_values"):
-			raise AttributeError("set_analysis_data_type() has not been set yet.")
-
-	# def get_observable_at(self, tf):
-	# 	return self.
-
+			raise AttributeError(
+				"set_analysis_data_type() has not been set yet.")
 
 	def set_analysis_data_type(self, analysis_data_type="bootstrap"):
 		"""Sets the analysis type and retrieves correct analysis data."""
@@ -308,7 +307,8 @@ class PostCore(object):
 
 		plt.close(fig)
 
-	def _get_plot_figure_name(self, output_folder=None, figure_name_appendix=""):
+	def _get_plot_figure_name(self, output_folder=None, 
+		figure_name_appendix=""):
 		"""Retrieves appropriate figure file name."""
 		if isinstance(output_folder, types.NoneType):
 			output_folder = self.output_folder_path
@@ -316,47 +316,79 @@ class PostCore(object):
 			self.analysis_data_type, figure_name_appendix)
 		return os.path.join(output_folder, fname)
 
-	def get_values(self, tf, atype=None, extrap_method=None):
+
+	def get_values(self, tf, atype, extrap_method=None):
 		"""
 		Method for retrieving values a given flow time t_f.
 
 		Args:
 			tf: float or str. (float) flow time at a given t_f/a^2. If 
 				string is "t0", will return the flow time at reference value
-				t0/a^2 from t^2<E>=0.3 for a given beta.
+				t0/a^2 from t^2<E>=0.3 for a given beta. "tfbeta" will use the
+				t0 value for each particular beta value.
 			atype: str, type of analysis we have performed.
-			extrap_method: str, type of extrapolation technique used.
+			extrap_method: str, type of extrapolation technique used. If None,
+				will use method which is present.
 
 		Returns:
 			{beta: {t0, y0, y0_error}
 		"""
 
-		if isinstance(atype, types.NoneType):
-			atype = self.analysis_data_type
+		# Checks that the extrapolation method exists
 		if isinstance(extrap_method, types.NoneType):
+			# If module has the extrapolation method, but it is not set, the 
+			# one last used will be the method of choice.
 			if hasattr(self, "extrapolation_method"):
 				extrap_method = self.extrapolation_method
-			else:
-				raise KeyError("Missing extrapolation method.")
 
-		values = {}
+		values = {beta: {} for beat in self.beta_values}
+		# t0 = {beta: {} for beat in self.beta_values}
 
-		print self.reference_values.keys()
-		print self.reference_values[atype].keys()
+		# Sets the correct tf value
+		if isinstance(tf, str):
+			if tf == "t0":
+				if isinstance(extrap_method, types.NoneType):
+					tf = self.reference_values[atype].values()[0]["t0_cont"]
+				else:
+					tf = self.reference_values[atype][extrap_method]["t0_cont"]
+			# elif tf == "t0beta":
+			# 	tf = 
 
-		if tf == "t0":
-			for b in self.beta_values:
-				tf0 = self.plot_values["beta"]["x"]
-				values[b] = {}
-			# return self.y
-			np.argmin()
-			pass
+			sørge for at the det er mulig med local t0 også... kanskje flytte seleksjonen 
+			av t0 til en egen funksjon som kan bli satt i de mer spesielle tilfellene?
+
+			else: # Stupid error check
+				raise ValueError("%s is not a valid key. Use t0.")
 		else:
-			assert isinstance(tf, float), "tf not of type float"
+			assert isinstance(tf, float), "input should be float."
+
+		for beta in self.beta_values:
+			a = self.plot_values[beta]["a"]
+
+			# Selects index closest to q0_flow_time
+			tf_index = np.argmin(np.abs(self.plot_values[beta]["x"] - tf))
+			
+			# print a*np.sqrt(8*np.linspace(0,10-0.01,1000))[-1]
+			# print self.plot_values[beta]["x"][-1]
+
+			values[beta]["t0"]
 
 
-		exit("woop")
-		raise NotImplementedError("Not implemented method for retrieving values yet.")
+
+
+
+		# if tf == "t0":
+		# 	for b in self.beta_values:
+		# 		tf0 = self.plot_values["beta"]["x"]
+		# 		values[b] = {}
+		# 	# return self.y
+		# 	np.argmin()
+		# 	pass
+		# else:
+		# 	assert isinstance(tf, float), "tf not of type float"
+
+		raise NotImplementedError(
+			"Not implemented method for retrieving values yet.")
 
 	def __str__(self):
 		"""Class string representation method."""
@@ -369,8 +401,10 @@ class PostCore(object):
 		msg += "\n" + "="*100
 		return msg
 
+
 def main():
 	exit("Exit: PostCore is not intended to be used as a standalone module.")
+
 
 if __name__ == "__main__":
 	main()

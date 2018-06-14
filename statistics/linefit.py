@@ -13,10 +13,14 @@ from tqdm import tqdm
 __all__ = ["LineFit", "extract_fit_target"]
 
 
-from matplotlib import rc
+from matplotlib import rc, rcParams
 rc("text", usetex=True)
-rc("font", **{"family": "serif", "serif": ["Computer Modern"]})
+rcParams["font.family"] += ["serif"]
+# rcParams["font.serif"] += ["Computer Modern"]
 
+# rcParams["font.serif"] = ["Computer Modern Roman"]
+# rcParams["font.serif"] = ["Computer Modern"]
+# rc("font", **{"family": "serif", "serif": ["Computer Modern"]})
 
 class LineFit:
 	"""
