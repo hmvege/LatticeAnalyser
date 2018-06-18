@@ -5,6 +5,7 @@ import numpy as np
 import re
 import pandas as pd
 import json
+import types
 
 __all__ = ["DataReader", "check_folder", "get_NBoots", "write_data_to_file",
 	"write_raw_analysis_to_file"]
@@ -815,9 +816,12 @@ def write_raw_analysis_to_file(raw_data, analysis_type, observable,
 		print ("Analysis %s for observable %s stored as binary data at %s.npy" 
 			% (analysis_type, observable, file_name_path))
 
-def get_num_observables(batch_folder, beta_folder):
+def get_num_observables(batch_folder, beta_folder=None):
 	"""Gets the number of observable in a folder."""
-	flow_path = os.path.join(batch_folder, beta_folder, "flow_observables")
+	if isinstance(beta_folder, types.NoneType):
+		flow_path = os.path.join(batch_folder, "flow_observables")
+	else:
+		flow_path = os.path.join(batch_folder, beta_folder, "flow_observables")
 	num_obs = []
 
 	# If flow path do not exist, then we return

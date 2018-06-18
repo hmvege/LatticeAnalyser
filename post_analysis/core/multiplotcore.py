@@ -275,7 +275,7 @@ class MultiPlotCore(PostCore):
 		# if plot_with_formula:
 		# 	title_string += r" %s" % self.formula
 		# plt.suptitle(title_string)
-		plt.tight_layout(pad=1.7)
+		# plt.tight_layout(pad=1.7)
 
 		# Saves and closes figure
 		if beta == "all":

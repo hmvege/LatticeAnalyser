@@ -2,6 +2,7 @@ from collections import OrderedDict
 import numpy as np
 import types
 
+
 def _check_splits(N, numsplits):
     """Checks if the temporal dimension has been split into good .intervals"""
     assert N % numsplits == 0, ("Bad number of splits: N %% "
@@ -15,6 +16,7 @@ def _check_intervals(intervals, numsplits):
 
         raise ValueError(("Either provide MC intervals to plot for or the "
             "number of MC intervals to split into."))
+
 
 def interval_setup(beta_param_list, int_type):
     """
@@ -59,6 +61,7 @@ def interval_setup(beta_param_list, int_type):
         interval_dict_list = np.asarray(_temp).T
 
     return interval_dict_list
+
 
 def get_intervals(N, numsplits=None, intervals=None):
     """
@@ -168,8 +171,10 @@ def write_fit_parameters_to_file(fparams, fname, skip_values=None, verbose=False
                 print line_values
             f.write(line_values + "\n")
 
+
 def main():
     exit("%s Not intended as standalone module." % __name__)
+
 
 if __name__ == '__main__':
     main()

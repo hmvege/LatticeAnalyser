@@ -25,6 +25,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 	dpi=400
 	fold = True
 	fold_range = 20
+	subfolder_type = "tflow"
 
 	def __init__(self, *args, **kwargs):
 		# Ensures we load correct data

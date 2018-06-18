@@ -7,6 +7,7 @@ import copy
 import os
 import numpy as np
 
+
 def main():
 	#### Available observables
 	observables = [
@@ -36,14 +37,14 @@ def main():
 
 	# observables = observables_euclidean_time
 	observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
-	# observables = ["topc", "plaq", "topsus", "topcr"]
+	observables = ["topc", "plaq", "topsus"]
 	# observables = ["topcr", "qtq0eff"]
-	observables = ["topc4"]
+	# observables = ["topc4"]
 	# observables = observables_euclidean_time
 	# observables = ["topcr", "topsus"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
 	# observables = ["topcr"]
-	observables = ["topc"]
+	# observables = ["topcr"]
 	# observables = ["qtq0eff", "qtq0e"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["qtq0eff", "qtq0e"] + ["topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
@@ -96,9 +97,8 @@ def main():
 	#### Different batches
 	# data_batch_folder = "../GluonAction/data8"
 	data_batch_folder = "../GluonAction/data9"
-	# data_batch_folder = "../topc_modes_8x16"
 	# data_batch_folder = "../GluonAction/DataGiovanni"
-	# data_batch_folder = "smaug_data_beta61"
+	# data_batch_folder = "../data/topc_modes_8x16"
 	
 	figures_folder = "figures"
 
@@ -112,13 +112,16 @@ def main():
 	else:
 		correct_energy = True
 
-	# Method of continuum extrapolation
+	# Method of continuum extrapolation. 
 	# Options: plateau, plateau_mean, nearest, interpolate, bootstrap
-	extrapolation_methods = ["plateau", "plateau_mean", "nearest", "interpolate", "bootstrap"]
+	extrapolation_methods = ["plateau", "plateau_mean", "nearest",
+		"interpolate", "bootstrap"]
 	extrapolation_methods = ["plateau"]
 	extrapolation_methods = ["bootstrap"]
-	# extrapolation_methods.remove("bootstrap") # Not viable for our methods, as data is strongly autocorrelated
 	plot_continuum_fit = True
+
+	# Topcr reference value. Options: [float], t0beta, article, t0
+	topcr_t0 = "t0beta"
 
 	# Indexes to look at for topct.
 	num_t_euclidean_indexes = 5
@@ -129,7 +132,7 @@ def main():
 
 	# Number of different sectors we will analyse in monte carlo time
 	MC_time_splits = 2
-	MC_intervals = [[0, 1000], [500, 1000,], [500, 1000], [175, 250]]
+	MC_intervals = [[0, 1000], [500, 1000], [500, 1000], [175, 250]]
 	# MC_intervals = [None, None, None, None]
  
 	# Extraction point in flow time a*t_f for q0 in qtq0
@@ -169,10 +172,13 @@ def main():
 	print 100*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
 	print 100*"=" + "\n"
 
+
+	########## Main analysis ##########
 	databeta60 = copy.deepcopy(default_params)
 	databeta60["batch_name"] = "beta60"
 	databeta60["beta"] = 6.0
-	databeta60["NCfgs"] = get_num_observables(data_batch_folder,
+	databeta60["NCfgs"] = get_num_observables(
+		databeta60["batch_folder"],
 		databeta60["batch_name"])
 	databeta60["obs_file"] = "24_6.00"
 	databeta60["MCInt"] = MC_intervals[0]
@@ -183,7 +189,8 @@ def main():
 	databeta61 = copy.deepcopy(default_params)
 	databeta61["batch_name"] = "beta61"
 	databeta61["beta"] = 6.1
-	databeta61["NCfgs"] = get_num_observables(data_batch_folder,
+	databeta61["NCfgs"] = get_num_observables(
+		databeta61["batch_folder"],
 		databeta61["batch_name"])
 	databeta61["obs_file"] = "28_6.10"
 	databeta61["MCInt"] = MC_intervals[1]
@@ -194,7 +201,8 @@ def main():
 	databeta62 = copy.deepcopy(default_params)
 	databeta62["batch_name"] = "beta62"
 	databeta62["beta"] = 6.2
-	databeta62["NCfgs"] = get_num_observables(data_batch_folder, 
+	databeta62["NCfgs"] = get_num_observables(
+		databeta62["batch_folder"], 
 		databeta62["batch_name"])
 	databeta62["obs_file"] = "32_6.20"
 	databeta62["MCInt"] = MC_intervals[2]
@@ -202,36 +210,80 @@ def main():
 	databeta62["NT"] = 2*databeta62["N"]
 	databeta62["color"] = "#4daf4a"
 
-	default_params["flow_epsilon"] = 0.02
 	databeta645 = copy.deepcopy(default_params)
+	databeta645["flow_epsilon"] = 0.02
 	databeta645["batch_name"] = "beta645"
 	databeta645["beta"] = 6.45
-	databeta645["NCfgs"] = get_num_observables(data_batch_folder,
+	databeta645["NCfgs"] = get_num_observables(
+		databeta645["batch_folder"],
 		databeta645["batch_name"])
 	databeta645["obs_file"] = "48_6.45"
 	databeta645["MCInt"] = MC_intervals[3]
 	databeta645["N"] = 48
 	databeta645["NT"] = 2*databeta645["N"]
 	databeta645["color"] = "#984ea3"
-	
-	# smaug_data_beta60_analysis = copy.deepcopy(default_params)
-	# smaug_data_beta60_analysis["batch_name"] = beta_folders[0]
-	# smaug_data_beta60_analysis["NCfgs"] = get_num_observables(data_batch_folder,
-	# 	beta_folders[0])
-	# smaug_data_beta60_analysis["obs_file"] = "8_6.00"
-	# smaug_data_beta60_analysis["lattice_size"] = {6.0: 8**3*16}
+
+	########## Smaug data 8x16 analysis ##########
+	smaug8x16_data_beta60_analysis = copy.deepcopy(default_params)
+	smaug8x16_data_beta60_analysis["batch_folder"] = "../data/topc_modes_8x16"
+	smaug8x16_data_beta60_analysis["batch_name"] = "beta60"
+	smaug8x16_data_beta60_analysis["beta"] = 6.0
+	smaug8x16_data_beta60_analysis["NCfgs"] = get_num_observables(
+		smaug8x16_data_beta60_analysis["batch_folder"], 
+		smaug8x16_data_beta60_analysis["batch_name"])
+	smaug8x16_data_beta60_analysis["obs_file"] = "8_6.00"
+	smaug8x16_data_beta60_analysis["N"] = 8
+	smaug8x16_data_beta60_analysis["NT"] = 16
+	smaug8x16_data_beta60_analysis["color"] = "#377eb8"
+
+	########## Smaug data 12x24 analysis ##########
+	smaug12x24_data_beta60_analysis = copy.deepcopy(default_params)
+	smaug12x24_data_beta60_analysis["batch_folder"] = "../data/"
+	smaug12x24_data_beta60_analysis["batch_name"] = "beta60_12x24_run"
+	smaug12x24_data_beta60_analysis["beta"] = 6.0
+	smaug12x24_data_beta60_analysis["NCfgs"] = get_num_observables(
+		smaug12x24_data_beta60_analysis["batch_folder"], 
+		smaug12x24_data_beta60_analysis["batch_name"])
+	smaug12x24_data_beta60_analysis["obs_file"] = "12_6.00"
+	smaug12x24_data_beta60_analysis["N"] = 12
+	smaug12x24_data_beta60_analysis["NT"] = 24
+	smaug12x24_data_beta60_analysis["color"] = "#377eb8"
+
+	########## Distribution analysis ##########
+	dist_eps = [0.05, 0.10, 0.20, 0.24, 0.30, 0.40, 0.60]
+	def create_dist_batch_set(default_parameters, eps):
+		clean_str = lambda s: str("%-2.2f"%s).replace(".", "")
+		dist_data_beta60_analysis = copy.deepcopy(default_parameters)
+		dist_data_beta60_analysis["batch_folder"] = (
+			"../data/distribution_tests/distribution_runs/eps"
+			"{0:s}".format(clean_str(eps)))
+		dist_data_beta60_analysis["batch_name"] = \
+			"distribution_test_eps{0:s}".format(clean_str(eps))
+		dist_data_beta60_analysis["beta"] = 6.0
+		dist_data_beta60_analysis["NCfgs"] = get_num_observables(
+			dist_data_beta60_analysis["batch_folder"],
+			dist_data_beta60_analysis["batch_name"])
+		dist_data_beta60_analysis["obs_file"] = "6_6.00" # 6^3x12, beta=6.0
+		dist_data_beta60_analysis["N"] = 6
+		dist_data_beta60_analysis["NT"] = 12
+		dist_data_beta60_analysis["color"] = "#377eb8"
+		return dist_data_beta60_analysis
+
+	dist_param_list = [create_dist_batch_set(default_params, _eps)
+		for _eps in dist_eps]
 
 	#### Adding relevant batches to args
-	analysis_parameter_list = [databeta60, databeta61, databeta62, databeta645]
+	# analysis_parameter_list = [databeta60, databeta61, databeta62, databeta645]
 	# analysis_parameter_list = [databeta60, databeta61, databeta62]
 	# analysis_parameter_list = [databeta61, databeta62]
 	# analysis_parameter_list = [databeta62]
 	# analysis_parameter_list = [databeta645]
-	# analysis_parameter_list = [smaug_data_beta61_analysis]
+	# analysis_parameter_list = [smaug_data_beta60_analysis]
+	analysis_parameter_list = dist_param_list
 
-	# #### Submitting observable-batches
-	# for analysis_parameters in analysis_parameter_list:
-	# 	pre_analysis(analysis_parameters)
+	#### Submitting observable-batches
+	for analysis_parameters in analysis_parameter_list:
+		pre_analysis(analysis_parameters)
 
 	if not analysis_parameter_list[0]["MCInt"] is None:
 		assert sum([len(plist["MCInt"]) - len(analysis_parameter_list[0]["MCInt"]) 

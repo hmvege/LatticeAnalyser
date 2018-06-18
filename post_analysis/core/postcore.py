@@ -193,7 +193,7 @@ class PostCore(object):
 
 	def _initiate_plot_values(self, data, data_raw):
 		"""Sorts data into a format specific for the plotting method."""
-		for beta in sorted(data.keys()):
+		for beta in sorted(data):
 			values = {}
 			values["a"], values["a_err"] = get_lattice_spacing(beta)
 			values["x"] = values["a"]* np.sqrt(8*data[beta]["x"])
@@ -341,54 +341,105 @@ class PostCore(object):
 			if hasattr(self, "extrapolation_method"):
 				extrap_method = self.extrapolation_method
 
-		values = {beta: {} for beat in self.beta_values}
-		# t0 = {beta: {} for beat in self.beta_values}
+		values = {beta: {} for beta in self.beta_values}
+		self.t0 = {beta: {} for beta in self.beta_values}
 
-		# Sets the correct tf value
-		if isinstance(tf, str):
-			if tf == "t0":
-				if isinstance(extrap_method, types.NoneType):
-					tf = self.reference_values[atype].values()[0]["t0_cont"]
-				else:
-					tf = self.reference_values[atype][extrap_method]["t0_cont"]
-			# elif tf == "t0beta":
-			# 	tf = 
 
-			sørge for at the det er mulig med local t0 også... kanskje flytte seleksjonen 
-			av t0 til en egen funksjon som kan bli satt i de mer spesielle tilfellene?
-
-			else: # Stupid error check
-				raise ValueError("%s is not a valid key. Use t0.")
-		else:
-			assert isinstance(tf, float), "input should be float."
+		self._get_tf_value(tf, atype, extrap_method)
+		# # Sets the correct tf value
+		# if isinstance(tf, str):
+		# 	assert not isinstance(self.reference_values, types.NoneType), (
+		# 		"Missing reference values: %s" % self.reference_values)
+		# 	if tf == "t0":
+		# 		if isinstance(extrap_method, types.NoneType):
+		# 			for beta in self.beta_values:
+		# 				self.t0[beta] = \
+		# 					self.reference_values[atype].values()[0]["t0_cont"]
+		# 		else:
+		# 			for beta in self.beta_values:
+		# 				self.t0[beta] = \
+		# 					self.reference_values[atype][extrap_method][beta]["t0r02"]
+		# 	elif tf == "t0beta":
+		# 		for beta in self.beta_values:
+		# 			self.t0[beta] = self.reference_values[atype][extrap_method][beta]
+		# 	else: # Stupid error check
+		# 		raise ValueError("%s is not a valid key. Use t0.")
+		# else:
+		# 	assert isinstance(tf, float), "input tf %s should be float." % tf
+		# 	for beta in self.beta_values:
+		# 		self.t0[beta] = tf
 
 		for beta in self.beta_values:
 			a = self.plot_values[beta]["a"]
 
 			# Selects index closest to q0_flow_time
-			tf_index = np.argmin(np.abs(self.plot_values[beta]["x"] - tf))
-			
-			# print a*np.sqrt(8*np.linspace(0,10-0.01,1000))[-1]
-			# print self.plot_values[beta]["x"][-1]
+			tf_index = np.argmin(
+				np.abs(self.plot_values[beta]["x"] - self.t0[beta]))
 
-			values[beta]["t0"]
+			# # Should select exact values at selected t0
+			# if self.sub_obs:
+			# 	for sub_obs in self.observable_intervals[beta]:
+			# 		values[beta][sub_obs]["t0"] = self.t0[beta]
+			# 		values[beta][sub_obs]["y0"] = self.plot_values[beta]["y"][tf_index]
+			# 		values[beta][sub_obs]["y_err0"] = self.plot_values[beta]["y_err"][tf_index]
+			# 		values[beta][sub_obs]["tau_int0"] = self.plot_values[beta]["tau_int"][tf_index]
+			# 		values[beta][sub_obs]["tau_int_err0"] = self.plot_values[beta]["tau_int_err"][tf_index]
+			# else:
+			values[beta]["t0"] = self.t0[beta]
+			values[beta]["y0"] = self.plot_values[beta]["y"][tf_index]
+			values[beta]["y_err0"] = self.plot_values[beta]["y_err"][tf_index]
+			values[beta]["tau_int0"] = self.plot_values[beta]["tau_int"][tf_index]
+			values[beta]["tau_int_err0"] = self.plot_values[beta]["tau_int_err"][tf_index]
+
+		return_dict = {"obs": self.observable_name_compact, "data": values}
+		return return_dict
+
+	def _get_tf_value(self, tf, atype, extrap_method):
+		"""
+		Sets the correct tf value.
+
+		tf options: "t0", "t0beta", float"
+		"""
+		self.t0 = {beta: {} for beta in self.beta_values}
+		if isinstance(tf, str):
+			assert not isinstance(self.reference_values, types.NoneType), (
+				"Missing reference values: %s" % self.reference_values)
+			if tf == "t0":
+				if isinstance(extrap_method, types.NoneType):
+					for beta in self.beta_values:
+						self.t0[beta] = \
+							self.reference_values[atype].values()[0]["t0_cont"]
+				else:
+					for beta in self.beta_values:
+						self.t0[beta] = \
+							self.reference_values[atype][extrap_method][beta]["t0_cont"]
+			elif tf == "t0beta":
+				if isinstance(extrap_method, types.NoneType):
+					for beta in self.beta_values:
+						self.t0[beta] = \
+							self.reference_values[atype].values()[0][beta]["t0r02"]
+				else:
+					for beta in self.beta_values:
+						self.t0[beta] = self.reference_values[atype][extrap_method][beta]["t0r02"]
+						print self.t0[beta]
+			elif tf == "t0beta_a2":
+				# print self.reference_values[atype].values()[0][6.0].keys()
+				if isinstance(extrap_method, types.NoneType):
+					for beta in self.beta_values:
+						self.t0[beta] = \
+							self.reference_values[atype].values()[0][beta]["t0a2"]
+				else:
+					for beta in self.beta_values:
+						self.t0[beta] = self.reference_values[atype][extrap_method][beta]["t0a2"]
+						print self.t0[beta]
+			else: # Stupid error check
+				raise ValueError("%s is not a valid key. Use t0.")
+		else:
+			assert isinstance(tf, float), "input tf %s should be float." % tf
+			for beta in self.beta_values:
+				self.t0[beta] = tf
 
 
-
-
-
-		# if tf == "t0":
-		# 	for b in self.beta_values:
-		# 		tf0 = self.plot_values["beta"]["x"]
-		# 		values[b] = {}
-		# 	# return self.y
-		# 	np.argmin()
-		# 	pass
-		# else:
-		# 	assert isinstance(tf, float), "tf not of type float"
-
-		raise NotImplementedError(
-			"Not implemented method for retrieving values yet.")
 
 	def __str__(self):
 		"""Class string representation method."""

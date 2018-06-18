@@ -42,6 +42,7 @@ class TopcRPostAnalysis(PostCore):
 		self.colors = data.colors
 		self.lattice_sizes = data.lattice_volumes
 		self.size_labels = data.labels
+		self.reference_values = data.reference_values
 		self._setup_analysis_types(data.analysis_types)
 
 		# Q^2
@@ -219,52 +220,7 @@ class TopcRPostAnalysis(PostCore):
 
 				self.data[atype][beta] = self.topcR[atype][beta]
 
-		# for beta in self.beta_values:
-		# 	print "="*100
-		# 	for atype in self.analysis_types:
-		# 		self.topc4c_raw[beta][atype] = Q4C(self.topc4_raw[beta][atype], self.topc2_raw[beta][atype])
-		# 		self.topcR_raw[beta][atype] = R(self.topc4c_raw[beta][atype], self.topc2_raw[beta][atype])
-
-		# 		_q2_mean = np.mean(self.topc2_raw[beta][atype], axis=1)
-		# 		_q2_err = np.std(self.topc2_raw[beta][atype], axis=1)
-		# 		_q4_mean = np.mean(self.topc4_raw[beta][atype], axis=1)
-		# 		_q4_err = np.std(self.topc4_raw[beta][atype], axis=1)
-
-		# 		if atype=="jackknife": # Bias corrects error
-		# 			_q2_err *= np.sqrt(self.topc2_raw[beta][atype].shape[-1])
-		# 			_q4_err *= np.sqrt(self.topc4_raw[beta][atype].shape[-1])
-
-		# 		_q4c_mean = Q4C(_q4_mean, _q2_mean)
-		# 		_q4c_err = Q4C_error(_q4_mean, _q4_err, _q2_mean, _q2_err)
-
-		# 		_R_mean = R(_q4c_mean, _q2_mean)
-		# 		_R_err = R_error(_q4c_mean, _q4c_err, _q2_mean, _q2_err)
-
-		# 		scaling = self.lattice_sizes[beta] / float(comp_lattices[beta]["size"])
-		# 		msg =  "\nBeta         %.2f" % beta
-		# 		msg += "\nBeta_article %.2f" % comp_lattices[beta]["beta_article"]
-		# 		msg += "\nFlow time 9.99"
-		# 		msg += "\nScaling = Volume / Volume article = 2*%d^4 / %d^4 = %d / %d = %f" % ((self.lattice_sizes[beta]/2.)**(0.25), comp_lattices[beta]["L"], self.lattice_sizes[beta], comp_lattices[beta]["size"], scaling)
-		# 		q2_scaled = _q2_mean[-1]/scaling
-		# 		msg += "\nQ^2   %-14.4f" % self.topc2[beta][atype]["y"][-1]
-		# 		msg += "   Q^2_scaled   %10.4f  Q^2_article   %10.4f  Difference(scaled-article): %10.4f  Factor_difference(scaled/article) %10.4f" % (q2_scaled, comp_lattices[beta]["q2"], q2_scaled-comp_lattices[beta]["q2"], q2_scaled/comp_lattices[beta]["q2"])
-		# 		q4_scaled = _q4_mean[-1]/scaling
-		# 		msg += "\nQ^4   %-14.4f" % self.topc4[beta][atype]["y"][-1]
-		# 		msg += "   Q^4_scaled   %10.4f  Q^4_article   %10.4f  Difference(scaled-article): %10.4f  Factor_difference(scaled/article) %10.4f" % (q4_scaled, comp_lattices[beta]["q4"], q4_scaled-comp_lattices[beta]["q4"], q4_scaled/comp_lattices[beta]["q4"])
-		# 		q4c_scaled = _q4c_mean[-1]/scaling
-		# 		msg += "\nQ^4_C %-14.4f" % (self.topc4C[beta][atype]["y"][-1])
-		# 		msg += "   Q^4_C_scaled %10.4f  Q^4_C_article %10.4f  Difference(scaled-article): %10.4f  Factor_difference(scaled/article) %10.4f" % (q4c_scaled, comp_lattices[beta]["q4c"], q4c_scaled - comp_lattices[beta]["q4c"], q4c_scaled/comp_lattices[beta]["q4c"])
-		# 		R_scaled = _R_mean[-1]/scaling
-		# 		# R_scaled = np.mean(self.topcR_raw[beta][atype],axis=1)[-1]
-		# 		msg += "\nR     %-14.4f" % self.data[atype][beta]["y"][-1]
-		# 		msg += "   R_scaled     %10.4f  R_article     %10.4f  Difference(scaled-article): %10.4f  Factor_difference(scaled/article) %10.4f" % (R_scaled, comp_lattices[beta]["R"], R_scaled - comp_lattices[beta]["R"], R_scaled/comp_lattices[beta]["R"])
-		# 		if atype == "bootstrap":
-		# 			print msg
-
-		# 		self.data[atype][beta] = {"y": _R_mean, "y_error": _R_err}
-		# 		self.data_raw[atype][beta] = self.topcR_raw[beta][atype]
-
-	def compare_lattice_values(self, atype="bootstrap"):
+	def compare_lattice_values(self, tf=None, atype="bootstrap"):
 		"""
 		Compares values at flow times given by the data we are comparing against
 		"""
@@ -276,26 +232,40 @@ class TopcRPostAnalysis(PostCore):
 		y_pvals_me = []
 
 		article_data2 = {}
-		for data_set in sorted(self.data_article.keys()):
-			for size in sorted(self.data_article[data_set].keys()):
+		for data_set in sorted(self.data_article):
+			for size in sorted(self.data_article[data_set]):
 				article_data2[size] = {}
 
-		for data_set in sorted(self.data_article.keys()):
-			for size in sorted(self.data_article[data_set].keys()):
-				article_data2[size][data_set] = self.data_article[data_set][size]
+		for data_set in sorted(self.data_article):
+			for size in sorted(self.data_article[data_set]):
+				article_data2[size][data_set] = \
+					self.data_article[data_set][size]
 
-		# for size in sorted(self.data_article[data_set].keys()):
-		for size in sorted(article_data2.keys()):
-			t0 = self.data_article["B"][size]["t0"]
+		def ratio_error(x, xerr, y, yerr):
+			return x/y, np.sqrt((xerr/y)**2 + (x*yerr/y**2)**2)
+
+		# for size in sorted(self.data_article[data_set]):
+		for size in sorted(article_data2):
+
+			# Sets the t0 value to extract at.
+			if tf == "article":
+				self.t0 = {b: self.data_article["B"][size]["t0"] 
+					for b in self.beta_values}
+			else:
+				tf = "t0beta_a2"
+				self._get_tf_value(tf, atype, None)
+
 			print "="*150
-			print "Reference value t0: %f" % t0
-			print "\nMy data:"
+			print "Reference value type %s t0: %s" % (tf, self.t0)
 
+			print "\nMy data:"
 			for beta in self.beta_values:
 				# Gets the approximate same t0 ref. value
-				t0_index = np.argmin(np.abs(self.topc2[atype][beta]["x"] - t0))
-				print "Beta: %4.2f Q2: %10.5f Q2_err: %10.5f Q4: %10.5f \
-Q4_err: %10.5f Q4C: %10.5f Q4C_err: %10.5f R: %10.5f R_err: %10.5f" % (beta,
+				t0_index = np.argmin(np.abs(self.topc2[atype][beta]["x"] - self.t0[beta]))
+
+				print ("Beta: %4.2f t0: %4.2f Q2: %10.5f Q2_err: %10.5f Q4: %10.5f \
+					Q4_err: %10.5f Q4C: %10.5f Q4C_err: %10.5f R: %10.5f \
+					R_err: %10.5f" % (beta, self.t0[beta],
 					self.topc2[atype][beta]["y"][t0_index], 
 					self.topc2[atype][beta]["y_error"][t0_index],
 					self.topc4[atype][beta]["y"][t0_index], 
@@ -303,14 +273,14 @@ Q4_err: %10.5f Q4C: %10.5f Q4C_err: %10.5f R: %10.5f R_err: %10.5f" % (beta,
 					self.topc4C[atype][beta]["y"][t0_index], 
 					self.topc4C[atype][beta]["y_error"][t0_index],
 					self.topcR[atype][beta]["y"][t0_index], 
-					self.topcR[atype][beta]["y_error"][t0_index])
+					self.topcR[atype][beta]["y_error"][t0_index]))
+
 			print "\nArticle data(normalized by volume):"
+			for data_set in sorted(article_data2[size]):
 
-			for data_set in sorted(article_data2[size].keys()):
-
-				print "Dataset: %s Beta: %2.2f Volume: %f t0: %f" % (
+				print "Dataset: %s Beta: %2.2f Volume: %f t0: %s" % (
 					data_set, self.data_article[data_set][size]["beta"],
-					self.data_article[data_set][size]["V"],	t0)
+					self.data_article[data_set][size]["V"],	self.t0)
 				print "Q2:  %10.5f Q2_err:  %10.5f" % (
 					self.data_article[data_set][size]["Q2_norm"],
 					self.data_article[data_set][size]["Q2Err_norm"])
@@ -325,13 +295,45 @@ Q4_err: %10.5f Q4C: %10.5f Q4C_err: %10.5f R: %10.5f R_err: %10.5f" % (beta,
 					self.data_article[data_set][size]["RErr_norm"])
 
 				if size==1:
-					x_pvals_article.append(t0)
+					x_pvals_article.append(self.t0)
 					y_pvals_article.append((
 						self.data_article[data_set][size]["R_norm"],
-						self.data_article[data_set][size]["RErr_norm"])
-					)
-			print ""
+						self.data_article[data_set][size]["RErr_norm"]))
 
+			print "\nRatios between me and article"
+			for data_set in sorted(article_data2[size]):
+				# Compares values by dividing my values by article values
+				for beta in self.beta_values:
+					beta_article = self.data_article[data_set][size]["beta"]
+
+					# Gets the approximate same t0 ref. value
+					t0_index = np.argmin(
+						np.abs(self.topc2[atype][beta]["x"] - self.t0[beta]))
+					print "Beta(me) %.2f Beta(article) %.2f Dataset %-s" % (
+						beta, beta_article, data_set)
+
+					print "Q2_me/Q2_article:   %10.5f +/- %10.5f" % (
+						ratio_error(self.topc2[atype][beta]["y"][t0_index],
+						self.topc2[atype][beta]["y_error"][t0_index],
+						self.data_article[data_set][size]["Q2_norm"], 
+						self.data_article[data_set][size]["Q2Err_norm"]))
+					print "Q4_me/Q4_article:   %10.5f +/- %10.5f" % (
+						ratio_error(self.topc4[atype][beta]["y"][t0_index], 
+						self.topc4[atype][beta]["y_error"][t0_index],
+						self.data_article[data_set][size]["Q4_norm"], 
+						self.data_article[data_set][size]["Q4Err_norm"]))
+					print "Q4C_me/Q4C_article: %10.5f +/- %10.5f" % (
+						ratio_error(self.topc4C[atype][beta]["y"][t0_index], 
+						self.topc4C[atype][beta]["y_error"][t0_index],
+						self.data_article[data_set][size]["Q4C_norm"], 
+						self.data_article[data_set][size]["Q4CErr_norm"]))
+					print "R_me/R_article:     %10.5f +/- %10.5f" % (
+						ratio_error(self.topcR[atype][beta]["y"][t0_index], 
+						self.topcR[atype][beta]["y_error"][t0_index],
+						self.data_article[data_set][size]["R_norm"], 
+						self.data_article[data_set][size]["RErr_norm"]))
+
+			print ""
 
 	def set_analysis_data_type(self, analysis_data_type="bootstrap"):
 		"""Sets the analysis type and retrieves correct analysis data."""
@@ -407,8 +409,8 @@ Q4_err: %10.5f Q4C: %10.5f Q4C_err: %10.5f R: %10.5f R_err: %10.5f" % (beta,
 				self.data_article[data_set][size]["R_norm"] = R_norm
 				self.data_article[data_set][size]["RErr_norm"] = RErr_norm
 
-		# for data_set in sorted(self.data_article.keys()):
-		# 	for size in sorted(self.data_article[data_set].keys()):
+		# for data_set in sorted(self.data_article):
+		# 	for size in sorted(self.data_article[data_set]):
 		# 		print "="*50
 		# 		print "Dataset: %s Size number: %s Volume: %f" % (
 		# 			data_set, size, self.data_article[data_set][size]["V"])

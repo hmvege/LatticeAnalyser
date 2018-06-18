@@ -2,6 +2,7 @@ from observable_analysis import *
 from tools.postanalysisdatareader import PostAnalysisDataReader
 from tools.analysis_setup_tools import append_fit_params, \
 	write_fit_parameters_to_file, get_intervals, interval_setup
+from tools.value_comparer import ValueCMP
 import types
 import numpy as np
 import os
@@ -15,9 +16,17 @@ def default_post_analysis(PostAnalysis, data, figures_folder, analysis_type,
 	print analysis
 	analysis.plot()
 
+def default_interval_pa(*args, **kwargs):
+	pass
+
+def default_slice_pa(*args, **kwargs):
+	pass
 
 def plaq_post_analysis(*args, **kwargs):
 	default_post_analysis(PlaqPostAnalysis, *args, **kwargs)
+
+def energy_post_analysis(*args, **kwargs):
+	default_post_analysis(PlaqPostAnalysis, *args, **kwargs)	
 
 
 def post_analysis(beta_parameter_list, observables,
@@ -25,7 +34,7 @@ def post_analysis(beta_parameter_list, observables,
 	q0_flow_times, euclidean_time_percents, extrapolation_methods="nearest",
 	plot_continuum_fit=False, figures_folder="figures", 
 	post_analysis_data_type=["bootstrap", "jackknife", "unanalyzed"], 
-	bval_to_plot="all", gif_params=None, t0_value_extraction=None, 
+	bval_to_plot="all", topcr_tf="t0beta", gif_params=None, t0_value_extraction=None, 
 	verbose=False):
 	"""
 	Post analysis of the flow observables.
@@ -83,17 +92,21 @@ def post_analysis(beta_parameter_list, observables,
 		extrap_method: {atype: {} for atype in post_analysis_data_type}
 		for extrap_method in extrapolation_methods
 	}
+
+	cmp_values = ValueCMP(observables, post_analysis_data_type, 
+		verbose=verbose)
+
 	# comparison_values = {obs: {extrap_method: {atype: {} 
 	# 			for atype in post_analysis_data_type}
 	# 		for extrap_method in extrapolation_methods} 
 	# 	for obs in observables
 	# }
 
-	# Dictionary to store values we are to write out to file in.
-	comparison_values = {obs: {atype: {} 
-			for atype in post_analysis_data_type}
-		for obs in observables
-	}
+	# # Dictionary to store values we are to write out to file in.
+	# comparison_values = {obs: {atype: {} 
+	# 		for atype in post_analysis_data_type}
+	# 	for obs in observables
+	# }
 
 	if "energy" in observables:
 		for extrapolation_method in extrapolation_methods:
@@ -149,8 +162,12 @@ def post_analysis(beta_parameter_list, observables,
 			topc_analysis.set_analysis_data_type(analysis_type)
 			print topc_analysis
 			topc_analysis.plot(y_limits=[-5,5])
-			comparison_values[obs][analysis_type] = \
-				topc_analysis.get_values("t0", analysis_type)
+			# comparison_values["topc"][analysis_type] = \
+			# 	topc_analysis.get_values("t0", analysis_type)
+
+			# cmp_values.append(topc_analysis.get_values("t0", analysis_type), 
+			# 	analysis_type)
+
 
 	if "topc2" in observables:
 		topc2_analysis = Topc2PostAnalysis(data, 
@@ -159,6 +176,9 @@ def post_analysis(beta_parameter_list, observables,
 			topc2_analysis.set_analysis_data_type(analysis_type)
 			print topc2_analysis
 			topc2_analysis.plot()
+
+			# comparison_values["topc2"][analysis_type] = \
+			# 	topc2_analysis.get_values("t0", analysis_type)
 
 	if "topc4" in observables:
 		topc4_analysis = Topc4PostAnalysis(data, 
@@ -175,20 +195,23 @@ def post_analysis(beta_parameter_list, observables,
 			topcr_analysis.set_analysis_data_type(analysis_type)
 			print topcr_analysis
 			topcr_analysis.plot()
-		topcr_analysis.compare_lattice_values()
+
+		topcr_analysis.compare_lattice_values(tf=topcr_tf)
 
 	if "topct" in observables:
 		topct_analysis = TopctPostAnalysis(data, 
 			figures_folder=figures_folder, verbose=verbose)
 
-		interval_dict_list = topct_analysis.setup_intervals(
-			intervals=interval_setup(beta_parameter_list, "Eucl"))
+		interval_dict_list = topct_analysis.setup_intervals()
 
 		for analysis_type in post_analysis_data_type:
 			topct_analysis.set_analysis_data_type(analysis_type)
 			print topct_analysis
 			for int_keys in interval_dict_list:
-				topcte_analysis.plot_interval(int_keys)
+				topct_analysis.plot_interval(int_keys)
+				# cmp_values.append(topct_analysis.get_values("t0", analysis_type), 
+				# 	analysis_type)
+
 			topct_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
 	if "topcte" in observables:
