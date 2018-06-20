@@ -21,6 +21,7 @@ class PostCore(object):
 	y_label = r""
 	dpi = 350
 	r0 = 0.5
+	print_latex = False
 	sub_obs = False
 	sub_sub_obs = False
 	interval = []
@@ -58,6 +59,7 @@ class PostCore(object):
 		self.lattice_sizes = data.lattice_sizes
 		self.size_labels = data.labels
 		self._setup_analysis_types(data.analysis_types)
+		self.print_latex = data.print_latex
 
 		self.data = {atype: {beta: {} for beta in self.beta_values} \
 			for atype in self.analysis_types}

@@ -19,7 +19,6 @@ def main():
 		# Other quantities 
 		"topcr",
 	]
-
 	observables_euclidean_time = [
 		# Topological charge
 		"topct", "topcte",
@@ -43,8 +42,7 @@ def main():
 	# observables = observables_euclidean_time
 	# observables = ["topcr", "topsus"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
-	# observables = ["topcr"]
-	# observables = ["topcr"]
+	observables = ["topcr"]
 	# observables = ["qtq0eff", "qtq0e"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["qtq0eff", "qtq0e"] + ["topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
@@ -57,6 +55,7 @@ def main():
 	N_bs = 500
 	dryrun = False
 	verbose = True
+	print_latex = True
 	parallel = True
 	numprocs = 8
 	base_parameters = {"N_bs": N_bs, "dryrun": dryrun, "verbose": verbose, 
@@ -165,6 +164,7 @@ def main():
 		"intervals_eucl": None,
 		"MC_time_splits": MC_time_splits,
 		"MCInt": None,
+		"print_latex": print_latex,
 		# Gif smearing parameters in the qtq0e observable
 		"gif": gif_params,
 	}
@@ -273,17 +273,17 @@ def main():
 		for _eps in dist_eps]
 
 	#### Adding relevant batches to args
-	# analysis_parameter_list = [databeta60, databeta61, databeta62, databeta645]
+	analysis_parameter_list = [databeta60, databeta61, databeta62, databeta645]
 	# analysis_parameter_list = [databeta60, databeta61, databeta62]
 	# analysis_parameter_list = [databeta61, databeta62]
 	# analysis_parameter_list = [databeta62]
 	# analysis_parameter_list = [databeta645]
 	# analysis_parameter_list = [smaug_data_beta60_analysis]
-	analysis_parameter_list = dist_param_list
+	# analysis_parameter_list = dist_param_list
 
-	#### Submitting observable-batches
-	for analysis_parameters in analysis_parameter_list:
-		pre_analysis(analysis_parameters)
+	# #### Submitting observable-batches
+	# for analysis_parameters in analysis_parameter_list:
+	# 	pre_analysis(analysis_parameters)
 
 	if not analysis_parameter_list[0]["MCInt"] is None:
 		assert sum([len(plist["MCInt"]) - len(analysis_parameter_list[0]["MCInt"]) 

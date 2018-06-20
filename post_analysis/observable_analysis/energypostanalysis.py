@@ -4,6 +4,7 @@ from statistics.linefit import LineFit, extract_fit_target
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import tools.sciprint as sciprint
 
 class EnergyPostAnalysis(PostCore):
 	"""Post analysis of the energy, <E>."""
@@ -25,6 +26,7 @@ class EnergyPostAnalysis(PostCore):
 			values = {}
 			values["beta"] = beta
 			values["a"], values["a_err"] = get_lattice_spacing(beta)
+			print get_lattice_spacing(beta)
 			values["x"] = data[beta]["x"]/self.r0**2*values["a"]**2
 			values["t"] = data[beta]["x"]*values["a"]**2
 			values["y"] = data[beta]["y"]*data[beta]["x"]**2
@@ -161,12 +163,48 @@ class EnergyPostAnalysis(PostCore):
 			print "t0 = %.16f +/- %.16f" % (self.t0_cont,
 				self.t0_cont_error)
 			for b in self.beta_values:
-				msg = "beta = %.2f || t0 = %10f +/- %-10f" % (b, t0_dict[b]["t0"], t0_dict[b]["t0err"])
-				msg += " || t0/a^2 = %10f +/- %-10f" % (t0_dict[b]["t0a2"], t0_dict[b]["t0_erra2"])
-				msg += " || t0/a^2 = %10f +/- %-10f" % (t0_dict[b]["t0a2"], t0_dict[b]["t0_erra2"])
-				msg += " || t0/r0^2 = %10f +/- %-10f" % (t0_dict[b]["t0r02"], t0_dict[b]["t0_errr02"])
+				msg = "beta = %.2f || t0 = %10f +/- %-10f" % (b, 
+					t0_dict[b]["t0"], t0_dict[b]["t0err"])
+				msg += " || t0/a^2 = %10f +/- %-10f" % (t0_dict[b]["t0a2"], 
+					t0_dict[b]["t0_erra2"])
+				msg += " || t0/a^2 = %10f +/- %-10f" % (t0_dict[b]["t0a2"], 
+					t0_dict[b]["t0_erra2"])
+				msg += " || t0/r0^2 = %10f +/- %-10f" % (t0_dict[b]["t0r02"],
+					t0_dict[b]["t0_errr02"])
 				print msg
 
+		if self.print_latex:
+			# Header:
+			# beta   t0a2   t0r02   L/a   L   a
+			print "LATEX OUTPUT:\n"
+			
+			# Header
+			msg = r"$\beta$ & $t_0/a^2$ & $t_0/{r_0^2}$ & $L/a$ & $L[\fm]$ "
+			msg += r"& $a[\fm]$ \\ \hline"
+			msg += r"\n\specialrule{.1em}{.05em}{.05em}"
+
+			for b in self.beta_values:
+				print self.plot_values[b]["a"], self.plot_values[b]["a_err"]
+
+			# Table rows
+			for b in self.beta_values:
+				L_fm = self.lattice_sizes[b][0]*self.plot_values[b]["a"]
+				L_fm_err = self.lattice_sizes[b][0]*self.plot_values[b]["a_err"]
+
+				msg += "\n"
+				msg += r"{0:<5.2f} & ".format(b)
+				msg += r"{0:10s} & ".format(sciprint.error_str(t0_dict[b]["t0a2"], 
+					t0_dict[b]["t0_erra2"]))
+				msg += r"{0:10s} & ".format(sciprint.error_str(t0_dict[b]["t0r02"], 
+					t0_dict[b]["t0_errr02"]))
+				msg += r"{0:<4d} & ".format(self.lattice_sizes[b][0])
+				msg += r"{0:10s} & ".format(sciprint.error_str(L_fm, L_fm_err))
+				msg += r"{0:10s}".format(sciprint.error_str(
+					self.plot_values[b]["a"],
+					self.plot_values[b]["a_err"]))
+			msg += "\n"
+			print msg, "\n"
+		exit(1)
 		return t0_dict
 
 		# exit("Done in energy post analysis")

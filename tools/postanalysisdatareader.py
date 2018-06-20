@@ -212,6 +212,7 @@ class PostAnalysisDataReader:
 		self.NT = {}
 		self.colors = {}
 		self.labels = {}
+		_print_latex_list = []
 		for b in batch_parameters:
 			self.N[b["beta"]] = b["N"]
 			self.NT[b["beta"]] = b["NT"]
@@ -219,6 +220,10 @@ class PostAnalysisDataReader:
 			self.lattice_volumes[b["beta"]] = b["N"]**3*b["NT"]
 			self.colors[b["beta"]] = b["color"]
 			self.labels[b["beta"]] = r"$%d^3 \times %d$" % (b["N"], b["NT"])
+			_print_latex_list.append(b["print_latex"])
+		assert len(set(_print_latex_list)), ("check input parameters: "
+			"print_latex differs for parameters.")
+		self.print_latex = _print_latex_list[0]
 
 	def _get_obs_data(self, obs, obs_path, sub_obs=None, sub_obs_path=None):
 		"""Method for retrieving data associated with an observable."""
