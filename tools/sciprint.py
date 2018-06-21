@@ -1,6 +1,8 @@
 import numpy as np
 from decimal import Decimal
 
+# TODO: make into a proper function with options to how one wants the error to be printed.
+
 def __get_leading_zeros(fl):
     """Returns the number of leading zeros in a decimal."""
     if fl > 1.0:

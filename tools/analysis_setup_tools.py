@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from table_printer import TablePrinter
 import numpy as np
 import types
 
@@ -123,7 +124,8 @@ def append_fit_params(fplist, obs_name, analysis_name, fparams):
     return fplist
 
 
-def write_fit_parameters_to_file(fparams, fname, skip_values=None, verbose=False):
+def write_fit_parameters_to_file(fparams, fname, skip_values=None, 
+    verbose=False, verbose_latex=False):
     """Function for writing fit parameters to file."""
     with open(fname, "w") as f:
         sorted_parameter_list = sorted(fparams, key=lambda d: \
@@ -148,6 +150,8 @@ def write_fit_parameters_to_file(fparams, fname, skip_values=None, verbose=False
             ("N_F", {"name": "N_F", "w": fw, "type": ".8f"}),
             ("N_F_err", {"name": "N_F_err", "w": fw, "type": ".8f"}),
         ])
+
+        # TODO: print out table of values using table printer.
 
         # Sets header in text file
         header_string = ""

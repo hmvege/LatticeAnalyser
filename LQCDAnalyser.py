@@ -35,8 +35,8 @@ def main():
 	# observables = list(set(set(observables) - set(obs_exlusions)))
 
 	# observables = observables_euclidean_time
-	observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
-	observables = ["topc", "plaq", "topsus"]
+	# observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
+	# observables = ["topc", "plaq", "topsus"]
 	# observables = ["topcr", "qtq0eff"]
 	# observables = ["topc4"]
 	# observables = observables_euclidean_time
@@ -278,7 +278,8 @@ def main():
 	# analysis_parameter_list = [databeta61, databeta62]
 	# analysis_parameter_list = [databeta62]
 	# analysis_parameter_list = [databeta645]
-	# analysis_parameter_list = [smaug_data_beta60_analysis]
+	# analysis_parameter_list = [smaug8x16_data_beta60_analysis]
+	# analysis_parameter_list = [smaug12x24_data_beta60_analysis]
 	# analysis_parameter_list = dist_param_list
 
 	# #### Submitting observable-batches

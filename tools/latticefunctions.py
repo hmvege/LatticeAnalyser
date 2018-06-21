@@ -12,22 +12,28 @@ def get_lattice_spacing(beta):
 	Returns:
 		a: lattice spacing in fermi
 	"""
-	if beta < 5.7: raise ValueError("Beta should be larger than 5.7!")
-	r = 0.5
-	bval = (beta - 6)
-	a = np.exp(-1.6805 - 1.7139*bval + 0.8155*bval**2 - 0.6667*bval**3)*0.5
 
-	a_err = np.linspace(0.3, 0.6, 1000)
+	r0 = 0.5
 	beta_low = 5.7
 	beta_high = 6.57
-	a_err_rise = ((0.6 - 0.3)/100.0)/(6.57 - 5.7) # err% / beta
-	a_err = (a_err_rise + 0.3/100.0)*beta
 
 	if beta < beta_low or beta > beta_high:
 		raise Warning("Beta value of %f is outside of defined area [%f, %f]."
 			% (beta, beta_low, beta_high))
 
-	return a, a_err # fermi
+	def _get_a(b):
+		"""Gets the beta value without any error."""
+		bval = (b - 6.0)
+		_a = np.exp(-1.6805 - 1.7139*bval + 0.8155*bval**2 - 0.6667*bval**3)*r0
+		return _a
+
+	a = _get_a(beta)
+	a_err_slope = ((0.6 - 0.3)/100.0)/(beta_high - beta_low) # err% / beta
+	a_err_const = 0.3/100 - a_err_slope*beta_low
+	a_err_percent = lambda _b: a_err_slope*_b + a_err_const
+	a_err = a*a_err_percent(beta)
+
+	return a, a*a_err_percent(beta) # fermi
 
 def witten_veneziano(chi, chi_error):
 	"""

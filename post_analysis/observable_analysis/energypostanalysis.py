@@ -1,10 +1,12 @@
 from post_analysis.core.postcore import PostCore
 from tools.latticefunctions import get_lattice_spacing
+from tools.table_printer import TablePrinter
+import tools.sciprint as sciprint
 from statistics.linefit import LineFit, extract_fit_target
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-import tools.sciprint as sciprint
+
 
 class EnergyPostAnalysis(PostCore):
 	"""Post analysis of the energy, <E>."""
@@ -26,7 +28,6 @@ class EnergyPostAnalysis(PostCore):
 			values = {}
 			values["beta"] = beta
 			values["a"], values["a_err"] = get_lattice_spacing(beta)
-			print get_lattice_spacing(beta)
 			values["x"] = data[beta]["x"]/self.r0**2*values["a"]**2
 			values["t"] = data[beta]["x"]*values["a"]**2
 			values["y"] = data[beta]["y"]*data[beta]["x"]**2
@@ -176,38 +177,32 @@ class EnergyPostAnalysis(PostCore):
 		if self.print_latex:
 			# Header:
 			# beta   t0a2   t0r02   L/a   L   a
-			print "LATEX OUTPUT:\n"
-			
-			# Header
-			msg = r"$\beta$ & $t_0/a^2$ & $t_0/{r_0^2}$ & $L/a$ & $L[\fm]$ "
-			msg += r"& $a[\fm]$ \\ \hline"
-			msg += r"\n\specialrule{.1em}{.05em}{.05em}"
 
-			for b in self.beta_values:
-				print self.plot_values[b]["a"], self.plot_values[b]["a_err"]
+			header = [r"$\beta$", r"$t_0/a^2$", r"$t_0/{r_0^2}$", r"$L/a$",
+				r"$L[\fm]$", r"$a[\fm]$"]
 
-			# Table rows
-			for b in self.beta_values:
-				L_fm = self.lattice_sizes[b][0]*self.plot_values[b]["a"]
-				L_fm_err = self.lattice_sizes[b][0]*self.plot_values[b]["a_err"]
-
-				msg += "\n"
-				msg += r"{0:<5.2f} & ".format(b)
-				msg += r"{0:10s} & ".format(sciprint.error_str(t0_dict[b]["t0a2"], 
-					t0_dict[b]["t0_erra2"]))
-				msg += r"{0:10s} & ".format(sciprint.error_str(t0_dict[b]["t0r02"], 
-					t0_dict[b]["t0_errr02"]))
-				msg += r"{0:<4d} & ".format(self.lattice_sizes[b][0])
-				msg += r"{0:10s} & ".format(sciprint.error_str(L_fm, L_fm_err))
-				msg += r"{0:10s}".format(sciprint.error_str(
+			bvals = self.beta_values
+			tab = [
+				[r"{0:.2f}".format(b) for b in bvals],
+				[r"{0:s}".format(sciprint.error_str(t0_dict[b]["t0a2"], 
+					t0_dict[b]["t0_erra2"])) for b in bvals],
+				[r"{0:s}".format(sciprint.error_str(t0_dict[b]["t0r02"], 
+					t0_dict[b]["t0_errr02"])) for b in bvals],
+				[r"{0:d}".format(self.lattice_sizes[b][0]) for b in bvals],
+				[r"{0:s}".format(sciprint.error_str(
+					self.lattice_sizes[b][0]*self.plot_values[b]["a"], 
+					self.lattice_sizes[b][0]*self.plot_values[b]["a_err"])) 
+					for b in bvals],
+				[r"{0:s}".format(sciprint.error_str(
 					self.plot_values[b]["a"],
-					self.plot_values[b]["a_err"]))
-			msg += "\n"
-			print msg, "\n"
-		exit(1)
+					self.plot_values[b]["a_err"])) for b in bvals],
+			]
+
+			ptab = TablePrinter(header, tab)			
+			ptab.print_table(latex=True, width=15)
+
 		return t0_dict
 
-		# exit("Done in energy post analysis")
 
 	# def _energy_continuum(self, t):
 	# 	"""
