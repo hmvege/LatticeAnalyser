@@ -456,8 +456,16 @@ class DataReader:
 		if "topct" in self.data.keys():
 			self.NT = self.data["topct"]["obs"].shape[-1]
 
+		self.observables = self.data.keys()
+
 	def __call__(self, obs):
 		return copy.deepcopy(self.data[obs])
+
+	def has_observable(self, obs):
+		"""Checks that the observable we are retrieving exists."""
+		if not obs in self.observables:
+			print "%s not found in data: %s" % (obs, observables)
+			return False
 
 	def write_parameter_file(self):
 		"""Writes a parameter file for the analysis of a given batch."""

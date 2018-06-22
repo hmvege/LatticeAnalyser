@@ -144,14 +144,21 @@ class EnergyPostAnalysis(PostCore):
 		self.extrapolation_method = extrapolation_method
 
 		_tmp_beta_dict = {
-			beta: {
+			b: {
 				"t0": t0_values[i],
 				"t0err": t0err_values[i],
-				"t0a2": t0_values[i]/self.plot_values[beta]["a"]**2,
-				"t0_erra2": t0err_values[i]/self.plot_values[beta]["a"]**2,
+				"t0a2": t0_values[i]/self.plot_values[b]["a"]**2,
+				"t0_erra2": t0err_values[i]/self.plot_values[b]["a"]**2,
 				"t0r02": t0_values[i]/self.r0**2,
-				"t0_errr02": t0err_values[i]/self.r0**2}
-			for i, beta in enumerate(self.beta_values)
+				"t0_errr02": t0err_values[i]/self.r0**2,
+				"aL": self.plot_values[b]["a"]*self.lattice_sizes[b][0],
+				"aLerr": (self.plot_values[b]["a_err"] \
+					* self.lattice_sizes[b][0]),
+				"L": self.lattice_sizes[b][0],
+				"a": self.plot_values[beta]["a"],
+				"a_err": self.plot_values[b]["a_err"],
+			}
+			for i, b in enumerate(self.beta_values)
 		}
 
 		t0_dict = {"t0_cont": self.t0_cont, "t0err_cont": self.t0_cont_error}
@@ -184,16 +191,16 @@ class EnergyPostAnalysis(PostCore):
 			bvals = self.beta_values
 			tab = [
 				[r"{0:.2f}".format(b) for b in bvals],
-				[r"{0:s}".format(sciprint.error_str(t0_dict[b]["t0a2"], 
+				[r"{0:s}".format(sciprint.sciprint(t0_dict[b]["t0a2"], 
 					t0_dict[b]["t0_erra2"])) for b in bvals],
-				[r"{0:s}".format(sciprint.error_str(t0_dict[b]["t0r02"], 
+				[r"{0:s}".format(sciprint.sciprint(t0_dict[b]["t0r02"], 
 					t0_dict[b]["t0_errr02"])) for b in bvals],
 				[r"{0:d}".format(self.lattice_sizes[b][0]) for b in bvals],
-				[r"{0:s}".format(sciprint.error_str(
+				[r"{0:s}".format(sciprint.sciprint(
 					self.lattice_sizes[b][0]*self.plot_values[b]["a"], 
 					self.lattice_sizes[b][0]*self.plot_values[b]["a_err"])) 
 					for b in bvals],
-				[r"{0:s}".format(sciprint.error_str(
+				[r"{0:s}".format(sciprint.sciprint(
 					self.plot_values[b]["a"],
 					self.plot_values[b]["a_err"])) for b in bvals],
 			]

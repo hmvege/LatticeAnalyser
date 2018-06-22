@@ -6,8 +6,9 @@ import types
 
 def _check_splits(N, numsplits):
     """Checks if the temporal dimension has been split into good .intervals"""
-    assert N % numsplits == 0, ("Bad number of splits: N %% "
-            "numsplits = %d" % (N % numsplits))
+    if N % numsplits != 0:
+        print ("Number of splits not even: N %% "
+            "numsplits = %d %% %d = %d." % (N, numsplits, N % numsplits))
 
 
 def _check_intervals(intervals, numsplits):
@@ -81,7 +82,7 @@ def get_intervals(N, numsplits=None, intervals=None):
         ValueError: if no intervals or numsplits is provided, or if both is
             provided.
         AssertionError: if number of splits lead to an uneven split N.
-            (THIS FEATURE SHOULD PERHAPS BE REMOVED IN FUTURE??)
+    TODO: THIS FEATURE SHOULD PERHAPS BE REMOVED IN FUTURE??
     """
     _check_intervals(intervals, numsplits)
 

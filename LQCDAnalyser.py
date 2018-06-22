@@ -13,9 +13,10 @@ def main():
 	observables = [
 		"plaq", "energy",
 		# Topological charge definitions
-		"topc", "topc2", "topc4", "topcr", "topcMC",
+		# "topc2", "topc4",
+		"topc", "topcr", "topcMC",
 		# Topological susceptibility definitions
-		"topsus", "topsusMC",
+		"topsus", "topsusMC", "topsusqtq0",
 		# Other quantities 
 		"topcr",
 	]
@@ -23,7 +24,7 @@ def main():
 		# Topological charge
 		"topct", "topcte",
 		# Topological susceptiblity
-		"topsust", "topsuste", "topsusqtq0",
+		"topsust", "topsuste",
 		# Other quantities 
 		"qtq0e",
 		"qtq0eff",
@@ -38,7 +39,7 @@ def main():
 	# observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["topc", "plaq", "topsus"]
 	# observables = ["topcr", "qtq0eff"]
-	# observables = ["topc4"]
+	# observables = ["topcMC"]
 	# observables = observables_euclidean_time
 	# observables = ["topcr", "topsus"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
@@ -278,8 +279,17 @@ def main():
 	# analysis_parameter_list = [databeta61, databeta62]
 	# analysis_parameter_list = [databeta62]
 	# analysis_parameter_list = [databeta645]
+
+	# #### Submitting 8x16 analysis
 	# analysis_parameter_list = [smaug8x16_data_beta60_analysis]
+	# for analysis_parameters in analysis_parameter_list:
+	# 	pre_analysis(analysis_parameters)
+
+	# #### Submitting 12x24 analysis
 	# analysis_parameter_list = [smaug12x24_data_beta60_analysis]
+	# for analysis_parameters in analysis_parameter_list:
+	# 	pre_analysis(analysis_parameters)
+
 	# analysis_parameter_list = dist_param_list
 
 	# #### Submitting observable-batches

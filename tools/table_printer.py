@@ -26,13 +26,14 @@ class TablePrinter:
 
     def _transpose_table(self, tab):
         """Transposes table list, tab."""
-        N_rows = len(tab)
-        N_col = len(tab[0])
+        self.N_cols = len(tab)
+        self.N_rows = len(tab[0])
         assert len(set([len(row) for row in tab])) == 1, (
             "Length of all the table rows should be equal")
 
-        new_tab = [[] for i in range(N_col)]
+        new_tab = [[] for i in range(self.N_rows)]
 
+        # Transforms table from [column][row] to [row][column]
         for ic, col in enumerate(tab):
             for ir, row in enumerate(col):
                 new_tab[ir].append(row)
@@ -78,9 +79,9 @@ class TablePrinter:
         tab = ""
 
         # Printing header
-        for h in self.header:
+        for icol, h in enumerate(self.header):
             tab += "{0:<{w}s}".format(h, w=width)
-            if latex:
+            if latex and icol != (self.N_cols-1):
                 tab += " & "
 
         if latex:
@@ -92,11 +93,13 @@ class TablePrinter:
         for ir, row in enumerate(self.table):
 
             tab += "\n"
-            for ielem, elem in enumerate(row):
+
+            for icol, elem in enumerate(row):
                 elem = self._check_table_elem(elem, latex)
                 tab += "{0:<{w}s}".format(elem, w=width)
 
-                if latex:
+                if latex and icol != (self.N_cols-1):
+                # if latex and (icol != (self.N_cols-1) or (ir != (self.N_rows-1))):
                     tab += " & "
 
             if latex:
@@ -122,6 +125,10 @@ class TablePrinter:
             row_seperator_positions: list of ints, optional. Will place a 
                 row_seperator after each position in list.
         """
+
+        # Corrects the position 
+        row_seperator_positions = [i-1 for i in row_seperator_positions]
+
         print self._generate_table(latex=latex, width=width, 
             row_seperator=row_seperator, 
             row_seperator_positions=row_seperator_positions)
@@ -138,11 +145,12 @@ class TablePrinter:
 
 def main():
     # Testing printing function
-    header = ["a", "b", "c"]
+    header = ["a", "b", "c", "d"]
     table = [
         [0.1, 2.3, 3.4], # Columns
         [0.3, 4.1, 4.5],
         [1.1, 1.3, 6.3],
+        [1.3, 2.0, 4.3]
     ]
 
     ptab = TablePrinter(header, table)

@@ -37,12 +37,13 @@ def analyse_default(analysis_object, N_bs, NBins=None, skip_histogram=False,
 		]
 		for iHist in hist_pts:
 			analysis_object.plot_histogram(iHist, NBins=NBins)
-		analysis_object.plot_multihist([hist_pts[0], hist_pts[2], hist_pts[-1]],
-			NBins=NBins)
+		analysis_object.plot_multihist([hist_pts[0], hist_pts[2], 
+			hist_pts[-1]], NBins=NBins)
 	analysis_object.plot_integrated_correlation_time()
 	analysis_object.save_post_analysis_data() # save_as_txt=False
 
-def gif_analysis(gif_analysis_obj, gif_flow_range, N_bs, gif_euclidean_time=None):
+def gif_analysis(gif_analysis_obj, gif_flow_range, N_bs, 
+	gif_euclidean_time=None):
 	"""Function for creating gifs as effectively as possible."""
 
 	# Sets up random boot strap lists so they are equal for all flow times
@@ -142,7 +143,8 @@ def analyse_topcr(params):
 	bs_index_lists = np.random.randint(N_cfgs_topc2,
 		size=(N_bs, N_cfgs_topc2))
 
-	analyse_default(topc2_analysis, N_bs, NBins=150, bs_index_lists=bs_index_lists)
+	analyse_default(topc2_analysis, N_bs, NBins=150, 
+		bs_index_lists=bs_index_lists)
 	analyse_default(topc4_analysis, N_bs, bs_index_lists=bs_index_lists)
 
 def analyse_topsus4(params):
@@ -159,16 +161,17 @@ def analyse_topsus_qtq0(params, q0_flow_times):
 	"""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
 
-	qtq0_analysis = TopsusQtQ0Analyser(obs_data("topc"), dryrun=dryrun,
+	topsus_qtq0_analysis = TopsusQtQ0Analyser(obs_data("topc"), dryrun=dryrun,
 		parallel=parallel, numprocs=numprocs, verbose=verbose)
 
 	for q0_flow_time in q0_flow_times:
-		qtq0_analysis.setQ0(q0_flow_time) 
-		analyse_default(qtq0_analysis, N_bs, skip_histogram=True)
+		topsus_qtq0_analysis.setQ0(q0_flow_time) 
+		analyse_default(topsus_qtq0_analysis, N_bs, skip_histogram=True)
 
 def analyse_qtq0e(params, q0_flow_times, euclidean_time_percents):
 	"""Analysis for the effective mass qtq0 with q0 at a fixed flow time."""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
+	if not obs_data.has_observable("topct"): return
 
 	qtq0_analysis = QtQ0EuclideanAnalyser(obs_data("topct"), dryrun=dryrun,
 		parallel=parallel, numprocs=numprocs, verbose=verbose)
@@ -179,11 +182,14 @@ def analyse_qtq0e(params, q0_flow_times, euclidean_time_percents):
 			analyse_default(qtq0_analysis, N_bs)
 
 def analyse_qtq0_effective_mass(params, q0_flow_times):
-	"""Pre-analyser for the effective mass qtq0 with q0 at a fixed flow time."""
+	"""
+	Pre-analyser for the effective mass qtq0 with q0 at a fixed flow time.
+	"""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
+	if not obs_data.has_observable("topct"): return
 
-	qtq0eff_analysis = QtQ0EffectiveMassAnalyser(obs_data("topct"), dryrun=dryrun,
-		parallel=parallel, numprocs=numprocs, verbose=verbose)
+	qtq0eff_analysis = QtQ0EffectiveMassAnalyser(obs_data("topct"), 
+		dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
 	for q0_flow_time in q0_flow_times:
 		if q0_flow_time != 0.6: # Only zeroth flow 
 			continue
@@ -193,6 +199,7 @@ def analyse_qtq0_effective_mass(params, q0_flow_times):
 def analyse_topct(params, numsplits):
 	"""Analyses topological charge at a specific euclidean time."""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
+	if not obs_data.has_observable("topct"): return
 
 	topct_analysis = TopctAnalyser(obs_data("topct"),
 		dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
@@ -206,6 +213,7 @@ def analyse_topct(params, numsplits):
 def analyse_topsust(params, numsplits):
 	"""Analyses topological susceptibility at a specific euclidean time."""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
+	if not obs_data.has_observable("topct"): return
 
 	topct_analysis = TopsustAnalyser(obs_data("topct"),
 		dryrun=dryrun, parallel=parallel, numprocs=numprocs, verbose=verbose)
@@ -228,6 +236,7 @@ def analyse_topcte_intervals(params, numsplits=None, intervals=None):
 		intervals: intervals to plot in. Default is none.
 	"""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
+	if not obs_data.has_observable("topct"): return
 
 	t_interval, _ = get_intervals(obs_data.NT, numsplits=numsplits, 
 		intervals=intervals)
@@ -252,6 +261,7 @@ def analyse_topsuste_intervals(params, numsplits=None, intervals=None):
 		intervals: intervals to plot in. Default is none.
 	"""
 	obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
+	if not obs_data.has_observable("topct"): return
 
 	t_interval, _ = get_intervals(obs_data.NT, numsplits=numsplits, 
 		intervals=intervals)
