@@ -396,53 +396,6 @@ class PostCore(object):
 		return_dict = {"obs": self.observable_name_compact, "data": values}
 		return return_dict
 
-	def _get_tf_value(self, tf, atype, extrap_method):
-		"""
-		Sets the correct tf value.
-
-		tf options: "t0", "t0beta", float"
-		"""
-		self.t0 = {beta: {} for beta in self.beta_values}
-		if isinstance(tf, str):
-			assert not isinstance(self.reference_values, types.NoneType), (
-				"Missing reference values: %s" % self.reference_values)
-			if tf == "t0":
-				if isinstance(extrap_method, types.NoneType):
-					for beta in self.beta_values:
-						self.t0[beta] = \
-							self.reference_values[atype].values()[0]["t0_cont"]
-				else:
-					for beta in self.beta_values:
-						self.t0[beta] = \
-							self.reference_values[atype][extrap_method][beta]["t0_cont"]
-			elif tf == "t0beta":
-				if isinstance(extrap_method, types.NoneType):
-					for beta in self.beta_values:
-						self.t0[beta] = \
-							self.reference_values[atype].values()[0][beta]["t0r02"]
-				else:
-					for beta in self.beta_values:
-						self.t0[beta] = self.reference_values[atype][extrap_method][beta]["t0r02"]
-						print self.t0[beta]
-			elif tf == "t0beta_a2":
-				# print self.reference_values[atype].values()[0][6.0].keys()
-				if isinstance(extrap_method, types.NoneType):
-					for beta in self.beta_values:
-						self.t0[beta] = \
-							self.reference_values[atype].values()[0][beta]["t0a2"]
-				else:
-					for beta in self.beta_values:
-						self.t0[beta] = self.reference_values[atype][extrap_method][beta]["t0a2"]
-						print self.t0[beta]
-			else: # Stupid error check
-				raise ValueError("%s is not a valid key. Use t0.")
-		else:
-			assert isinstance(tf, float), "input tf %s should be float." % tf
-			for beta in self.beta_values:
-				self.t0[beta] = tf
-
-
-
 	def __str__(self):
 		"""Class string representation method."""
 		msg = "\n" +"="*100

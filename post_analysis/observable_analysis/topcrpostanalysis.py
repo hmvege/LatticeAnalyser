@@ -248,7 +248,7 @@ class TopcRPostAnalysis(PostCore):
 		"""Returns the ratio and and error between two quantities."""
 		return x/y, np.sqrt((xerr/y)**2 + (x*yerr/y**2)**2)
 
-	def _print_data(self, t0=None):
+	def _print_data(self, atype="bootstrap"):
 		"""Prints data."""
 
 		article_param_header = [r"Lattice", r"$\beta$", r"$L/a$", r"$L[\fm]$",
@@ -314,14 +314,15 @@ class TopcRPostAnalysis(PostCore):
 			row_seperator_positions=[6, 8, 10])
 
 		# TODO: Prints values I have generated
-		ref_vals = self.reference_values
-		values_header = [r"$\beta$", r"$L/a$", r"$\langle Q^2 \rangle$", 
+		values_header = [r"$\beta$", r"$L/a$", r"$t_0/a^2$", r"$\langle Q^2 \rangle$", 
 			r"$\langle Q^4 \rangle$", r"$\langle Q^4 \rangle_C$", r"$R$"]
 		values_table = [
 			[b for b in self.beta_values],
 			["{:.2f}".format(self.data_values[b]["aL"])
 				for b in self.beta_values],
 			[sciprint(self.data_values[b]["Q2"], self.data_values[b]["Q2Err"])
+				for b in self.beta_values],
+			[sciprint(self.t0[b]["t0"], self.t0[b]["t0err"]) 
 				for b in self.beta_values],
 			[sciprint(self.data_values[b]["Q4"], self.data_values[b]["Q4Err"])
 				for b in self.beta_values],
@@ -376,8 +377,7 @@ class TopcRPostAnalysis(PostCore):
 		"""
 		self.data_values = {b: {} for b in self.beta_values}
 
-		self._get_tf_value(tf, atype, None)
-
+		# Sets up the reference values
 		try:
 			ref_vals = self.reference_values[atype]["bootstrap"]
 		except KeyError:
@@ -385,11 +385,12 @@ class TopcRPostAnalysis(PostCore):
 			print ("Bootstrap line extrapolation not found."
 				" Falling back to %s" % fallback_key)
 			ref_vals = self.reference_values[atype][fallback_key]
+		self.t0 = {b: {"t0": ref_vals[b]["t0a2"], "t0err": ref_vals[b]["t0a2err"]}
+			for b in self.beta_values}
 
 		t0_indexes = [
-			np.argmin(np.abs(self.topc2[atype][b]["x"] - self.t0[b])) 
-			for b in self.beta_values
-		]
+			np.argmin(np.abs(self.topc2[atype][b]["x"] - self.t0[b]["t0"]))
+			for b in self.beta_values]
 
 		for t0_index, b in zip(t0_indexes, self.beta_values):
 			self.data_values[b]["aL"] = ref_vals[b]["aL"]
@@ -470,10 +471,10 @@ class TopcRPostAnalysis(PostCore):
 			return x/y, np.sqrt((xerr/y)**2 + (x*yerr/y**2)**2)
 
 		self._setup_comparison_values(tf=tf, atype=atype)
-		self._print_data()
+		self._print_data(atype=atype)
 
 		# for size in sorted(self.article_name_size[data_set]):
-		for size in sorted(self.article_size_name):
+		# for size in sorted(self.article_size_name):
 
 		# 	# Sets the t0 value to extract at.
 		# 	if tf == "article":
@@ -528,53 +529,53 @@ class TopcRPostAnalysis(PostCore):
 		# 				self.article_name_size[data_set][size]["R_norm"],
 		# 				self.article_name_size[data_set][size]["RErr_norm"]))
 
-			print "\nRatios between me and article"
-			for data_set in sorted(self.article_size_name[size]):
-				# Compares values by dividing my values by article values
-				for beta in self.beta_values:
-					beta_article = self.article_name_size[data_set][size]["beta"]
+		# 	print "\nRatios between me and article"
+		# 	for data_set in sorted(self.article_size_name[size]):
+		# 		# Compares values by dividing my values by article values
+		# 		for beta in self.beta_values:
+		# 			beta_article = self.article_name_size[data_set][size]["beta"]
 
-					# Gets the approximate same t0 ref. value
-					t0_index = np.argmin(
-						np.abs(self.topc2[atype][beta]["x"] - self.t0[beta]))
-					print "Beta(me) %.2f Beta(article) %.2f Dataset %-s" % (
-						beta, beta_article, data_set)
+		# 			# Gets the approximate same t0 ref. value
+		# 			t0_index = np.argmin(
+		# 				np.abs(self.topc2[atype][beta]["x"] - self.t0[beta]["t0"]))
+		# 			print "Beta(me) %.2f Beta(article) %.2f Dataset %-s" % (
+		# 				beta, beta_article, data_set)
 
-					print "Q2_me/Q2_article:   %10.5f +/- %10.5f" % (
-						ratio_error(self.topc2[atype][beta]["y"][t0_index],
-						self.topc2[atype][beta]["y_error"][t0_index],
-						self.article_name_size[data_set][size]["Q2_norm"], 
-						self.article_name_size[data_set][size]["Q2Err_norm"]))
-					print "Q4_me/Q4_article:   %10.5f +/- %10.5f" % (
-						ratio_error(self.topc4[atype][beta]["y"][t0_index], 
-						self.topc4[atype][beta]["y_error"][t0_index],
-						self.article_name_size[data_set][size]["Q4_norm"], 
-						self.article_name_size[data_set][size]["Q4Err_norm"]))
-					print "Q4C_me/Q4C_article: %10.5f +/- %10.5f" % (
-						ratio_error(self.topc4C[atype][beta]["y"][t0_index], 
-						self.topc4C[atype][beta]["y_error"][t0_index],
-						self.article_name_size[data_set][size]["Q4C_norm"], 
-						self.article_name_size[data_set][size]["Q4CErr_norm"]))
-					print "R_me/R_article:     %10.5f +/- %10.5f" % (
-						ratio_error(self.topcR[atype][beta]["y"][t0_index], 
-						self.topcR[atype][beta]["y_error"][t0_index],
-						self.article_name_size[data_set][size]["R_norm"], 
-						self.article_name_size[data_set][size]["RErr_norm"]))
-			print ""
+		# 			print "Q2_me/Q2_article:   %10.5f +/- %10.5f" % (
+		# 				ratio_error(self.topc2[atype][beta]["y"][t0_index],
+		# 				self.topc2[atype][beta]["y_error"][t0_index],
+		# 				self.article_name_size[data_set][size]["Q2_norm"], 
+		# 				self.article_name_size[data_set][size]["Q2Err_norm"]))
+		# 			print "Q4_me/Q4_article:   %10.5f +/- %10.5f" % (
+		# 				ratio_error(self.topc4[atype][beta]["y"][t0_index], 
+		# 				self.topc4[atype][beta]["y_error"][t0_index],
+		# 				self.article_name_size[data_set][size]["Q4_norm"], 
+		# 				self.article_name_size[data_set][size]["Q4Err_norm"]))
+		# 			print "Q4C_me/Q4C_article: %10.5f +/- %10.5f" % (
+		# 				ratio_error(self.topc4C[atype][beta]["y"][t0_index], 
+		# 				self.topc4C[atype][beta]["y_error"][t0_index],
+		# 				self.article_name_size[data_set][size]["Q4C_norm"], 
+		# 				self.article_name_size[data_set][size]["Q4CErr_norm"]))
+		# 			print "R_me/R_article:     %10.5f +/- %10.5f" % (
+		# 				ratio_error(self.topcR[atype][beta]["y"][t0_index], 
+		# 				self.topcR[atype][beta]["y_error"][t0_index],
+		# 				self.article_name_size[data_set][size]["R_norm"], 
+		# 				self.article_name_size[data_set][size]["RErr_norm"]))
+		# 	print ""
 
-		exit("Exits before exiting compare_lattice_values @ 565")
+		# exit("Exits before exiting compare_lattice_values @ 565")
 
 	def _normalize_article_values(self):
 		"""
 		Normalizes values from article based on physical volume.
 		"""
-		for data_set in self.article_name_size:
-			for size in self.article_name_size[data_set]:
+		for data_set in sorted(self.article_name_size):
+			for size in sorted(self.article_name_size[data_set]):
 				# Set up volume in physical units
 				L = self.article_name_size[data_set][size]["L"]
 				a = self.article_name_size[data_set][size]["a"]
 				aL = a*float(L)
-				V = aL**4
+				V = (aL)**4
 				# self._add_article_dict_item(name, size, key, value)
 				self._add_article_dict_item(data_set, size, "aL", aL)
 				self._add_article_dict_item(data_set, size, "V", V)

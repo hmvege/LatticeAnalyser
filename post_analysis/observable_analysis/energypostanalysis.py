@@ -148,9 +148,9 @@ class EnergyPostAnalysis(PostCore):
 				"t0": t0_values[i],
 				"t0err": t0err_values[i],
 				"t0a2": t0_values[i]/self.plot_values[b]["a"]**2,
-				"t0_erra2": t0err_values[i]/self.plot_values[b]["a"]**2,
+				"t0a2err": t0err_values[i]/self.plot_values[b]["a"]**2,
 				"t0r02": t0_values[i]/self.r0**2,
-				"t0_errr02": t0err_values[i]/self.r0**2,
+				"t0r02err": t0err_values[i]/self.r0**2,
 				"aL": self.plot_values[b]["a"]*self.lattice_sizes[b][0],
 				"aLerr": (self.plot_values[b]["a_err"] \
 					* self.lattice_sizes[b][0]),
@@ -161,7 +161,7 @@ class EnergyPostAnalysis(PostCore):
 			for i, b in enumerate(self.beta_values)
 		}
 
-		t0_dict = {"t0_cont": self.t0_cont, "t0err_cont": self.t0_cont_error}
+		t0_dict = {"t0cont": self.t0_cont, "t0cont_err": self.t0_cont_error}
 		t0_dict.update(_tmp_beta_dict)
 
 		if self.verbose:
@@ -174,11 +174,11 @@ class EnergyPostAnalysis(PostCore):
 				msg = "beta = %.2f || t0 = %10f +/- %-10f" % (b, 
 					t0_dict[b]["t0"], t0_dict[b]["t0err"])
 				msg += " || t0/a^2 = %10f +/- %-10f" % (t0_dict[b]["t0a2"], 
-					t0_dict[b]["t0_erra2"])
+					t0_dict[b]["t0a2err"])
 				msg += " || t0/a^2 = %10f +/- %-10f" % (t0_dict[b]["t0a2"], 
-					t0_dict[b]["t0_erra2"])
+					t0_dict[b]["t0a2err"])
 				msg += " || t0/r0^2 = %10f +/- %-10f" % (t0_dict[b]["t0r02"],
-					t0_dict[b]["t0_errr02"])
+					t0_dict[b]["t0r02err"])
 				print msg
 
 		if self.print_latex:
@@ -192,9 +192,9 @@ class EnergyPostAnalysis(PostCore):
 			tab = [
 				[r"{0:.2f}".format(b) for b in bvals],
 				[r"{0:s}".format(sciprint.sciprint(t0_dict[b]["t0a2"], 
-					t0_dict[b]["t0_erra2"])) for b in bvals],
+					t0_dict[b]["t0a2err"])) for b in bvals],
 				[r"{0:s}".format(sciprint.sciprint(t0_dict[b]["t0r02"], 
-					t0_dict[b]["t0_errr02"])) for b in bvals],
+					t0_dict[b]["t0r02err"])) for b in bvals],
 				[r"{0:d}".format(self.lattice_sizes[b][0]) for b in bvals],
 				[r"{0:s}".format(sciprint.sciprint(
 					self.lattice_sizes[b][0]*self.plot_values[b]["a"], 
