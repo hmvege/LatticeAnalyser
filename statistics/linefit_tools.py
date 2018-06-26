@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import types
 import copy
+from decimal import Decimal
 # from tqdm import tqdm
 
 
@@ -54,6 +55,8 @@ def _get_covariance_matrix_from_raw(y_raw, iscov=False):
     """
     Returns a covariance matrix that is guaranteed to not be singular.
     """
+    y_raw.astype(Decimal)
+
     if not iscov:
         cov_raw = np.cov(y_raw)
     else:
@@ -65,15 +68,18 @@ def _get_covariance_matrix_from_raw(y_raw, iscov=False):
     # if min_eig <= 0:
     #     cov_raw -= 1*min_eig * np.eye(*cov_raw.shape)
 
-    # min_eig = np.min(np.linalg.eigh(cov_raw)[0])
-    # counter = 0
+    min_eig = np.min(np.linalg.eigh(cov_raw)[0])
+    counter = 0
+
     # print "BEFORE: ",min_eig, "%10.16f" % cov_raw[10,10], min_eig * np.eye(*cov_raw.shape)[0,0]
     # print 
-    # while min_eig < 0 and counter < 10000:
-    #     cov_raw -= 0.1*min_eig * np.eye(*cov_raw.shape)
-    #     min_eig = np.min(np.linalg.eigh(cov_raw)[0])
-    #     counter += 1
-    #     # print counter, min_eig, "%10.16f" % cov_raw[10,10], 0.01*min_eig * np.eye(*cov_raw.shape)[0,0]
+
+    while min_eig < 0 and counter < 10000:
+        cov_raw -= 0.5*min_eig * np.eye(*cov_raw.shape)
+        min_eig = np.min(np.linalg.eigh(cov_raw)[0])
+        counter += 1
+
+        # print counter, min_eig, "%10.16f" % cov_raw[10,10], 0.01*min_eig * np.eye(*cov_raw.shape)[0,0]
 
     # min_eig = np.min(np.real(np.linalg.eigvals(cov_raw)))
     # print min_eig

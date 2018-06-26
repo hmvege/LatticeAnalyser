@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from table_printer import TablePrinter
+import tools.sciprint as sciprint
 import numpy as np
 import types
 
@@ -13,8 +14,9 @@ def _check_splits(N, numsplits):
 
 def _check_intervals(intervals, numsplits):
     """Sets up the intervals"""
-    if (intervals == numsplits == None) or \
-        (intervals != None and numsplits != None):
+    # if (intervals == numsplits == None) or \
+    #     (intervals != None and numsplits != None):
+    if (intervals == numsplits == None):
 
         raise ValueError(("Either provide MC intervals to plot for or the "
             "number of MC intervals to split into."))
@@ -47,10 +49,10 @@ def interval_setup(beta_param_list, int_type):
         intervals_arg = "MCInt"
 
     # If we have provided exact intervals, will create a dictionary
-    if not isinstance(beta_param_list[0]["MCInt"], types.NoneType):
-        interval_dict_list = [_create_int(beta_param_list[ib]["MCInt"])
+    if not isinstance(beta_param_list[0][intervals_arg], types.NoneType):
+        interval_list = [_create_int(beta_param_list[ib][intervals_arg])
             for ib in range(N_betas)]
-        interval_dict_list = [interval_dict_list]
+        interval_list = [interval_list]
     else:
         _temp = []
         for plist in beta_param_list:
@@ -60,9 +62,9 @@ def interval_setup(beta_param_list, int_type):
                             intervals=plist[intervals_arg])[0]])
 
         _num_splits = beta_param_list[0][numsplits_arg]
-        interval_dict_list = np.asarray(_temp).T
+        interval_list = np.asarray(_temp).T
 
-    return interval_dict_list
+    return interval_list
 
 
 def get_intervals(N, numsplits=None, intervals=None):
@@ -81,8 +83,6 @@ def get_intervals(N, numsplits=None, intervals=None):
     Raises:
         ValueError: if no intervals or numsplits is provided, or if both is
             provided.
-        AssertionError: if number of splits lead to an uneven split N.
-    TODO: THIS FEATURE SHOULD PERHAPS BE REMOVED IN FUTURE??
     """
     _check_intervals(intervals, numsplits)
 
@@ -104,7 +104,7 @@ def get_intervals(N, numsplits=None, intervals=None):
 def append_fit_params(fplist, obs_name, analysis_name, fparams):
     """Function for appending fit parameters."""
     chi_squared, fit_params, topsus, topsus_err, N_F, N_F_err, \
-        fit_target, interval, descr, extrap_method = fparams
+        fit_target, interval, descr, extrap_method, obs_name_latex = fparams
     fplist.append({
         "observable_type": obs_name,
         "descr": descr,
@@ -121,6 +121,7 @@ def append_fit_params(fplist, obs_name, analysis_name, fparams):
         "N_F": N_F,
         "N_F_err": N_F_err,
         "interval": interval,
+        "obs_name_latex": obs_name_latex,
     })
     return fplist
 
@@ -152,8 +153,6 @@ def write_fit_parameters_to_file(fparams, fname, skip_values=None,
             ("N_F_err", {"name": "N_F_err", "w": fw, "type": ".8f"}),
         ])
 
-        # TODO: print out table of values using table printer.
-
         # Sets header in text file
         header_string = ""
         create_str = lambda _val, _width, _fcode: "{0:<{w}{t}}".format(
@@ -175,6 +174,26 @@ def write_fit_parameters_to_file(fparams, fname, skip_values=None,
             if verbose:
                 print line_values
             f.write(line_values + "\n")
+
+        # Obs  sqrt(8t)  extrap.method  int/slice  chi^2  topsus  Nf
+        table_header = [r"$\mathcal{O}$", r"$\sqrt{8t_{0,\text{extrap}}}$", 
+            "Extrap. method", "Interval/slice", r"$\chi^2$", 
+            r"$\sqrt(\chi}^{\frac{1}{4}}$", r"$N_F$"]
+        table_body = [
+            [fp["obs_name_latex"] for fp in sorted_parameter_list],
+            [fp["fit_target"] for fp in sorted_parameter_list],
+            [fp["extrap_method"] for fp in sorted_parameter_list],
+            [r"{:s}".format(fp["interval"]) for fp in sorted_parameter_list],
+            [r"{:.2g}".format(fp["chi_squared"]) for fp in sorted_parameter_list],
+            [sciprint.sciprint(fp["topsus"], fp["topsus_err"], prec=4) for fp in sorted_parameter_list],
+            [sciprint.sciprint(fp["N_F"], fp["N_F_err"], prec=4) for fp in sorted_parameter_list],
+        ]
+
+        width_list = [len(tab)+2 for tab in table_header]
+        width_list[0] = 45
+        width_list[3] = 30
+        topsus_table = TablePrinter(table_header, table_body)
+        topsus_table.print_table(width=width_list, ignore_latex_cols=[2])
 
 
 def main():

@@ -71,7 +71,7 @@ def post_analysis(beta_parameter_list, observables,
 		verbose: bool, a more verbose run. Default is False.
 	"""
 
-	print "="*100 
+	print "="*160 
 	print "Post-analysis: retrieving data from folders: %s" % (
 			", ".join([os.path.join(b["batch_folder"], b["batch_name"]) \
 		for b in beta_parameter_list]))
@@ -274,6 +274,13 @@ def post_analysis(beta_parameter_list, observables,
 				print topsusqtq0_analysis
 
 				for int_keys in interval_dict_list:
+
+					if (list(set(int_keys))[0] == "0.00" and 
+						extrapolation_method == "bootstrap"):
+						print ("Skipping intervals 0.00, as they may contain "
+							"negative numbers from bootstrapped data.")
+						continue
+
 					topsusqtq0_analysis.plot_interval(int_keys)
 					for cont_target in topsus_fit_targets:
 						topsusqtq0_analysis.plot_continuum(cont_target, 
@@ -314,6 +321,8 @@ def post_analysis(beta_parameter_list, observables,
 		if "topsuste" in observables:
 			topsuste_analysis = TopsusteIntervalPostAnalysis(data, 
 				figures_folder=figures_folder, verbose=verbose)
+
+			print interval_setup(beta_parameter_list, "Eucl")
 
 			interval_dict_list = topsuste_analysis.setup_intervals(
 				intervals=interval_setup(beta_parameter_list, "Eucl"))

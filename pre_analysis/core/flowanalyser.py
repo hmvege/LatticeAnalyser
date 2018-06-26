@@ -626,7 +626,7 @@ class FlowAnalyser(object):
 			title_string = ""
 			if len(self.observable_name)!=0:
 				title_string = r"%s, " % self.observable_name
-			title_string += r"$N_{bootstraps}=%d$" % self.N_bs
+			title_string += r"$N_\mathrm{bootstraps}=%d$" % self.N_bs
 
 			fname_path = os.path.join(self.observable_output_folder_path,
 				"{0:<s}_bootstrap_Nbs{2:<d}_beta{1:<s}{3:<s}.png".format(
@@ -773,7 +773,7 @@ class FlowAnalyser(object):
 		x = self.a*np.sqrt(8*self.x)
 
 		# Gives title and file name
-		title_string = r"$\tau_{int}$ of %s, $N_{cfg}=%2d$" % (
+		title_string = r"$\tau_\mathrm{int}$ of %s, $N_\mathrm{cfg}=%2d$" % (
 			self.observable_name, self.N_configurations)
 		fname_path = os.path.join(self.observable_output_folder_path, 
 			"{0:<s}_integrated_ac_time_beta{1:<s}{2:<s}.png".format(
@@ -789,7 +789,7 @@ class FlowAnalyser(object):
 		ax.fill_between(x, y - y_std, y + y_std, 
 			alpha=0.5, edgecolor='', facecolor='#6699ff')
 		ax.set_xlabel(r"$\sqrt{8t_f}$")
-		ax.set_ylabel(r"$\tau_{int}$")
+		ax.set_ylabel(r"$\tau_\mathrm{int}$")
 		ax.set_title(title_string)
 		ax.grid(True)
 		if not self.dryrun: 
@@ -856,7 +856,7 @@ class FlowAnalyser(object):
 		# Adds unanalyzed data
 		ax1 = fig.add_subplot(311)
 		x1, y1, _ = ax1.hist(F(self.unanalyzed_y_data[flow_time_index]), 
-			bins=NBins, label="Unanalyzed", normed=True)
+			bins=NBins, label="Unanalyzed", density=True)
 		ax1.legend()
 		ax1.grid("on")
 		ax1.set_title(title_string)
@@ -864,7 +864,7 @@ class FlowAnalyser(object):
 		# Adds bootstrapped data
 		ax2 = fig.add_subplot(312)
 		x2, y2, _ = ax2.hist(F(self.bs_y_data[flow_time_index]),
-			bins=NBins, label="Bootstrap", normed=True)
+			bins=NBins, label="Bootstrap", density=True)
 		ax2.grid("on")
 		ax2.legend()
 		ax2.set_ylabel("Hits")
@@ -872,7 +872,7 @@ class FlowAnalyser(object):
 		# Adds jackknifed histogram
 		ax3 = fig.add_subplot(313)
 		x3, y3, _ = ax3.hist(F(self.jk_y_data[flow_time_index]),
-			bins=NBins, label="Jackknife", normed=True)
+			bins=NBins, label="Jackknife", density=True)
 		ax3.legend()
 		ax3.grid("on")
 		ax3.set_xlabel(r"%s" % x_label)
@@ -1025,7 +1025,7 @@ class FlowAnalyser(object):
 	def __str__(self):
 		info_string = lambda s1, s2: "\n{0:<20s}: {1:<20s}".format(s1, s2)
 		return_string = ""
-		return_string += "\n" + "="*100
+		return_string += "\n" + "="*160
 		return_string += info_string("Data batch folder", self.batch_data_folder)
 		return_string += info_string("Batch name", self.batch_name)
 		return_string += info_string("Observable", self.observable_name_compact)
@@ -1033,7 +1033,7 @@ class FlowAnalyser(object):
 		if not isinstance(self.mc_interval, types.NoneType):
 			return_string += info_string("MC interval",
 				"[%d,%d)" % self.mc_interval)
-		return_string += "\n" + "="*100
+		return_string += "\n" + "="*160
 		return return_string
 
 

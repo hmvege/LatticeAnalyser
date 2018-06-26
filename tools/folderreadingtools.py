@@ -464,7 +464,7 @@ class DataReader:
 	def has_observable(self, obs):
 		"""Checks that the observable we are retrieving exists."""
 		if not obs in self.observables:
-			print "%s not found in data: %s" % (obs, observables)
+			print "%s not found in data: %s" % (obs, self.observables)
 			return False
 
 	def write_parameter_file(self):

@@ -496,26 +496,9 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 		fit_index = np.argmin(np.abs(y - fit_target))
 	else:
 		fit_index = np.argmin(np.abs(x - fit_target))
+
 	ilow = fit_index - plateau_size
 	ihigh = fit_index + plateau_size
-
-	# import copy
-	# import scipy.io as sio
-
-	# matlab_data = {
-	# 	"x": x[ilow:ihigh],
-	# 	"y": y[ilow:ihigh], 
-	# 	"y_err": y_err[ilow:ihigh], 
-	# 	"y_raw": copy.deepcopy(y_raw[ilow:ihigh]),
-	# 	"tau_int": tau_int[ilow:ihigh],
-	# }
-
-	# sio.savemat("../../MATLAB-TEST/line_fit_data4.mat", matlab_data)
-	# np.save("../x", x[ilow:ihigh])
-	# np.save("../y", y[ilow:ihigh])
-	# np.save("../y_err", y_err[ilow:ihigh])
-	# np.save("../y_raw", y_raw[ilow:ihigh])
-	# np.save("../tau_int", tau_int[ilow:ihigh])
 
 	def _f(_x, a, b):
 		return _x*a + b
@@ -524,11 +507,7 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 		y0, y0_error, tau_int0, chi_squared = lfit_tools._extract_plateau_fit(fit_target, 
 			_f, x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh], 
 			y_raw[ilow:ihigh], tau_int[ilow:ihigh], tau_int_err[ilow:ihigh],
-			inverse_fit=inverse_fit, fraw=raw_func, ferrraw=raw_func_der)
-		# y0, y0_error, tau_int0, chi_squared = lfit_tools._extract_plateau_fit(fit_target, 
-		# 	_f, copy.deepcopy(x[ilow:ihigh]), copy.deepcopy(y[ilow:ihigh]), copy.deepcopy(y_err[ilow:ihigh]),
-		# 	copy.deepcopy(y_raw[ilow:ihigh]), copy.deepcopy(tau_int[ilow:ihigh]), copy.deepcopy(tau_int_err[ilow:ihigh]),
-		# 	inverse_fit=inverse_fit)
+			inverse_fit=inverse_fit)
 
 	elif extrapolation_method == "plateau_mean":
 		y0, y0_error, chi_squared = lfit_tools._extract_plateau_mean_fit(fit_target,
@@ -591,8 +570,6 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 		if not isinstance(chi_squared, types.NoneType):
 			msg += "\nchi^2     %16.10f" % chi_squared
 		print msg
-
-	# exit("Exiting @ 594 in linefit.py")
 
 	return x0, y0, y0_error, y0_raw, tau_int0
 

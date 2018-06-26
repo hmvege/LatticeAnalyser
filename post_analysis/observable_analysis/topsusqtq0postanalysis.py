@@ -7,7 +7,8 @@ class TopsusQtQ0PostAnalysis(MultiPlotCore, TopsusCore):
 	"""Post-analysis of the topsus at a fixed flow time."""
 	observable_name = r"$\chi(\langle Q_t Q_{t_0} \rangle)^{1/4}$"
 	observable_name_compact = "topsusqtq0"
-	x_label = r"$\sqrt{8t_{flow}}[fm]$"
+	obs_name_latex = r"\chi^{1/4}\expect{Q_{t_f}Q_{t_{f,0}}}"
+	x_label = r"$\sqrt{8t_{f}}[fm]$"
 	y_label = r"$\chi(\langle Q_{t} Q_{t_0} \rangle)^{1/4} [GeV]$"
 	sub_obs = True
 	descr = "One Q at fixed flow time"
@@ -63,7 +64,7 @@ class TopsusQtQ0PostAnalysis(MultiPlotCore, TopsusCore):
 	def _convert_label(self, label):
 		"""Short method for formatting time in labels."""
 		try:
-			return r"$t_{flow}=%.2f$" % (float(label)/100)
+			return r"$t_{f}=%.2f$" % (float(label)/100)
 		except ValueError:
 			return r"$%s$" % label
 

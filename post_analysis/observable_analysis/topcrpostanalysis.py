@@ -271,7 +271,8 @@ class TopcRPostAnalysis(PostCore):
 		art_param_table_printer = TablePrinter(article_param_header, 
 			article_param_table)
 		art_param_table_printer.print_table(width=15, 
-			row_seperator_positions=[6, 8, 10])
+			row_seperator_positions=[5, 7, 9])
+
 
 		article_values_header = [r"Lattice", r"$\langle Q^2 \rangle$", 
 			r"$\langle Q^4 \rangle$", r"$\langle Q^4 \rangle_C$", r"$R$"]
@@ -290,7 +291,7 @@ class TopcRPostAnalysis(PostCore):
 		art_values_table_printer = TablePrinter(article_values_header, 
 			article_values_table)
 		art_values_table_printer.print_table(width=15, 
-			row_seperator_positions=[6, 8, 10])
+			row_seperator_positions=[5, 7, 9])
 
 		article_normed_header = [r"Lattice", 
 			r"$\langle Q^2 \rangle_\text{normed}$", 
@@ -308,12 +309,12 @@ class TopcRPostAnalysis(PostCore):
 				for k in art_flat],
 		]
 
+
 		art_normed_table_printer = TablePrinter(article_normed_header, 
 			article_normed_table)
 		art_normed_table_printer.print_table(width=15, 
-			row_seperator_positions=[6, 8, 10])
+			row_seperator_positions=[5, 7, 9])
 
-		# TODO: Prints values I have generated
 		values_header = [r"$\beta$", r"$L/a$", r"$t_0/a^2$", r"$\langle Q^2 \rangle$", 
 			r"$\langle Q^4 \rangle$", r"$\langle Q^4 \rangle_C$", r"$R$"]
 		values_table = [
@@ -335,7 +336,7 @@ class TopcRPostAnalysis(PostCore):
 		values_table_printer = TablePrinter(values_header, values_table)
 		values_table_printer.print_table(width=15)
 
-		# TODO: Prints ratio between me and article
+
 		ratio_header = [r"Lattice", r"$\beta$", 
 			r"$\text{Ratio}(\langle Q^2 \rangle)$",
 			r"$\text{Ratio}(\langle Q^4 \rangle)$", 
@@ -363,7 +364,7 @@ class TopcRPostAnalysis(PostCore):
 				ratio_table.append(sub_list)
 
 		ratio_table = np.asarray(ratio_table).T.tolist()
-		ratio_tab_pos = (4*np.arange(len(self.article_flattened)))
+		ratio_tab_pos = (4*np.arange(len(self.article_flattened))) - 1
 		ratio_table_printer = TablePrinter(ratio_header, ratio_table)
 		ratio_table_printer.print_table(width=15,
 			row_seperator_positions=ratio_tab_pos)

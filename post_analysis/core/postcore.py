@@ -16,6 +16,7 @@ class PostCore(object):
 	"""Post analysis base class."""
 	observable_name = "Observable"
 	observable_name_compact = "obs"
+	obs_name_latex = "MISSING LATEX NAME FOR OBSERVABLE"
 	formula = ""
 	x_label = r""
 	y_label = r""
@@ -222,6 +223,7 @@ class PostCore(object):
 
 			self.plot_values[beta] = values
 
+
 	def plot(self, x_limits=False, y_limits=False, plot_with_formula=False,
 		error_shape="band", figure_folder=None, plot_vline_at=None,
 		plot_hline_at=None, figure_name_appendix=""):
@@ -398,13 +400,13 @@ class PostCore(object):
 
 	def __str__(self):
 		"""Class string representation method."""
-		msg = "\n" +"="*100
+		msg = "\n" +"="*160
 		msg += "\nPost analaysis for:        " + self.observable_name_compact
 		msg += "\n" + self.__doc__
 		msg += "\nAnalysis-type:             " + self.analysis_data_type
 		msg += "\nIncluding autocorrelation: " + self.ac
 		msg += "\nOutput folder:             " + self.output_folder_path
-		msg += "\n" + "="*100
+		msg += "\n" + "="*160
 		return msg
 
 

@@ -11,6 +11,7 @@ import types
 class TopsusCore(PostCore):
 	observable_name = "topsus_core"
 	observable_name_compact = "topsus_core"
+	obs_name_latex = "MISSING LATEX NAME FOR TOPSUS"
 
 	# Regular plot variables
 	x_label = r"$\sqrt{8t_f}[fm]$"
@@ -135,11 +136,6 @@ class TopsusCore(PostCore):
 			y = self.plot_values[beta]["y"]
 			y_err = self.plot_values[beta]["y_err"]
 			y_raw = self.plot_values[beta]["y_raw"]
-			# print self.chi[beta](y_raw)[-1,:]
-			# y_raw = self.plot_values[beta]["y_uraw"]
-			# print self.chi[beta](y_uraw)[-1,:]
-			# print y_raw[-1,:]
-			# exit(1)
 
 			if self.with_autocorr:
 				tau_int = self.plot_values[beta]["tau_int"]
@@ -161,6 +157,10 @@ class TopsusCore(PostCore):
 
 			_x0, _y0, _y0_error, _y0_raw, _tau_int0 = res
 
+			if np.isnan([_y0, _y0_error]).any():
+				print "NaN type detected: skipping calculation"
+				return
+
 			if self.verbose:
 				msg = "Beta = %4.2f Topsus = %14.12f +/- %14.12f" % (
 					beta, _y0, _y0_error)
@@ -169,10 +169,10 @@ class TopsusCore(PostCore):
 				a_squared.append(self.plot_values[beta]["a"]**2/_x0)
 			else:
 				a_squared.append(
-					self.plot_values[beta]["a"]**2/t0_values["t0_cont"])
+					self.plot_values[beta]["a"]**2/t0_values["t0cont"])
 
 				if self.verbose:
-					msg += " t0 = %14.12f" % (t0_values["t0_cont"]\
+					msg += " t0 = %14.12f" % (t0_values["t0cont"]\
 						/ (self.plot_values[beta]["a"]**2) * self.r0**2)
 
 			if self.verbose:
@@ -275,7 +275,7 @@ class TopsusCore(PostCore):
 		return self.chi_squared, self.fit_params, self.topsus_continuum, \
 			self.topsus_continuum_error, self.NF, self.NF_error, \
 			self.fit_target, self.intervals_str, self.descr, \
-			self.extrapolation_method
+			self.extrapolation_method, self.obs_name_latex
 
 	def print_continuum_estimate(self):
 		"""Prints the NF from the Witten-Veneziano formula."""

@@ -1,5 +1,3 @@
-# TODO: allow for numpy arrays.
-
 class TablePrinter:
     """
     Class for generating a table from a header and table body. Prints in 
@@ -60,27 +58,38 @@ class TablePrinter:
             return elem
 
     def _generate_table(self, latex=True, width=10, row_seperator=r"\hline", 
-        row_seperator_positions=[]):
+        row_seperator_positions=[], ignore_latex_cols=[]):
         """
         Internal table generator.
 
         Args:
             latex: bool, optional, if true, will print in LaTeX format. Default
                 is True.
-            width: int, optional. Width of spacing allocated to table. 
-                Default is 10.
+            width: int or table of ints, optional. Width of spacing allocated 
+                to table. Default is 10.
             row_seperator: str, optional. One will always be placed after 
                 table header unless empty. Element to print between header and 
                 table. Default is hline.
             row_seperator_positions: list of ints, optional. Will place a 
                 row_seperator after each position in list.
+            ignore_latex_cols: list of bools, optional, rows specified will 
+                not be in LaTeX format if prompted.
         """
 
-        tab = ""
+        if isinstance(width, list):
+            assert len(width) == self.N_cols, ("number of spacings for "
+                "columns in 'width' is not equal to the number of columns")
+        elif isinstance(width, int):
+            width = [width for icol in range(self.N_cols)]
+        else:
+            raise ValueError("%s is not allowed for 'width'. Type should be "
+                "either 'int' or 'list'" % type(width))
+
+        tab = "\n"
 
         # Printing header
         for icol, h in enumerate(self.header):
-            tab += "{0:<{w}s}".format(h, w=width)
+            tab += "{0:<{w}s}".format(h, w=width[icol])
             if latex and icol != (self.N_cols-1):
                 tab += " & "
 
@@ -95,11 +104,14 @@ class TablePrinter:
             tab += "\n"
 
             for icol, elem in enumerate(row):
-                elem = self._check_table_elem(elem, latex)
-                tab += "{0:<{w}s}".format(elem, w=width)
+                if icol in ignore_latex_cols:
+                    elem = self._check_table_elem(elem, False)
+                else:
+                    elem = self._check_table_elem(elem, latex)
+
+                tab += "{0:<{w}s}".format(elem, w=width[icol])
 
                 if latex and icol != (self.N_cols-1):
-                # if latex and (icol != (self.N_cols-1) or (ir != (self.N_rows-1))):
                     tab += " & "
 
             if latex:
@@ -107,16 +119,19 @@ class TablePrinter:
                 if ir in row_seperator_positions:
                     tab += row_seperator
 
+        tab += "\n"
+
         return tab
 
     def print_table(self, latex=True, width=10, row_seperator=r"\hline", 
-        row_seperator_positions=[]):
+        row_seperator_positions=[], ignore_latex_cols=[]):
         """
         Prints a table in either LaTeX format or in regular ascii format.
 
         Args:
             latex: bool, optional, if true, will print in LaTeX format. Default
-                is True.
+                is True. All cells will be converted to LaTeX equations unless 
+                specified in ignore_latex_cols.
             width: int, optional. Width of spacing allocated to table. 
                 Default is 10.
             row_seperator: str, optional. One will always be placed after 
@@ -124,14 +139,14 @@ class TablePrinter:
                 table. Default is hline.
             row_seperator_positions: list of ints, optional. Will place a 
                 row_seperator after each position in list.
+            ignore_latex_cols: list of bools, optional, rows specified will 
+                not be in LaTeX format if prompted.
         """
-
-        # Corrects the position 
-        row_seperator_positions = [i-1 for i in row_seperator_positions]
 
         print self._generate_table(latex=latex, width=width, 
             row_seperator=row_seperator, 
-            row_seperator_positions=row_seperator_positions)
+            row_seperator_positions=row_seperator_positions, 
+            ignore_latex_cols=ignore_latex_cols)
 
     def __call__(self, latex=True, width=10, row_seperator=r"\hline",
         row_seperator_positions=[]):

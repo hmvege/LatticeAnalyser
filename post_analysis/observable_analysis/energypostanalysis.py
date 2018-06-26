@@ -15,12 +15,12 @@ class EnergyPostAnalysis(PostCore):
 
 	# Regular plot variables
 	y_label = r"$t^2\langle E\rangle$"
-	x_label = r"$t/r_0^2$"
+	x_label = r"$t_f/r_0^2$"
 	formula = r"$\langle E\rangle = -\frac{1}{64V}F_{\mu\nu}^a{F^a}^{\mu\nu}$"
 
 	# Continuum plot variables
 	x_label_continuum = r"$(a/r_0)^2$"
-	y_label_continuum = r"$\frac{\sqrt{8t_0}}{r_0}$"
+	y_label_continuum = r"$\frac{\sqrt{8t_{f,0}}}{r_0}$"
 
 	def _initiate_plot_values(self, data, data_raw):
 		# Sorts data into a format specific for the plotting method
