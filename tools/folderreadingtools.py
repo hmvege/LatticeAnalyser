@@ -478,6 +478,7 @@ class DataReader:
 		# Writes parameters to json dictionary
 		json_dict["beta"] = self.beta
 		json_dict["NFlows"] = self.NFlows
+		json_dict["NCfgs"] = self.NCfgs
 
 		# Prints configuration file content if verbose or dryrun is true
 		if self.dryrun or self.verbose:

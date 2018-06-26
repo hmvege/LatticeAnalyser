@@ -857,24 +857,24 @@ class FlowAnalyser(object):
 		ax1 = fig.add_subplot(311)
 		x1, y1, _ = ax1.hist(F(self.unanalyzed_y_data[flow_time_index]), 
 			bins=NBins, label="Unanalyzed", density=True)
-		ax1.legend()
-		ax1.grid("on")
+		ax1.legend(loc="upper right")
+		ax1.grid(True)
 		ax1.set_title(title_string)
 
 		# Adds bootstrapped data
 		ax2 = fig.add_subplot(312)
 		x2, y2, _ = ax2.hist(F(self.bs_y_data[flow_time_index]),
 			bins=NBins, label="Bootstrap", density=True)
-		ax2.grid("on")
-		ax2.legend()
-		ax2.set_ylabel("Hits")
+		ax2.grid(True)
+		ax2.legend(loc="upper right")
+		ax2.set_ylabel("Hits(normalized)")
 
 		# Adds jackknifed histogram
 		ax3 = fig.add_subplot(313)
 		x3, y3, _ = ax3.hist(F(self.jk_y_data[flow_time_index]),
 			bins=NBins, label="Jackknife", density=True)
-		ax3.legend()
-		ax3.grid("on")
+		ax3.legend(loc="upper right")
+		ax3.grid(True)
 		ax3.set_xlabel(r"%s" % x_label)
 
 		if x_limits == "auto":
@@ -923,11 +923,8 @@ class FlowAnalyser(object):
 		"""
 
 		# Checks if we have a derived histogram_bins instance of class.
-		if not hasattr(self, "histogram_bins"):
-			if isinstance(NBins, types.NoneType):
-				NBins = 30
-		else:
-			NBins = self.histogram_bins
+		if isinstance(NBins, types.NoneType):
+			NBins = 30
 
 		# X-label set as the default y-label
 		if isinstance(x_label, types.NoneType):
@@ -958,11 +955,11 @@ class FlowAnalyser(object):
 		fig, axes = plt.subplots(3, 1, sharey=True, sharex=True)
 		for iHist, ax in zip(histogram_slices, axes):
 			ax.hist(self.unanalyzed_y_data[iHist], 
-				bins=NBins, label="t=%d" % iHist, normed=True)
-			ax.grid("on")
-			ax.legend()
+				bins=NBins, label=r"$t_f=%d$" % iHist, density=True)
+			ax.grid(True)
+			ax.legend(loc="upper right")
 			if iHist == histogram_slices[1]:
-				ax.set_ylabel("Hits")
+				ax.set_ylabel("Hits(normalized)")
 			if iHist == histogram_slices[2]:
 				ax.set_xlabel(x_label)
 		fig.suptitle(title_string)

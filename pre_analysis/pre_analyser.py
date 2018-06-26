@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 
 def analyse_default(analysis_object, N_bs, NBins=None, skip_histogram=False,
-	bs_index_lists=None):
+	bs_index_lists=None, hist_flow_times=None):
 	"""Default analysis method for pre-analysis."""
 	print analysis_object
 	analysis_object.boot(N_bs, index_lists=bs_index_lists)
@@ -29,16 +29,26 @@ def analyse_default(analysis_object, N_bs, NBins=None, skip_histogram=False,
 	analysis_object.plot_boot()
 	analysis_object.plot_jackknife()
 	if not skip_histogram:
-		# Plots histogram at the beginning, during and end.
-		hist_pts = [0, 
-			int(analysis_object.NFlows * 0.25), 
-			int(analysis_object.NFlows * 0.50), 
-			int(analysis_object.NFlows * 0.75), -1
-		]
-		for iHist in hist_pts:
-			analysis_object.plot_histogram(iHist, NBins=NBins)
-		analysis_object.plot_multihist([hist_pts[0], hist_pts[2], 
-			hist_pts[-1]], NBins=NBins)
+		if isinstance(hist_flow_times, types.NoneType):
+			# Plots histogram at the beginning, during and end.
+			hist_pts = [0, 
+				int(analysis_object.NFlows * 0.25), 
+				int(analysis_object.NFlows * 0.50), 
+				int(analysis_object.NFlows * 0.75), -1
+			]
+
+			for iHist in hist_pts:
+				analysis_object.plot_histogram(iHist, NBins=NBins)			
+
+			analysis_object.plot_multihist([hist_pts[0], hist_pts[2], 
+				hist_pts[-1]], NBins=NBins)
+
+		else:
+			for iHist in hist_flow_times:
+				analysis_object.plot_histogram(iHist, NBins=NBins)			
+
+			analysis_object.plot_multihist(hist_flow_times, NBins=NBins)
+
 	analysis_object.plot_integrated_correlation_time()
 	analysis_object.save_post_analysis_data() # save_as_txt=False
 
@@ -90,32 +100,21 @@ def analyse_topc(params):
 		dryrun=params["dryrun"], parallel=params["parallel"], 
 		numprocs=params["numprocs"], verbose=params["verbose"])
 
-	if topc_analysis.beta == 6.0:
-		topc_analysis.y_limits = [-9, 9]
-	elif topc_analysis.beta == 6.1:
-		topc_analysis.y_limits = [-12, 12]
-	elif topc_analysis.beta == 6.2:
-		topc_analysis.y_limits = [-12, 12]
-	else:
-		topc_analysis.y_limits = [None, None]
+	topc_analysis.y_limits = params["topc_y_limits"]
 
-	analyse_default(topc_analysis, params["N_bs"])
+	N_bin_range = params["bin_range"]
+	N_bins = 1 + (N_bin_range[-1] + N_bin_range[1])*params["num_bins_per_int"]
+	bins = np.linspace(N_bin_range[0], N_bin_range[1], N_bins)
+
+	analyse_default(topc_analysis, params["N_bs"], 
+		NBins=bins, hist_flow_times=params["hist_flow_times"])
 
 def analyse_topc2(params):
 	"""Analysis of Q^2."""
 	topc2_analysis = Topc2Analyser(params["data"]("topc"), 
 		dryrun=params["dryrun"], parallel=params["parallel"], 
 		numprocs=params["numprocs"], verbose=params["verbose"])
-
-	if topc2_analysis.beta == 6.0:
-		topc2_analysis.y_limits = [-81, 81]
-	elif topc2_analysis.beta == 6.1:
-		topc2_analysis.y_limits = [-144, 144]
-	elif topc2_analysis.beta == 6.2:
-		topc2_analysis.y_limits = [-196, 196]
-	else:
-		topc2_analysis.y_limits = [None, None]
-
+	topc2_analysis.y_limits = params["topc2_y_limits"]
 	analyse_default(topc2_analysis, params["N_bs"], NBins=150)
 
 def analyse_topc4(params):

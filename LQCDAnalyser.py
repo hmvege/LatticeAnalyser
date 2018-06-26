@@ -36,10 +36,10 @@ def main():
 	# observables = list(set(set(observables) - set(obs_exlusions)))
 
 	# observables = observables_euclidean_time
-	# observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
+	observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["topsusMC"]
 	# observables = ["topcr", "qtq0eff"]
-	observables = ["topc"]
+	# observables = ["topc"]
 	# observables = observables_euclidean_time
 	# observables = ["topcr", "topsus"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
@@ -50,7 +50,7 @@ def main():
 	# observables = ["topsusqtq0"]
 	# observables = ["topsus"]
 
-	# observables += ["energy"]
+	observables += ["energy"]
 
 	#### Base parameters
 	N_bs = 500
@@ -121,9 +121,6 @@ def main():
 	# Topcr reference value. Options: [float], t0beta, article, t0
 	topcr_t0 = "t0beta"
 
-	# Indexes to look at for topct.
-	num_t_euclidean_indexes = 5
-
 	# Number of different sectors we will analyse in euclidean time
 	numsplits_eucl = 4
 	intervals_eucl = [None, None, None, None]
@@ -156,18 +153,28 @@ def main():
 		"observables": observables,
 		"load_file": load_file,
 		"save_to_binary": save_to_binary, 
+		# Flow parameters
+		"create_perflow_data": create_perflow_data,
 		"flow_epsilon": flow_epsilon, 
 		"NFlows": NFlows,
-		"NBins": None,
-		"create_perflow_data": create_perflow_data,
-		"correct_energy": correct_energy,
-		"num_t_euclidean_indexes": num_t_euclidean_indexes,
+		# Topc histogram parameters
+		"topc_y_limits": None,
+		"topc2_y_limits": None,
+		"topc4_y_limits": None,
+		"bin_range": [-10, 10],
+		"num_bins_per_int": 4,
+		"hist_flow_times": None,
+		# Indexes to look at for topct.
+		"num_t_euclidean_indexes": 5,
+		# Interval selection parameters
 		"q0_flow_times": q0_flow_times,
 		"euclidean_time_percents": euclidean_time_percents,
 		"numsplits_eucl": numsplits_eucl,
 		"intervals_eucl": None,
 		"MC_time_splits": MC_time_splits,
 		"MCInt": None,
+		# Various parameters
+		"correct_energy": correct_energy,
 		"print_latex": print_latex,
 		# Gif smearing parameters in the qtq0e observable
 		"gif": gif_params,
@@ -181,6 +188,8 @@ def main():
 	databeta60 = copy.deepcopy(default_params)
 	databeta60["batch_name"] = "beta60"
 	databeta60["beta"] = 6.0
+	databeta60["topc_y_limits"] = [-9, 9]
+	databeta60["topc2_y_limits"] = [-81, 81]
 	databeta60["NCfgs"] = get_num_observables(
 		databeta60["batch_folder"],
 		databeta60["batch_name"])
@@ -193,6 +202,8 @@ def main():
 	databeta61 = copy.deepcopy(default_params)
 	databeta61["batch_name"] = "beta61"
 	databeta61["beta"] = 6.1
+	databeta61["topc_y_limits"] = [-12, 12]
+	databeta61["topc2_y_limits"] = [-144, 144]
 	databeta61["NCfgs"] = get_num_observables(
 		databeta61["batch_folder"],
 		databeta61["batch_name"])
@@ -205,6 +216,8 @@ def main():
 	databeta62 = copy.deepcopy(default_params)
 	databeta62["batch_name"] = "beta62"
 	databeta62["beta"] = 6.2
+	databeta62["topc_y_limits"] = [-12, 12]
+	databeta62["topc2_y_limits"] = [-196, 196]
 	databeta62["NCfgs"] = get_num_observables(
 		databeta62["batch_folder"], 
 		databeta62["batch_name"])
@@ -218,6 +231,8 @@ def main():
 	databeta645["flow_epsilon"] = 0.02
 	databeta645["batch_name"] = "beta645"
 	databeta645["beta"] = 6.45
+	databeta645["topc_y_limits"] = [-15, 15]
+	databeta645["topc2_y_limits"] = [-300, 300]
 	databeta645["NCfgs"] = get_num_observables(
 		databeta645["batch_folder"],
 		databeta645["batch_name"])
@@ -232,6 +247,10 @@ def main():
 	smaug8x16_data_beta60_analysis["batch_folder"] = "../data/"
 	smaug8x16_data_beta60_analysis["batch_name"] = "beta60_8x16_run"
 	smaug8x16_data_beta60_analysis["beta"] = 6.0
+	smaug8x16_data_beta60_analysis["topc_y_limits"] = [-2, 2]
+	smaug8x16_data_beta60_analysis["num_bins_per_int"] = 32
+	smaug8x16_data_beta60_analysis["bin_range"] = [-2.5, 2.5]
+	smaug8x16_data_beta60_analysis["hist_flow_times"] = [0, 250, 600]
 	smaug8x16_data_beta60_analysis["NCfgs"] = get_num_observables(
 		smaug8x16_data_beta60_analysis["batch_folder"], 
 		smaug8x16_data_beta60_analysis["batch_name"])
@@ -245,6 +264,10 @@ def main():
 	smaug12x24_data_beta60_analysis["batch_folder"] = "../data/"
 	smaug12x24_data_beta60_analysis["batch_name"] = "beta60_12x24_run"
 	smaug12x24_data_beta60_analysis["beta"] = 6.0
+	smaug12x24_data_beta60_analysis["topc_y_limits"] = [-4, 4]
+	smaug12x24_data_beta60_analysis["num_bins_per_int"] = 16
+	smaug12x24_data_beta60_analysis["bin_range"] = [-4.5, 4.5]
+	smaug12x24_data_beta60_analysis["hist_flow_times"] = [0, 250, 600]
 	smaug12x24_data_beta60_analysis["NCfgs"] = get_num_observables(
 		smaug12x24_data_beta60_analysis["batch_folder"], 
 		smaug12x24_data_beta60_analysis["batch_name"])
@@ -258,6 +281,10 @@ def main():
 	smaug16x32_data_beta61_analysis["batch_folder"] = "../data/"
 	smaug16x32_data_beta61_analysis["batch_name"] = "beta61_16x32_run"
 	smaug16x32_data_beta61_analysis["beta"] = 6.1
+	smaug16x32_data_beta61_analysis["topc_y_limits"] = [-8, 8]
+	smaug16x32_data_beta61_analysis["num_bins_per_int"] = 16
+	smaug16x32_data_beta61_analysis["bin_range"] = [-7.5, 7.5]
+	smaug16x32_data_beta61_analysis["hist_flow_times"] = [0, 250, 600]
 	smaug16x32_data_beta61_analysis["NCfgs"] = get_num_observables(
 		smaug16x32_data_beta61_analysis["batch_folder"], 
 		smaug16x32_data_beta61_analysis["batch_name"])
@@ -277,6 +304,9 @@ def main():
 		dist_data_beta60_analysis["batch_name"] = \
 			"distribution_test_eps{0:s}".format(clean_str(eps))
 		dist_data_beta60_analysis["beta"] = 6.0
+		dist_data_beta60_analysis["num_bins_per_int"] = 16
+		dist_data_beta60_analysis["bin_range"] = [-2.1, 2.1]
+		dist_data_beta60_analysis["hist_flow_times"] = [0, 250, 600]
 		dist_data_beta60_analysis["NCfgs"] = get_num_observables(
 			dist_data_beta60_analysis["batch_folder"],
 			dist_data_beta60_analysis["batch_name"])
@@ -299,10 +329,10 @@ def main():
 	# for analysis_parameters in analysis_parameter_list:
 	# 	pre_analysis(analysis_parameters)
 
-	#### Submitting 12x24 analysis
-	analysis_parameter_list = [smaug12x24_data_beta60_analysis]
-	for analysis_parameters in analysis_parameter_list:
-		pre_analysis(analysis_parameters)
+	# #### Submitting 12x24 analysis
+	# analysis_parameter_list = [smaug12x24_data_beta60_analysis]
+	# for analysis_parameters in analysis_parameter_list:
+	# 	pre_analysis(analysis_parameters)
 
 	# #### Submitting 16x32 analysis
 	# analysis_parameter_list = [smaug16x32_data_beta61_analysis]
@@ -321,25 +351,25 @@ def main():
 	# 	pre_analysis(analysis_parameters)
 
 
-	# if not analysis_parameter_list[0]["MCInt"] is None:
-	# 	assert sum([len(plist["MCInt"]) - len(analysis_parameter_list[0]["MCInt"]) 
-	# 		for plist in analysis_parameter_list]) == 0, \
-	# 		"unequal amount of MC intervals"
+	if not analysis_parameter_list[0]["MCInt"] is None:
+		assert sum([len(plist["MCInt"]) - len(analysis_parameter_list[0]["MCInt"]) 
+			for plist in analysis_parameter_list]) == 0, \
+			"unequal amount of MC intervals"
 
-	# #### Submitting post-analysis data
-	# if len(analysis_parameter_list) >= 3:
-	# 	post_analysis(analysis_parameter_list, observables,
-	# 		topsus_fit_targets, line_fit_interval_points, energy_fit_target,
-	# 		q0_flow_times, euclidean_time_percents,
-	# 		extrapolation_methods=extrapolation_methods,
-	# 		plot_continuum_fit=plot_continuum_fit,
-	# 		post_analysis_data_type=post_analysis_data_type,
-	# 		figures_folder=figures_folder, gif_params=gif_params, 
-	# 		verbose=verbose)
-	# else:
-	# 	msg = "Need at least 3 different beta values to run post analysis"
-	# 	msg += "(%d given)."% len(analysis_parameter_list)
-	# 	print msg
+	#### Submitting post-analysis data
+	if len(analysis_parameter_list) >= 3:
+		post_analysis(analysis_parameter_list, observables,
+			topsus_fit_targets, line_fit_interval_points, energy_fit_target,
+			q0_flow_times, euclidean_time_percents,
+			extrapolation_methods=extrapolation_methods,
+			plot_continuum_fit=plot_continuum_fit,
+			post_analysis_data_type=post_analysis_data_type,
+			figures_folder=figures_folder, gif_params=gif_params, 
+			verbose=verbose)
+	else:
+		msg = "Need at least 3 different beta values to run post analysis"
+		msg += "(%d given)."% len(analysis_parameter_list)
+		print msg
 
 if __name__ == '__main__':
 	main()
