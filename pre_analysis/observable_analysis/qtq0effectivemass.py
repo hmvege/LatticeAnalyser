@@ -50,7 +50,7 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 		self.NFlows = self.NT
 
 		# Sets file name
-		self.observable_name = r"$t_{flow}=%.2f$" % (self.q0_flow_time)
+		self.observable_name = r"$t_{f}=%.2f$" % (self.q0_flow_time)
 
 		# Sets a new x-axis
 		self.x = np.linspace(0, self.NFlows - 1, self.NFlows)
@@ -169,13 +169,13 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 	def __str__(self):
 		info_string = lambda s1, s2: "\n{0:<20s}: {1:<20s}".format(s1, s2)
 		return_string = ""
-		return_string += "\n" + "="*100
+		return_string += "\n" + self.section_seperator
 		return_string += info_string("Data batch folder", self.batch_data_folder)
 		return_string += info_string("Batch name", self.batch_name)
 		return_string += info_string("Observable", self.observable_name_compact)
 		return_string += info_string("Beta", "%.2f" % self.beta)
 		return_string += info_string("Flow time t0", "%.2f" % self.q0_flow_time)
-		return_string += "\n" + "="*100
+		return_string += "\n" + self.section_seperator
 		return return_string
 
 def main():

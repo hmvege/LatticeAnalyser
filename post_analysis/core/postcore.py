@@ -20,6 +20,7 @@ class PostCore(object):
 	formula = ""
 	x_label = r""
 	y_label = r""
+	section_seperator = "="*160
 	dpi = 350
 	r0 = 0.5
 	print_latex = False
@@ -400,13 +401,13 @@ class PostCore(object):
 
 	def __str__(self):
 		"""Class string representation method."""
-		msg = "\n" +"="*160
+		msg = "\n" + self.section_seperator
 		msg += "\nPost analaysis for:        " + self.observable_name_compact
 		msg += "\n" + self.__doc__
 		msg += "\nAnalysis-type:             " + self.analysis_data_type
 		msg += "\nIncluding autocorrelation: " + self.ac
 		msg += "\nOutput folder:             " + self.output_folder_path
-		msg += "\n" + "="*160
+		msg += "\n" + self.section_seperator
 		return msg
 
 

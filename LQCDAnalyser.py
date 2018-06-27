@@ -32,14 +32,15 @@ def main():
 
 	observables += observables_euclidean_time
 
-	# obs_exlusions = ["plaq", "energy", "topc", "topc2", "topc4", "topcr", "topcMC", "topsus"]
-	# observables = list(set(set(observables) - set(obs_exlusions)))
+	obs_exlusions = ["plaq", "energy", "topc", "topc2", "topc4", "topcr", "topcMC", "topsus"]
+	obs_exlusions = ["energy", "topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
+	observables = list(set(set(observables) - set(obs_exlusions)))
 
 	# observables = observables_euclidean_time
-	observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
+	# observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["topsusMC"]
 	# observables = ["topcr", "qtq0eff"]
-	# observables = ["topc"]
+	# observables = ["topcte"]
 	# observables = observables_euclidean_time
 	# observables = ["topcr", "topsus"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
@@ -50,7 +51,7 @@ def main():
 	# observables = ["topsusqtq0"]
 	# observables = ["topsus"]
 
-	observables += ["energy"]
+	# observables += ["energy"]
 
 	#### Base parameters
 	N_bs = 500
@@ -59,6 +60,7 @@ def main():
 	print_latex = True
 	parallel = True
 	numprocs = 8
+	section_seperator = "="*160
 
 	#### Try to load binary file(much much faster)
 	load_file = True
@@ -77,7 +79,7 @@ def main():
 	# run_post_analysis = True
 	line_fit_interval_points = 20
 	# topsus_fit_targets = [0.3,0.4,0.5,0.58]
-	topsus_fit_targets = [0.3, 0.4, 0.5, 0.6] # tf = sqrt(8*t0)
+	# topsus_fit_targets = [0.3, 0.4, 0.5, 0.6] # tf = sqrt(8*t0)
 	topsus_fit_targets = [0.6]
 	energy_fit_target = 0.3
 
@@ -126,9 +128,9 @@ def main():
 	intervals_eucl = [None, None, None, None]
 
 	# Number of different sectors we will analyse in monte carlo time
-	MC_time_splits = 2
-	MC_intervals = [[0, 1000], [500, 1000], [500, 1000], [175, 250]]
-	# MC_intervals = [None, None, None, None]
+	MC_time_splits = 4
+	# MC_intervals = [[0, 1000], [500, 1000], [500, 1000], [175, 250]]
+	MC_intervals = [None, None, None, None]
  
 	# Extraction point in flow time a*t_f for q0 in qtq0
 	q0_flow_times = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6] # [fermi]
@@ -180,8 +182,9 @@ def main():
 		"gif": gif_params,
 	}
 
-	print 160*"=" + "\nObservables to be analysed: %s" % ", ".join(observables)
-	print 160*"=" + "\n"
+	print section_seperator
+	print "Observables to be analysed: %s" % ", ".join(observables)
+	print section_seperator + "\n"
 
 
 	########## Main analysis ##########
@@ -299,8 +302,7 @@ def main():
 		clean_str = lambda s: str("%-2.2f"%s).replace(".", "")
 		dist_data_beta60_analysis = copy.deepcopy(default_parameters)
 		dist_data_beta60_analysis["batch_folder"] = (
-			"../data/distribution_tests/distribution_runs/eps"
-			"{0:s}".format(clean_str(eps)))
+			"../data/distribution_tests/distribution_runs")
 		dist_data_beta60_analysis["batch_name"] = \
 			"distribution_test_eps{0:s}".format(clean_str(eps))
 		dist_data_beta60_analysis["beta"] = 6.0
@@ -320,7 +322,7 @@ def main():
 		for _eps in dist_eps]
 
 	# #### Submitting distribution analysis
-	# analysis_parameter_list = dist_param_list
+	analysis_parameter_list = dist_param_list
 	# for analysis_parameters in analysis_parameter_list:
 	# 	pre_analysis(analysis_parameters)
 
@@ -340,7 +342,7 @@ def main():
 	# 	pre_analysis(analysis_parameters)
 
 	#### Adding relevant batches to args
-	analysis_parameter_list = [databeta60, databeta61, databeta62, databeta645]
+	# analysis_parameter_list = [databeta60, databeta61, databeta62, databeta645]
 	# analysis_parameter_list = [databeta60, databeta61, databeta62]
 	# analysis_parameter_list = [databeta61, databeta62]
 	# analysis_parameter_list = [databeta62]
@@ -350,9 +352,8 @@ def main():
 	# for analysis_parameters in analysis_parameter_list:
 	# 	pre_analysis(analysis_parameters)
 
-
 	if not analysis_parameter_list[0]["MCInt"] is None:
-		assert sum([len(plist["MCInt"]) - len(analysis_parameter_list[0]["MCInt"]) 
+		assert sum([len(plist["MCInt"]) - len(analysis_parameter_list[0]["MCInt"])
 			for plist in analysis_parameter_list]) == 0, \
 			"unequal amount of MC intervals"
 

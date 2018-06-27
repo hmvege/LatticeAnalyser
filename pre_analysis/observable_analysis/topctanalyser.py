@@ -7,8 +7,8 @@ class TopctAnalyser(FlowAnalyser):
 	"""Analysis of the topological charge in Euclidean Time."""
 	observable_name = "Topological Charge in Euclidean Time"
 	observable_name_compact = "topct"
-	x_label = r"$\sqrt{8t_{flow}}[fm]$"
-	y_label = r"$\langle Q_{t_{euclidean}} \rangle$"
+	x_label = r"$\sqrt{8t_{f}}[fm]$"
+	y_label = r"$\langle Q_{t_\mathrm{euclidean}} \rangle$"
 
 	def __init__(self, *args, **kwargs):
 		super(TopctAnalyser, self).__init__(*args, **kwargs)
@@ -51,11 +51,11 @@ class TopctAnalyser(FlowAnalyser):
 	def __str__(self):
 		info_string = lambda s1, s2: "\n{0:<20s}: {1:<20s}".format(s1, s2)
 		return_string = ""
-		return_string += "\n" + "="*100
+		return_string += "\n" + self.section_seperator
 		return_string += info_string("Data batch folder", self.batch_data_folder)
 		return_string += info_string("Batch name", self.batch_name)
 		return_string += info_string("Observable", self.observable_name_compact)
 		return_string += info_string("Beta", "%.2f" % self.beta)
 		return_string += info_string("Euclidean time", "%d" % self.t_euclidean_index)
-		return_string += "\n" + "="*100
+		return_string += "\n" + self.section_seperator
 		return return_string

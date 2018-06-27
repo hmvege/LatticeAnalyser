@@ -71,7 +71,8 @@ def post_analysis(beta_parameter_list, observables,
 		verbose: bool, a more verbose run. Default is False.
 	"""
 
-	print "="*160 
+	section_seperator = "="*160
+	print section_seperator
 	print "Post-analysis: retrieving data from folders: %s" % (
 			", ".join([os.path.join(b["batch_folder"], b["batch_name"]) \
 		for b in beta_parameter_list]))

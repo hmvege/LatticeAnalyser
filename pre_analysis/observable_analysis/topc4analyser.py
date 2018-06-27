@@ -4,7 +4,7 @@ class Topc4Analyser(FlowAnalyser):
 	"""Class for topological charge with quartic topological charge."""
 	observable_name = r"$\langle Q^4 \rangle$"
 	observable_name_compact = "topc4"
-	x_label = r"$\sqrt{8t_{flow}}[fm]$"
+	x_label = r"$\sqrt{8t_{f}}[fm]$"
 	y_label = r"$\langle Q^4 \rangle$"
 
 	def __init__(self, *args, **kwargs):

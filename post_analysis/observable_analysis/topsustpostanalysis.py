@@ -8,7 +8,7 @@ class TopsustPostAnalysis(MultiPlotCore, TopsusCore):
 	"""Post-analysis of the topsus with with one Q at fixed euclidean time."""
 	observable_name = "Topological Susceptibility with a fixed Euclidean Time"
 	observable_name_compact = "topsust"
-	obs_name_latex = r"\chi^{1/4}(\expect{Q^2_{t_f}^2})"
+	obs_name_latex = r"\chi^{1/4}(\expect{Q^2_{t_f}})"
 	x_label = r"$\sqrt{8t_{f}}[fm]$"
 	y_label = r"$\chi^{1/4}(\langle Q_t Q_{t_{euclidean}} \rangle) [GeV]$"
 	sub_obs = True

@@ -17,6 +17,7 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 	y_label = r"$\langle Q_{t_e} Q_{t_{e,0}} \rangle$" # $\chi_t^{1/4}[GeV]$
 	sub_obs = True
 	sub_sub_obs = True
+	subfolder_type = "tf"
 
 	def __init__(self, *args, **kwargs):
 		super(QtQ0EuclideanPostAnalysis, self).__init__(*args, **kwargs)

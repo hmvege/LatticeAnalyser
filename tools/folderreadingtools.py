@@ -344,7 +344,7 @@ class DataReader:
 	def __init__(self, batch_name, batch_folder, figures_folder, 
 			load_binary_file=None, save_to_binary=False, flow_epsilon=0.01, 
 			NCfgs=None, create_perflow_data=False, correct_energy=False, 
-			lattice_size=None,	verbose=True, dryrun=False):
+			N_spatial=None, N_temporal=None, verbose=True, dryrun=False):
 		"""
 		Class that reads and loads the observable data.
 
@@ -360,9 +360,9 @@ class DataReader:
 				is 0.01.
 			create_perflow_data: boolean if we are to create a folder containing 
 				per-flow data(as opposite of per-config).
-			correct_energy: Optional, bool. If try, energy is by dividing by 64.
-			lattice_size: optional, dictionary with lattice sizes.
-				Format: {[beta_values]: size}
+			correct_energy: Optional, bool. If true, energy is by dividing by 64.
+			N_spatial: Optional, int. Spatial extent of lattice.
+			N_temporal: Optional, int. Temporal extent of lattice.
 			verbose: bool, a more verbose run. Default is True.
 			dryrun: bool, dryrun option. Default is False.
 		"""
@@ -374,7 +374,9 @@ class DataReader:
 		self.batch_name = batch_name
 		self.batch_folder = batch_folder
 		self.figures_folder = figures_folder
-		self.lattice_size = lattice_size
+		self.N = N_spatial
+		self.NT = N_temporal
+		self.lattice_size = N_spatial**3 * N_temporal
 
 		self.__print_load_info()
 
@@ -642,13 +644,12 @@ class DataReader:
 				raw_data = np.column_stack((raw_data, self.data[obs]["obs"].T))
 
 		beta_value = self.data[observables_to_write[0]]["beta"]
-		spatial_size = self.beta_to_spatial_size[beta_value]
 
 		# Sets up file name. Format {N}_{beta}.npy and {N}_{beta}_topct.npy
 		if len(observables_to_write) == 1 and observables_to_write[0] == "topct":
-			file_name = "%2d_%1.2f_topct" % (spatial_size, beta_value)
+			file_name = "%d_%1.2f_topct" % (self.N, beta_value)
 		else:
-			file_name = "%2d_%1.2f" % (spatial_size, beta_value)
+			file_name = "%d_%1.2f" % (self.N, beta_value)
 			
 		file_path = os.path.join(self.file_tree.batch_name_folder, file_name)
 

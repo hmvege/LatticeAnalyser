@@ -31,6 +31,7 @@ class FlowAnalyser(object):
 	autocorrelations_limits = 1
 	figures_folder = "figures"
 	fname_addon = ""
+	section_seperator = "="*160
 	hbarc = 0.19732697 #eV micro m
 
 	# Function derivative to be used in the autocorrelation class

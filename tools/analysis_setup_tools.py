@@ -176,9 +176,9 @@ def write_fit_parameters_to_file(fparams, fname, skip_values=None,
             f.write(line_values + "\n")
 
         # Obs  sqrt(8t)  extrap.method  int/slice  chi^2  topsus  Nf
-        table_header = [r"$\mathcal{O}$", r"$\sqrt{8t_{0,\text{extrap}}}$", 
+        table_header = [r"$\mathcal{O}$", r"$\sqrt{8t_{f,0,\text{extrap}}}$", 
             "Extrap. method", "Interval/slice", r"$\chi^2$", 
-            r"$\sqrt(\chi}^{\frac{1}{4}}$", r"$N_F$"]
+            r"$\chi^{\frac{1}{4}}$", r"$N_F$"]
         table_body = [
             [fp["obs_name_latex"] for fp in sorted_parameter_list],
             [fp["fit_target"] for fp in sorted_parameter_list],

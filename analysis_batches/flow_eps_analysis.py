@@ -240,9 +240,9 @@ def main():
         for i, feps in enumerate(feps_values)}
 
     observables = {
-        "plaq": {"x": r"$t_f/a^2$", "y": r"$\langle P \rangle$"},
-        "energy": {"x": r"$t_f/a^2$", "y": r"$\langle E \rangle$"},
-        "topc": {"x": r"$t_f/a^2$", "y": r"$\langle Q \rangle$"},
+        "plaq": {"x": r"$t_f/a^2$", "y": r"$\mathrm{err}(\langle P \rangle)_\mathrm{abs}$"},
+        "energy": {"x": r"$t_f/a^2$", "y": r"$\mathrm{err}(\langle E \rangle)_\mathrm{abs}$"},
+        "topc": {"x": r"$t_f/a^2$", "y": r"$\mathrm{err}(\langle E \rangle)_\mathrm{abs}$"},
         # "topct": {"x": r"$t_f/a^2$", "y": r"$\langle Q(t_e) \rangle$"},
     }
 

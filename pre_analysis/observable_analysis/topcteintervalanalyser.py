@@ -9,7 +9,7 @@ class TopcteIntervalAnalyser(EuclideanIntervalAnalyser):
 	"""
 	observable_name = "Topological Charge in Euclidean Time"
 	observable_name_compact = "topcte"
-	x_label = r"$\sqrt{8t_{flow}}[fm]$"
+	x_label = r"$\sqrt{8t_{f}}[fm]$"
  	y_label = r"$\langle Q \rangle$"
 
 	def __init__(self, *args, **kwargs):

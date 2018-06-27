@@ -60,7 +60,7 @@ class QtQ0EuclideanAnalyser(FlowAnalyser):
 		self.function_derivative = ptools._C_derivative
 
 		# Sets file name
-		self.observable_name = r"$t_e=%.2f$, $t_{flow}=%.2f$" % (
+		self.observable_name = r"$t_e=%.2f$, $t_{f}=%.2f$" % (
 			self.euclidean_time, self.q0_flow_time)
 
 		# Selects the configurations in euclidean time in flow time to multiply
@@ -170,14 +170,14 @@ class QtQ0EuclideanAnalyser(FlowAnalyser):
 	def __str__(self):
 		info_string = lambda s1, s2: "\n{0:<20s}: {1:<20s}".format(s1, s2)
 		return_string = ""
-		return_string += "\n" + "="*100
+		return_string += "\n" + self.section_seperator
 		return_string += info_string("Data batch folder", self.batch_data_folder)
 		return_string += info_string("Batch name", self.batch_name)
 		return_string += info_string("Observable", self.observable_name_compact)
 		return_string += info_string("Beta", "%.2f" % self.beta)
 		return_string += info_string("Flow time t0", "%.2f" % self.q0_flow_time)
 		return_string += info_string("Euclidean time", "%d" % self.euclidean_time)
-		return_string += "\n" + "="*100
+		return_string += "\n" + self.section_seperator
 		return return_string
 
 def main():

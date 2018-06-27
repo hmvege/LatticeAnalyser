@@ -52,7 +52,7 @@ class TablePrinter:
             raise TypeError(("Table element type "
                 "%s not recognized in element: " % type(elem) + elem))
 
-        if latex:
+        if latex and len(elem)>0:
             return "${0:<s}$".format(elem)
         else:
             return elem

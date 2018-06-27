@@ -9,7 +9,7 @@ class TopsusMCIntervalAnalyser(TopsusAnalyserCore):
 	"""
 	observable_name = "Topological Susceptibility in MC Time"
 	observable_name_compact = "topsusMC"
-	x_label = r"$\sqrt{8t_{flow}}[fm]$"
+	x_label = r"$\sqrt{8t_{f}}[fm]$"
 	y_label = r"$\chi^{1/4}(\langle Q^2\rangle) [GeV]$"
 
 	def __init__(self, *args, **kwargs):

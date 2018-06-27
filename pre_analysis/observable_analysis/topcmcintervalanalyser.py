@@ -8,7 +8,7 @@ class TopcMCIntervalAnalyser(TopcAnalyser):
 	"""
 	observable_name = "Topological Charge in MC Time"
 	observable_name_compact = "topcMC"
-	x_label = r"$\sqrt{8t_{flow}}[fm]$"
+	x_label = r"$\sqrt{8t_{f}}[fm]$"
 	y_label = r"$\langle Q \rangle$"
 
 	# def __init__(self, *args, **kwargs):

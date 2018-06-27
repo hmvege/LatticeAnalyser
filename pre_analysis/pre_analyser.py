@@ -172,7 +172,7 @@ def analyse_qtq0e(params):
 		dryrun=params["dryrun"], parallel=params["parallel"], 
 		numprocs=params["numprocs"], verbose=params["verbose"])
 
-	for q0_flow_time in param["q0_flow_times"]:
+	for q0_flow_time in params["q0_flow_times"]:
 		for euclidean_percent in params["euclidean_time_percents"]:
 			qtq0_analysis.set_time(q0_flow_time, euclidean_percent)
 			analyse_default(qtq0_analysis, params["N_bs"])
@@ -189,7 +189,7 @@ def analyse_qtq0_effective_mass(params):
 		dryrun=params["dryrun"], parallel=params["parallel"], 
 		numprocs=params["numprocs"], verbose=params["verbose"])
 
-	for q0_flow_time in param["q0_flow_times"]:
+	for q0_flow_time in params["q0_flow_times"]:
 		if q0_flow_time != 0.6: # Only zeroth flow 
 			continue
 		qtq0eff_analysis.set_time(q0_flow_time)
@@ -230,7 +230,7 @@ def analyse_topsust(params):
 	indexes[0] += 1
 	for ie in indexes:
 		topct_analysis.setEQ0(ie)
-		analyse_default(topct_analysis, N_bs, skip_histogram=True)
+		analyse_default(topct_analysis, params["N_bs"], skip_histogram=True)
 
 def analyse_topcte_intervals(params):
 	"""
@@ -293,7 +293,7 @@ def analyse_topcMCTime(params):
 		numsplits=params["MC_time_splits"], intervals=params["MCInt"])
 
 	bs_index_lists = np.random.randint(interval_size,
-		size=(N_bs, interval_size))
+		size=(params["N_bs"], interval_size))
 
 	for MC_int in MC_interval:
 		analyse_topcMC = TopcMCIntervalAnalyser(obs_data("topc"),
@@ -342,7 +342,6 @@ def pre_analysis(parameters):
 	batch_name = parameters["batch_name"]
 	batch_folder = parameters["batch_folder"]
 	figures_folder = parameters["figures_folder"]
-	parameters["lattice_size"] = parameters["N"]**3*parameters["NT"]
 
 	# Retrieves data
 	obs_data = DataReader(batch_name, batch_folder, figures_folder, 
@@ -351,13 +350,14 @@ def pre_analysis(parameters):
 		flow_epsilon=parameters["flow_epsilon"], NCfgs=parameters["NCfgs"],
 		create_perflow_data=parameters["create_perflow_data"],
 		correct_energy=parameters["correct_energy"],
-		lattice_size=parameters["lattice_size"], verbose=parameters["verbose"],
-		dryrun=parameters["dryrun"])
+		N_spatial=parameters["N"], N_temporal=parameters["NT"], 
+		verbose=parameters["verbose"], dryrun=parameters["dryrun"])
 
 	# Writes a parameters file for the post analysis
 	obs_data.write_parameter_file()
 
-	print "="*160
+	section_seperator = "="*160
+	print section_seperator
 
 	# Builds parameters list to be passed to analyser
 	# params = [obs_data, _bp["dryrun"], _bp["parallel"], _bp["numprocs"], 
@@ -401,7 +401,7 @@ def pre_analysis(parameters):
 
 	# Other definitions
 	if "qtq0e" in parameters["observables"]:
-		analyse_qtq0e(param)
+		analyse_qtq0e(params)
 	if "qtq0eff" in parameters["observables"]:
 		analyse_qtq0_effective_mass(params)
 
@@ -428,11 +428,11 @@ def pre_analysis(parameters):
 
 
 	post_time = time.clock()
-	print "="*160
-	print "Analysis of batch %s observables %s in %.2f seconds" % (batch_name,
+	print section_seperator
+	print "Analysis of batch %s observables %s completed in %.2f seconds" % (batch_name,
 		", ".join([i.lower() for i in parameters["observables"]]),
 		(post_time-pre_time))
-	print "="*160
+	print section_seperator
 
 def main():
 	exit("No default run for pre_analyser.py is currently set up.")

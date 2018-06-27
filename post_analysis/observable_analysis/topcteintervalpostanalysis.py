@@ -7,6 +7,7 @@ class TopcteIntervalPostAnalysis(MultiPlotCore):
 	x_label = r"$\sqrt{8t_{f}}[fm]$"
 	y_label = r"$\langle Q \rangle$"
 	sub_obs = True
+	subfolder_type = "teInt"
 
 def main():
 	exit(("Exit: TopcteIntervalPostAnalysis not intended to be a standalone "

@@ -8,7 +8,7 @@ class TopsusQtQ0Analyser(TopsusAnalyserCore):
 	"""Topological susceptibility QtQ0 analysis class."""
 	observable_name = r"$\chi(\langle Q_t Q_{t_0} \rangle)^{1/4}$"
 	observable_name_compact = "topsusqtq0"
-	x_label = r"$\sqrt{8t_{flow}}[fm]$"
+	x_label = r"$\sqrt{8t_{f}}[fm]$"
 	y_label = r"$\chi(\langle Q_{t} Q_{t_0} \rangle)^{1/4} [GeV]$"
 
 	def __init__(self, *args, **kwargs):
@@ -89,11 +89,11 @@ class TopsusQtQ0Analyser(TopsusAnalyserCore):
 	def __str__(self):
 		info_string = lambda s1, s2: "\n{0:<20s}: {1:<20s}".format(s1, s2)
 		return_string = ""
-		return_string += "\n" + "="*100
+		return_string += "\n" + self.section_seperator
 		return_string += info_string("Data batch folder", self.batch_data_folder)
 		return_string += info_string("Batch name", self.batch_name)
 		return_string += info_string("Observable", self.observable_name_compact)
 		return_string += info_string("Beta", "%.2f" % self.beta)
 		return_string += info_string("Flow time t0", "%.2f" % self.q0_flow_time)
-		return_string += "\n" + "="*100
+		return_string += "\n" + self.section_seperator
 		return return_string

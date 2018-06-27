@@ -4,7 +4,7 @@ class TopsusAnalyser(TopsusAnalyserCore):
 	"""Topological susceptibility analysis class."""
 	observable_name = "Topological Susceptibility"
 	observable_name_compact = "topsus"
-	x_label = r"$\sqrt{8t_{flow}}[fm]$"
+	x_label = r"$\sqrt{8t_{f}}[fm]$"
 	y_label = r"$\chi_t^{1/4}[GeV]$"
 
 	def __init__(self, *args, **kwargs):

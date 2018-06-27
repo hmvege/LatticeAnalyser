@@ -410,14 +410,14 @@ class EnergyPostAnalysis(PostCore):
 
 	def __str__(self):
 		"""Class string representation method."""
-		msg = "\n" +"="*100
+		msg = "\n" + self.section_seperator
 		msg += "\nPost analaysis for:        " + self.observable_name_compact
 		msg += "\n" + self.__doc__
 		msg += "\nAnalysis-type:             " + self.analysis_data_type
 		# msg += "\nE0 extraction method:      " + self.extrapolation_method
 		msg += "\nIncluding autocorrelation: " + self.ac
 		msg += "\nOutput folder:             " + self.output_folder_path
-		msg += "\n" + "="*100
+		msg += "\n" + self.section_seperator
 		return msg
 
 def main():

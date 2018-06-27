@@ -51,7 +51,7 @@ class MCIntervalAnalyser(FlowAnalyser):
 	def __str__(self):
 		info_string = lambda s1, s2: "\n{0:<20s}: {1:<20s}".format(s1, s2)
 		return_string = ""
-		return_string += "\n" + "="*160
+		return_string += "\n" + self.section_seperator
 		return_string += info_string("Data batch folder",
 			self.batch_data_folder)
 		return_string += info_string("Batch name", self.batch_name)
@@ -60,5 +60,5 @@ class MCIntervalAnalyser(FlowAnalyser):
 		return_string += info_string("Beta", "%.2f" % self.beta)
 		return_string += info_string("Time interval",
 			"[%d,%d)" % self.mc_interval)
-		return_string += "\n" + "="*160
+		return_string += "\n" + self.section_seperator
 		return return_string
