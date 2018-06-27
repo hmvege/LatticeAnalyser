@@ -322,7 +322,7 @@ def main():
 		for _eps in dist_eps]
 
 	# #### Submitting distribution analysis
-	analysis_parameter_list = dist_param_list
+	# analysis_parameter_list = dist_param_list
 	# for analysis_parameters in analysis_parameter_list:
 	# 	pre_analysis(analysis_parameters)
 
@@ -341,16 +341,16 @@ def main():
 	# for analysis_parameters in analysis_parameter_list:
 	# 	pre_analysis(analysis_parameters)
 
-	#### Adding relevant batches to args
-	# analysis_parameter_list = [databeta60, databeta61, databeta62, databeta645]
+	### Adding relevant batches to args
+	analysis_parameter_list = [databeta60, databeta61, databeta62, databeta645]
 	# analysis_parameter_list = [databeta60, databeta61, databeta62]
 	# analysis_parameter_list = [databeta61, databeta62]
 	# analysis_parameter_list = [databeta62]
 	# analysis_parameter_list = [databeta645]
 
-	# #### Submitting main analysis
-	# for analysis_parameters in analysis_parameter_list:
-	# 	pre_analysis(analysis_parameters)
+	#### Submitting main analysis
+	for analysis_parameters in analysis_parameter_list:
+		pre_analysis(analysis_parameters)
 
 	if not analysis_parameter_list[0]["MCInt"] is None:
 		assert sum([len(plist["MCInt"]) - len(analysis_parameter_list[0]["MCInt"])
