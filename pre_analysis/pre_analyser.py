@@ -149,6 +149,38 @@ def analyse_topcr(params):
 		bs_index_lists=bs_index_lists)
 	analyse_default(topc4_analysis, N_bs, bs_index_lists=bs_index_lists)
 
+def analyse_topcrMC(params):
+	"""
+	Analysis of the ratio with R=q4c/q2 of the topological charge. Performs an
+	analysis on Q^2 and Q^4 with the same bootstrap samples, such that an post
+	analysis can be performed on these explisitly. In a MC interval
+	"""
+	MC_interval, interval_size = get_intervals(params["data"].NCfgs, 
+		numsplits=params["MC_time_splits"], intervals=params["MCInt"])
+
+	N_bs = params["N_bs"]
+	bs_index_lists = np.random.randint(interval_size,
+		size=(N_bs, interval_size))
+
+	for MC_int in MC_interval:
+		topc2_analysis = Topc2MCIntervalAnalyser(params["data"]("topc"), 
+			mc_interval=MC_int, dryrun=params["dryrun"], 
+			parallel=params["parallel"], numprocs=params["numprocs"], 
+			verbose=params["verbose"])
+		topc4_analysis = Topc4MCIntervalAnalyser(params["data"]("topc"), 
+			mc_interval=MC_int, dryrun=params["dryrun"], 
+			parallel=params["parallel"], numprocs=params["numprocs"], 
+			verbose=params["verbose"])
+
+		N_cfgs_topc2 = topc2_analysis.N_configurations
+		N_cfgs_topc4 = topc4_analysis.N_configurations
+		assert N_cfgs_topc2 == N_cfgs_topc4, "NCfgs differ in topc2 and topc4."
+
+		analyse_default(topc2_analysis, N_bs, NBins=150, 
+			bs_index_lists=bs_index_lists)
+		analyse_default(topc4_analysis, N_bs, bs_index_lists=bs_index_lists)
+
+
 def analyse_topsus_qtq0(params):
 	"""
 	Analysis the topological susceptiblity with one charge q0 set a given 
@@ -380,6 +412,8 @@ def pre_analysis(parameters):
 		analyse_topc4(params)
 	if "topcr" in parameters["observables"]:
 		analyse_topcr(params)
+	if "topcrMC" in parameters["observables"]:
+		analyse_topcrMC(params)
 	if "topct" in parameters["observables"]:
 		analyse_topct(params)
 	if "topcte" in parameters["observables"]:

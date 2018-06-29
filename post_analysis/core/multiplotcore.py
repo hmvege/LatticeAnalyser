@@ -111,13 +111,15 @@ class MultiPlotCore(PostCore):
 		self.plot(**kwargs)
 
 
-	def _get_plot_figure_name(self, output_folder=None, figure_name_appendix=""):
+	def _get_plot_figure_name(self, output_folder=None, 
+		figure_name_appendix=""):
 		"""Retrieves appropriate figure file name."""
 		if isinstance(output_folder, types.NoneType):
 			output_folder = os.path.join(self.output_folder_path, "slices")
 		check_folder(output_folder, False, True)
-		fname = "post_analysis_%s_%s_int%s%s.png" % (self.observable_name_compact,
-			self.analysis_data_type, self.intervals_str_compact, figure_name_appendix)
+		fname = "post_analysis_%s_%s_int%s%s.png" % (
+			self.observable_name_compact, self.analysis_data_type, 
+			self.intervals_str_compact, figure_name_appendix)
 		return os.path.join(output_folder, fname)
 
 
@@ -129,7 +131,6 @@ class MultiPlotCore(PostCore):
 		Args:
 			intervals: list of ordered beta values to check.
 		"""
-
 		if self.verbose:
 			print "Intervals N=%d, possible for %s: " % (
 				len(self.observable_intervals),
@@ -162,7 +163,8 @@ class MultiPlotCore(PostCore):
 		Method for plotting 4 axes together.
 
 		Args:
-			indexes: list containing integers of which intervals to plot together.
+			indexes: list containing integers of which intervals to plot 
+				together.
 			beta: beta values to plot. Default is "all". Otherwise, 
 				a list of numbers or a single beta value is provided.
 			x_limits: limits of the x-axis. Default is False.
@@ -182,13 +184,15 @@ class MultiPlotCore(PostCore):
 
 
 	def _series_plot_core(self, indexes, beta="all", x_limits=False, 
-		y_limits=False, plot_with_formula=False, error_shape="band", fname=None):
+		y_limits=False, plot_with_formula=False, error_shape="band", 
+		fname=None):
 		"""
 		Core structure of the series plot, allows to easily be expanded upon 
 		by the needs of the different observables.
 
 		Args:
-			indexes: list containing integers of which intervals to plot together.
+			indexes: list containing integers of which intervals to plot 
+				together.
 			beta: beta values to plot. Default is "all". Otherwise, 
 				a list of numbers or a single beta value is provided.
 			x_limits: limits of the x-axis. Default is False.
@@ -308,8 +312,8 @@ class MultiPlotCore(PostCore):
 
 		Args:
 			fit_target: float value at which we extrapolate to continuum from.
-			interval_keys: list of str, for a given interval euclidean specified from
-				setup_interval().
+			interval_keys: list of str, for a given interval euclidean 
+				specified from setup_interval().
 			**kwargs: passed to plot_continuum().
 		"""
 

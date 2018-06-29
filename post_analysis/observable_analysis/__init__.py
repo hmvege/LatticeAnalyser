@@ -9,6 +9,7 @@ from topcpostanalysis import TopcPostAnalysis
 from topc2postanalysis import Topc2PostAnalysis
 from topc4postanalysis import Topc4PostAnalysis
 from topcrpostanalysis import TopcRPostAnalysis
+from topcrmcintervalpostanalysis import TopcRMCIntervalPostAnalysis
 from topctpostanalysis import TopctPostAnalysis
 from topcteintervalpostanalysis import TopcteIntervalPostAnalysis
 from topcmcintervalpostanalysis import TopcMCIntervalPostAnalysis

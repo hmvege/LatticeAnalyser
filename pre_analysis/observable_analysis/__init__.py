@@ -12,6 +12,8 @@ from topc2analyser import Topc2Analyser
 from topc4analyser import Topc4Analyser
 from topcteintervalanalyser import TopcteIntervalAnalyser
 from topcmcintervalanalyser import TopcMCIntervalAnalyser
+from topc2mcintervalanalyser import Topc2MCIntervalAnalyser
+from topc4mcintervalanalyser import Topc4MCIntervalAnalyser
 
 # Topological susceptibility definitions
 from topsusanalyser import TopsusAnalyser

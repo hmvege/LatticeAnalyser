@@ -14,7 +14,7 @@ def main():
 		"plaq", "energy",
 		# Topological charge definitions
 		# "topc2", "topc4",
-		"topc", "topcr", "topcMC",
+		"topc", "topcMC", "topcr", "topcrMC",
 		# Topological susceptibility definitions
 		"topsus", "topsusMC", "topsusqtq0",
 		# Other quantities 
@@ -44,7 +44,7 @@ def main():
 	# observables = observables_euclidean_time
 	# observables = ["topcr", "topsus"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
-	# observables = ["topcr"]
+	observables = ["topcrMC"]
 	# observables = ["qtq0eff", "qtq0e"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["qtq0eff", "qtq0e"] + ["topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
@@ -348,9 +348,9 @@ def main():
 	# analysis_parameter_list = [databeta62]
 	# analysis_parameter_list = [databeta645]
 
-	#### Submitting main analysis
-	for analysis_parameters in analysis_parameter_list:
-		pre_analysis(analysis_parameters)
+	# #### Submitting main analysis
+	# for analysis_parameters in analysis_parameter_list:
+	# 	pre_analysis(analysis_parameters)
 
 	if not analysis_parameter_list[0]["MCInt"] is None:
 		assert sum([len(plist["MCInt"]) - len(analysis_parameter_list[0]["MCInt"])

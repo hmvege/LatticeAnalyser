@@ -81,6 +81,8 @@ def post_analysis(beta_parameter_list, observables,
 	old_obs = observables
 	if "topcr" in observables:
 		observables += ["topc2", "topc4"]
+	if "topcrMC" in observables:
+		observables += ["topc2MC", "topc4MC"]
 
 	data = PostAnalysisDataReader(beta_parameter_list,
 		observables_to_load=observables)
@@ -198,6 +200,25 @@ def post_analysis(beta_parameter_list, observables,
 			topcr_analysis.plot()
 
 		topcr_analysis.compare_lattice_values(tf=topcr_tf)
+
+	if "topcrMC" in observables:
+		topcrmc_analysis = TopcRMCIntervalPostAnalysis(data, 
+			figures_folder=figures_folder, verbose=verbose)
+
+		print interval_setup(beta_parameter_list, "MC")
+
+		interval_dict_list = topcrmc_analysis.setup_intervals(
+			intervals=interval_setup(beta_parameter_list, "MC"))
+
+		for analysis_type in post_analysis_data_type:
+			topcrmc_analysis.set_analysis_data_type(analysis_type)
+			print topcrmc_analysis
+
+			for int_keys in interval_dict_list:
+				topcrmc_analysis.plot_interval(int_keys)
+				topcrmc_analysis.compare_lattice_values(tf=topcr_tf)
+
+			topcrmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
 	if "topct" in observables:
 		topct_analysis = TopctPostAnalysis(data, 

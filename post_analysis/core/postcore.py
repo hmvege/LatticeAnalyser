@@ -68,9 +68,9 @@ class PostCore(object):
 		
 		# Only sets this variable if we have sub-intervals in order to avoid bugs.
 		if self.sub_obs:
-			self.observable_intervals = {}
-			for beta in self.beta_values:
-				self.observable_intervals[beta] = {}
+			self.observable_intervals = {b: {} for b in self.beta_values}
+			# for beta in self.beta_values:
+			# 	self.observable_intervals[beta] = {}
 
 		# Checks that the observable is among the available data
 		assert_msg = ("%s is not among current data(%s). Have the pre analysis"
@@ -351,28 +351,6 @@ class PostCore(object):
 
 
 		self._get_tf_value(tf, atype, extrap_method)
-		# # Sets the correct tf value
-		# if isinstance(tf, str):
-		# 	assert not isinstance(self.reference_values, types.NoneType), (
-		# 		"Missing reference values: %s" % self.reference_values)
-		# 	if tf == "t0":
-		# 		if isinstance(extrap_method, types.NoneType):
-		# 			for beta in self.beta_values:
-		# 				self.t0[beta] = \
-		# 					self.reference_values[atype].values()[0]["t0_cont"]
-		# 		else:
-		# 			for beta in self.beta_values:
-		# 				self.t0[beta] = \
-		# 					self.reference_values[atype][extrap_method][beta]["t0r02"]
-		# 	elif tf == "t0beta":
-		# 		for beta in self.beta_values:
-		# 			self.t0[beta] = self.reference_values[atype][extrap_method][beta]
-		# 	else: # Stupid error check
-		# 		raise ValueError("%s is not a valid key. Use t0.")
-		# else:
-		# 	assert isinstance(tf, float), "input tf %s should be float." % tf
-		# 	for beta in self.beta_values:
-		# 		self.t0[beta] = tf
 
 		for beta in self.beta_values:
 			a = self.plot_values[beta]["a"]
@@ -381,15 +359,6 @@ class PostCore(object):
 			tf_index = np.argmin(
 				np.abs(self.plot_values[beta]["x"] - self.t0[beta]))
 
-			# # Should select exact values at selected t0
-			# if self.sub_obs:
-			# 	for sub_obs in self.observable_intervals[beta]:
-			# 		values[beta][sub_obs]["t0"] = self.t0[beta]
-			# 		values[beta][sub_obs]["y0"] = self.plot_values[beta]["y"][tf_index]
-			# 		values[beta][sub_obs]["y_err0"] = self.plot_values[beta]["y_err"][tf_index]
-			# 		values[beta][sub_obs]["tau_int0"] = self.plot_values[beta]["tau_int"][tf_index]
-			# 		values[beta][sub_obs]["tau_int_err0"] = self.plot_values[beta]["tau_int_err"][tf_index]
-			# else:
 			values[beta]["t0"] = self.t0[beta]
 			values[beta]["y0"] = self.plot_values[beta]["y"][tf_index]
 			values[beta]["y_err0"] = self.plot_values[beta]["y_err"][tf_index]
