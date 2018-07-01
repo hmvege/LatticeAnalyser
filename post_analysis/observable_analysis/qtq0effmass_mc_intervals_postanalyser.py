@@ -12,7 +12,7 @@ from statistics.autocorrelation import Autocorrelation
 import multiprocessing
 import statistics.parallel_tools as ptools
 
-class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
+class QtQ0EffectiveMassMCIntervalsPostAnalysis(MultiPlotCore):
 	"""Post-analysis of the effective mass."""
 	observable_name = r"Effective mass, "
 	observable_name += r"$am_\textrm{eff} = \log \frac{C(t_e)}{C(t_e+1)}$, "
@@ -31,7 +31,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 		# Ensures we load correct data
 		self.observable_name_compact_old = self.observable_name_compact
 
-		super(QtQ0EffectiveMassPostAnalysis, self).__init__(*args, **kwargs)
+		super(QtQ0EffectiveMassMCIntervalsPostAnalysis, self).__init__(*args, **kwargs)
 		
 		# Resets the observable name after data has been loaded.
 		self.observable_name_compact = self.observable_name_compact_old
@@ -88,50 +88,6 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 		# Using bs samples
 		y = self.effMass(data["y"])
 		y_err = self.effMass_err(data["y"], data["y_error"])
-
-		# NEucl, NCfgs = data_raw.shape
-		# if self.analysis_data_type=="unanalyzed":
-		# 	N_BS = 500
-		# 	y_raw = np.zeros((NEucl, N_BS)) 	# Correlator, G
-		# 	index_lists = np.random.randint(NCfgs, size=(N_BS, NCfgs))
-		# 	# Performing the bootstrap samples
-		# 	for i in xrange(NEucl):
-		# 		for j in xrange(N_BS):
-		# 			y_raw[i,j] = np.mean(data_raw[i][index_lists[j]])
-		# else:
-		# 	y_raw = data_raw
-
-		# y_raw = np.log(y_raw/np.roll(y_raw, -1, axis=0))
-		# y = np.mean(y_raw, axis=1)
-		# y_err = np.std(y_raw, axis=1)
-
-		# # Runs parallel processes
-		# input_values = zip(	[data_raw[iEucl] for iEucl in range(NEucl)],
-		# 					[None for _d in range(NEucl)],
-		# 					[{} for _d in range(NEucl)])
-
-		# pool = multiprocessing.Pool(processes=8)				
-		# res = pool.map(ptools._autocorrelation_propagated_parallel_core, input_values)
-		# pool.close()
-
-		# error_correction = np.ones(NEucl)
-		# for i, _data in enumerate(data_raw):
-		# 	error_correction[i] = np.sqrt(2*res[i][2])
-
-		# y_err *= error_correction
-
-		# print "\n"
-		# print y[:10]
-		# print y_err[:10],"\n"
-
-		# for _res in results:
-		# 	y_err *= np.sqrt(2*_res[2])
-
-
-		# C = np.mean(data_raw, axis=1)
-		# C_err = np.std(data_raw, axis=1)
-		# y = self.effMass(C, axis=0)
-		# y_err = self.effMass_err(C, C_err, axis=0)
 
 		return y, y_err
 
@@ -282,10 +238,10 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 		# else:
 		# 	kwargs["x_limits"] = [-0.1,4.7]
 		kwargs["x_limits"] = [-0.1,1]
-		super(QtQ0EffectiveMassPostAnalysis, self).plot(*args, **kwargs)
+		super(QtQ0EffectiveMassMCIntervalsPostAnalysis, self).plot(*args, **kwargs)
 
 def main():
-	exit(("Exit: QtQ0EffectiveMassPostAnalysis not intended to be a "
+	exit(("Exit: QtQ0EffectiveMassMCIntervalsPostAnalysis not intended to be a "
 		"standalone module."))
 
 if __name__ == '__main__':

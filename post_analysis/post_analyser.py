@@ -426,8 +426,8 @@ def post_analysis(beta_parameter_list, observables,
 			for tf in q0_flow_times: # Flow times
 				if tf != 0.6: 
 					continue
-
 				qtq0e_analysis.plot_interval(tf)
+
 			y_limits = [-1, 1]
 			error_shape = "bars"
 			qtq0e_analysis.plot_series([0,1,2,3], beta=bval_to_plot,

@@ -180,7 +180,6 @@ def analyse_topcrMC(params):
 			bs_index_lists=bs_index_lists)
 		analyse_default(topc4_analysis, N_bs, bs_index_lists=bs_index_lists)
 
-
 def analyse_topsus_qtq0(params):
 	"""
 	Analysis the topological susceptiblity with one charge q0 set a given 
@@ -226,6 +225,37 @@ def analyse_qtq0_effective_mass(params):
 			continue
 		qtq0eff_analysis.set_time(q0_flow_time)
 		analyse_default(qtq0eff_analysis, params["N_bs"])
+
+def analyse_qtq0_effective_mass_mc(params):
+	"""
+	Pre-analyser for the effective mass qtq0 with q0 at a fixed flow time in 
+	Monte Carlo intervals.
+	"""
+
+	# TODO: fullfør qtq0 effective mass ting
+
+	MC_interval, interval_size = get_intervals(params["data"].NCfgs, 
+		numsplits=params["MC_time_splits"], intervals=params["MCInt"])
+
+	bs_index_lists = np.random.randint(interval_size,
+		size=(params["N_bs"], interval_size))
+
+	obs_data = params["data"]
+	if not obs_data.has_observable("topct"): return
+
+	for MC_int in MC_interval:
+		analyse_eff_mass_MC = QtQ0EffectiveMassMCIntervalsPostAnalysis(
+			obs_data("topct"), mc_interval=MC_int, dryrun=params["dryrun"], 
+			parallel=params["parallel"], numprocs=params["numprocs"],
+			verbose=params["verbose"])
+
+		for q0_flow_time in params["q0_flow_times"]:
+			if q0_flow_time != 0.6: # Only zeroth flow 
+				continue
+
+			analyse_eff_mass_MC.set_time(q0_flow_time)
+			analyse_default(analyse_eff_mass_MC, params["N_bs"],
+				bs_index_lists=bs_index_lists)
 
 def analyse_topct(params):
 	"""Analyses topological charge at a specific euclidean time."""
@@ -438,6 +468,8 @@ def pre_analysis(parameters):
 		analyse_qtq0e(params)
 	if "qtq0eff" in parameters["observables"]:
 		analyse_qtq0_effective_mass(params)
+	if "qtq0effMC" in parameters["observables"]:
+		analyse_qtq0_effective_mass_mc(params)
 
 	gif_params = parameters["gif"]
 	gif_observables = gif_params["gif_observables"]
