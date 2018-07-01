@@ -215,8 +215,10 @@ def post_analysis(beta_parameter_list, observables,
 			print topcrmc_analysis
 
 			for int_keys in interval_dict_list:
+				print section_seperator
+				print "Interval: %s" % int_keys
 				topcrmc_analysis.plot_interval(int_keys)
-				topcrmc_analysis.compare_lattice_values(tf=topcr_tf)
+				topcrmc_analysis.compare_lattice_values(int_keys, tf=topcr_tf)
 
 			topcrmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 

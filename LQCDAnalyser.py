@@ -44,7 +44,7 @@ def main():
 	# observables = observables_euclidean_time
 	# observables = ["topcr", "topsus"]
 	# observables = ["topsust", "topsuste", "topsusqtq0"]
-	observables = ["topcrMC"]
+	# observables = ["topcrMC"]
 	# observables = ["qtq0eff", "qtq0e"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["qtq0eff", "qtq0e"] + ["topsust", "topsuste", "topsusMC", "topsusqtq0"]
 	# observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
