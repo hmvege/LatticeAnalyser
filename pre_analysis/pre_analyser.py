@@ -232,8 +232,6 @@ def analyse_qtq0_effective_mass_mc(params):
 	Monte Carlo intervals.
 	"""
 
-	# TODO: fullfør qtq0 effective mass ting
-
 	MC_interval, interval_size = get_intervals(params["data"].NCfgs, 
 		numsplits=params["MC_time_splits"], intervals=params["MCInt"])
 
@@ -241,10 +239,12 @@ def analyse_qtq0_effective_mass_mc(params):
 		size=(params["N_bs"], interval_size))
 
 	obs_data = params["data"]
-	if not obs_data.has_observable("topct"): return
+	if not obs_data.has_observable("topct"):
+		print "Missing topct data. Returning."
+		return
 
 	for MC_int in MC_interval:
-		analyse_eff_mass_MC = QtQ0EffectiveMassMCIntervalsPostAnalysis(
+		analyse_eff_mass_MC = QtQ0EffectiveMassMCAnalyser(
 			obs_data("topct"), mc_interval=MC_int, dryrun=params["dryrun"], 
 			parallel=params["parallel"], numprocs=params["numprocs"],
 			verbose=params["verbose"])

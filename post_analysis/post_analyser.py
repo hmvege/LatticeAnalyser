@@ -435,6 +435,29 @@ def post_analysis(beta_parameter_list, observables,
 			qtq0e_analysis.plot_series([0,2,3,4], beta=bval_to_plot,
 				error_shape=error_shape, y_limits=y_limits)
 
+
+	if "qtq0effMC" in observables:
+		# if analysis_type != "unanalyzed": continue
+		effmass_mc_analysis = QtQ0EffectiveMassMCIntervalsPostAnalysis(data,
+			figures_folder=figures_folder, verbose=verbose)
+
+		for analysis_type in post_analysis_data_type:
+			effmass_mc_analysis.set_analysis_data_type(analysis_type)
+			print effmass_mc_analysis
+
+			for tf in q0_flow_times: # Flow times
+				if tf != 0.6: 
+					continue
+				effmass_mc_analysis.plot_interval(tf)
+
+			y_limits = [-1, 1]
+			error_shape = "bars"
+			effmass_mc_analysis.plot_series([0,1,2,3], beta=bval_to_plot,
+				error_shape=error_shape, y_limits=y_limits)
+			effmass_mc_analysis.plot_series([0,2,3,4], beta=bval_to_plot,
+				error_shape=error_shape, y_limits=y_limits)
+
+
 	# Prints and writes fit parameters to file.
 	for obs in observables:
 		if "topsus" in obs:

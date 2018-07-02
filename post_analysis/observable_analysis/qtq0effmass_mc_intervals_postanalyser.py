@@ -17,7 +17,7 @@ class QtQ0EffectiveMassMCIntervalsPostAnalysis(MultiPlotCore):
 	observable_name = r"Effective mass, "
 	observable_name += r"$am_\textrm{eff} = \log \frac{C(t_e)}{C(t_e+1)}$, "
 	observable_name += r"$C(t_e)=\langle q_t q_0\rangle$"
-	observable_name_compact = "qtq0eff"
+	observable_name_compact = "qtq0effmc"
 	x_label = r"$t_e[\textrm{fm}]$"
 	y_label = r"$r_0 m_\textrm{eff}$"
 	sub_obs = True

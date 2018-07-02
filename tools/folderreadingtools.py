@@ -468,6 +468,8 @@ class DataReader:
 		if not obs in self.observables:
 			print "%s not found in data: %s" % (obs, self.observables)
 			return False
+		else:
+			return True
 
 	def write_parameter_file(self):
 		"""Writes a parameter file for the analysis of a given batch."""

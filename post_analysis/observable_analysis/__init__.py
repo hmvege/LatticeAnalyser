@@ -24,7 +24,7 @@ from topsusqtq0postanalysis import TopsusQtQ0PostAnalysis
 # Other definitions and observable post analyses
 from qtq0euclideanpostanalysis import QtQ0EuclideanPostAnalysis 
 from qtq0effectivemasspostanalysis import QtQ0EffectiveMassPostAnalysis
-from qt0effmass_mc_intervals_postanalyser import \
+from qtq0effmass_mc_intervals_postanalyser import \
     QtQ0EffectiveMassMCIntervalsPostAnalysis
 
 # Gif plotters

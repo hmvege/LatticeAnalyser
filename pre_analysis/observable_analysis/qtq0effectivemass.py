@@ -71,8 +71,6 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 		# 	self.y = np.concatenate((first_half, last_half), axis=0)
 
 			self.N_configurations, self.NT = self.y.shape
-		
-		print self.y.shape
 
 		# self.y = np.log(self.y/np.roll(self.y, -1, axis=1)) # C(t)/C(t+1)
 
