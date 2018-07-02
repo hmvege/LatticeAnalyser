@@ -49,7 +49,7 @@ class EnergyPostAnalysis(PostCore):
 
 			self.plot_values[beta] = values
 
-	def get_scale(self, extrapolation_method="plateau_mean", E0=0.3, **kwargs):
+	def get_t0_scale(self, extrapolation_method="plateau_mean", E0=0.3, **kwargs):
 		"""
 		Method for retrieveing reference value t0 based on Luscher(2010),
 		Properties and uses of the Wilson flow in lattice QCD.
@@ -210,6 +210,9 @@ class EnergyPostAnalysis(PostCore):
 
 		return t0_dict
 
+
+	def get_w0_scale(self, extrapolation_method="plateau_mean", E0=0.3, **kwargs):
+		raise NotImplementedError("Method for retrieving the w0 scale is not yet complete.")
 
 	# def _energy_continuum(self, t):
 	# 	"""

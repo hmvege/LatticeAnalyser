@@ -131,7 +131,7 @@ def post_analysis(beta_parameter_list, observables,
 					y_limits=[-0.025, 0.4], plot_hline_at=0.3, 
 					figure_name_appendix="_zoomed")
 
-				t0_dict = energy_analysis.get_scale(
+				t0_dict = energy_analysis.get_t0_scale(
 					extrapolation_method=extrapolation_method, 
 					E0=energy_fit_target, plot_fit=False)
 
@@ -346,8 +346,6 @@ def post_analysis(beta_parameter_list, observables,
 			topsuste_analysis = TopsusteIntervalPostAnalysis(data, 
 				figures_folder=figures_folder, verbose=verbose)
 
-			print interval_setup(beta_parameter_list, "Eucl")
-
 			interval_dict_list = topsuste_analysis.setup_intervals(
 				intervals=interval_setup(beta_parameter_list, "Eucl"))
 
@@ -441,21 +439,27 @@ def post_analysis(beta_parameter_list, observables,
 		effmass_mc_analysis = QtQ0EffectiveMassMCIntervalsPostAnalysis(data,
 			figures_folder=figures_folder, verbose=verbose)
 
+		mc_interval_dict_list = effmass_mc_analysis.setup_intervals(
+			intervals=interval_setup(beta_parameter_list, "MC"))
+
+
 		for analysis_type in post_analysis_data_type:
-			effmass_mc_analysis.set_analysis_data_type(analysis_type)
-			print effmass_mc_analysis
-
-			for tf in q0_flow_times: # Flow times
-				if tf != 0.6: 
+			for tf0 in q0_flow_times: # Flow times
+				if tf0 != 0.6: 
 					continue
-				effmass_mc_analysis.plot_interval(tf)
+				effmass_mc_analysis.set_analysis_data_type(tf0, analysis_type)
+				print effmass_mc_analysis
+				
+				for int_keys in mc_interval_dict_list:
+					effmass_mc_analysis.plot_interval(tf0, int_keys)
 
-			y_limits = [-1, 1]
-			error_shape = "bars"
-			effmass_mc_analysis.plot_series([0,1,2,3], beta=bval_to_plot,
-				error_shape=error_shape, y_limits=y_limits)
-			effmass_mc_analysis.plot_series([0,2,3,4], beta=bval_to_plot,
-				error_shape=error_shape, y_limits=y_limits)
+
+				y_limits = [-1, 1]
+				error_shape = "bars"
+				effmass_mc_analysis.plot_series([0,1,2,3], tf0, beta=bval_to_plot,
+					error_shape=error_shape, y_limits=y_limits)
+				effmass_mc_analysis.plot_series([0,2,3,4], tf0, beta=bval_to_plot,
+					error_shape=error_shape, y_limits=y_limits)
 
 
 	# Prints and writes fit parameters to file.

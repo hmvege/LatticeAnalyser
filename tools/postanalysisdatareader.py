@@ -42,7 +42,7 @@ class PostAnalysisDataReader:
 		self.observable_list = []
 
 		# Observables to load, enables fast load times when only analysing few
-		self.observables_to_load = observables_to_load
+		self.observables_to_load = [o.lower() for o in observables_to_load]
 
 		# Number of betas variable
 		self.beta_values = []
@@ -79,7 +79,7 @@ class PostAnalysisDataReader:
 					self.observable_list.append(obs)
 
 				if not isinstance(self.observables_to_load, types.NoneType):
-					if not obs in self.observables_to_load:
+					if not obs.lower() in self.observables_to_load:
 						self.observable_list.remove(obs)
 						if self.verbose:
 							print "Skipping loading observable %s" % obs

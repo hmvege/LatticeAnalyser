@@ -21,6 +21,7 @@ class QtQ0EffectiveMassMCIntervalsPostAnalysis(MultiPlotCore):
 	x_label = r"$t_e[\textrm{fm}]$"
 	y_label = r"$r_0 m_\textrm{eff}$"
 	sub_obs = True
+	sub_sub_obs = True
 	hbarc = 0.19732697 #eV micro m
 	dpi=400
 	fold = True
@@ -102,38 +103,38 @@ class QtQ0EffectiveMassMCIntervalsPostAnalysis(MultiPlotCore):
 		if isinstance(output_folder, types.NoneType):
 			output_folder = os.path.join(self.output_folder_path, "slices")
 		check_folder(output_folder, False, True)
-		fname = "post_analysis_%s_%s_tf%f%s.png" % (
+		fname = "post_analysis_%s_%s_tf%f_mc%s%s.png" % (
 			self.observable_name_compact,self.analysis_data_type, 
-			self.interval_index, figure_name_appendix)
+			self.interval_index, self.mc_int_str, figure_name_appendix)
 		return os.path.join(output_folder, fname)
 
-	def _initiate_plot_values(self, data, data_raw, flow_index=None):
-		"""interval_index: int, should be in euclidean time."""
+	def _initiate_plot_values(self, data, data_raw, tf0, mc_int=None):
+		"""mc_int: int, should be in mc time."""
+
+		tf0_key = "tflow%.4f" % tf0
 
 		# Sorts data into a format specific for the plotting method
 		for beta in self.beta_values:
 			values = {}
 
-			if flow_index == None:
+			if isinstance(mc_int, types.NoneType):
 				# Case where we have sub sections of observables, e.g. in 
-				# euclidean time.
+				# mc time.
 				for sub_obs in self.observable_intervals[beta]:
 					sub_values = {}
 					sub_values["a"], sub_values["a_err"] = get_lattice_spacing(beta)
 					sub_values["x"] = np.linspace(0, 
 						self.lattice_sizes[beta][1] * sub_values["a"], 
 						self.lattice_sizes[beta][1])
-
 					sub_values["y"], sub_values["y_err"] = self.analyse_raw(
-						data[beta][sub_obs],
-						data_raw[beta][self.observable_name_compact][sub_obs])
+						data[beta][sub_obs][tf0_key],
+						data_raw[beta][self.observable_name_compact][sub_obs][tf0_key])
 
-					sub_values["label"] = r"%s, $\beta=%2.2f$, $t_f=%.2f$" % (
-						self.size_labels[beta], beta, 
-						self._convert_label(sub_obs))
+					sub_values["label"] = r"%s, $\beta=%2.2f$, $t_f=%.2f$, $MC:%s$" % (
+						self.size_labels[beta], beta, tf0, sub_obs)
 
 					sub_values["raw"] = data_raw[beta] \
-						[self.observable_name_compact][sub_obs]
+						[self.observable_name_compact][sub_obs][tf0_key]
 
 					if self.fold:
 						# OLD FOLD METHOD - DO NOT INCREASE STATISTICS BY THIS WAY:|
@@ -151,15 +152,16 @@ class QtQ0EffectiveMassMCIntervalsPostAnalysis(MultiPlotCore):
 
 					if self.with_autocorr:
 						sub_values["tau_int"] = \
-							data[beta][sub_obs]["ac"]["tau_int"]
+							data[beta][sub_obs][tf0_key]["ac"]["tau_int"]
 						sub_values["tau_int_err"] = \
-							data[beta][sub_obs]["ac"]["tau_int_err"]
+							data[beta][sub_obs][tf0_key]["ac"]["tau_int_err"]
 
 					values[sub_obs] = sub_values
 				self.plot_values[beta] = values
 
 			else:
-				tf_index = "tflow%04.4f" % flow_index
+				mc_dict = {b: mc_int[ib] for ib, b in enumerate(self.beta_values)}
+				# raise NotImplementedError("This section is not complete")
 				values["a"], values["a_err"] = get_lattice_spacing(beta)
 				
 				# For exact box sizes
@@ -168,15 +170,15 @@ class QtQ0EffectiveMassMCIntervalsPostAnalysis(MultiPlotCore):
 					self.lattice_sizes[beta][1])
 
 				values["y_raw"] = data_raw[beta] \
-					[self.observable_name_compact][tf_index]
+					[self.observable_name_compact][mc_dict[beta]][tf0_key]
 
 				if self.with_autocorr:
-					values["tau_int"] = data[beta][tf_index]["ac"]["tau_int"]
+					values["tau_int"] = data[beta][mc_dict[beta]][tf0_key]["ac"]["tau_int"]
 					values["tau_int_err"] = \
-						data[beta][tf_index]["ac"]["tau_int_err"]
+						data[beta][mc_dict[beta]][tf0_key]["ac"]["tau_int_err"]
 
 				values["y"], values["y_err"] = \
-					self.analyse_data(data[beta][tf_index])
+					self.analyse_data(data[beta][mc_dict[beta]][tf0_key])
 
 				if self.fold:
 					# # OLD METHOD
@@ -192,12 +194,23 @@ class QtQ0EffectiveMassMCIntervalsPostAnalysis(MultiPlotCore):
 					# values["y_raw"] = self.fold_array(values["y_raw"], axis=0)
 					self.fold_position = values["x"][self.fold_range]
 
-				values["label"] = r"%s $\beta=%2.2f$, $t_f=%.2f$" % (
-					self.size_labels[beta], beta, flow_index)
+				values["label"] = r"%s $\beta=%2.2f$, $t_f=%.2f$, $MC=%s$" % (
+					self.size_labels[beta], beta, tf0,
+					", ".join(["[%s)" % i for i in mc_int]))
 
 				self.plot_values[beta] = values
 
-	def plot_interval(self, flow_index, **kwargs):
+	def set_analysis_data_type(self, tf0, analysis_data_type="bootstrap"):
+		"""Sets the analysis type and retrieves correct analysis data."""
+
+		# Makes it a global constant so it can be added in plot figure name
+		self.analysis_data_type = analysis_data_type
+
+		self.plot_values = {} # Clears old plot values
+		self._initiate_plot_values(self.data[analysis_data_type],
+			self.data_raw[analysis_data_type], tf0)
+
+	def plot_interval(self, tf0, mc_int, **kwargs):
 		"""
 		Sets and plots only one interval.
 
@@ -206,9 +219,11 @@ class QtQ0EffectiveMassMCIntervalsPostAnalysis(MultiPlotCore):
 			euclidean_index: integer for euclidean time
 		"""
 		self.plot_values = {}
-		self.interval_index = flow_index
+		self.interval_index = tf0
+		self.mc_int_str = "_".join(mc_int)
 		self._initiate_plot_values(self.data[self.analysis_data_type], 
-			self.data_raw[self.analysis_data_type], flow_index=flow_index)
+			self.data_raw[self.analysis_data_type], tf0, 
+			mc_int=mc_int)
 
 		# Sets the x-label to proper units
 		x_label_old = self.x_label
@@ -217,16 +232,25 @@ class QtQ0EffectiveMassMCIntervalsPostAnalysis(MultiPlotCore):
 		# SET THIS TO ZERO IF NO Y-AXIS SCALING IS TO BE DONE
 		# kwargs["y_limits"] = [-1,1]
 		kwargs["error_shape"] = "bars"
-
-		# if self.fold:
-		# 	kwargs["plot_vline_at"] = self.fold_position
-		# else:
-		# kwargs["x_limits"] = [-0.1,1]
-
 		# Makes it a global constant so it can be added in plot figure name
 		self.plot(**kwargs)
 
 		self.x_label = x_label_old
+
+
+	def plot_series(self, indexes, tf0, beta="all", x_limits=False, 
+		y_limits=False, plot_with_formula=False, error_shape="band"):
+		"""
+		Method for plotting 4 axes together.
+		"""
+		self.plot_values = {}
+		self._initiate_plot_values(self.data[self.analysis_data_type],
+			self.data_raw[self.analysis_data_type], tf0)
+
+		self._series_plot_core(indexes, beta=beta, x_limits=[-0.1, 1], 
+		y_limits=[-10, 10], plot_with_formula=plot_with_formula, 
+		error_shape=error_shape)
+
 
 	def plot(self, *args, **kwargs):
 		"""Ensuring I am plotting with formule in title."""
