@@ -210,6 +210,7 @@ class PostAnalysisDataReader:
 		self.lattice_volumes = {}
 		self.N = {}
 		self.NT = {}
+		self.flow_epsilon = {}
 		self.colors = {}
 		self.labels = {}
 		_print_latex_list = []
@@ -218,11 +219,14 @@ class PostAnalysisDataReader:
 			self.NT[b["beta"]] = b["NT"]
 			self.lattice_sizes[b["beta"]] = [b["N"], b["NT"]]
 			self.lattice_volumes[b["beta"]] = b["N"]**3*b["NT"]
+			self.flow_epsilon[b["beta"]] = b["flow_epsilon"]
 			self.colors[b["beta"]] = b["color"]
 			self.labels[b["beta"]] = r"$%d^3 \times %d$" % (b["N"], b["NT"])
 			_print_latex_list.append(b["print_latex"])
+
 		assert len(set(_print_latex_list)), ("check input parameters: "
 			"print_latex differs for parameters.")
+
 		self.print_latex = _print_latex_list[0]
 
 	def _get_obs_data(self, obs, obs_path, sub_obs=None, sub_obs_path=None):

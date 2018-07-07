@@ -504,19 +504,22 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 		return _x*a + b
 
 	if extrapolation_method == "plateau":
-		y0, y0_error, tau_int0, chi_squared = lfit_tools._extract_plateau_fit(fit_target, 
-			_f, x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh], 
+		y0, y0_error, tau_int0, chi_squared = lfit_tools._extract_plateau_fit(
+			fit_target, _f, x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh], 
 			y_raw[ilow:ihigh], tau_int[ilow:ihigh], tau_int_err[ilow:ihigh],
 			inverse_fit=inverse_fit)
 
 	elif extrapolation_method == "plateau_mean":
-		y0, y0_error, chi_squared = lfit_tools._extract_plateau_mean_fit(fit_target,
-			_f, x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh],
+		y0, y0_error, chi_squared = lfit_tools._extract_plateau_mean_fit(
+			fit_target, _f, x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh],
 			inverse_fit=inverse_fit)
 
 	elif extrapolation_method == "bootstrap":
+		assert type(y_raw)!=type(None), (
+			"missing y_raw for performing bootstrap fit")
 		# Assumes that y_raw is the bootstrapped samples.
-		y0, y0_error, tau_int0 = lfit_tools._extract_bootstrap_fit(fit_target, _f, x[ilow:ihigh],
+		y0, y0_error, tau_int0 = lfit_tools._extract_bootstrap_fit(
+			fit_target, _f, x[ilow:ihigh],
 			y[ilow:ihigh], y_err[ilow:ihigh], y_raw[ilow:ihigh], 
 			tau_int[ilow:ihigh], tau_int_err[ilow:ihigh], F=raw_func,
 			FDer=raw_func_der, inverse_fit=inverse_fit)
@@ -555,8 +558,9 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
 
 	if plot_fit:
 		title_string = "Fit: %s" % extrapolation_method.replace("_", " ")
-		lfit_tools.__plot_fit_target(x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh],
-			x0, y0, y0_error, title_string, inverse_fit=inverse_fit)
+		lfit_tools.__plot_fit_target(x[ilow:ihigh], y[ilow:ihigh], 
+			y_err[ilow:ihigh], x0, y0, y0_error, title_string, 
+			inverse_fit=inverse_fit)
 
 	if verbose:
 		msg = "Method:       %s" % extrapolation_method

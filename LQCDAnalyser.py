@@ -188,7 +188,6 @@ def main():
 	print "Observables to be analysed: %s" % ", ".join(observables)
 	print section_seperator + "\n"
 
-
 	########## Main analysis ##########
 	databeta60 = copy.deepcopy(default_params)
 	databeta60["batch_name"] = "beta60"
@@ -350,9 +349,9 @@ def main():
 	# analysis_parameter_list = [databeta62]
 	# analysis_parameter_list = [databeta645]
 
-	#### Submitting main analysis
-	for analysis_parameters in analysis_parameter_list:
-		pre_analysis(analysis_parameters)
+	# #### Submitting main analysis
+	# for analysis_parameters in analysis_parameter_list:
+	# 	pre_analysis(analysis_parameters)
 
 	if not analysis_parameter_list[0]["MCInt"] is None:
 		assert sum([len(plist["MCInt"]) - len(analysis_parameter_list[0]["MCInt"])

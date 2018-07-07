@@ -6,6 +6,10 @@ import numpy as np
 import os
 import types
 
+# For zooming in on particular part of plot
+from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
+from mpl_toolkits.axes_grid1.inset_locator import mark_inset
+
 from matplotlib import rc, rcParams
 rc("text", usetex=True)
 # rc("font", **{"family": "serif", "serif": ["Computer Modern"]})
@@ -65,6 +69,8 @@ class PostCore(object):
 
 		self.data = {atype: {beta: {} for beta in self.beta_values} \
 			for atype in self.analysis_types}
+
+		self.flow_epsilon = {b: data.flow_epsilon[b] for b in self.beta_values}
 		
 		# Only sets this variable if we have sub-intervals in order to avoid bugs.
 		if self.sub_obs:
@@ -227,7 +233,8 @@ class PostCore(object):
 
 	def plot(self, x_limits=False, y_limits=False, plot_with_formula=False,
 		error_shape="band", figure_folder=None, plot_vline_at=None,
-		plot_hline_at=None, figure_name_appendix=""):
+		plot_hline_at=None, figure_name_appendix="", show_plot=False, 
+		zoom_box=None):
 		"""
 		Function for making a basic plot of all the different beta values
 		together.
@@ -245,72 +252,83 @@ class PostCore(object):
 				position given position.
 			figure_name_appendix: optional, str, adds provided string to 
 				filename. Default is adding nothing.
+			show_plot: optional, bool, will show plot figure.
+			zoom_box, optional, nested list of floats, will create a zoomed 
+				in subplot in figure at location [[xmin, xmax], [ymin, ymax]].
 		"""
 
-		if self.verbose:
-			print "Plotting %s for betas %s together" % (
-				self.observable_name_compact,
-				", ".join([str(b) for b in self.beta_values]))
+		self._plot_core(self.plot_values, x_label=self.x_label, 
+			y_label=self.y_label, x_limits=x_limits, y_limits=y_limits, 
+			plot_with_formula=plot_with_formula, error_shape=error_shape, 
+			figure_folder=figure_folder, plot_vline_at=plot_vline_at, 
+			plot_hline_at=plot_hline_at, 
+			figure_name_appendix=figure_name_appendix, 
+			show_plot=show_plot, zoom_box=zoom_box)
 
-		fig = plt.figure(dpi=self.dpi)
-		ax = fig.add_subplot(111)
+		# if self.verbose:
+		# 	print "Plotting %s for betas %s together" % (
+		# 		self.observable_name_compact,
+		# 		", ".join([str(b) for b in self.beta_values]))
 
-		self._check_plot_values()
+		# fig = plt.figure(dpi=self.dpi)
+		# ax = fig.add_subplot(111)
 
-		# Retrieves values to plot
-		for beta in sorted(self.plot_values):
-			value = self.plot_values[beta]
-			x = value["x"]
-			y = value["y"]
-			y_err = value["y_err"]
-			if error_shape == "band":
-				ax.plot(x, y, "-", label=value["label"], color=self.colors[beta])
-				ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, 
-					edgecolor="", facecolor=self.colors[beta])
-			elif error_shape == "bars":
-				ax.errorbar(x, y, yerr=y_err, capsize=5, fmt="_", ls=":", 
-					label=value["label"], color=self.colors[beta], 
-					ecolor=self.colors[beta])
-			else:
-				raise KeyError("%s not a recognized plot type" % error_shape)
+		# self._check_plot_values()
 
-		# # Sets the title string
-		# title_string = r"%s" % self.observable_name
-		# if plot_with_formula:
-		# 	title_string += r" %s" % self.formula
+		# # Retrieves values to plot
+		# for beta in sorted(self.plot_values):
+		# 	value = self.plot_values[beta]
+		# 	x = value["x"]
+		# 	y = value["y"]
+		# 	y_err = value["y_err"]
+		# 	if error_shape == "band":
+		# 		ax.plot(x, y, "-", label=value["label"], color=self.colors[beta])
+		# 		ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, 
+		# 			edgecolor="", facecolor=self.colors[beta])
+		# 	elif error_shape == "bars":
+		# 		ax.errorbar(x, y, yerr=y_err, capsize=5, fmt="_", ls=":", 
+		# 			label=value["label"], color=self.colors[beta], 
+		# 			ecolor=self.colors[beta])
+		# 	else:
+		# 		raise KeyError("%s not a recognized plot type" % error_shape)
 
-		# Basic plotting commands
-		ax.grid(True)
-		# ax.set_title(r"%s" % title_string)
-		ax.set_xlabel(r"%s" % self.x_label)
-		ax.set_ylabel(r"%s" % self.y_label)
-		ax.legend(loc="lower right", prop={"size": 8})
+		# # Basic plotting commands
+		# ax.grid(True)
+		# # ax.set_title(r"%s" % title_string)
+		# ax.set_xlabel(r"%s" % self.x_label)
+		# ax.set_ylabel(r"%s" % self.y_label)
+		# ax.legend(loc="lower right", prop={"size": 8})
 
-		# if self.observable_name_compact == "energy":
-		# 	ax.ticklabel_format(style="sci", axis="y", scilimits=(1,10))
+		# # # Sets the title string
+		# # title_string = r"%s" % self.observable_name
+		# # if plot_with_formula:
+		# # 	title_string += r" %s" % self.formula
 
-		# Sets axes limits if provided
-		if x_limits != False:
-			ax.set_xlim(x_limits)
-		if y_limits != False:
-			ax.set_ylim(y_limits)
+		# # if self.observable_name_compact == "energy":
+		# # 	ax.ticklabel_format(style="sci", axis="y", scilimits=(1,10))
 
-		# Plots a vertical line at position "plot_vline_at"
-		if not isinstance(plot_vline_at, types.NoneType):
-			ax.axvline(plot_vline_at, linestyle="--", color="0", alpha=0.3)
+		# # Sets axes limits if provided
+		# if x_limits != False:
+		# 	ax.set_xlim(x_limits)
+		# if y_limits != False:
+		# 	ax.set_ylim(y_limits)
 
-		# Plots a horizontal line at position "plot_hline_at"
-		if not isinstance(plot_hline_at, types.NoneType):
-			ax.axhline(plot_hline_at, linestyle="--", color="0", alpha=0.3)
+		# # Plots a vertical line at position "plot_vline_at"
+		# if not isinstance(plot_vline_at, types.NoneType):
+		# 	ax.axvline(plot_vline_at, linestyle="--", color="0", alpha=0.3)
 
-		# Saves and closes figure
-		fname = self._get_plot_figure_name(output_folder=figure_folder, 
-			figure_name_appendix=figure_name_appendix)
-		plt.savefig(fname)
-		if self.verbose:
-			print "Figure saved in %s" % fname
+		# # Plots a horizontal line at position "plot_hline_at"
+		# if not isinstance(plot_hline_at, types.NoneType):
+		# 	ax.axhline(plot_hline_at, linestyle="--", color="0", alpha=0.3)
 
-		plt.close(fig)
+		# # Saves and closes figure
+		# fname = self._get_plot_figure_name(output_folder=figure_folder, 
+		# 	figure_name_appendix=figure_name_appendix)
+		# plt.savefig(fname)
+		# if self.verbose:
+		# 	print "Figure saved in %s" % fname
+
+		# plt.close(fig)
 
 	def _get_plot_figure_name(self, output_folder=None, 
 		figure_name_appendix=""):
@@ -367,6 +385,144 @@ class PostCore(object):
 
 		return_dict = {"obs": self.observable_name_compact, "data": values}
 		return return_dict
+
+
+	def _plot_core(self, plot_values, observable_name_compact=None, 
+		x_label="x", y_label="y", x_limits=False, y_limits=False, 
+		plot_with_formula=False, error_shape="band", figure_folder=None, 
+		plot_vline_at=None, plot_hline_at=None, figure_name_appendix="", 
+		show_plot=False, zoom_box=None):
+		"""
+		Function for making a basic plot of all the different beta values
+		together.
+
+		Args:
+			plot_values: from _initiate_plot_values().
+			x_label: str, x label.
+			x_label: str, y label.
+			x_limits: limits of the x-axis. Default is False.
+			y_limits: limits of the y-axis. Default is False.
+			plot_with_formula: bool, default is false, is True will look for 
+				formula for the y-value to plot in title.
+			figure_folder: optional, default is None. If default, will place
+				figures in figures/{batch_name}/post_analysis/{observable_name}
+			plot_vline_at: optional, float. If present, will plot a vline at 
+				position given position.
+			plot_hline_at: optional, float. If present, will plot a hline at 
+				position given position.
+			figure_name_appendix: optional, str, adds provided string to 
+				filename. Default is adding nothing.
+			show_plot: optional, bool, will show plot figure.
+			zoom_box, optional, nested list of floats, will create a zoomed 
+				in subplot in figure at location [[xmin, xmax], [ymin, ymax]].
+		"""
+
+		if type(observable_name_compact) == type(None):
+			observable_name_compact = self.observable_name_compact
+
+		if self.verbose:
+			print "Plotting %s for betas %s together" % (
+				observable_name_compact,
+				", ".join([str(b) for b in plot_values]))
+
+		fig = plt.figure(dpi=self.dpi)
+		ax = fig.add_subplot(111)
+
+		self._check_plot_values()
+
+		if not isinstance(zoom_box, type(None)):
+			# 2.5: zoom factor, loc=2: upper left
+			axins = zoomed_inset_axes(ax, zoom_box["zoom_factor"], loc=2)
+
+		# Retrieves values to plot
+		for beta in sorted(plot_values):
+			value = plot_values[beta]
+			x = value["x"]
+			y = value["y"]
+			y_err = value["y_err"]
+			if error_shape == "band":
+				ax.plot(x, y, "-", label=value["label"], color=self.colors[beta])
+				ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, 
+					edgecolor="", facecolor=self.colors[beta])
+			elif error_shape == "bars":
+				ax.errorbar(x, y, yerr=y_err, capsize=5, fmt="_", ls=":", 
+					label=value["label"], color=self.colors[beta], 
+					ecolor=self.colors[beta])
+			else:
+				raise KeyError("%s not a recognized plot type" % error_shape)
+
+			if not isinstance(zoom_box, type(None)):
+				if error_shape == "band":
+					axins.plot(x, y, "-", label=value["label"], 
+						color=self.colors[beta])
+					axins.fill_between(x, y - y_err, y + y_err, alpha=0.5, 
+						edgecolor="", facecolor=self.colors[beta])
+				elif error_shape == "bars":
+					axins.errorbar(x, y, yerr=y_err, capsize=5, fmt="_", ls=":", 
+						label=value["label"], color=self.colors[beta], 
+						ecolor=self.colors[beta])
+
+		if not isinstance(zoom_box, type(None)):
+			axins.set_xlim(zoom_box["xlim"])
+			axins.set_ylim(zoom_box["ylim"])
+			# axins.grid(True)
+			plt.yticks(visible=False)
+			plt.xticks(visible=False)
+
+			# Plots a vertical line at position "plot_vline_at"
+			if not isinstance(plot_vline_at, types.NoneType):
+				axins.axvline(plot_vline_at, linestyle="--", color="0", alpha=0.3)
+
+			# Plots a horizontal line at position "plot_hline_at"
+			if not isinstance(plot_hline_at, types.NoneType):
+				axins.axhline(plot_hline_at, linestyle="--", color="0", alpha=0.3)
+
+			mark_inset(ax, axins, loc1=1, loc2=4, fc="none", ec="0.5")
+
+
+		# Basic plotting commands
+		ax.grid(True)
+		# ax.set_title(r"%s" % title_string)
+		ax.set_xlabel(r"%s" % x_label)
+		ax.set_ylabel(r"%s" % y_label)
+		ax.legend(loc="lower right", prop={"size": 8})
+
+		# # Sets the title string
+		# title_string = r"%s" % self.observable_name
+		# if plot_with_formula:
+		# 	title_string += r" %s" % self.formula
+
+		# if self.observable_name_compact == "energy":
+		# 	ax.ticklabel_format(style="sci", axis="y", scilimits=(1,10))
+
+
+		# Sets axes limits if provided
+		if x_limits != False:
+			ax.set_xlim(x_limits)
+		if y_limits != False:
+			ax.set_ylim(y_limits)
+
+		# Plots a vertical line at position "plot_vline_at"
+		if not isinstance(plot_vline_at, types.NoneType):
+			ax.axvline(plot_vline_at, linestyle="--", color="0", alpha=0.3)
+
+		# Plots a horizontal line at position "plot_hline_at"
+		if not isinstance(plot_hline_at, types.NoneType):
+			ax.axhline(plot_hline_at, linestyle="--", color="0", alpha=0.3)
+
+		# Saves and closes figure
+		fname = self._get_plot_figure_name(output_folder=figure_folder, 
+			figure_name_appendix=figure_name_appendix)
+		plt.savefig(fname)
+		if self.verbose:
+			print "Figure saved in %s" % fname
+
+		if show_plot:
+			plt.show()
+
+		plt.close(fig)
+
+
 
 	def __str__(self):
 		"""Class string representation method."""
