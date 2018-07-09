@@ -64,8 +64,9 @@ class EnergyPostAnalysis(PostCore):
 		# https://physics.stackexchange.com/questions/200029/how-does-uncertainty-error-propagate-with-differentiation
 		for i in xrange(1, len(y) - 1):
 			# W_err[i-1] = np.sqrt((2*t[i-1]**2*y_err[i])**2)# + (t[i-1]**3*np.sqrt(2)*y_err[i]/feps)**2)
-			print np.std(W_raw[i-1])
-			W_err[i-1] = np.sqrt((2*t[i-1]**2*y_err[i])**2 + (t[i-1]**3*np.std(W_raw[i-1]))**2)
+			# print np.std(W_raw[i-1])
+			# W_err[i-1] = np.sqrt((2*t[i-1]**2*y_err[i])**2 + (t[i-1]**3*np.std(W_raw[i-1]))**2)
+			W_err[i-1] = np.sqrt((2*t[i-1]**2*y_err[i])**2)
 
 
 		# Sets up the x-axis value for t_f*a^2
@@ -73,19 +74,19 @@ class EnergyPostAnalysis(PostCore):
 		for i in xrange(1, len(y) - 1):
 			ta2[i-1] = t_unscaled[i] 
 
-		# plt.plot(x_der, y_der)
-		# plt.errorbar(t, W, yerr=W_err)
-		plt.plot(ta2, W, color="tab:red", alpha=0.5)
-		plt.fill_between(t_unscaled[1:-1], W-W_err, W+W_err, alpha=0.5, edgecolor='',
-			facecolor="tab:red")
-		plt.grid(True)
-		# plt.hlines(0.3,t[0], t[-1], linestyle=":", alpha=0.75, color="gray")
-		plt.hlines(0.3,t_unscaled[1], t_unscaled[-2], linestyle=":", alpha=0.75, color="gray")
-		plt.xlabel(r"$t/{r_0^2}$")
-		plt.ylabel(r"$W(t)$")
-		plt.show()
+		# # plt.plot(x_der, y_der)
+		# # plt.errorbar(t, W, yerr=W_err)
+		# plt.plot(ta2, W, color="tab:red", alpha=0.5)
+		# plt.fill_between(t_unscaled[1:-1], W-W_err, W+W_err, alpha=0.5, edgecolor='',
+		# 	facecolor="tab:red")
+		# plt.grid(True)
+		# # plt.hlines(0.3,t[0], t[-1], linestyle=":", alpha=0.75, color="gray")
+		# plt.hlines(0.3,t_unscaled[1], t_unscaled[-2], linestyle=":", alpha=0.75, color="gray")
+		# plt.xlabel(r"$t/{r_0^2}$")
+		# plt.ylabel(r"$W(t)$")
+		# plt.show()
 
-		exit(1)
+		# exit(1)
 		return ta2, W, W_err, W_raw
 
 	def _initiate_plot_values(self, data, data_raw):
@@ -100,7 +101,7 @@ class EnergyPostAnalysis(PostCore):
 			values["y_err"] = data[beta]["y_error"]*data[beta]["x"]**2
 			values["flow_epsilon"] = self.flow_epsilon[beta]
 			values["tder"], values["W"], values["W_err"], values["W_raw"] = \
-				self.calculateW(values["x"], data[beta]["y"], 
+				self.calculateW(data[beta]["x"], data[beta]["y"], 
 					data[beta]["y_error"], 
 					data_raw[beta][self.observable_name_compact], 
 					values["flow_epsilon"], values["t"])

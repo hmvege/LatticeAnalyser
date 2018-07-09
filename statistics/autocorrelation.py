@@ -40,8 +40,8 @@ def timing_function(func):
 	return wrapper
 
 class _AutocorrelationCore(object):
-	def __init__(self, data, function_derivative=lambda x: x, 
-		function_parameters=None, method="correlate", 
+	def __init__(self, data, function_derivative=lambda x: 1.0, 
+		function_parameters={}, method="correlate", 
 		time_autocorrelation=False):
 		"""
 		Base method for the auto correlation modules.
@@ -319,11 +319,8 @@ class PropagatedAutocorrelation(_AutocorrelationCore):
 		avg_data = np.mean(self.data)
 
 		# Eq. 14
-		if isinstance(self.function_parameters, types.NoneType):
-			derfun_avg = self.function_derivative(avg_data)
-		else:
-			derfun_avg = self.function_derivative(avg_data,
-				**self.function_parameters)
+		derfun_avg = self.function_derivative(avg_data,
+			**self.function_parameters)
 
 		# Eq. 33
 		self.G *= derfun_avg**2
@@ -415,7 +412,7 @@ class FullAutocorrelation(_AutocorrelationCore):
 	indices, as well as propagated errors.
 	"""
 
-	def __init__(self, data, function_derivative=lambda x: x,
+	def __init__(self, data, function_derivative=lambda x: 1.0,
 		function_parameters={}, numerical_derivative=False, 
 		time_autocorrelation=False):
 		"""
@@ -523,7 +520,6 @@ class FullAutocorrelation(_AutocorrelationCore):
 		return self.G
 
 	def _autocorrelation_error(self, SParam=1.11):
-		print "self.data.shape:", self.data.shape, "reps, obs, data"
 		# Eq. 6: gets the average of each replicum
 		self.avg_replicums = np.mean(self.data, axis=2)
 
@@ -561,10 +557,6 @@ class FullAutocorrelation(_AutocorrelationCore):
 		for ia in xrange(self.N_obs): # alpha
 			for ib in xrange(self.N_obs): # beta
 				self.G_F += derfun[ia]*derfun[ib]*self.G_ab_t[ia,ib]
-		# self.G_F = np.asarray(self.G_F)
-
-		# fortsett her, implementer f(a_mean)_alpha, a_mean er gitt ved eq 6, 7
-		# self.G *= derfun_avg**2
 
 		# Eq. 35, array with different integration cutoffs
 		CfW = np.array([self.G_F[0]] + [self.G_F[0] + 2.0*np.sum(self.G_F[1:W+1]) \
@@ -768,21 +760,31 @@ def _testFullAC(data, N_bins, store_plots, time_ac_functions):
 	ac1 = Autocorrelation(data, method="corrcoef", 
 		time_autocorrelation=time_ac_functions)
 	ac1.plot_autocorrelation((r"Autocorrelation for Topological "
-		"Suscpetibility $\beta = 6.2$"), "beta6_2_topc",
+		r"Suscpetibility $\beta = 6.2$"), "beta6_2_topc",
 		dryrun=(not store_plots))
 	print ac1.integrated_autocorrelation_time()
 	print ac1.integrated_autocorrelation_time_error()
 	print ac1.W
 
-	ac = PropagatedAutocorrelation(data, 
+	ac2 = PropagatedAutocorrelation(data, 
 		function_derivative=chi_beta6_2_derivative,
 		method="corrcoef",
 		time_autocorrelation=time_ac_functions)
-	ac.plot_autocorrelation((r"Autocorrelation for Topological Suscpetibility"
-		" $\beta = 6.2$"),"beta6_2_topc", dryrun=(not store_plots))
-	print ac.integrated_autocorrelation_time()
-	print ac.integrated_autocorrelation_time_error()
-	print ac.W
+	ac2.plot_autocorrelation((r"Autocorrelation for Topological Suscpetibility"
+		r" $\beta = 6.2$"),"beta6_2_topc", dryrun=(not store_plots))
+	print ac2.integrated_autocorrelation_time()
+	print ac2.integrated_autocorrelation_time_error()
+	print ac2.W
+
+	ac3 = FullAutocorrelation([data], 
+		function_derivative=chi_beta6_2_derivative,
+		time_autocorrelation=time_ac_functions)
+	ac3.plot_autocorrelation((r"Autocorrelation for Topological Suscpetibility"
+		r" $\beta = 6.2$"),"beta6_2_topc", dryrun=(not store_plots))
+	print ac3.integrated_autocorrelation_time()
+	print ac3.integrated_autocorrelation_time_error()
+	print ac3.W
+
 
 def main():
 	# Data to load and analyse

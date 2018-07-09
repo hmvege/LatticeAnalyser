@@ -35,7 +35,7 @@ class FlowAnalyser(object):
 	hbarc = 0.19732697 #eV micro m
 
 	# Function derivative to be used in the autocorrelation class
-	function_derivative = None
+	function_derivative = lambda x: 1
 
 	# Resolution in figures created
 	dpi = 350
@@ -445,6 +445,14 @@ class FlowAnalyser(object):
 		# Sets performed flag to true
 		self.jackknife_performed = True
 
+	def update_func_der_params(self):
+		"""
+		In cases where we need to have a more complex function for the 
+		derivative, such as in the W(t) case, where information about the
+		flow time t_f is required.
+		"""
+		pass
+
 	def autocorrelation(self, store_raw_ac_error_correction=True, 
 		method="wolff"):
 		"""
@@ -454,13 +462,13 @@ class FlowAnalyser(object):
 			store_raw_ac_error_correction: optional argument for storing the 
 				autocorrelation error correction to file.
 			method: type of autocorrelation to be performed. Choose from: 
-				"wolff"(default), "luscher".
+				"wolff"(default), "luscher", "wolff_full".
 
 		Raises:
 			KeyError: if method is not a valid one.
 		"""
 
-		available_ac_methods = ["wolff", "luscher"]
+		available_ac_methods = ["wolff", "luscher", "wolff_full"]
 		if method not in available_ac_methods:
 			raise KeyError("%s not a receognized method. Choose from: %s." % (
 				method, ", ".join(available_ac_methods)))
@@ -481,6 +489,20 @@ class FlowAnalyser(object):
 					[self.y[:,i] for i in xrange(self.NFlows)],
 					[self.function_derivative for i in xrange(self.NFlows)],
 					[self.function_derivative_parameters \
+						for i in xrange(self.NFlows)])
+
+				# Initiates parallel jobs
+				results = pool.map(
+					ptools._autocorrelation_propagated_parallel_core, 
+					input_values)
+
+			elif method == "wolff_full" and skip_condition:
+				# Sets up jobs for parallel processing
+				self.update_func_der_params(i)
+				input_values = zip(	
+					[self.ac_data[i] for i in xrange(self.NFlows)],
+					[self.function_derivative for i in xrange(self.NFlows)],
+					[self.function_derivative_parameters[i] \
 						for i in xrange(self.NFlows)])
 
 				# Initiates parallel jobs
@@ -515,9 +537,15 @@ class FlowAnalyser(object):
 			# Non-parallel method for calculating autocorrelation
 			for i in xrange(self.NFlows):
 				if method == "wolff":
+					self.update_func_der_params(i)
 					ac = PropagatedAutocorrelation(self.y[:,i], 
 						function_derivative=self.function_derivative, 
 						func_params=self.function_derivative_parameters)
+				if method == "wolff_full":
+					self.update_func_der_params(i)
+					ac = FullAutocorrelation(self.ac_data[i], 
+						function_derivative=self.function_derivative, 
+						func_params=self.function_derivative_parameters[i])
 				else:
 					ac = Autocorrelation(self.y[:,i])
 				self.autocorrelations[i] = ac.R

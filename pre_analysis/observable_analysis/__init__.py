@@ -1,5 +1,6 @@
 # Energy definition
 from energyanalyser import EnergyAnalyser
+from w_t_energyanalyser import WtEnergyAnalyser
 
 # Plaqeutte definition
 from plaquetteanalyser import PlaquetteAnalyser

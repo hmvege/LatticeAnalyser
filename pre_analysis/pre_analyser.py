@@ -87,6 +87,12 @@ def analyse_energy(params):
 		numprocs=params["numprocs"], verbose=params["verbose"])
 	analyse_default(energy_analysis, params["N_bs"])
 
+def analyse_w_t_energy(params):
+	w_t_energy_analysis = WtEnergyAnalyser(params["data"]("energy"), 
+		dryrun=params["dryrun"], parallel=params["parallel"], 
+		numprocs=params["numprocs"], verbose=params["verbose"])
+	analyse_default(w_t_energy_analysis, params["N_bs"])
+
 def analyse_topsus(params):
 	"""Analysis of topsus."""
 	topsus_analysis = TopsusAnalyser(params["data"]("topc"), 
@@ -99,13 +105,10 @@ def analyse_topc(params):
 	topc_analysis = TopcAnalyser(params["data"]("topc"), 
 		dryrun=params["dryrun"], parallel=params["parallel"], 
 		numprocs=params["numprocs"], verbose=params["verbose"])
-
 	topc_analysis.y_limits = params["topc_y_limits"]
-
 	N_bin_range = params["bin_range"]
 	N_bins = 1 + (N_bin_range[-1] + N_bin_range[1])*params["num_bins_per_int"]
 	bins = np.linspace(N_bin_range[0], N_bin_range[1], N_bins)
-
 	analyse_default(topc_analysis, params["N_bs"], 
 		NBins=bins, hist_flow_times=params["hist_flow_times"])
 
@@ -432,6 +435,8 @@ def pre_analysis(parameters):
 		analyse_plaq(params)
 	if "energy" in parameters["observables"]:
 		analyse_energy(params)
+	if "w_t_energy" in parameters["observables"]:
+		analyse_w_t_energy(params)
 
 	# Topological charge definitions
 	if "topc" in parameters["observables"]:

@@ -22,13 +22,16 @@ class EnergyAnalyser(FlowAnalyser):
 		return y * self.x * self.x # factor 0.5 left out
 
 	def plot_original(self):
-		super(EnergyAnalyser, self).plot_boot(x=self.x_vals, correction_function=self.correction_function, _plot_bs=False)
+		super(EnergyAnalyser, self).plot_boot(x=self.x_vals, 
+			correction_function=self.correction_function, _plot_bs=False)
 
 	def plot_boot(self):
-		super(EnergyAnalyser, self).plot_boot(x=self.x_vals, correction_function=self.correction_function)
+		super(EnergyAnalyser, self).plot_boot(x=self.x_vals, 
+			correction_function=self.correction_function)
 
 	def plot_jackknife(self):
-		super(EnergyAnalyser, self).plot_jackknife(x=self.x_vals, correction_function=self.correction_function)
+		super(EnergyAnalyser, self).plot_jackknife(x=self.x_vals, 
+			correction_function=self.correction_function)
 
 	def plot_histogram(self, *args, **kwargs):
 		kwargs["x_label"] = r"$\langle E \rangle$[GeV]"
