@@ -1,5 +1,6 @@
 # Energy definition
 from energypostanalysis import EnergyPostAnalysis
+from w_t_energypostanalysis import WtPostAnalysis
 
 # Plaqeutte definition
 from plaqpostanalysis import PlaqPostAnalysis

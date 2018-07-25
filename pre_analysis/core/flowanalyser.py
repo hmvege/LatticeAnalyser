@@ -5,7 +5,8 @@ from tools.folderreadingtools import write_raw_analysis_to_file
 from tools.latticefunctions import get_lattice_spacing
 from statistics.jackknife import Jackknife
 from statistics.bootstrap import Bootstrap
-from statistics.autocorrelation import Autocorrelation
+from statistics.autocorrelation import Autocorrelation, FullAutocorrelation, \
+	PropagatedAutocorrelation
 import statistics.parallel_tools as ptools
 import os
 import numpy as np
@@ -35,7 +36,7 @@ class FlowAnalyser(object):
 	hbarc = 0.19732697 #eV micro m
 
 	# Function derivative to be used in the autocorrelation class
-	function_derivative = lambda x: 1
+	function_derivative = [ptools._default_return]
 
 	# Resolution in figures created
 	dpi = 350
@@ -86,9 +87,6 @@ class FlowAnalyser(object):
 
 		# Sets the lattice sizes if one is provided
 		self.lattice_size = data["lattice_size"]
-
-		# Sets up the function derivative parameters as an empty dictionary
-		self.function_derivative_parameters = {}
 
 		# Initializes up global constants
 		self.N_bs = None
@@ -155,6 +153,13 @@ class FlowAnalyser(object):
 		# Default type of observables, one per configuration per flow
 		self.N_configurations, self.NFlows = self.y.shape[:2]
 
+		self._analysis_arrays_setup()
+
+	def _analysis_arrays_setup(self):
+		"""Initializes the arrays used for storing analaysis results in."""
+		# Sets up the function derivative parameters as an empty dictionary
+		self.function_derivative_parameters = [{} for tf in range(self.NFlows)]
+
 		# Non-bootstrapped data
 		self.unanalyzed_y = np.zeros(self.NFlows)
 		self.unanalyzed_y_std = np.zeros(self.NFlows)
@@ -192,6 +197,7 @@ class FlowAnalyser(object):
 			AssertionError: if q0_flow_time is less than maximum value of 
 				a*sqrt(8t).
 		"""
+
 		# assert q0_flow_time < (self.a * np.sqrt(8*self.x))[-1], \
 		# 	"q0_flow_time %f exceed maximum flow time value %f." % \
 		# 	(q0_flow_time, (self.a * np.sqrt(8*self.x))[-1])
@@ -340,7 +346,7 @@ class FlowAnalyser(object):
 		else:
 			if self.verbose:
 				print ("Not running parallel bootstrap "
-					"for %s!" % self.observable_name)
+					"for %s!" % self.observable_name_compact)
 
 			# Non-parallel method for calculating bootstrap
 			for i in xrange(self.NFlows):
@@ -369,7 +375,6 @@ class FlowAnalyser(object):
 		# print self.bs_y[100]
 		# print F(np.mean(self.bs_y_data, axis=1)[100])
 		# exit(1)
-
 
 		if store_raw_bs_values:
 			self.save_raw_analysis_data(self.bs_y_data, "bootstrap")
@@ -426,7 +431,7 @@ class FlowAnalyser(object):
 		else:
 			if self.verbose:
 				print ("Not running parallel jackknife "
-					"for %s!" % self.observable_name)
+					"for %s!" % self.observable_name_compact)
 
 			# Non-parallel method for calculating jackknife
 			for i in xrange(self.NFlows):
@@ -445,16 +450,8 @@ class FlowAnalyser(object):
 		# Sets performed flag to true
 		self.jackknife_performed = True
 
-	def update_func_der_params(self):
-		"""
-		In cases where we need to have a more complex function for the 
-		derivative, such as in the W(t) case, where information about the
-		flow time t_f is required.
-		"""
-		pass
-
 	def autocorrelation(self, store_raw_ac_error_correction=True, 
-		method="wolff"):
+		method="wolff", funder=None, funder_params=None):
 		"""
 		Function for running the autocorrelation routine.
 
@@ -487,9 +484,8 @@ class FlowAnalyser(object):
 				# Sets up jobs for parallel processing
 				input_values = zip(	
 					[self.y[:,i] for i in xrange(self.NFlows)],
-					[self.function_derivative for i in xrange(self.NFlows)],
-					[self.function_derivative_parameters \
-						for i in xrange(self.NFlows)])
+					[self.function_derivative[0] for i in xrange(self.NFlows)],
+					[fdparam for fdparam in self.function_derivative_parameters])
 
 				# Initiates parallel jobs
 				results = pool.map(
@@ -498,16 +494,15 @@ class FlowAnalyser(object):
 
 			elif method == "wolff_full" and skip_condition:
 				# Sets up jobs for parallel processing
-				self.update_func_der_params(i)
 				input_values = zip(	
-					[self.ac_data[i] for i in xrange(self.NFlows)],
+					[[rep for rep in self.ac_data[i]] 
+						for i in xrange(self.NFlows)],
 					[self.function_derivative for i in xrange(self.NFlows)],
-					[self.function_derivative_parameters[i] \
-						for i in xrange(self.NFlows)])
+					self.function_derivative_parameters)
 
 				# Initiates parallel jobs
 				results = pool.map(
-					ptools._autocorrelation_propagated_parallel_core, 
+					ptools._autocorrelation_full_parallel_core, 
 					input_values)
 			else:
 				# Sets up jobs for parallel processing
@@ -532,22 +527,21 @@ class FlowAnalyser(object):
 		else:
 			if self.verbose:
 				print ("Not running parallel autocorrelation "
-					"for %s!" % self.observable_name)
+					"for %s!" % self.observable_name_compact)
 
 			# Non-parallel method for calculating autocorrelation
 			for i in xrange(self.NFlows):
 				if method == "wolff":
-					self.update_func_der_params(i)
 					ac = PropagatedAutocorrelation(self.y[:,i], 
-						function_derivative=self.function_derivative, 
-						func_params=self.function_derivative_parameters)
+						function_derivative=self.function_derivative[0], 
+						function_parameters=self.function_derivative_parameters[i])
 				if method == "wolff_full":
-					self.update_func_der_params(i)
-					ac = FullAutocorrelation(self.ac_data[i], 
+					ac = FullAutocorrelation([rep for rep in self.ac_data[i]], 
 						function_derivative=self.function_derivative, 
-						func_params=self.function_derivative_parameters[i])
+						function_parameters=self.function_derivative_parameters[i])
 				else:
 					ac = Autocorrelation(self.y[:,i])
+
 				self.autocorrelations[i] = ac.R
 				self.autocorrelations_errors[i] = ac.R_error
 				self.integrated_autocorrelation_time[i] = \

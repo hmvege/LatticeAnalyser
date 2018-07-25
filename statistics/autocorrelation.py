@@ -6,7 +6,15 @@ import os
 import time
 import types
 
+from matplotlib import rc, rcParams
+rc("text", usetex=True)
+# rc("font", **{"family": "sans-serif", "serif": ["Computer Modern"]})
+rcParams["font.family"] += ["serif"]
+
 __all__ = ["Autocorrelation", "PropagatedAutocorrelation"]
+
+
+# TODO: implement method for plotting W cutoff as a function of S.
 
 """
 Books:
@@ -162,6 +170,33 @@ class _AutocorrelationCore(object):
 		raise NotImplemented("integrated_autocorrelation_time_error() not "
 			"implemented for base class")
 
+	def _probe_and_plot_S_param(self):
+		"""
+		Method for investigating the S param for the automatic windowing 
+		procedure.
+		"""
+		for S in np.linspace(1.0, 2.0, 20):
+			self.W = self._automatic_windowing_procedure(S)
+			if np.isnan(self.W):
+				continue
+
+			n = len(self.tau_int)/2
+			x = np.arange(n)
+			y = self.tau_int[:n]
+			y_std = self.integrated_autocorrelation_time_error()
+
+			fig = plt.figure()
+			ax = fig.add_subplot(111)
+			ax.plot(x, y)
+			ax.fill_between(x, y - y_std, y + y_std, alpha=0.5)
+			ax.set_title(r"$W = %d$, $S_\mathrm{param} = %.2f$" % (self.W, S))
+			ax.set_ylim(0,1.25*np.max(self.tau_int[:len(self.tau_int)/4]))
+			ax.set_xlabel(r"$W$")
+			ax.set_ylabel(r"$\tau_\mathrm{int}(W)$")
+			ax.axvline(self.W)
+			plt.show()
+			plt.close(fig)
+
 	def plot_autocorrelation(self, title, filename, lims=1, dryrun=False):
 		"""
 		Plots the autocorrelation.
@@ -275,7 +310,7 @@ class Autocorrelation(_AutocorrelationCore):
 		# Plots cutoff if prompted
 		if plot_cutoff:
 			tau = np.zeros(len(self.R) - 1)
-			for iW in xrange(1, len(self.R)):
+			for iW in xrange(1, len(self.R)-1):
 				tau[iW] = (0.5 + np.sum(self.R[1:iW]))
 
 			plt.figure()
@@ -340,18 +375,7 @@ class PropagatedAutocorrelation(_AutocorrelationCore):
 		self.tau_int = CfW / (2*sigma0)
 
 		if SParam == False:
-			for S in np.linspace(1.0, 2.0, 20):
-				self.W = self._automatic_windowing_procedure(S)
-
-				plt.figure()
-				plt.plot(range(len(self.tau_int)/2),
-					self.tau_int[:len(self.tau_int)/2])
-				plt.title(r"$W = %d$, $S_{param} = %.2f$" % (self.W,S))
-				plt.ylim(0,1.25*np.max(self.tau_int[:len(self.tau_int)/4]))
-				plt.xlabel(r"$W$")
-				plt.ylabel(r"$\tau_{int}(W)$")
-				plt.axvline(self.W)
-				plt.show()
+			self._probe_and_plot_S_param()
 		else:
 			self.W = self._automatic_windowing_procedure(SParam)
 
@@ -378,14 +402,13 @@ class PropagatedAutocorrelation(_AutocorrelationCore):
 		"""
 		Automatic windowing as described in Wolff paper, section 3.3 
 		"""
-		tau = []
+		tau = np.zeros(len(self.tau_int))
 		for it, itauint, in enumerate(self.tau_int):
 			if itauint <= 0.5:
-				tau.append(0.00000001)
+				tau[it] = 0.00000001
 			else:
 				# Eq. 51
-				tau.append(S/np.log((2*itauint + 1) / (2*itauint - 1)))
-		tau = np.asarray(tau)
+				tau[it] = S/np.log((2*itauint + 1) / (2*itauint - 1))
 
 		return self._gW(tau)
 
@@ -412,7 +435,7 @@ class FullAutocorrelation(_AutocorrelationCore):
 	indices, as well as propagated errors.
 	"""
 
-	def __init__(self, data, function_derivative=lambda x: 1.0,
+	def __init__(self, data, function_derivative=[lambda x: 1.0],
 		function_parameters={}, numerical_derivative=False, 
 		time_autocorrelation=False):
 		"""
@@ -420,9 +443,9 @@ class FullAutocorrelation(_AutocorrelationCore):
 
 		Args:
 			data: numpy array of dataset to get autocorrelation for, replicum 
-				R=1.
-			function_derivative: function of the derivative of function to 
-				propagate data through.
+				R=1. Structure of input: [replicums][observables][data]
+			function_derivative: list of functions of the derivative of 
+				function to propagate data through.
 			function_parameters: python dictionary of function derivative 
 				parameters.
 			method: optional, string method of performing autocorrelation: 
@@ -436,11 +459,16 @@ class FullAutocorrelation(_AutocorrelationCore):
 		for d in data:
 			assert isinstance(d, np.ndarray), ("replicum is not "
 				"of type numpy ndarray.")
-		# assert isinstance(function_derivative, list), ("a list of function"
-		# 	" derivatives not provided.")
 
-		if not numerical_derivative:
-			print "TODO: implement option for taking a numerical derivative"
+		assert isinstance(function_derivative, list), ("Missing list of "
+			"derivatives of observables.")
+		for func in function_derivative:
+			assert isinstance(func, types.FunctionType), ("Derivative is not "
+				"of function type: %s" % type(func))
+
+		if numerical_derivative:
+			raise NotImplementedError("TODO: implement option for taking "
+				"a numerical derivative")
 
 		# N replicums and a check
 		self.NReplicums = len(data)
@@ -456,8 +484,6 @@ class FullAutocorrelation(_AutocorrelationCore):
 			"replicums: %s" % num_obs)
 		self.N_obs = list(num_obs)[0]
 
-		# raise NotImplementedError("%s not yet completed." % self.__class__.__name__)
-
 		# Retrieves relevant functions for later
 		self.function_derivative = function_derivative
 		self.function_parameters = function_parameters
@@ -472,24 +498,7 @@ class FullAutocorrelation(_AutocorrelationCore):
 		# Sets up data set lengths
 		self.NR = np.asarray(map(np.shape, self.data))[:,1]
 		self.N = np.sum(self.NR)
-
-		# TODO: introduce replicums here!!
-		# self.C0 = np.var(self.data)
-		# self.R = np.zeros(self.N/2)
-		# self.G = np.zeros(self.N/2)
 		self.R_error = np.zeros(self.N/2)
-		# self.tau_int = 0
-		# self.tau_int_error = 0
-
-		# STRUCTURE: [replicums][observables][data]
-		# self.avg_rep_obs = np.zeros((self.NReplicums, self.N_obs))
-		# for ir in xrange(self.NReplicums):
-		# 	for ia in xrange(self.N_obs): # alpha
-		# 		self.avg_rep_obs[ir, ia] = self.data[ir, ia].mean()
-		# self.avg_obs = np.zeros(self.N_obs)
-		# for ia in xrange(self.N_obs):
-		# 	self.avg_obs[ia] = self.avg_rep_obs[:,ia].mean(axis=0)
-
 
 		# Gets the autocorrelations
 		G_ab_t = []
@@ -507,12 +516,13 @@ class FullAutocorrelation(_AutocorrelationCore):
 	@timing_function
 	def _autocorrelation_with_replicums(self, x, y):
 		"""Eq. 31. Autocorrelation function with replicums."""
-		self.G = 0
+		self.G = []
 		for ir in xrange(self.NReplicums):
 			# variance = x.var()
 			_x = x[ir] - x[ir].mean()
 			_y = y[ir] - y[ir].mean()
-			self.G += np.correlate(_x, _y, mode="full")[-self.NR[ir]:]
+			# self.G += np.correlate(_x, _y, mode="full")[-self.NR[ir]:]
+			self.G = np.append(self.G, np.correlate(_x, _y, mode="full")[-self.NR[ir]:])
 
 		self.G /= (self.N - self.NReplicums*np.arange(0, self.N, 1))
 		self.G = self.G[:self.N/2]
@@ -520,6 +530,8 @@ class FullAutocorrelation(_AutocorrelationCore):
 		return self.G
 
 	def _autocorrelation_error(self, SParam=1.11):
+		"""Computes the autocorrelation with error propagation."""
+
 		# Eq. 6: gets the average of each replicum
 		self.avg_replicums = np.mean(self.data, axis=2)
 
@@ -530,26 +542,10 @@ class FullAutocorrelation(_AutocorrelationCore):
 				for _nr, _avg_rep in zip(self.NR, self.avg_replicums[:,ia])])
 			self.avg_data[ia] /= float(self.N)
 
-		# self.avg_data = np.sum([_nr*_avg_rep
-		# 	for _nr, _avg_rep in zip(self.NR, self.avg_replicums[:,a])])
-		# self.avg_data /= float(self.N)
-
-		# # Eq. 14, 15
-		# derfun_avg = 0
-		# for ir in xrange(self.NReplicums):
-		# 	derfun_avg += self.NR[ir]*self.function_derivative(
-		# 		self.avg_replicums[ir], **self.function_parameters)
-		# derfun_avg /= float(self.N)
-
-		# derfun_avg = np.sum([_nr*self.function_derivative(
-		# 	_rep, **self.function_parameters) 
-		# 	for _nr, _rep in zip(self.NR, self.data)])/float(self.N)
-		# derfun_avg = self.function_derivative(avg_data, **self.function_parameters)
-
 		# Eq. 33, computing derivatives
 		derfun = np.zeros(self.N_obs)
 		for ia in xrange(self.N_obs): # alpha
-			derfun[ia] = self.function_derivative(self.avg_data[ia],
+			derfun[ia] = self.function_derivative[ia](self.avg_data,
 				**self.function_parameters)
 
 		# Eq. 33, computed G_F
@@ -573,20 +569,12 @@ class FullAutocorrelation(_AutocorrelationCore):
 		self.tau_int = CfW / (2*sigma0)
 
 		if SParam == False:
-			for S in np.linspace(1.0, 2.0, 20):
-				self.W = self._automatic_windowing_procedure(S)
-
-				plt.figure()
-				plt.plot(range(len(self.tau_int)/2), 
-					self.tau_int[:len(self.tau_int)/2])
-				plt.title(r"$W = %d$, $S_{param} = %.2f$" % (self.W,S))
-				plt.ylim(0,1.25*np.max(self.tau_int[:len(self.tau_int)/4]))
-				plt.xlabel(r"$W$")
-				plt.ylabel(r"$\tau_{int}(W)$")
-				plt.axvline(self.W)
-				plt.show()
+			self._probe_and_plot_S_param()
 		else:
 			self.W = self._automatic_windowing_procedure(SParam)
+
+		if np.isnan(self.W):
+			raise ValueError("W is nan.")
 
 		self.tau_int_optimal = self.tau_int[self.W]
 
@@ -602,7 +590,7 @@ class FullAutocorrelation(_AutocorrelationCore):
 		"""
 		for iW, itau in enumerate(tau):
 			if iW == 0: continue
-			if np.exp(-iW/itau) - itau/np.sqrt(iW*float(self.N)) < 0.0:
+			if (np.exp(-iW/itau) - itau/np.sqrt(iW*float(self.N))) < 0.0:
 				return iW
 		else:
 			return float('NaN')
@@ -762,7 +750,7 @@ def _testFullAC(data, N_bins, store_plots, time_ac_functions):
 	ac1.plot_autocorrelation((r"Autocorrelation for Topological "
 		r"Suscpetibility $\beta = 6.2$"), "beta6_2_topc",
 		dryrun=(not store_plots))
-	print ac1.integrated_autocorrelation_time()
+	print ac1.integrated_autocorrelation_time(plot_cutoff=True)
 	print ac1.integrated_autocorrelation_time_error()
 	print ac1.W
 
@@ -777,7 +765,7 @@ def _testFullAC(data, N_bins, store_plots, time_ac_functions):
 	print ac2.W
 
 	ac3 = FullAutocorrelation([data], 
-		function_derivative=chi_beta6_2_derivative,
+		function_derivative=[chi_beta6_2_derivative],
 		time_autocorrelation=time_ac_functions)
 	ac3.plot_autocorrelation((r"Autocorrelation for Topological Suscpetibility"
 		r" $\beta = 6.2$"),"beta6_2_topc", dryrun=(not store_plots))
@@ -796,7 +784,7 @@ def main():
 	store_plots = True
 	time_ac_functions = True
 
-	_testRegularAC(data_plaq, N_bins, store_plots, time_ac_functions)
+	# _testRegularAC(data_plaq, N_bins, store_plots, time_ac_functions)
 	_testFullAC(data_topc, N_bins, store_plots, time_ac_functions)
 	# plt.show()
 

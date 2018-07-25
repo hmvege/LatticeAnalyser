@@ -40,10 +40,11 @@ class TopsusAnalyserCore(FlowAnalyser):
 	def __set_size(self):
 		"""Function that sets the lattice size deepending on the beta value."""
 		# Sets up constants used in the chi function for topsus
-		self.function_derivative = ptools._chi_derivative
+		self.function_derivative = [ptools._chi_derivative]
 		self.V = self.lattice_size
 		self.const = self.hbarc/self.a/self.V**(1./4)
-		self.function_derivative_parameters = {"const": self.const}
+		self.function_derivative_parameters = \
+			[{"const": self.const} for i in xrange(self.NFlows)]
 
 	def jackknife(self, F=None, F_error=None, store_raw_jk_values=True):
 		"""Overriding the jackknife class by adding the chi-function"""

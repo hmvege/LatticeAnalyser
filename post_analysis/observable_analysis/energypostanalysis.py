@@ -36,6 +36,7 @@ class EnergyPostAnalysis(PostCore):
 		y_der = np.zeros(len(y) - 2)
 		for i in xrange(1, len(y) - 1):
 			y_der[i-1] = (y[i+1] - y[i-1]) / (2*eps)
+
 		return y_der
 
 	def calculateW(self, x, y, y_err, y_raw, feps, t_unscaled):
@@ -49,11 +50,16 @@ class EnergyPostAnalysis(PostCore):
 		W_raw = np.zeros((len(x) - 2, y_raw.shape[-1]))
 		dE_raw = np.zeros((len(x) - 2, y_raw.shape[-1]))
 		for i in xrange(1, len(y) - 1):
-			t[i-1] = x[i]
+			# t[i-1] = x[i]
+			t[i-1] = t_unscaled[i]
 
 		dE = self.derivative(y, feps)
 		for iBoot in xrange(W_raw.shape[-1]):
 			dE_raw[:,iBoot] = self.derivative(y_raw[:,iBoot], feps)
+
+		# dE_err = np.zeros(len(x) - 2)
+		# for i in xrange(1, len(y) - 1):
+		# 	dE_err[i-1] = (y_err[+1] - y_err[-1])/(2*feps)
 
 		# Calculates W(t) = t d/dt { t^2 E(t) }
 		for i in xrange(1, len(y) - 1):
@@ -66,8 +72,8 @@ class EnergyPostAnalysis(PostCore):
 			# W_err[i-1] = np.sqrt((2*t[i-1]**2*y_err[i])**2)# + (t[i-1]**3*np.sqrt(2)*y_err[i]/feps)**2)
 			# print np.std(W_raw[i-1])
 			# W_err[i-1] = np.sqrt((2*t[i-1]**2*y_err[i])**2 + (t[i-1]**3*np.std(W_raw[i-1]))**2)
-			W_err[i-1] = np.sqrt((2*t[i-1]**2*y_err[i])**2)
-
+			# W_err[i-1] = np.sqrt((2*t[i-1]**2*y_err[i])**2)
+			W_err[i-1] = np.sqrt((2*t[i-1]**2*y_err[i])**2 + (y_err[i+1]/(2*feps))**2 + (y_err[i-1]/(2*feps))**2 )
 
 		# Sets up the x-axis value for t_f*a^2
 		ta2 = np.zeros(len(x) - 2)
@@ -76,17 +82,17 @@ class EnergyPostAnalysis(PostCore):
 
 		# # plt.plot(x_der, y_der)
 		# # plt.errorbar(t, W, yerr=W_err)
-		# plt.plot(ta2, W, color="tab:red", alpha=0.5)
-		# plt.fill_between(t_unscaled[1:-1], W-W_err, W+W_err, alpha=0.5, edgecolor='',
+		# plt.plot(x[1:-1], W, color="tab:red", alpha=0.5)
+		# plt.fill_between(x[1:-1], W-W_err, W+W_err, alpha=0.5, edgecolor='',
 		# 	facecolor="tab:red")
 		# plt.grid(True)
 		# # plt.hlines(0.3,t[0], t[-1], linestyle=":", alpha=0.75, color="gray")
-		# plt.hlines(0.3,t_unscaled[1], t_unscaled[-2], linestyle=":", alpha=0.75, color="gray")
+		# plt.hlines(0.3,x[1], x[-2], linestyle=":", alpha=0.75, color="gray")
 		# plt.xlabel(r"$t/{r_0^2}$")
 		# plt.ylabel(r"$W(t)$")
 		# plt.show()
-
 		# exit(1)
+
 		return ta2, W, W_err, W_raw
 
 	def _initiate_plot_values(self, data, data_raw):
@@ -101,10 +107,11 @@ class EnergyPostAnalysis(PostCore):
 			values["y_err"] = data[beta]["y_error"]*data[beta]["x"]**2
 			values["flow_epsilon"] = self.flow_epsilon[beta]
 			values["tder"], values["W"], values["W_err"], values["W_raw"] = \
-				self.calculateW(data[beta]["x"], data[beta]["y"], 
+				self.calculateW(values["t"], data[beta]["y"], 
 					data[beta]["y_error"], 
 					data_raw[beta][self.observable_name_compact], 
-					values["flow_epsilon"], values["t"])
+					values["flow_epsilon"], data[beta]["x"])
+			# print values["x"]
 			# exit("Exits in plot values initiations.")
 
 			if self.with_autocorr:
@@ -301,6 +308,8 @@ class EnergyPostAnalysis(PostCore):
 		w0err_values = []
 
 		for beta, bval in sorted(self.plot_values.items(), key=lambda i: i[0]):
+			# print bval["tder"]
+			# exit("ENERGY")
 			y0, w0, w0_err, _, _ = extract_fit_target(W0, bval["tder"], bval["W"],
 				y_err=bval["W_err"], y_raw=bval["W_raw"], 
 				tau_int=bval["tau_int"][1:-1], 
@@ -309,7 +318,7 @@ class EnergyPostAnalysis(PostCore):
 				inverse_fit=True, **kwargs)
 
 			a_values.append(bval["a"]**2)
-			w0_values.append(np.sqrt(w0))
+			w0_values.append(np.sqrt(w0)*bval["a"])
 			w0err_values.append(0.5*w0_err/np.sqrt(w0))
 
 		a_values = np.asarray(a_values[::-1])
@@ -367,6 +376,9 @@ class EnergyPostAnalysis(PostCore):
 			print "Figure saved in %s" % fname
 
 		plt.close(fig)
+
+		w0_values = w0_values[::-1]
+		w0err_values = w0err_values[::-1]
 
 		_tmp_beta_dict = {
 			b: {
@@ -623,14 +635,13 @@ class EnergyPostAnalysis(PostCore):
 		"""Plots the W(t)."""
 		w_plot_values = copy.deepcopy(self.plot_values)
 		for beta in sorted(self.beta_values):
-			w_plot_values[beta]["x"] = self.plot_values[beta]["tder"]
+			w_plot_values[beta]["x"] = self.plot_values[beta]["x"][1:-1]
 			w_plot_values[beta]["y"] = self.plot_values[beta]["W"]
 			w_plot_values[beta]["y_err"] = self.plot_values[beta]["W_err"]
 
 		kwargs["observable_name_compact"] = "energyW"
-		kwargs["x_label"] = r"$t_f$"
+		kwargs["x_label"] = r"$t_f/r_0^2$"
 		kwargs["y_label"] = r"$W(t)$"
-		kwargs["plot_hline_at"] = 0.3
 		# kwargs["show_plot"] = True
 
 		self._plot_core(w_plot_values, *args, **kwargs)

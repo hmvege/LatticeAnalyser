@@ -32,7 +32,7 @@ def _autocorrelation_full_parallel_core(input_values):
 		funder = lambda x: x
 	assert isinstance(funder_params, dict), (
 		"function parameters is not a dictionary.")
-	ac = FullAutocorrelation(data, function_derivative=funder, 
+	ac = FullAutocorrelation([rep for rep in data], function_derivative=funder, 
 		function_parameters=funder_params)
 	return ac.R, ac.R_error, ac.integrated_autocorrelation_time(), \
 		ac.integrated_autocorrelation_time_error()

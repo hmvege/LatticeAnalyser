@@ -126,25 +126,29 @@ def post_analysis(beta_parameter_list, observables,
 					print "Energy analysis type: ", analysis_type
 
 				# energy_analysis.plot()
-				energy_analysis.plot(x_limits=[-0.01,0.15], 
-					y_limits=[-0.025, 0.4], plot_hline_at=0.3, 
-					figure_name_appendix="_zoomed", 
-					zoom_box={"xlim": [0.1104, 0.1115],
-						"ylim": [0.298, 0.302], "zoom_factor": 50})
+				# energy_analysis.plot(x_limits=[-0.015,0.15], 
+				# 	y_limits=[-0.025, 0.4], plot_hline_at=0.3, 
+				# 	figure_name_appendix="_zoomed", 
+				# 	zoom_box={"xlim": [0.1104, 0.1115],
+				# 		"ylim": [0.298, 0.302], "zoom_factor": 50})
 
-				t0_dict = energy_analysis.get_t0_scale(
-					extrapolation_method=extrapolation_method, 
-					E0=energy_fit_target, plot_fit=False)
+				# t0_dict = energy_analysis.get_t0_scale(
+				# 	extrapolation_method=extrapolation_method, 
+				# 	E0=energy_fit_target, plot_fit=False)
 
-				t0_reference_scale[extrapolation_method][analysis_type] = \
-					t0_dict
+				# t0_reference_scale[extrapolation_method][analysis_type] = \
+				# 	t0_dict
+
+				box_settings = {
+					"xlim": [0.111, 0.117],
+					"ylim": [0.295, 0.305],
+					"zoom_factor": 10}
 
 				energy_analysis.plot_w(figure_name_appendix="_w_scale")
-				energy_analysis.plot_w(x_limits=[-0.005,0.035], 
-					y_limits=[-0.025, 0.35], 
+				energy_analysis.plot_w(x_limits=[-0.015, 0.15], 
+					y_limits=[-0.025, 0.4], plot_hline_at=0.3, 
 					figure_name_appendix="_w_scale_zoomed", 
-					zoom_box={"xlim": [0.028, 0.029], 
-						"ylim": [0.295, 0.305], "zoom_factor": 16})
+					zoom_box=box_settings)
 
 				energy_analysis.get_w0_scale(
 					extrapolation_method=extrapolation_method, 
@@ -158,6 +162,38 @@ def post_analysis(beta_parameter_list, observables,
 				# energy_analysis.coupling_fit()
 	else:
 		t0_reference_scale = None
+
+	if "w_t_energy" in observables:
+		for extrapolation_method in extrapolation_methods:
+
+			w_t_energy_analysis = WtPostAnalysis(data, 
+				figures_folder=figures_folder, verbose=verbose)
+
+			for analysis_type in post_analysis_data_type:
+				w_t_energy_analysis.set_analysis_data_type(analysis_type)
+
+				print w_t_energy_analysis
+				if verbose:
+					print "Wt extrapolation method: ", extrapolation_method
+					print "Wt analysis type: ", analysis_type
+
+				box_settings = {
+					"xlim": [0.111, 0.117],
+					"ylim": [0.295, 0.305],
+					"zoom_factor": 10}
+
+				w_t_energy_analysis.plot(figure_name_appendix="_w_scale")
+				w_t_energy_analysis.plot(x_limits=[-0.015, 0.15], 
+					y_limits=[-0.025, 0.4], plot_hline_at=0.3, 
+					figure_name_appendix="_w_scale_zoomed", 
+					zoom_box=box_settings)
+
+				w0_dict = w_t_energy_analysis.get_w0_scale(
+					extrapolation_method=extrapolation_method, 
+					W0=energy_fit_target, plot_fit=False)
+
+				# w0_reference_scale[extrapolation_method][analysis_type] = \
+				# 	w0_dict
 
 	data.set_reference_values(t0_reference_scale)
 
