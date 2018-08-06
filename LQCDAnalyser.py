@@ -52,7 +52,7 @@ def main():
 	# observables = ["topsus"]
 	# observables = ["qtq0effMC"]
 	observables = ["energy"]
-	# observables = ["w_t_energy"]
+	observables = ["w_t_energy"]
 
 	# observables += ["energy"]
 
