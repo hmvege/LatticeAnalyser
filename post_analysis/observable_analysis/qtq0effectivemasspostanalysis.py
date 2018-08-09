@@ -62,7 +62,8 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 		folded_array = arr[:fold_range+1]
 		last_part = arr[fold_range+1:] * (-1)
 		folded_array[1:-1] = (folded_array[1:-1] + np.flip(last_part, axis=0))*0.5
-		folded_array[1:-1] = np.sqrt((0.5*folded_array[1:-1])**2 + (0.5*np.flip(last_part, axis=0))**2)
+		folded_array[1:-1] = np.sqrt((0.5*folded_array[1:-1])**2 \
+			+ (0.5*np.flip(last_part, axis=0))**2)
 		return folded_array
 
 	def _convert_label(self, lab):
@@ -180,15 +181,18 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 						[self.observable_name_compact][sub_obs]
 
 					if self.fold:
-						# OLD FOLD METHOD - DO NOT INCREASE STATISTICS BY THIS WAY:|
-						# sub_values["x"] = np.linspace(-self.fold_range*sub_values["a"], 
-						# 	(self.fold_range-1)*sub_values["a"], self.fold_range*2)
 						sub_values["x"] = np.linspace(0, 
 							(int(sub_values["y"].shape[0]/2))*sub_values["a"],
 							int(sub_values["y"].shape[0]/2)+1)
 						sub_values["y"] = self.fold_array(sub_values["y"]) * self.r0 / sub_values["a"]
-						sub_values["y_err"] = \
-							self.fold_error_array(sub_values["y_err"])  * self.r0 / sub_values["a"]
+						# sub_values["y_err"] = \
+						# 	self.fold_error_array(sub_values["y_err"]) * self.r0 / sub_values["a"]
+
+						# Error propagation with lattice spacing error
+						sub_values["y_err"] = np.sqrt(
+							(self.fold_error_array(sub_values["y_err"])*self.r0/sub_values["a"])**2 + \
+							(sub_values["y"]/sub_values["a"]*sub_values["a_err"])**2)
+
 						# sub_values["raw"] = self.fold_array(sub_values["raw"],
 						# 	axis=0)
 						self.fold_position = sub_values["x"][self.fold_range]
@@ -223,16 +227,19 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 					self.analyse_data(data[beta][tf_index])
 
 				if self.fold:
-					# # OLD METHOD
-					# values["x"] = np.linspace(-self.fold_range*values["a"], 
-					# 		(self.fold_range-1)*values["a"], self.fold_range*2)
 					values["x"] = np.linspace(0, 
 							(int(values["y"].shape[0]/2))*values["a"],
 							int(values["y"].shape[0]/2)+1)
 
-					values["y"] = self.fold_array(values["y"]) * self.r0 / values["a"]
-					values["y_err"] = \
-						self.fold_error_array(values["y_err"]) * self.r0 / values["a"]
+					values["y"] = self.fold_array(values["y"])*self.r0/values["a"]
+					# values["y_err"] = \
+					# 	self.fold_error_array(values["y_err"]) * self.r0 / values["a"]
+
+					# Error propagation with lattice spacing error
+					values["y_err"] = np.sqrt(
+							(self.fold_error_array(values["y_err"])*self.r0/values["a"])**2 + \
+							(values["y"]/values["a"]*values["a_err"])**2)
+
 					# values["y_raw"] = self.fold_array(values["y_raw"], axis=0)
 					self.fold_position = values["x"][self.fold_range]
 

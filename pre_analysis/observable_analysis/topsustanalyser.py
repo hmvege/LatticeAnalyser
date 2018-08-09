@@ -31,7 +31,8 @@ class TopsustAnalyser(TopsusAnalyserCore):
 		self.t_euclidean_index = t_euclidean_index
 
 		self.V = self.lattice_sizes[self.beta] / float(self.NT)
-		self.const = self.hbarc/self.a/self.V**(1./4)
+		self.const = self.hbarc/self.a/self.V**0.25
+		self.const_err = self.hbarc*self.a_err/self.a**2/self.V**0.25
 		self.function_derivative_parameters = {"const": self.const}
 
 		# Sets file name

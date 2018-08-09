@@ -144,19 +144,43 @@ class TopcRMCIntervalPostAnalysis(MultiPlotCore, PostCore):
 
     def _setup_volumes(self):
         """Sets up lattice volumes."""
-        vol = lambda b: self.lattice_sizes[b]*get_lattice_spacing(b)[0]**4
+
+        # Sets up the lattice spacing values with errors
+        self.a_vals, self.a_vals_err = \
+            zip(*[get_lattice_spacing(b) for b in self.beta_values])
+        self.a_vals = {b: self.a_vals[i] \
+            for i, b in enumerate(self.beta_values)}
+        self.a_vals_err = {b: self.a_vals_err[i] \
+            for i, b in enumerate(self.beta_values)}
+
+        # Sets up the volumes       
+        vol = lambda b: self.lattice_sizes[b]*self.a_vals[b]**4
+        vol_err = lambda b: \
+            4*self.lattice_sizes[b]*self.a_vals[b]**3*self.a_vals_err[b]
         self.V = {b: vol(b) for b in self.beta_values}
+        self.V_err = {b: vol_err(b) for b in self.beta_values}
 
     def _normalize_Q(self):
         """Normalizes Q4 and Q2"""
         for atype in self.analysis_types:
             for beta in self.beta_values:
                 for subobs in self.observable_intervals[beta]:
+                    # self.topc2[atype][beta][subobs]["y"] /= self.V[beta]
+                    # self.topc2[atype][beta][subobs]["y_error"] /= self.V[beta]
+                    # self.topc4[atype][beta][subobs]["y"] /= self.V[beta]**2
+                    # self.topc4[atype][beta][subobs]["y_error"] /= \
+                    #     self.V[beta]**2
+
+                    self.topc2[atype][beta][subobs]["y_error"] = np.sqrt(
+                        (self.topc2[atype][beta][subobs]["y_error"]/self.V[beta])**2 +\
+                        (self.V_err[beta]*self.topc2[atype][beta][subobs]["y"]/self.V[beta]**2)**2)
                     self.topc2[atype][beta][subobs]["y"] /= self.V[beta]
-                    self.topc2[atype][beta][subobs]["y_error"] /= self.V[beta]
+
+                    self.topc4[atype][beta][subobs]["y_error"] = np.sqrt(
+                        (self.topc4[atype][beta][subobs]["y_error"]/self.V[beta]**2)**2 +\
+                        (2*self.V_err[beta]*self.topc4[atype][beta][subobs]["y"]/self.V[beta]**3)**2)
                     self.topc4[atype][beta][subobs]["y"] /= self.V[beta]**2
-                    self.topc4[atype][beta][subobs]["y_error"] /= \
-                        self.V[beta]**2
+
 
     def _calculate_Q4C(self):
         """Caluclates the 4th cumulant for my data."""

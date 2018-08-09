@@ -24,6 +24,7 @@ class TopsusQtQ0Analyser(TopsusAnalyserCore):
 		self.function_derivative = ptools._chi_derivative
 		self.V = self.lattice_sizes[self.beta] / float(self.NTemporal[self.beta])
 		self.const = self.hbarc/self.a/self.V**(1./4)
+		self.const_err = self.hbarc*self.a_err/self.a**2/self.V**0.25
 		self.function_derivative_parameters = {"const": self.const}
 
 	def setQ0(self, q0_flow_time, y_label=None):

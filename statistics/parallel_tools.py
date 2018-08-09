@@ -81,12 +81,15 @@ def _chi_derivativeQ4(Q4, const=None):
 
 # Correlator function for C to be passed with **kwargs
 def _C(QtQ0, const=None):
+	"""Basic correlator."""
 	return const*QtQ0
 
-def _C_error(QtQ0, const=None):
-	return const*QtQ0
+def _C_error(QtQ0_err, const=None):
+	"""Correlator error propegation. Assumes no error in const."""
+	return const*QtQ0_err
 
 def _C_derivative(QtQ0, const=None):
+	"""Correlator derivative."""
 	return const*QtQ0
 
 

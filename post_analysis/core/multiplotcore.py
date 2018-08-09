@@ -154,6 +154,8 @@ class MultiPlotCore(PostCore):
 
 			intervals = np.asarray(intervals)
 
+		self.N_intervals = len(intervals)
+
 		return intervals
 
 

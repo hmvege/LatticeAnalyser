@@ -135,24 +135,29 @@ class WtPostAnalysis(PostCore):
 
         # Retrieves t0 values from data
         a_values = []
+        a_values_err = []
         w0_values = []
         w0err_values = []
 
         for beta, bval in sorted(self.plot_values.items(), key=lambda i: i[0]):
             # print bval["xraw"]
             # exit("WT")
-            y0, w0, w0_err, _, _ = extract_fit_target(W0, bval["xraw"], bval["y"],
-                y_err=bval["y_err"], y_raw=bval[self.analysis_data_type], 
+            y0, w0, w0_err, _, _ = extract_fit_target(W0, bval["xraw"], 
+                bval["y"], y_err=bval["y_err"], 
+                y_raw=bval[self.analysis_data_type], 
                 tau_int=bval["tau_int"][1:-1], 
                 tau_int_err=bval["tau_int_err"][1:-1],
                 extrapolation_method=extrapolation_method, plateau_size=10,
                 inverse_fit=True, **kwargs)
 
+            # TODO: fix a lattice spacing error here @ w_t
             a_values.append(bval["a"]**2)
+            a_values_err.append(2*bval["a"]*bval["a_err"])
             w0_values.append(np.sqrt(w0)*bval["a"])
             w0err_values.append(0.5*w0_err/np.sqrt(w0))
 
         a_values = np.asarray(a_values[::-1])
+        a_values_err = np.asarray(a_values_err[::-1])
         w0_values = np.asarray(w0_values[::-1])
         w0err_values = np.asarray(w0err_values[::-1])
 
@@ -190,8 +195,8 @@ class WtPostAnalysis(PostCore):
             y_cont_err[1], alpha=0.5, edgecolor='',
             facecolor="tab:red")
         ax.axvline(0, linestyle="dashed", color="tab:red")
-        ax.errorbar(a_values, w0_values, yerr=w0err_values, fmt="o", capsize=5,
-            capthick=1, color="#000000", ecolor="#000000")
+        ax.errorbar(a_values, w0_values, xerr=a_values_err, yerr=w0err_values,
+            fmt="o", capsize=5, capthick=1, color="#000000", ecolor="#000000")
         ax.set_ylabel(r"$w_0[\mathrm{fm}]$")
         ax.set_xlabel(r"$a^2[\mathrm{GeV}^{-2}]$")
         ax.set_xlim(a_squared_cont[0], a_squared_cont[-1])

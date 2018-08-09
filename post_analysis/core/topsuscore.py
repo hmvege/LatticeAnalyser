@@ -9,6 +9,7 @@ import copy
 import types
 
 class TopsusCore(PostCore):
+	"""Core class for all topological susceptiblity calculations."""
 	observable_name = "topsus_core"
 	observable_name_compact = "topsus_core"
 	obs_name_latex = "MISSING LATEX NAME FOR TOPSUS"
@@ -28,6 +29,7 @@ class TopsusCore(PostCore):
 	hbarc = 0.19732697 #eV micro m
 
 	chi_const = {}
+	chi_const_err = {}
 	chi = {}
 	chi_der = {}
 
@@ -47,10 +49,11 @@ class TopsusCore(PostCore):
 	def _initialize_topsus_func_const(self):
 		"""Sets the constant in the topsus function for found beta values."""
 		for beta in self.beta_values:
+			a, a_err = get_lattice_spacing(beta)
 			V = self.lattice_sizes[beta][0]**3 * self.lattice_sizes[beta][1]
-			self.chi_const[beta] = self.hbarc/get_lattice_spacing(beta)[0]\
-				/float(V)**(0.25)
-			# self.chi[beta] = lambda qq: self.chi_const[beta]*qq**(0.25)
+			V = float(V)
+			self.chi_const[beta] = self.hbarc/a/V**0.25
+			self.chi_const_err[beta] = self.hbarc*a_err/a**2/V**0.25
 
 	def _initialize_topsus_func(self):
 		"""Sets the topsus function for all found beta values."""
@@ -62,28 +65,31 @@ class TopsusCore(PostCore):
 		if 6.0 in self.beta_values:
 			self.chi[6.0] = lambda qq: self.chi_const[6.0]*qq**(0.25)
 			self.chi_der[6.0] = lambda qq, qqerr: \
-				0.25*self.chi_const[6.0]*qqerr/qq**(0.75)
+				np.sqrt((self.chi_const_err[6.0]*qq**0.25)**2 +\
+				(0.25*self.chi_const[6.0]*qqerr/qq**(0.75))**2)
 
 		if 6.1 in self.beta_values:
 			self.chi[6.1] = lambda qq: self.chi_const[6.1]*qq**(0.25)
 			self.chi_der[6.1] = lambda qq, qqerr: \
-				0.25*self.chi_const[6.1]*qqerr/qq**(0.75)
+				np.sqrt((self.chi_const_err[6.1]*qq**0.25)**2 +\
+				(0.25*self.chi_const[6.1]*qqerr/qq**(0.75))**2)
 
 		if 6.2 in self.beta_values:
 			self.chi[6.2] = lambda qq: self.chi_const[6.2]*qq**(0.25)
 			self.chi_der[6.2] = lambda qq, qqerr: \
-				0.25*self.chi_const[6.2]*qqerr/qq**(0.75)
+				np.sqrt((self.chi_const_err[6.2]*qq**0.25)**2 +\
+				(0.25*self.chi_const[6.2]*qqerr/qq**(0.75))**2)
 
 		if 6.45 in self.beta_values:
 			self.chi[6.45] = lambda qq: self.chi_const[6.45]*qq**(0.25)
 			self.chi_der[6.45] = lambda qq, qqerr: \
-				0.25*self.chi_const[6.45]*qqerr/qq**(0.75)
+				np.sqrt((self.chi_const_err[6.45]*qq**0.25)**2 +\
+				(0.25*self.chi_const[6.45]*qqerr/qq**(0.75))**2)
 
 	def plot_continuum(self, fit_target, title_addendum="",
 		extrapolation_method="bootstrap", plateau_fit_size=20,
 		interpolation_rank=3, plot_continuum_fit=False):
-		"""
-		Method for plotting the continuum limit of topsus at a given 
+		"""Method for plotting the continuum limit of topsus at a given 
 		fit_target.
 
 		Args:
@@ -130,7 +136,9 @@ class TopsusCore(PostCore):
 		if fit_target == -1:
 			fit_target = self.plot_values[max(self.plot_values)]["x"][-1]
 
-		a_squared, obs, obs_raw, obs_err, tau_int_corr = [], [], [], [], []
+		a, a_err, a_norm_factor, a_norm_factor_err, obs, obs_raw, obs_err, \
+			tau_int_corr = [], [], [], [], [], [], []
+
 		for beta in sorted(self.plot_values):
 			x = self.plot_values[beta]["x"]
 			y = self.plot_values[beta]["y"]
@@ -146,7 +154,6 @@ class TopsusCore(PostCore):
 
 			# Extrapolation of point to use in continuum extrapolation
 			res = extract_fit_target(fit_target, x, y, y_err, 
-				# y_raw=self.chi[beta](y_raw), tau_int=tau_int, 
 				y_raw=y_raw, tau_int=tau_int, 
 				tau_int_err=tau_int_err, 
 				extrapolation_method=extrapolation_method, 
@@ -164,12 +171,16 @@ class TopsusCore(PostCore):
 			if self.verbose:
 				msg = "Beta = %4.2f Topsus = %14.12f +/- %14.12f" % (
 					beta, _y0, _y0_error)
-			
+
+			a.append(self.plot_values[beta]["a"])
+			a_err.append(self.plot_values[beta]["a_err"])
+
 			if isinstance(t0_values, types.NoneType):
-				a_squared.append(self.plot_values[beta]["a"]**2/_x0)
+				a_norm_factor.append(_x0)
+				a_norm_factor_err.append(0)
 			else:
-				a_squared.append(
-					self.plot_values[beta]["a"]**2/t0_values["t0cont"])
+				a_norm_factor.append(t0_values["t0cont"])
+				a_norm_factor_err.append(t0_values["t0cont_err"])
 
 				if self.verbose:
 					msg += " t0 = %14.12f" % (t0_values["t0cont"]\
@@ -184,7 +195,13 @@ class TopsusCore(PostCore):
 			tau_int_corr.append(_tau_int0)
 
 		# Makes lists into arrays
-		a_squared = np.asarray(a_squared)[::-1]
+		a = np.asarray(a)[::-1]
+		a_err = np.asarray(a_err)[::-1]
+		a_norm_factor = np.asarray(a_norm_factor)[::-1]
+		a_norm_factor_err = np.asarray(a_norm_factor_err)[::-1]
+		a_squared = a**2 / a_norm_factor
+		a_squared_err = np.sqrt((2*a*a_err/a_norm_factor)**2 \
+			+ (a**2*a_norm_factor_err/a_norm_factor**2)**2)
 		obs = np.asarray(obs)[::-1]
 		obs_err = np.asarray(obs_err)[::-1]
 
@@ -233,7 +250,7 @@ class TopsusCore(PostCore):
 			alpha=0.5, edgecolor='', facecolor="tab:blue")
 
 		# Plot lattice points
-		ax.errorbar(a_squared, obs, yerr=obs_err, fmt="o",
+		ax.errorbar(a_squared, obs, xerr=a_squared_err, yerr=obs_err, fmt="o",
 			color="tab:orange", ecolor="tab:orange")
 
 		# plots continuum limit, 5 is a good value for cap size

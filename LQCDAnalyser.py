@@ -32,9 +32,9 @@ def main():
 
 	observables += observables_euclidean_time
 
-	obs_exlusions = ["plaq", "energy", "topc", "topc2", "topc4", "topcr", "topcMC", "topsus"]
-	obs_exlusions = ["energy", "topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
-	observables = list(set(set(observables) - set(obs_exlusions)))
+	# obs_exlusions = ["plaq", "energy", "topc", "topc2", "topc4", "topcr", "topcMC", "topsus"]
+	# obs_exlusions = ["energy", "topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
+	# observables = list(set(set(observables) - set(obs_exlusions)))
 
 	# observables = observables_euclidean_time
 	# observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
@@ -51,8 +51,8 @@ def main():
 	# observables = ["topsusqtq0"]
 	# observables = ["topsus"]
 	# observables = ["qtq0effMC"]
-	observables = ["energy"]
-	observables = ["w_t_energy"]
+	# observables = ["energy"]
+	# observables = ["w_t_energy"]
 
 	# observables += ["energy"]
 
@@ -350,9 +350,9 @@ def main():
 	# analysis_parameter_list = [databeta62]
 	# analysis_parameter_list = [databeta645]
 
-	# #### Submitting main analysis
-	# for analysis_parameters in analysis_parameter_list:
-	# 	pre_analysis(analysis_parameters)
+	#### Submitting main analysis
+	for analysis_parameters in analysis_parameter_list:
+		pre_analysis(analysis_parameters)
 
 	if not analysis_parameter_list[0]["MCInt"] is None:
 		assert sum([len(plist["MCInt"]) - len(analysis_parameter_list[0]["MCInt"])

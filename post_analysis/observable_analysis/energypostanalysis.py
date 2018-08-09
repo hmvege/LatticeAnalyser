@@ -153,21 +153,26 @@ class EnergyPostAnalysis(PostCore):
 
 		# Retrieves t0 values from data
 		a_values = []
+		a_values_err = []
 		t0_values = []
 		t0err_values = []
 
 		for beta, bval in sorted(self.plot_values.items(), key=lambda i: i[0]):
-			y0, t0, t0_err, _, _ = extract_fit_target(E0, bval["t"], bval["y"], 
+			y0, t0, t0_err, _, _ = extract_fit_target(E0, bval["t"], bval["y"],
 				y_err=bval["y_err"], y_raw=bval[self.analysis_data_type], 
 				tau_int=bval["tau_int"], tau_int_err=bval["tau_int_err"],
 				extrapolation_method=extrapolation_method, plateau_size=10,
 				inverse_fit=True, **kwargs)
 
 			a_values.append(bval["a"]**2/t0)
+			a_values_err.append(np.sqrt((2*bval["a_err"]*bval["a"]/t0)**2 \
+				+ (bval["a"]**2*t0_err/t0**2)**2))
+
 			t0_values.append(t0)
 			t0err_values.append(t0_err)
 
 		a_values = np.asarray(a_values[::-1])
+		a_values_err = np.asarray(a_values_err[::-1])
 		t0_values = np.asarray(t0_values[::-1])
 		t0err_values = np.asarray(t0err_values[::-1])		
 
@@ -204,7 +209,7 @@ class EnergyPostAnalysis(PostCore):
 			y_cont_err[1], alpha=0.5, edgecolor='',
 			facecolor="tab:red")
 		ax.axvline(0, linestyle="dashed", color="tab:red")
-		ax.errorbar(a_values, y, yerr=yerr, fmt="o", capsize=5,
+		ax.errorbar(a_values, y, xerr=a_values_err, yerr=yerr, fmt="o", capsize=5,
 			capthick=1, color="#000000", ecolor="#000000")
 		ax.set_ylabel(r"$\sqrt{8t_0}/r_0$")
 		ax.set_xlabel(r"$a^2/t_0$")
@@ -229,7 +234,9 @@ class EnergyPostAnalysis(PostCore):
 				"t0": t0_values[i],
 				"t0err": t0err_values[i],
 				"t0a2": t0_values[i]/self.plot_values[b]["a"]**2,
-				"t0a2err": t0err_values[i]/self.plot_values[b]["a"]**2,
+				# Including error term in lattice spacing, a
+				"t0a2err": np.sqrt((t0err_values[i]/self.plot_values[b]["a"]**2)**2 \
+					+ (2*self.plot_values[b]["a_err"]*t0_values[i]/self.plot_values[b]["a"]**3)**2),
 				"t0r02": t0_values[i]/self.r0**2,
 				"t0r02err": t0err_values[i]/self.r0**2,
 				"aL": self.plot_values[b]["a"]*self.lattice_sizes[b][0],
@@ -239,7 +246,7 @@ class EnergyPostAnalysis(PostCore):
 				"a": self.plot_values[beta]["a"],
 				"a_err": self.plot_values[b]["a_err"],
 			}
-			for i, b in enumerate(self.beta_values)
+			for i, b in enumerate(self.beta)
 		}
 
 		t0_dict = {"t0cont": self.t0_cont, "t0cont_err": self.t0_cont_error}
@@ -251,7 +258,7 @@ class EnergyPostAnalysis(PostCore):
 				self.sqrt_8t0_cont_error)
 			print "t0 = %.16f +/- %.16f" % (self.t0_cont,
 				self.t0_cont_error)
-			for b in self.beta_values:
+			for b in self.beta:
 				msg = "beta = %.2f || t0 = %10f +/- %-10f" % (b, 
 					t0_dict[b]["t0"], t0_dict[b]["t0err"])
 				msg += " || t0/a^2 = %10f +/- %-10f" % (t0_dict[b]["t0a2"], 
@@ -269,7 +276,7 @@ class EnergyPostAnalysis(PostCore):
 			header = [r"$\beta$", r"$t_0/a^2$", r"$t_0/{r_0^2}$", r"$L/a$",
 				r"$L[\fm]$", r"$a[\fm]$"]
 
-			bvals = self.beta_values
+			bvals = self.beta
 			tab = [
 				[r"{0:.2f}".format(b) for b in bvals],
 				[r"{0:s}".format(sciprint.sciprint(t0_dict[b]["t0a2"], 
@@ -304,6 +311,8 @@ class EnergyPostAnalysis(PostCore):
 
 		# Retrieves t0 values from data
 		a_values = []
+		a
+		a_values_err = []
 		w0_values = []
 		w0err_values = []
 
@@ -317,11 +326,15 @@ class EnergyPostAnalysis(PostCore):
 				extrapolation_method=extrapolation_method, plateau_size=10,
 				inverse_fit=True, **kwargs)
 
+			# TODO: fix a lattice spacing error here @ energy
 			a_values.append(bval["a"]**2)
+			a_values_err.append(2*bval["a_err"]*bval["a"])
 			w0_values.append(np.sqrt(w0)*bval["a"])
-			w0err_values.append(0.5*w0_err/np.sqrt(w0))
+			w0err_values.append(np.sqrt((0.5*w0_err/np.sqrt(w0))**2 \
+				+ (np.sqrt(w0)*bval["a_err"])**2))
 
 		a_values = np.asarray(a_values[::-1])
+		a_values_err = np.asarray(a_values_err[::-1])
 		w0_values = np.asarray(w0_values[::-1])
 		w0err_values = np.asarray(w0err_values[::-1])
 
@@ -359,7 +372,7 @@ class EnergyPostAnalysis(PostCore):
 			y_cont_err[1], alpha=0.5, edgecolor='',
 			facecolor="tab:red")
 		ax.axvline(0, linestyle="dashed", color="tab:red")
-		ax.errorbar(a_values, w0_values, yerr=w0err_values, fmt="o", capsize=5,
+		ax.errorbar(a_values, w0_values, xerr=a_values_err, yerr=w0err_values, fmt="o", capsize=5,
 			capthick=1, color="#000000", ecolor="#000000")
 		ax.set_ylabel(r"$w_0[\mathrm{fm}]$")
 		ax.set_xlabel(r"$a^2[\mathrm{GeV}^{-2}]$")
@@ -391,7 +404,7 @@ class EnergyPostAnalysis(PostCore):
 				"a": self.plot_values[beta]["a"],
 				"a_err": self.plot_values[b]["a_err"],
 			}
-			for i, b in enumerate(self.beta_values)
+			for i, b in enumerate(self.beta)
 		}
 
 		w0_dict = {"w0cont": self.w0_cont, "w0cont_err": self.w0_cont_error}
@@ -400,7 +413,7 @@ class EnergyPostAnalysis(PostCore):
 		if self.verbose:
 			print "w0 reference values table: "
 			print "w0 = %.16f +/- %.16f" % (self.w0_cont, self.w0_cont_error)
-			for b in self.beta_values:
+			for b in self.beta:
 				msg = "beta = %.2f || w0 = %10f +/- %-10f" % (b, 
 					w0_dict[b]["w0"], w0_dict[b]["w0err"])
 				print msg
@@ -413,7 +426,7 @@ class EnergyPostAnalysis(PostCore):
 				r"$a^2[\mathrm{GeV}^{-2}]$", r"$L/a$", r"$L[\fm]$", 
 				r"$a[\fm]$"]
 
-			bvals = self.beta_values
+			bvals = self.beta
 			tab = [
 				[r"{0:.2f}".format(b) for b in bvals],
 				[r"{0:s}".format(sciprint.sciprint(w0_dict[b]["w0"], 
@@ -543,7 +556,7 @@ class EnergyPostAnalysis(PostCore):
 	# 	"""
 
 	# 	# Retrieves t0 values used to be used for continium fitting
-	# 	self._get_beta_values_to_fit(
+	# 	self._get_beta_to_fit(
 	# 		fit_target, fit_interval, axis="y",
 	# 		fit_type=fit_type, 
 	# 		fit_function_modifier=lambda x: x*self.r0**2,
@@ -634,7 +647,7 @@ class EnergyPostAnalysis(PostCore):
 	def plot_w(self, *args, **kwargs):
 		"""Plots the W(t)."""
 		w_plot_values = copy.deepcopy(self.plot_values)
-		for beta in sorted(self.beta_values):
+		for beta in sorted(self.beta):
 			w_plot_values[beta]["x"] = self.plot_values[beta]["x"][1:-1]
 			w_plot_values[beta]["y"] = self.plot_values[beta]["W"]
 			w_plot_values[beta]["y_err"] = self.plot_values[beta]["W_err"]

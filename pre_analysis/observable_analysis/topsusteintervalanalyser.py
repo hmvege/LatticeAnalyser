@@ -27,7 +27,8 @@ class TopsusteIntervalAnalyser(EuclideanIntervalAnalyser, TopsusAnalyserCore):
 		self.NT_interval_size = self.t_interval[-1] - self.t_interval[0]
 		self.V = self.lattice_sizes[self.beta] * self.NT_interval_size \
 			/ float(self.NT)
-		self.const = self.hbarc/self.a/self.V**(1./4)
+		self.const = self.hbarc/self.a/self.V**0.25
+		self.const_err = self.hbarc*self.a_err/self.a**2/self.V**0.25
 		self.function_derivative_parameters = {"const": self.const}
 
 		self.y = np.sum(self.y, axis=2)

@@ -367,7 +367,6 @@ class PostCore(object):
 		values = {beta: {} for beta in self.beta_values}
 		self.t0 = {beta: {} for beta in self.beta_values}
 
-
 		self._get_tf_value(tf, atype, extrap_method)
 
 		for beta in self.beta_values:

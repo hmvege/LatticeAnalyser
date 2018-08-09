@@ -20,8 +20,11 @@ class TopsusAnalyserCore(FlowAnalyser):
 		return self.const*Q_squared**(0.25)
 
 	def chi_std(self, Q_squared, Q_squared_std):
-		"""Topological susceptibility with error propagation."""
-		return 0.25*self.const*Q_squared_std / Q_squared**(0.75)
+		"""Topological susceptibility with error propagation. Includes error 
+		in the lattice spacing."""
+		spacing_err = self.const_err*Q_squared**0.25
+		Q_err = 0.25*self.const*Q_squared_std / Q_squared**(0.75)
+		return np.sqrt(spacing_err**2 + Q_err**2)
 
 	def _check_skip_wolff_condition(self):
 		"""Checks if we have a negative mean of Q^2."""
@@ -43,6 +46,7 @@ class TopsusAnalyserCore(FlowAnalyser):
 		self.function_derivative = [ptools._chi_derivative]
 		self.V = self.lattice_size
 		self.const = self.hbarc/self.a/self.V**(1./4)
+		self.const_err = self.hbarc*self.a_err/self.a**2/self.V**(0.25)
 		self.function_derivative_parameters = \
 			[{"const": self.const} for i in xrange(self.NFlows)]
 

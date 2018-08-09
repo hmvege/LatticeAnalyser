@@ -21,10 +21,10 @@ class TopsustPostAnalysis(MultiPlotCore, TopsusCore):
 	def _initialize_topsus_func_const(self):
 		"""Sets the constant in the topsus function for found beta values."""
 		for beta in self.beta_values:
-			V = self.lattice_sizes[beta][0]**3
-			self.chi_const[beta] = self.hbarc/get_lattice_spacing(beta)[0]\
-				/float(V)**(0.25)
-			# self.chi[beta] = lambda qq: self.chi_const[beta]*qq**(0.25)
+			a, a_err = get_lattice_spacing(beta)
+			V = float(self.lattice_sizes[beta][0]**3)
+			self.chi_const[beta] = self.hbarc/a/V**0.25
+			self.chi_const_err[beta] = self.hbarc*a_err/a**2/V**0.25
 
 	def _convert_label(self, label):
 		"""Short method for formatting time in labels."""
