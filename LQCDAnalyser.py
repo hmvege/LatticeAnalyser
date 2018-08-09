@@ -5,11 +5,12 @@ from post_analysis.post_analyser import post_analysis
 from tools.folderreadingtools import get_num_observables
 import copy
 import os
-# import numpy as np
 
 from analysis_batches.main_analysis import main_analysis
 from analysis_batches.distribution_analysis import distribution_analysis
 from analysis_batches.topc_modes_analysis import topc_modes_analysis
+from analysis_batches.thermlization_comparison_analysis \
+	import thermalization_analysis
 
 
 def main():
@@ -24,6 +25,7 @@ def main():
 	# main_analysis()
 	# distribution_analysis()
 	# topc_modes_analysis()
+	thermalization_analysis()
 
 	# #### Available observables
 	# observables = [

@@ -36,9 +36,8 @@ def distribution_analysis():
     dist_param_list = [create_dist_batch_set(default_params, _eps)
         for _eps in dist_eps]
 
-    #### Submitting distribution analysis
-    analysis_parameter_list = dist_param_list
-    for analysis_parameters in analysis_parameter_list:
+    # Submitting distribution analysis
+    for analysis_parameters in dist_param_list:
         pre_analysis(analysis_parameters)
 
 if __name__ == '__main__':
