@@ -499,7 +499,7 @@ class DataReader:
 				json.dump(json_dict, json_file, indent=4)
 
 	def __print_load_info(self):
-		load_job_info = "="*100
+		load_job_info = "="*160
 		load_job_info += "\n" + "Data loader"
 		load_job_info += "\n{0:<20s}: {1:<20s}".format("Batch name",
 			self.batch_name)
