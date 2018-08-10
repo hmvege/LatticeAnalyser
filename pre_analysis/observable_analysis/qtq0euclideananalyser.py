@@ -52,12 +52,13 @@ class QtQ0EuclideanAnalyser(FlowAnalyser):
 		assert self.y.shape[1] == self.NT, "the first row does not match NT."
 		self.NFlows = self.NT
 
-		self.V = self.lattice_sizes[self.beta] / float(self.NT)
+		self.V = self.lattice_size / float(self.NT)
 		self.const = (self.hbarc**4)/(self.a**4)/self.V
 		self.const = 1.0 # Correlator contains no normalization
-		self.function_derivative_parameters = {"const": self.const}
+		self.function_derivative_parameters = \
+			[{"const": self.const} for i in xrange(self.NFlows)]
 
-		self.function_derivative = ptools._C_derivative
+		self.function_derivative = [ptools._C_derivative]
 
 		# Sets file name
 		self.observable_name = r"$t_e=%.2f$, $t_{f}=%.2f$" % (

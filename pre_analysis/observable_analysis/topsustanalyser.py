@@ -30,10 +30,11 @@ class TopsustAnalyser(TopsusAnalyserCore):
 		# Finds the euclidean time zero index
 		self.t_euclidean_index = t_euclidean_index
 
-		self.V = self.lattice_sizes[self.beta] / float(self.NT)
+		self.V = self.lattice_size / float(self.NT)
 		self.const = self.hbarc/self.a/self.V**0.25
 		self.const_err = self.hbarc*self.a_err/self.a**2/self.V**0.25
-		self.function_derivative_parameters = {"const": self.const}
+		self.function_derivative_parameters = \
+			[{"const": self.const} for i in xrange(self.NFlows)]
 
 		# Sets file name
 		self.observable_name = r"$\chi(\langle Q_t Q_{t_{euclidean}}$"

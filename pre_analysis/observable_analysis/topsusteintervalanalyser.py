@@ -25,11 +25,11 @@ class TopsusteIntervalAnalyser(EuclideanIntervalAnalyser, TopsusAnalyserCore):
 		self.observable_name = (r"$\chi(\langle Q^2 \rangle)^{1/4}$ in "
 			"Euclidean time $[%d,%d)$" % self.t_interval)
 		self.NT_interval_size = self.t_interval[-1] - self.t_interval[0]
-		self.V = self.lattice_sizes[self.beta] * self.NT_interval_size \
-			/ float(self.NT)
+		self.V = self.lattice_size * self.NT_interval_size / float(self.NT)
 		self.const = self.hbarc/self.a/self.V**0.25
 		self.const_err = self.hbarc*self.a_err/self.a**2/self.V**0.25
-		self.function_derivative_parameters = {"const": self.const}
+		self.function_derivative_parameters = \
+			[{"const": self.const} for i in xrange(self.NFlows)]
 
 		self.y = np.sum(self.y, axis=2)
 		self.y **= 2

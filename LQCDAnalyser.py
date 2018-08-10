@@ -9,23 +9,18 @@ import os
 from analysis_batches.main_analysis import main_analysis
 from analysis_batches.distribution_analysis import distribution_analysis
 from analysis_batches.topc_modes_analysis import topc_modes_analysis
-from analysis_batches.thermlization_comparison_analysis \
+from analysis_batches.thermalization_comparison_analysis \
 	import thermalization_analysis
 
 
 def main():
 	# Printing settings
-	try:
-		section_seperator = \
-			"="*int(os.popen('stty size', 'r').read().split()[-1])
-	except IndexError:
-		section_seperator = "="*160
-	section_seperator
+	section_seperator = "="*160
 
-	# main_analysis()
+	main_analysis()
 	# distribution_analysis()
 	# topc_modes_analysis()
-	thermalization_analysis()
+	# thermalization_analysis()
 
 	# #### Available observables
 	# observables = [

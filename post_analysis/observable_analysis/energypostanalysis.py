@@ -246,7 +246,7 @@ class EnergyPostAnalysis(PostCore):
 				"a": self.plot_values[beta]["a"],
 				"a_err": self.plot_values[b]["a_err"],
 			}
-			for i, b in enumerate(self.beta)
+			for i, b in enumerate(self.beta_values)
 		}
 
 		t0_dict = {"t0cont": self.t0_cont, "t0cont_err": self.t0_cont_error}
@@ -258,7 +258,7 @@ class EnergyPostAnalysis(PostCore):
 				self.sqrt_8t0_cont_error)
 			print "t0 = %.16f +/- %.16f" % (self.t0_cont,
 				self.t0_cont_error)
-			for b in self.beta:
+			for b in self.beta_values:
 				msg = "beta = %.2f || t0 = %10f +/- %-10f" % (b, 
 					t0_dict[b]["t0"], t0_dict[b]["t0err"])
 				msg += " || t0/a^2 = %10f +/- %-10f" % (t0_dict[b]["t0a2"], 
@@ -276,7 +276,7 @@ class EnergyPostAnalysis(PostCore):
 			header = [r"$\beta$", r"$t_0/a^2$", r"$t_0/{r_0^2}$", r"$L/a$",
 				r"$L[\fm]$", r"$a[\fm]$"]
 
-			bvals = self.beta
+			bvals = self.beta_values
 			tab = [
 				[r"{0:.2f}".format(b) for b in bvals],
 				[r"{0:s}".format(sciprint.sciprint(t0_dict[b]["t0a2"], 
@@ -311,7 +311,6 @@ class EnergyPostAnalysis(PostCore):
 
 		# Retrieves t0 values from data
 		a_values = []
-		a
 		a_values_err = []
 		w0_values = []
 		w0err_values = []
@@ -404,7 +403,7 @@ class EnergyPostAnalysis(PostCore):
 				"a": self.plot_values[beta]["a"],
 				"a_err": self.plot_values[b]["a_err"],
 			}
-			for i, b in enumerate(self.beta)
+			for i, b in enumerate(self.beta_values)
 		}
 
 		w0_dict = {"w0cont": self.w0_cont, "w0cont_err": self.w0_cont_error}
@@ -413,7 +412,7 @@ class EnergyPostAnalysis(PostCore):
 		if self.verbose:
 			print "w0 reference values table: "
 			print "w0 = %.16f +/- %.16f" % (self.w0_cont, self.w0_cont_error)
-			for b in self.beta:
+			for b in self.beta_values:
 				msg = "beta = %.2f || w0 = %10f +/- %-10f" % (b, 
 					w0_dict[b]["w0"], w0_dict[b]["w0err"])
 				print msg
@@ -426,7 +425,7 @@ class EnergyPostAnalysis(PostCore):
 				r"$a^2[\mathrm{GeV}^{-2}]$", r"$L/a$", r"$L[\fm]$", 
 				r"$a[\fm]$"]
 
-			bvals = self.beta
+			bvals = self.beta_values
 			tab = [
 				[r"{0:.2f}".format(b) for b in bvals],
 				[r"{0:s}".format(sciprint.sciprint(w0_dict[b]["w0"], 
@@ -647,7 +646,7 @@ class EnergyPostAnalysis(PostCore):
 	def plot_w(self, *args, **kwargs):
 		"""Plots the W(t)."""
 		w_plot_values = copy.deepcopy(self.plot_values)
-		for beta in sorted(self.beta):
+		for beta in sorted(self.beta_values):
 			w_plot_values[beta]["x"] = self.plot_values[beta]["x"][1:-1]
 			w_plot_values[beta]["y"] = self.plot_values[beta]["W"]
 			w_plot_values[beta]["y_err"] = self.plot_values[beta]["W_err"]

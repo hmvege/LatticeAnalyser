@@ -30,8 +30,8 @@ def main_analysis():
     # observables = ["qtq0eff", "qtq0e"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
     # observables = ["qtq0eff", "qtq0e"] + ["topsust", "topsuste", "topsusMC", "topsusqtq0"]
     # observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
-    # observables = ["topsusqtq0"]
-    # observables = ["topsus"]
+    observables = ["energy"]
+    # observables = ["topsust"]
     # observables = ["qtq0effMC"]
     # observables = ["energy"]
     # observables = ["w_t_energy"]
@@ -154,25 +154,26 @@ def main_analysis():
         default_params["observables"])
     print section_seperator + "\n"
 
-    #### Submitting main analysis
-    for analysis_parameters in analysis_parameter_list:
-        pre_analysis(analysis_parameters)
+    # #### Submitting main analysis
+    # for analysis_parameters in analysis_parameter_list:
+    #     pre_analysis(analysis_parameters)
 
-    if not analysis_parameter_list[0]["MCInt"] is None:
-        assert sum([len(plist["MCInt"]) - len(analysis_parameter_list[0]["MCInt"])
-            for plist in analysis_parameter_list]) == 0, \
-            "unequal amount of MC intervals"
+    # if not analysis_parameter_list[0]["MCInt"] is None:
+    #     assert sum([len(plist["MCInt"]) - len(analysis_parameter_list[0]["MCInt"])
+    #         for plist in analysis_parameter_list]) == 0, \
+    #         "unequal amount of MC intervals"
 
     #### Submitting post-analysis data
     if len(analysis_parameter_list) >= 3:
-        post_analysis(analysis_parameter_list, observables,
+        post_analysis(analysis_parameter_list, default_params["observables"],
             topsus_fit_targets, line_fit_interval_points, energy_fit_target,
             q0_flow_times, euclidean_time_percents,
             extrapolation_methods=extrapolation_methods,
             plot_continuum_fit=plot_continuum_fit,
             post_analysis_data_type=post_analysis_data_type,
-            figures_folder=figures_folder, gif_params=gif_params, 
-            verbose=verbose)
+            figures_folder=default_params["figures_folder"], 
+            gif_params=default_params["gif"], 
+            verbose=default_params["verbose"])
     else:
         msg = "Need at least 3 different beta values to run post analysis"
         msg += "(%d given)."% len(analysis_parameter_list)
