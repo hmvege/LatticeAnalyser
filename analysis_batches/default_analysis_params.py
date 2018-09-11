@@ -7,7 +7,7 @@ def get_default_parameters(data_batch_folder=None, obs_exlusions=[]):
     ######## Available observables ########
     #######################################
     observables = [
-        "plaq", "energy",
+        "plaq", "energy", "w_t_energy",
         # Topological charge definitions
         # "topc2", "topc4",
         "topc", "topcMC", "topcr", "topcrMC",

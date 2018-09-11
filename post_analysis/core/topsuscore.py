@@ -44,7 +44,10 @@ class TopsusCore(PostCore):
 
 	def __init__(self, *args, **kwargs):
 		super(TopsusCore, self).__init__(*args, **kwargs)
+
+	def set_analysis_data_type(self, *args, **kwargs):
 		self._initialize_topsus_func()
+		super(TopsusCore, self).set_analysis_data_type(*args, **kwargs)
 
 	def _initialize_topsus_func_const(self):
 		"""Sets the constant in the topsus function for found beta values."""
@@ -137,7 +140,7 @@ class TopsusCore(PostCore):
 			fit_target = self.plot_values[max(self.plot_values)]["x"][-1]
 
 		a, a_err, a_norm_factor, a_norm_factor_err, obs, obs_raw, obs_err, \
-			tau_int_corr = [], [], [], [], [], [], []
+			tau_int_corr = [], [], [], [], [], [], [], []
 
 		for beta in sorted(self.plot_values):
 			x = self.plot_values[beta]["x"]

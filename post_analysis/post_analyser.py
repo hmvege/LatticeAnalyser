@@ -125,19 +125,19 @@ def post_analysis(beta_parameter_list, observables,
 					print "Energy extrapolation method: ", extrapolation_method
 					print "Energy analysis type: ", analysis_type
 
-				# energy_analysis.plot()
-				# energy_analysis.plot(x_limits=[-0.015,0.15], 
-				# 	y_limits=[-0.025, 0.4], plot_hline_at=0.3, 
-				# 	figure_name_appendix="_zoomed", 
-				# 	zoom_box={"xlim": [0.1104, 0.1115],
-				# 		"ylim": [0.298, 0.302], "zoom_factor": 50})
+				energy_analysis.plot()
+				energy_analysis.plot(x_limits=[-0.015,0.15], 
+					y_limits=[-0.025, 0.4], plot_hline_at=0.3, 
+					figure_name_appendix="_zoomed", 
+					zoom_box={"xlim": [0.1104, 0.1115],
+						"ylim": [0.298, 0.302], "zoom_factor": 50})
 
-				# t0_dict = energy_analysis.get_t0_scale(
-				# 	extrapolation_method=extrapolation_method, 
-				# 	E0=energy_fit_target, plot_fit=False)
+				t0_dict = energy_analysis.get_t0_scale(
+					extrapolation_method=extrapolation_method, 
+					E0=energy_fit_target, plot_fit=False)
 
-				# t0_reference_scale[extrapolation_method][analysis_type] = \
-				# 	t0_dict
+				t0_reference_scale[extrapolation_method][analysis_type] = \
+					t0_dict
 
 				box_settings = {
 					"xlim": [0.111, 0.117],

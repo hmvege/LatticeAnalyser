@@ -406,6 +406,7 @@ class TopcRPostAnalysis(PostCore):
 			print ("Bootstrap line extrapolation not found."
 				" Falling back to %s" % fallback_key)
 			ref_vals = self.reference_values[atype][fallback_key]
+
 		self.t0 = {b: {"t0": ref_vals[b]["t0a2"], "t0err": ref_vals[b]["t0a2err"]}
 			for b in self.beta_values}
 

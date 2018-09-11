@@ -30,11 +30,13 @@ def main_analysis():
     # observables = ["qtq0eff", "qtq0e"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
     # observables = ["qtq0eff", "qtq0e"] + ["topsust", "topsuste", "topsusMC", "topsusqtq0"]
     # observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
-    observables = ["energy"]
-    # observables = ["topsust"]
+    # observables = ["topcr"]
+    # exit("CHECK TOPCR!! @ 34 in main_analysis.py")
+    # observables = ["topsuste"]
     # observables = ["qtq0effMC"]
     # observables = ["energy"]
     # observables = ["w_t_energy"]
+    observables = ["plaq", "energy", "topc", "topct"]
 
     # observables += ["energy"]
     # default_params["observables"] = observables
@@ -154,14 +156,14 @@ def main_analysis():
         default_params["observables"])
     print section_seperator + "\n"
 
-    # #### Submitting main analysis
-    # for analysis_parameters in analysis_parameter_list:
-    #     pre_analysis(analysis_parameters)
+    #### Submitting main analysis
+    for analysis_parameters in analysis_parameter_list:
+        pre_analysis(analysis_parameters)
 
-    # if not analysis_parameter_list[0]["MCInt"] is None:
-    #     assert sum([len(plist["MCInt"]) - len(analysis_parameter_list[0]["MCInt"])
-    #         for plist in analysis_parameter_list]) == 0, \
-    #         "unequal amount of MC intervals"
+    if not analysis_parameter_list[0]["MCInt"] is None:
+        assert sum([len(plist["MCInt"]) - len(analysis_parameter_list[0]["MCInt"])
+            for plist in analysis_parameter_list]) == 0, \
+            "unequal amount of MC intervals"
 
     #### Submitting post-analysis data
     if len(analysis_parameter_list) >= 3:
