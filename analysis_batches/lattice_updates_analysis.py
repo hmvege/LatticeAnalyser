@@ -19,6 +19,7 @@ def lattice_updates_analysis():
     for i_N_corr in N_corr:
         for i_N_up in N_updates:
             _params = copy.deepcopy(default_params)
+            _parmas["observables"] = ["plaq", "energy", "topc", "topct"]
             param_list.append(_params)
 
     raise NotImplementedError("Missing data to fully implement "
