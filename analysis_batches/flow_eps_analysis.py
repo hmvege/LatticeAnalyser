@@ -17,7 +17,7 @@ def rm_hidden(l):
 def get_max_x_limit(feps_dictionary, observable):
     """Gets the maximal x limit from smallest epsilon."""
     lowest_eps = np.min(feps_dictionary.keys())
-    x_limit = np.max(feps_dictionary[lowest_eps]["data"][observable][:,0])
+    x_limit = np.max(feps_dictionary[lowest_eps]["data"][observable][:, 0])
     return x_limit, lowest_eps
 
 
@@ -44,8 +44,9 @@ def get_data(p):
     return obs_dict
 
 
-def observable_plotter(feps_dictionary, observable, x_limit=0, 
-    x_label=r"$t_f$", y_label="", savefig_folder="", exclude_eps=[]):
+def observable_plotter(feps_dictionary, observable, x_limit=0,
+                       x_label=r"$t_f$", y_label="", savefig_folder="",
+                       exclude_eps=[], fig_format="png"):
     """Method for plotting an observable."""
     feps_dict = copy.deepcopy(feps_dictionary)
     if not os.path.isdir(savefig_folder):
@@ -55,7 +56,8 @@ def observable_plotter(feps_dictionary, observable, x_limit=0,
     if x_limit == 0:
         x_limit, min_eps = get_max_x_limit(feps_dict, observable)
 
-    fig_name = os.path.join(savefig_folder, "{0:s}.png".format(observable))
+    fig_name = os.path.join(savefig_folder,
+                            "{0:s}.{1:s}".format(observable, fig_format))
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -64,17 +66,17 @@ def observable_plotter(feps_dictionary, observable, x_limit=0,
         if observable == "energy":
             a = 0.09314041
             r0 = 0.5
-            feps_dict[feps]["data"][observable][:,1] *= (-1)
-            feps_dict[feps]["data"][observable][:,0] *= (a**2)/(r0**2)
-            feps_dict[feps]["data"][observable][:,1] *= \
-                (feps_dict[feps]["data"][observable][:,0]**2)
+            feps_dict[feps]["data"][observable][:, 1] *= (-1)
+            feps_dict[feps]["data"][observable][:, 0] *= (a**2)/(r0**2)
+            feps_dict[feps]["data"][observable][:, 1] *= \
+                (feps_dict[feps]["data"][observable][:, 0]**2)
             # feps_dict[feps]["data"][observable][:,0] /= (a**2)
 
         xvals, yvals = feps_dict[feps]["data"][observable].T
         ls = feps_dict[feps]["ls"][-1]
         label = r"$\epsilon_f = {:<.{w}f}$".format(
             float(feps), w=len(str(feps)) - 2)
-        
+
         xvals = filter(lambda x: x < x_limit, xvals)
         yvals = yvals[:len(xvals)]
 
@@ -96,8 +98,9 @@ def observable_plotter(feps_dictionary, observable, x_limit=0,
         fig_name, observable)
 
 
-def get_differences(feps_dictionary, observable, diff="relative", x_limit=0, 
-    x_label=r"$t_f$", y_label="", savefig_folder="", exclude_eps=[]):
+def get_differences(feps_dictionary, observable, diff="relative", x_limit=0,
+                    x_label=r"$t_f$", y_label="", savefig_folder="",
+                    exclude_eps=[], fig_format="pdf"):
     """Method for looking at the relative differences between the epsilons."""
     feps_dict = copy.deepcopy(feps_dictionary)
     for _eps in exclude_eps:
@@ -108,18 +111,18 @@ def get_differences(feps_dictionary, observable, diff="relative", x_limit=0,
         if observable == "energy":
             a = 0.09314041
             r0 = 0.5
-            feps_dict[feps]["data"][observable][:,1] *= (-1)
-            feps_dict[feps]["data"][observable][:,0] *= (a**2)/(r0**2)
-            feps_dict[feps]["data"][observable][:,1] *= \
-                (feps_dict[feps]["data"][observable][:,0]**2)
+            feps_dict[feps]["data"][observable][:, 1] *= (-1)
+            feps_dict[feps]["data"][observable][:, 0] *= (a**2)/(r0**2)
+            feps_dict[feps]["data"][observable][:, 1] *= \
+                (feps_dict[feps]["data"][observable][:, 0]**2)
             # feps_dict[feps]["data"][observable][:,0] /= (a**2)
 
     min_eps = np.min(feps_dict.keys())
     max_eps = np.max(feps_dict.keys())
-    x_min = feps_dict[min_eps]["data"][observable][:,0]
-    y_min = feps_dict[min_eps]["data"][observable][:,1]
-    x_max = feps_dict[max_eps]["data"][observable][:,0]
-    y_max = feps_dict[max_eps]["data"][observable][:,1]
+    x_min = feps_dict[min_eps]["data"][observable][:, 0]
+    y_min = feps_dict[min_eps]["data"][observable][:, 1]
+    x_max = feps_dict[max_eps]["data"][observable][:, 0]
+    y_max = feps_dict[max_eps]["data"][observable][:, 1]
 
     if x_limit == 0:
         x_limit, min_eps = get_max_x_limit(feps_dict, observable)
@@ -132,8 +135,8 @@ def get_differences(feps_dictionary, observable, diff="relative", x_limit=0,
     plot_dict = {}
 
     # Retrieves the values closest to max value for comparison
-    for feps in sorted(feps_dict):        
-        xvals, yvals = feps_dict[feps]["data"][observable].T        
+    for feps in sorted(feps_dict):
+        xvals, yvals = feps_dict[feps]["data"][observable].T
         xvals = filter(lambda x: x < x_limit, xvals)
         yvals = yvals[:len(xvals)]
 
@@ -170,19 +173,21 @@ def get_differences(feps_dictionary, observable, diff="relative", x_limit=0,
                     if diff == "absolute":
                         _y.append(np.abs(y_min[imin] - yvals[iv]))
                     elif diff == "relative":
-                        _y.append(np.abs((y_min[imin] - yvals[iv])/y_min[imin]))
+                        _y.append(
+                            np.abs((y_min[imin] - yvals[iv])/y_min[imin]))
                     else:
                         raise KeyError(
                             ("%s is not a recognized method "
                              "of difference comparison." % diff.capitalize()))
                     continue
 
-        # Skips first element, as that tends to be zero, and may obfuscate 
+        # Skips first element, as that tends to be zero, and may obfuscate
         # the plot.
         plot_dict[feps] = [np.asarray(_x[1:]), np.asarray(_y[1:])]
 
     fig_name = os.path.join(savefig_folder,
-        "{0:s}_diff_{1:s}.png".format(observable, diff))
+                            "{0:s}_diff_{1:s}.{2:s}".format(observable,
+                                                            diff, fig_format))
     if diff == "absolute":
         title = r"Absolute difference, $|${%s$_{\epsilon_{min}} - $" % y_label
         title += r"%s$_{\epsilon_{i}}|$" % y_label
@@ -209,8 +214,8 @@ def get_differences(feps_dictionary, observable, diff="relative", x_limit=0,
         label = r"$\epsilon_f = {:<.{w}f}$".format(
             float(feps), w=len(str(feps)) - 2)
         # print plot_dict[feps][0][:5], plot_dict[feps][1][:5]
-        ax.semilogy(x_plot_values, y_plot_values, label=label, 
-            linestyle=ls, marker=marker)
+        ax.semilogy(x_plot_values, y_plot_values, label=label,
+                    linestyle=ls, marker=marker)
 
     ax.legend(loc="upper right", ncol=2)
     ax.set_xlabel(x_label)
@@ -225,24 +230,31 @@ def get_differences(feps_dictionary, observable, diff="relative", x_limit=0,
     print "Figure saved at: {0:s}.\nPlotting done for {1:s}.".format(
         fig_name, observable)
 
+
 def main():
     # Flow epsilon main folder location
     feps_main_folder = "../../data/flow_eps/flow_eps_data"
 
     # Distribution sub folder locations
     feps_folders = rm_hidden(sorted(os.listdir(feps_main_folder)))
-    feps_data_paths = [os.path.join(feps_main_folder, f, "flow_observables") \
-        for f in feps_folders]
+    feps_data_paths = [os.path.join(feps_main_folder, f, "flow_observables")
+                       for f in feps_folders]
 
     feps_values = [float(".".join(f.split("_")[-2:])) for f in feps_folders]
     feps_values = sorted(feps_values)
-    feps_dict = {feps: {"data": get_data(feps_data_paths[i])} \
-        for i, feps in enumerate(feps_values)}
+    feps_dict = {feps: {"data": get_data(feps_data_paths[i])}
+                 for i, feps in enumerate(feps_values)}
 
     observables = {
-        "plaq": {"x": r"$t_f/a^2$", "y": r"$\mathrm{err}(\langle P \rangle)_\mathrm{abs}$"},
-        "energy": {"x": r"$t_f/a^2$", "y": r"$\mathrm{err}(\langle E \rangle)_\mathrm{abs}$"},
-        "topc": {"x": r"$t_f/a^2$", "y": r"$\mathrm{err}(\langle E \rangle)_\mathrm{abs}$"},
+        "plaq": {
+            "x": r"$t_f/a^2$",
+            "y": r"$\mathrm{err}(\langle P \rangle)_\mathrm{abs}$"},
+        "energy": {
+            "x": r"$t_f/a^2$",
+            "y": r"$\mathrm{err}(\langle E \rangle)_\mathrm{abs}$"},
+        "topc": {
+            "x": r"$t_f/a^2$",
+            "y": r"$\mathrm{err}(\langle E \rangle)_\mathrm{abs}$"},
         # "topct": {"x": r"$t_f/a^2$", "y": r"$\langle Q(t_e) \rangle$"},
     }
 
@@ -267,7 +279,7 @@ def main():
         ('dashdotdotted',         (0, (3, 5, 1, 5, 1, 5))),
         ('densely dashdotdotted', (0, (3, 1, 1, 1, 1, 1)))
     ]
-    
+
     markers = [".", "2", "o", "v", "^", "D", "h", "x", "8", "s", "p", "P", "*"]
 
     for feps, ls, marker in zip(feps_values, linestyles, markers):
@@ -275,20 +287,23 @@ def main():
         feps_dict[feps]["marker"] = marker
 
     for obs in observables:
-        observable_plotter(feps_dict, obs, x_limit=1.0, 
-            x_label=observables[obs]["x"], y_label=observables[obs]["y"],
-            savefig_folder="../figures/flow_epsilon_test_figures",
-            exclude_eps=exclude_eps)
+        observable_plotter(feps_dict, obs, x_limit=1.0,
+                           x_label=observables[obs]["x"], 
+                           y_label=observables[obs]["y"],
+                           savefig_folder="../figures/flow_epsilon_test_figures",
+                           exclude_eps=exclude_eps, fig_format="pdf")
 
         get_differences(feps_dict, obs, x_limit=1.0, diff="absolute",
-            x_label=observables[obs]["x"], y_label=observables[obs]["y"],
-            savefig_folder="../figures/flow_epsilon_test_figures",
-            exclude_eps=exclude_eps)
+                        x_label=observables[obs]["x"], 
+                        y_label=observables[obs]["y"],
+                        savefig_folder="../figures/flow_epsilon_test_figures",
+                        exclude_eps=exclude_eps)
 
         get_differences(feps_dict, obs, x_limit=0, diff="relative",
-            x_label=observables[obs]["x"], y_label=observables[obs]["y"],
-            savefig_folder="../figures/flow_epsilon_test_figures",
-            exclude_eps=exclude_eps)
+                        x_label=observables[obs]["x"], 
+                        y_label=observables[obs]["y"],
+                        savefig_folder="../figures/flow_epsilon_test_figures",
+                        exclude_eps=exclude_eps)
 
 
 if __name__ == '__main__':
