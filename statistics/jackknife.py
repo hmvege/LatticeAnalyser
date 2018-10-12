@@ -4,7 +4,7 @@ __all__ = ["Jackknife"]
 
 def timing_function(func):
 	"""
-	Time function.
+	Time function decorator.
 	"""
 	def wrapper(*args):
 		if args[0].time_jk:
@@ -18,8 +18,8 @@ def timing_function(func):
 			time_used = t2-t1
 			args[0].time_used = time_used
 			
-			print ("Autocorrelation: time used with function %s: %.10f secs/ "
-				"%.10f minutes" % (func.__name__, time_used, time_used/60.))
+			print ("Autocorrelation: time used with function {:s}: {:.10f} secs/ "
+				"{:.10f} minutes".format(func.__name__, time_used, time_used/60.))
 		
 		return val
 
