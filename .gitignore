@@ -8,6 +8,7 @@
 # Binary files
 *.pyc
 *.bin
+*__pycache__*
 
 # OS Junk files
 *.DS_Store
