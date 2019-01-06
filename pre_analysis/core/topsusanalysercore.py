@@ -37,7 +37,7 @@ class TopsusAnalyserCore(FlowAnalyser):
 				msg += "Since we have negative values in the mean of Q^2 and "
 				msg += "would thus be taking the negative cube root in the Wolff "
 				msg += "method.\n"
-			print msg
+			print(msg)
 			return False
 
 	def __set_size(self):

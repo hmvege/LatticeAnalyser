@@ -10,7 +10,7 @@ from tqdm import tqdm
 def analyse_default(analysis_object, N_bs, NBins=None, skip_histogram=False,
 	bs_index_lists=None, hist_flow_times=None):
 	"""Default analysis method for pre-analysis."""
-	print analysis_object
+	print(analysis_object)
 	analysis_object.boot(N_bs, index_lists=bs_index_lists)
 	analysis_object.jackknife()
 	analysis_object.save_post_analysis_data()
@@ -243,7 +243,7 @@ def analyse_qtq0_effective_mass_mc(params):
 
 	obs_data = params["data"]
 	if not obs_data.has_observable("topct"):
-		print "Missing topct data. Returning."
+		print("Missing topct data. Returning.")
 		return
 
 	for MC_int in MC_interval:
@@ -422,7 +422,7 @@ def pre_analysis(parameters):
 	obs_data.write_parameter_file()
 
 	section_seperator = "="*160
-	print section_seperator
+	print(section_seperator)
 
 	# Builds parameters list to be passed to analyser
 	# params = [obs_data, _bp["dryrun"], _bp["parallel"], _bp["numprocs"], 
@@ -499,11 +499,11 @@ def pre_analysis(parameters):
 
 
 	post_time = time.clock()
-	print section_seperator
-	print "Analysis of batch %s observables %s completed in %.2f seconds" % (batch_name,
+	print(section_seperator)
+	print("Analysis of batch %s observables %s completed in %.2f seconds" % (batch_name,
 		", ".join([i.lower() for i in parameters["observables"]]),
-		(post_time-pre_time))
-	print section_seperator
+		(post_time-pre_time)))
+	print(section_seperator)
 
 def main():
 	exit("No default run for pre_analyser.py is currently set up.")
