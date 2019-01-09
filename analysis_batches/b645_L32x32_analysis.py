@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-def main_analysis():
+def beta645_L32_analysis():
     from pre_analysis.pre_analyser import pre_analysis
     from post_analysis.post_analyser import post_analysis
     from default_analysis_params import get_default_parameters
@@ -9,10 +9,8 @@ def main_analysis():
     import os
 
     #### Different batches
-    # data_batch_folder = "../GluonAction/data8"
     data_batch_folder = "../GluonAction/data9"
-    # data_batch_folder = "../GluonAction/DataGiovanni"
-    # data_batch_folder = "../data/topc_modes_8x16"
+    data_batch_folder = "../GluonAction/data10"
 
     default_params = get_default_parameters(data_batch_folder=data_batch_folder)
     # obs_exlusions = ["plaq", "energy", "topc", "topc2", "topc4", "topcr", "topcMC", "topsus"]
@@ -50,7 +48,7 @@ def main_analysis():
 
     #### Different batches
     # data_batch_folder = "../GluonAction/data8"
-    data_batch_folder = "../GluonAction/data9"
+    data_batch_folder = "../GluonAction/data10"
     # data_batch_folder = "../GluonAction/DataGiovanni"
     # data_batch_folder = "../data/topc_modes_8x16"
 

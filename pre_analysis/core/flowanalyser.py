@@ -334,7 +334,7 @@ class FlowAnalyser(object):
 
         if self.parallel:
             # Sets up jobs for parallel processing
-            input_values = zip(    [self.y[:, i] for i in xrange(self.NFlows)],
+            input_values = zip( [self.y[:, i] for i in xrange(self.NFlows)],
                                 [N_bs for i in xrange(self.NFlows)],
                                 [index_lists for i in xrange(self.NFlows)])
 

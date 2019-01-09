@@ -1,6 +1,7 @@
 import numpy as np
 from decimal import Decimal
 
+
 def __get_leading_zeros(fl):
     """Returns the number of leading zeros in a float decimal."""
     if fl > 1.0:
@@ -11,6 +12,7 @@ def __get_leading_zeros(fl):
         N_left_stripped = len(fl_splitted.lstrip("0"))
         return N_unstripped - N_left_stripped
 
+
 def __float_error_to_string(fl, prec):
     """Converts error to usable string."""
     num = "{:.15f}".format(fl)
@@ -18,6 +20,7 @@ def __float_error_to_string(fl, prec):
     num = num[:prec]
     num = num.lstrip("0")
     return num
+
 
 def sciprint(val, err, prec=0, force_prec=False):
     """
@@ -48,11 +51,12 @@ def sciprint(val, err, prec=0, force_prec=False):
 
     if prec == 0:
         if error_magnitude >= 1:
-            # If we have an order of magnitude or greater, we should only include 1 decimal
+            # If we have an order of magnitude or greater, we should only 
+            # include 1 decimal
             prec = leading_error_zeros + 1
         else:
             # Same order of magnitude should have 2 extra decimals
-            prec = leading_error_zeros + 2 
+            prec = leading_error_zeros + 2
 
     max_err_prec = len(err_decimal.rstrip("0"))
     max_val_prec = len(val_decimal.rstrip("0"))
@@ -77,9 +81,9 @@ def sciprint(val, err, prec=0, force_prec=False):
         # No need to strip off leading zeros, so a simple string format is ok.
         str_err = "{:<.{w}f}".format(rounded_error, w=prec)
 
-    # Converts value to string for a more symmetric view    
+    # Converts value to string for a more symmetric view
     str_val = "{0:<2.{w}f}".format(val, w=prec)
-    
+
     msg = "{0:s}({1:s})".format(str_val, str_err)
 
     return msg
@@ -88,7 +92,7 @@ def sciprint(val, err, prec=0, force_prec=False):
 def main():
     def check_answer(name, val, err, ans, prec=0, force_prec=False):
         sciprint_ans = sciprint(val, err, prec=prec, force_prec=force_prec)
-        unit_test = sciprint_ans==ans
+        unit_test = sciprint_ans == ans
         msg = "{:>3s}: ".format(name)
         msg += "{:12s} ".format(sciprint_ans)
         msg += "{:<2s} ".format(str(unit_test))
@@ -109,7 +113,7 @@ def main():
     c = 0.111187
     c_err = 0.000160
     c_ans = "0.1112(2)"
-    c_ans_prec = "0.11119(16)" # with prec=5
+    c_ans_prec = "0.11119(16)"  # with prec=5
 
     d = 123.654
     d_err = 2.3
@@ -169,7 +173,7 @@ def main():
     check_answer("b", b, b_err, b_ans)
     check_answer("c", b, c_err, c_ans)
     check_answer("cp", c, c_err, c_ans_prec, prec=5)
-    
+
     # Error greater than 1.0
     check_answer("d", d, d_err, d_ans)
     check_answer("e", e, e_err, e_ans)
@@ -185,10 +189,15 @@ def main():
     check_answer("k", k, k_err, k_ans)
     check_answer("m", m, m_err, m_ans, prec=4)
     check_answer("n", n, n_err, n_ans, prec=4)
-    check_answer("p", p, p_err, p_ans, prec=4, force_prec=True) # This cant be True and still be consistent with m
+
+    # This cant be True and still be consistent with m
+    check_answer("p", p, p_err, p_ans, prec=4, force_prec=True)
 
     check_answer("q", q, q_err, q_ans, prec=3)
-    check_answer("r", r, r_err, r_ans, prec=3) # This cant be True and still be consistent with m
+
+    # This cant be True and still be consistent with m
+    check_answer("r", r, r_err, r_ans, prec=3)
+
 
 if __name__ == '__main__':
     main()

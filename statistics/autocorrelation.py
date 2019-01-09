@@ -91,7 +91,6 @@ class _AutocorrelationCore(object):
         self.G = np.zeros(int(self.N/2))
         self.R_error = np.zeros(int(self.N/2))
         self.tau_int = 0
-        self.tau_int_error = 0
 
         # Gets the autocorrelations
         if method == "corrcoef":
@@ -291,7 +290,7 @@ class Autocorrelation(_AutocorrelationCore):
                 self.W = t
                 break
         else:
-            self.W = float("NaN")
+            self.W = np.nan
 
     def integrated_autocorrelation_time(self, plot_cutoff=False):
         """
@@ -407,7 +406,7 @@ class PropagatedAutocorrelation(_AutocorrelationCore):
             if np.exp(-iW/itau) - itau/np.sqrt(iW*float(self.N)) < 0.0:
                 return iW
         else:
-            return float('NaN')
+            return np.nan
 
     @staticmethod
     @nb.njit(cache=True)
@@ -435,6 +434,18 @@ class PropagatedAutocorrelation(_AutocorrelationCore):
         # self.tau_int_error = np.sqrt((4*self.W + 2)/float(self.N) * self.tau_int**2)
         self.tau_int_optimal_error = self.tau_int_error[self.W]
         return self.tau_int_optimal_error
+
+    # @staticmethod
+    # @nb.njit(cache=True)
+    # def integrated_autocorrelation_time_error(N, tau_int, W):
+    #     """
+    #     Eq. 42, standard deviation of tau_int
+    #     """
+    #     tau_int_error = np.asarray(
+    #         [np.sqrt(4/float(N)*(float(iW) + 0.5 - itau)*itau**2)
+    #          for iW, itau in enumerate(tau_int)])
+    #     # self.tau_int_error = np.sqrt((4*self.W + 2)/float(self.N) * self.tau_int**2)
+    #     return tau_int_error, tau_int_error[W]
 
     def integrated_autocorrelation_time(self):
         return self.tau_int_optimal
@@ -613,7 +624,6 @@ class FullAutocorrelation(_AutocorrelationCore):
     @staticmethod
     @nb.njit(cache=True)
     def _correct_bias(CfW, N):
-    	fixe andre funksjon til også å bli jittet
         """
         Eq. 49, bias correction
         """
@@ -629,7 +639,7 @@ class FullAutocorrelation(_AutocorrelationCore):
             if (np.exp(-iW/itau) - itau/np.sqrt(iW*float(self.N))) < 0.0:
                 return iW
         else:
-            return float('NaN')
+            return np.jit
 
     @staticmethod
     @nb.njit(cache=True)

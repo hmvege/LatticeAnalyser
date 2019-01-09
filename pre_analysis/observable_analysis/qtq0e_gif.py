@@ -1,4 +1,5 @@
-from pre_analysis.observable_analysis.qtq0euclideananalyser import QtQ0EuclideanAnalyser
+from pre_analysis.observable_analysis.qtq0euclideananalyser import \
+    QtQ0EuclideanAnalyser
 from tools.folderreadingtools import check_folder
 import copy
 import numpy as np

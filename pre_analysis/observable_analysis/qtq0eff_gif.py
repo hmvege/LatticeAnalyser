@@ -1,4 +1,5 @@
-from pre_analysis.observable_analysis.qtq0effectivemass import QtQ0EffectiveMassAnalyser
+from pre_analysis.observable_analysis.qtq0effectivemass import \
+    QtQ0EffectiveMassAnalyser
 from tools.folderreadingtools import check_folder
 import statistics.parallel_tools as ptools
 import copy

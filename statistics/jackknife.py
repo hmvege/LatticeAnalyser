@@ -1,4 +1,8 @@
-import numpy as np, matplotlib.pyplot as plt, sys, os, time
+import numpy as np
+import matplotlib.pyplot as plt
+import sys
+import os
+import time
 
 __all__ = ["Jackknife"]
 
@@ -112,7 +116,7 @@ class Jackknife:
 		msg += "%10.10E " % self.jk_std
 		msg += "%20.16f (unbiased average)" % self.jk_avg_unbiased
 
-		return msg
+		return(msg)
 
 def main():
 	# Data to load and analyse
@@ -122,7 +126,7 @@ def main():
 	jk = Jackknife(data, time_jk=True)
 	jk_data = jk()
 
-	print jk
+	print(jk)
 
 if __name__ == '__main__':
 	main()

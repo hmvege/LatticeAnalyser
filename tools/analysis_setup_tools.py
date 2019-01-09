@@ -184,9 +184,12 @@ def write_fit_parameters_to_file(fparams, fname, skip_values=None,
             [fp["fit_target"] for fp in sorted_parameter_list],
             [fp["extrap_method"] for fp in sorted_parameter_list],
             [r"{:s}".format(fp["interval"]) for fp in sorted_parameter_list],
-            [r"{:.2g}".format(fp["chi_squared"]) for fp in sorted_parameter_list],
-            [sciprint.sciprint(fp["topsus"], fp["topsus_err"], prec=4) for fp in sorted_parameter_list],
-            [sciprint.sciprint(fp["N_F"], fp["N_F_err"], prec=4) for fp in sorted_parameter_list],
+            [r"{:.2g}".format(fp["chi_squared"]) 
+                for fp in sorted_parameter_list],
+            [sciprint.sciprint(fp["topsus"], fp["topsus_err"], prec=4) 
+                for fp in sorted_parameter_list],
+            [sciprint.sciprint(fp["N_F"], fp["N_F_err"], prec=4) 
+                for fp in sorted_parameter_list],
         ]
 
         width_list = [len(tab)+2 for tab in table_header]
