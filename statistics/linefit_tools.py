@@ -4,7 +4,10 @@ from scipy.interpolate import InterpolatedUnivariateSpline as spline
 import linefit as lfit
 import scipy.optimize as sciopt
 import numpy as np
-import matplotlib.pyplot as plt
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import matplotlib.pyplot as plt
 import types
 import copy
 from decimal import Decimal

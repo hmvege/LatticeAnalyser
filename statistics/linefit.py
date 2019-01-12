@@ -5,7 +5,10 @@ import linefit_tools as lfit_tools
 import scipy.optimize as sciopt
 import scipy.stats
 import numpy as np
-import matplotlib.pyplot as plt
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import matplotlib.pyplot as plt
 import types
 from tqdm import tqdm
 

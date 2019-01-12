@@ -1,7 +1,10 @@
 from tools.postanalysisdatareader import PostAnalysisDataReader
 from tools.latticefunctions import get_lattice_spacing
 from tools.folderreadingtools import check_folder, get_NBoots
-import matplotlib.pyplot as plt
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import matplotlib.pyplot as plt
 import numpy as np
 import os
 import types

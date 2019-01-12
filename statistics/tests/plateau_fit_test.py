@@ -5,10 +5,18 @@ import numpy as np
 import scipy.optimize as sciopt
 import scipy.stats as scista
 import types
-import linefit as lfit
-import linefit_tools as lftools
-import matplotlib.pyplot as plt
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import matplotlib.pyplot as plt
 import copy as cp
+try:
+    import linefit as lfit
+except ImportError:
+    import sys
+    sys.path.insert(0, "../")
+    import linefit as lfit
+    import linefit_tools as lftools
 
 # import statsmodels
 from statsmodels.stats.correlation_tools import cov_nearest

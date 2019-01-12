@@ -2,7 +2,10 @@ from post_analysis.core.multiplotcore import MultiPlotCore
 from tools.folderreadingtools import check_folder
 from tools.latticefunctions import get_lattice_spacing
 import numpy as np
-import matplotlib.pyplot as plt
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import matplotlib.pyplot as plt
 import itertools
 import os
 import types

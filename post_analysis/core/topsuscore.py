@@ -2,7 +2,10 @@ from postcore import PostCore
 from tools.latticefunctions import get_lattice_spacing
 from tools.latticefunctions import witten_veneziano
 from statistics.linefit import LineFit, extract_fit_target
-import matplotlib.pyplot as plt
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import matplotlib.pyplot as plt
 import numpy as np
 import os
 import copy

@@ -4,7 +4,10 @@ from tools.latticefunctions import get_lattice_spacing
 import numpy as np
 import copy
 import os
-import matplotlib.pyplot as plt
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import matplotlib.pyplot as plt
 import itertools
 import types
 import subprocess

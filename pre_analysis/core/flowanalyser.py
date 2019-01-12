@@ -732,7 +732,8 @@ class FlowAnalyser(object):
 
         # Plots the error bar
         ax.errorbar(x, y, yerr=y_std, fmt=".", color="0", ecolor="r",
-                    markevery=self.mark_interval, errorevery=self.error_mark_interval)
+                    markevery=self.mark_interval, 
+                    errorevery=self.error_mark_interval)
 
         # Plots hline/vline at specified position.
         # Needed for plotting at e.g. t0.
@@ -1089,6 +1090,12 @@ class FlowAnalyser(object):
         if not isinstance(self.mc_interval, types.NoneType):
             return_string += info_string("MC interval",
                                          "[%d,%d)" % self.mc_interval)
+
+        # Add parallel run info
+        return_string += info_string("Parallel", self.parallel)
+        if self.parallel:
+            return_string += info_string("Numprocs", self.numprocs)
+
         return_string += "\n" + "="*160
         return return_string
 

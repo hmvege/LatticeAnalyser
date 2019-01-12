@@ -1,4 +1,5 @@
 import numpy as np
+import pickle
 
 def get_default_parameters(data_batch_folder=None, obs_exlusions=[]):
     """Container for available observables."""
@@ -130,6 +131,28 @@ def get_default_parameters(data_batch_folder=None, obs_exlusions=[]):
 
     default_params["batch_folder"] = data_batch_folder
     return default_params
+
+
+def load_pickle(pickle_file_name, verbose=False):
+    """Loads a pickle from given pickle_file_name."""
+    assert isinstance(pickle_file_name, str), "filename is not of string type"
+
+    with open(pickle_file_name, "rb") as f:
+        data = pickle.load(f)
+        if verbose:
+            print("Pickle file loaded: {}".format(pickle_file_name))
+    return data
+
+
+def save_pickle(pickle_file_name, data, verbose=False):
+    """Saves data as a pickle."""
+    assert isinstance(pickle_file_name, str), "filename is not of string type"
+
+    with open(str(pickle_file_name), "wb") as f:
+        pickle.dump(data, f)
+        if verbose:
+            print("Data pickled and dumped to: {:s}".format(pickle_file_name))
+
 
 def main():
     raise ImportError("default_analysis_params not intended as a "
