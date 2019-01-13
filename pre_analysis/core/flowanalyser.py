@@ -1092,9 +1092,9 @@ class FlowAnalyser(object):
                                          "[%d,%d)" % self.mc_interval)
 
         # Add parallel run info
-        return_string += info_string("Parallel", self.parallel)
+        return_string += info_string("Parallel", "{}".format(self.parallel))
         if self.parallel:
-            return_string += info_string("Numprocs", self.numprocs)
+            return_string += info_string("Numprocs", "{}".format(self.numprocs))
 
         return_string += "\n" + "="*160
         return return_string

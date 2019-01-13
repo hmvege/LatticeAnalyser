@@ -30,6 +30,12 @@ def lattice_updates_analysis():
     for analysis_parameters in param_list:
         pre_analysis(analysis_parameters)
 
+    # TODO: find folder with .out files
+    # TODO: run pre analysis
+    # TODO: load pre analysis data
+    # TODO: load times
+    # TODO: plot final autocorr on grid
+    # TODO: plot times on grid
     
 
 if __name__ == '__main__':

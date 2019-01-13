@@ -1,7 +1,7 @@
 import numpy as np
 import pickle
 
-def get_default_parameters(data_batch_folder=None, obs_exlusions=[]):
+def get_default_parameters(data_batch_folder=None, obs_exlusions=[], verbose=True):
     """Container for available observables."""
 
     #######################################
@@ -34,7 +34,6 @@ def get_default_parameters(data_batch_folder=None, obs_exlusions=[]):
     #######################################
     N_bs = 500
     dryrun = False
-    verbose = True
     print_latex = True
     parallel = True
     numprocs = 8

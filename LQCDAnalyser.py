@@ -19,8 +19,8 @@ def main():
 
     # main_analysis() # TODO: Run and make sure it works
     # distribution_analysis()
-    topc_modes_analysis() # TODO: add different modes to the same plotting window
-    # lattice_updates_analysis() # TODO: complete lattice updates analysis
+    # topc_modes_analysis()
+    lattice_updates_analysis() # TODO: complete lattice updates analysis
     # thermalization_analysis() # TODO: complete thermalization analysis
     # strong_scaling_analysis() # TODO: complete strong scaling analysis
     # weak_scaling_analysis() # TODO: complete weak scaling analysis

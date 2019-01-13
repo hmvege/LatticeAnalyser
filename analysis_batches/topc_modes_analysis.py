@@ -6,28 +6,33 @@
 # from tools.folderreadingtools import get_num_observables
 import copy
 import os
+import numpy as np
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import matplotlib.pyplot as plt
 
 
 try:
     from default_analysis_params import get_default_parameters
-    from pre_analysis.pre_analyser import pre_analysis
+    from pre_analysis.pre_analyser import pre_analysis, get_data_parameters
     import post_analysis.post_analyser as post_analysis
     from tools.folderreadingtools import get_num_observables, check_folder
 except ImportError:
     import sys
     sys.path.insert(0, "../")
     from default_analysis_params import get_default_parameters
-    from pre_analysis.pre_analyser import pre_analysis
+    from pre_analysis.pre_analyser import pre_analysis, get_data_parameters
     import post_analysis.post_analyser as post_analysis
     from tools.folderreadingtools import get_num_observables, check_folder
-
 
 
 def topc_modes_analysis():
     """Analysis for different lattice sizes and their topological charges."""
     default_params = get_default_parameters(data_batch_folder="temp")
 
-    run_pre_analysis = True
+    run_pre_analysis = False
+    verbose = True
 
     data_path = "../data/"
     if not os.path.isdir(data_path):
@@ -84,31 +89,65 @@ def topc_modes_analysis():
     smaug16x32_data_beta61_analysis["NT"] = 32
     smaug16x32_data_beta61_analysis["color"] = "#377eb8"
 
-    if run_pre_analysis:
-        # Submitting 8x16 analysis
-        analysis_parameter_list = [smaug8x16_data_beta60_analysis]
-        for analysis_parameters in analysis_parameter_list:
-            pre_analysis(analysis_parameters)
-
-        # Submitting 12x24 analysis
-        analysis_parameter_list = [smaug12x24_data_beta60_analysis]
-        for analysis_parameters in analysis_parameter_list:
-            pre_analysis(analysis_parameters)
-
-        # Submitting 16x32 analysis
-        analysis_parameter_list = [smaug16x32_data_beta61_analysis]
-        for analysis_parameters in analysis_parameter_list:
-            pre_analysis(analysis_parameters)
-
-    # Use post_analysis data for further analysis.
     param_list = [smaug8x16_data_beta60_analysis,
-                  smaug12x24_data_beta60_analysis, 
+                  smaug12x24_data_beta60_analysis,
                   smaug16x32_data_beta61_analysis]
-    data = {}
-    for param in param_list:
-        print "Loading data for:".format(param["batch_name"])
-        data[param["N"]] = post_analysis.PostAnalysisDataReader(
-            [param], observables_to_load=param["observables"])
+
+    if run_pre_analysis:
+        # Submitting analysis
+        for analysis_parameters in param_list:
+            pre_analysis(analysis_parameters)
+
+    # Loads topc data
+    data = []
+    # N_val = [24, 24, 28]
+    for i, param in enumerate(param_list):
+        print "Loading data for: {}".format(param["batch_name"])
+        # fpath = os.path.join(param["batch_folder"], param["batch_name"],
+        #                      "{0:d}_{1:.2f}.npy".format(N_val[i],
+        #                                                 param["beta"]))
+        data_, p = get_data_parameters(param)
+        data.append({"data": data_("topc")["obs"].T,
+                     "beta": param["beta"],
+                     "N": param["N"]})
+
+
+        # print data_("topc")["obs"].shape
+
+    # Flow time to plots
+    flow_times = [0, 250, 600]
+
+    # Histogram plotting
+    xlim = 7.5
+    NBins = np.arange(-xlim,xlim,0.05)
+    for t_f in flow_times:
+        # Adds unanalyzed data
+        fig, axes = plt.subplots(3, 1, sharey=False, sharex=True)
+        for i, ax in enumerate(axes):
+            lab = r"${0:d}^3\times{1:d}$, $\beta={2:.2f}$".format(
+                data[i]["N"], data[i]["N"]*2, data[i]["beta"])
+
+            weights = np.ones_like(data[i]["data"][t_f])
+            weights /= len(data[i]["data"][t_f])
+            ax.hist(data[i]["data"][t_f], bins=NBins, label=lab, weights=weights)
+            ax.legend(loc="upper right")
+            ax.grid(True)
+            ax.set_xlim(-xlim, xlim)
+
+            if i == 1:
+                ax.set_ylabel(r"$Hits$")
+            elif i == 2:
+                ax.set_xlabel(r"$Q$")
+
+        # Sets up figure
+        figpath = "figures/topc_modes_analysis"
+        if not os.path.isdir(figpath):
+            figpath = "../" + figpath
+        check_folder(figpath, verbose=verbose)
+        figpath = os.path.join(figpath, "topc_modes_tf{}.pdf".format(t_f))
+        fig.savefig(figpath)
+        print "Figure saved at {0:s}".format(figpath)
+        plt.close(fig)
 
 
 
