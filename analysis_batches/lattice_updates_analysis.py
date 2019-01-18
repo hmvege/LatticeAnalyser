@@ -20,7 +20,6 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     import matplotlib.pyplot as plt
     from matplotlib import cm, rc, rcParams
-    from mpl_toolkits.mplot3d import axes3d
 
 try:
     from pre_analysis.pre_analyser import pre_analysis

@@ -1,7 +1,8 @@
 import numpy as np
 import pickle
 
-def get_default_parameters(data_batch_folder=None, obs_exlusions=[], verbose=True):
+def get_default_parameters(data_batch_folder=None, obs_exlusions=[], 
+    include_euclidean_time_obs=True, verbose=True):
     """Container for available observables."""
 
     #######################################
@@ -26,7 +27,8 @@ def get_default_parameters(data_batch_folder=None, obs_exlusions=[], verbose=Tru
         "qtq0e",
         "qtq0eff",
     ]
-    observables += observables_euclidean_time
+    if include_euclidean_time_obs:
+        observables += observables_euclidean_time
     observables = list(set(set(observables) - set(obs_exlusions)))
 
     #######################################
@@ -38,7 +40,7 @@ def get_default_parameters(data_batch_folder=None, obs_exlusions=[], verbose=Tru
     parallel = True
     numprocs = 8
     # Try to load binary file(much much faster)
-    load_file = True 
+    load_binary_file = True 
     # If we are to create per-flow datasets as opposite to per-cfg datasets
     create_perflow_data = False
     # Save binary file
@@ -71,7 +73,7 @@ def get_default_parameters(data_batch_folder=None, obs_exlusions=[], verbose=Tru
         observables = set(set(observables) - set(observables_euclidean_time))
         observables = list(observables)
         correct_energy = False
-        load_file = True
+        load_binary_file = True
         save_to_binary = False
     else:
         correct_energy = True
@@ -98,7 +100,7 @@ def get_default_parameters(data_batch_folder=None, obs_exlusions=[], verbose=Tru
         "batch_folder": data_batch_folder,
         "figures_folder": figures_folder,
         "observables": observables,
-        "load_file": load_file,
+        "load_binary_file": load_binary_file,
         "save_to_binary": save_to_binary, 
         # Flow parameters
         "create_perflow_data": create_perflow_data,

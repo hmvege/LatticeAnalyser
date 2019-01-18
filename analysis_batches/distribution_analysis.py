@@ -202,8 +202,9 @@ def distribution_plotter(data, observable, xlabel, ylabel, mark_interval=10,
     ax.grid(True)
 
     # Checks and creates relevant folder
-    figname = os.path.join(folder_path, "eps_vs_tau_int_{0:s}_{1:s}.pdf".format(
-        observable, t))
+    figname = os.path.join(folder_path,
+                           "eps_vs_tau_int_{0:s}_{1:s}.pdf".format(
+                               observable, t))
     fig.savefig(figname)
     print "Created figure {}".format(figname)
 

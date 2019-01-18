@@ -1,5 +1,5 @@
 from observable_analysis import *
-from tools.folderreadingtools import DataReader
+from tools.folderreadingtools import FlowDataReader
 from tools.analysis_setup_tools import get_intervals
 import time
 import numpy as np
@@ -443,7 +443,7 @@ def get_data_parameters(parameters):
 
     Args:
             parameters: dictionary containing following elements: batch_name, 
-                    batch_folder, observables, NCfgs, obs_file, load_file, 
+                    batch_folder, observables, NCfgs, obs_file, load_binary_file, 
                     save_to_binary, base_parameters, flow_epsilon, NFlows,
                     create_perflow_data, correct_energy
 
@@ -456,9 +456,9 @@ def get_data_parameters(parameters):
     figures_folder = parameters["figures_folder"]
 
     # Retrieves data
-    obs_data = DataReader(
+    obs_data = FlowDataReader(
         batch_name, batch_folder, figures_folder,
-        load_binary_file=parameters["load_file"],
+        load_binary_file=parameters["load_binary_file"],
         save_to_binary=parameters["save_to_binary"],
         flow_epsilon=parameters["flow_epsilon"], NCfgs=parameters["NCfgs"],
         create_perflow_data=parameters["create_perflow_data"],
@@ -480,7 +480,7 @@ def pre_analysis(parameters):
 
     Args:
             parameters: dictionary containing following elements: batch_name, 
-                    batch_folder, observables, NCfgs, obs_file, load_file, 
+                    batch_folder, observables, NCfgs, obs_file, load_binary_file, 
                     save_to_binary, base_parameters, flow_epsilon, NFlows,
                     create_perflow_data, correct_energy
     """
@@ -494,9 +494,9 @@ def pre_analysis(parameters):
     figures_folder = parameters["figures_folder"]
 
     # # Retrieves data
-    # obs_data = DataReader(
+    # obs_data = FlowDataReader(
     #     batch_name, batch_folder, figures_folder,
-    #     load_binary_file=parameters["load_file"],
+    #     load_binary_file=parameters["load_binary_file"],
     #     save_to_binary=parameters["save_to_binary"],
     #     flow_epsilon=parameters["flow_epsilon"], NCfgs=parameters["NCfgs"],
     #     create_perflow_data=parameters["create_perflow_data"],

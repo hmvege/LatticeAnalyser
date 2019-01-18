@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-from tools.folderreadingtools import DataReader
+from tools.folderreadingtools import FlowDataReader
 from tools.folderreadingtools import check_folder
 from tools.folderreadingtools import write_data_to_file
 from tools.folderreadingtools import write_raw_analysis_to_file
