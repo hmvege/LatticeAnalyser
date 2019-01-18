@@ -730,6 +730,14 @@ class FlowDataReader:
 def load_observable(params):
     """
     Method for loading observable .dat files in the 'observables' folder.
+
+    Args:
+        params: dict, takes a parameter dictionary, which contains entries 
+            batch_name, batch_folder, dryrun, verbose
+
+    Returns: 
+        dictionary with entry 'meta' containing metadata from the run, and
+            and entry 'obs' that contains the different observables
     """
     data = {
         "meta": {},
@@ -737,21 +745,44 @@ def load_observable(params):
     }
 
     file_tree = _DirectoryTree(params["batch_name"], params["batch_folder"],
-                               dryrun=params["dryrun"], 
+                               dryrun=params["dryrun"],
                                verbose=params["verbose"])
 
-    if params["verbose"]:
-        print "Loading found obervables: {}".format(
-            ", ".join(file_tree.get_found_observables()))
-
-    print dir(file_tree), file_tree.flow_tree, file_tree.obs_tree
+    # Loops over found observables
     for obs, obs_path in file_tree.obs_tree.items():
-        
-        with open(obs_path, "r") as f:
-            for l in f:
-                print l
 
-        exit("loool")
+        # Counter for the number of meta data lines
+        _num_meta_lines = 0
+
+        with open(obs_path, "r") as f:
+
+            # Reads meta data
+            for l in f:
+
+                # Will continue to retrieve meta data while possible
+                _lvals = l.split(" ")
+
+                # Checks if first element is string, descriptor
+                if _lvals[0].isalpha():
+
+                    # Conerts element to float
+                    data["meta"][_lvals[0]] = float(_lvals[1])
+                    _num_meta_lines += 1
+                else:
+
+                    # Meta data done when first element is not alpha,
+                    # i.e. is a integer.
+                    break
+
+        data["obs"][obs] = np.loadtxt(obs_path, skiprows=_num_meta_lines)
+
+    if params["verbose"]:
+        _data_size = list(map(sys.getsizeof,data["obs"].values()))
+        print "Retrieved {0:s}. Size: {1:.2f} MB".format(
+                ", ".join(file_tree.get_found_observables()), 
+                sum(_data_size)/1024.0/1024.0)
+
+    return data
 
 
 def check_folder(folder_name, dryrun=False, verbose=False):

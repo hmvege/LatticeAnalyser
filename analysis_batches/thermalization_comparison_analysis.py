@@ -64,7 +64,6 @@ def thermalization_analysis():
     hot_rst_beta60_params["batch_folder"] = batch_folder
     hot_rst_beta60_params["batch_name"] = "B60_THERM_HOT_RST"
 
-
     if run_pre_analysis:
         # Submitting distribution analysis
         cold_data = load_observable(cold_beta60_params)
@@ -87,8 +86,27 @@ def thermalization_analysis():
     #     observables_to_load=hot_rst_beta60_params["observables"],
     #     verbose=verbose)
 
-    # TODO: implement load method for the .dat observable files
     # TODO: plot termaliations for the 3 different observables
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.
+
+
+def plot_termalization(data_x, data_y, data_labels, x_label, y_label,
+                       figname, figfolder, plot_log="default", plot_window="1"):
+    """
+    Plots the 
+    """
+    fortsett her! husk å legge til modes:
+    - samme vindu
+    - tre vinduer
+    - log-log / logx / logy
+    assert len(data_x)==len(data_y)==len(data_labels), (
+        "data_x, data_y and data_labels is not of equal length: "
+        "{} {} {}".format(len(data_x), len(data_y), len(data_labels)))
+
+    pass
 
 
 if __name__ == '__main__':

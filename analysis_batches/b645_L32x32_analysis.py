@@ -8,6 +8,10 @@ def beta645_L32_analysis():
     import copy
     import os
 
+    # TODO: load b645 32^4 data
+    # TODO: pre-analyse b645 32^4 data
+    # TODO: compare b645 32^4 and b645 48^3*96 data in post analysis
+
     #### Different batches
     data_batch_folder = "../GluonAction/data9"
     data_batch_folder = "../GluonAction/data10"
