@@ -21,9 +21,8 @@ def main():
     # distribution_analysis()
     # topc_modes_analysis()
     # lattice_updates_analysis()
-    thermalization_analysis() # TODO: complete thermalization analysis
-    # strong_scaling_analysis() # TODO: complete strong scaling analysis
-    # weak_scaling_analysis() # TODO: complete weak scaling analysis
+    # thermalization_analysis()
+    scaling_analysis() # TODO: complete strong and weak scaling analysis
     # beta645_L32_analysis() # TODO: complete analysis with beta 645 L=32^3 and L=96x48^3
 
 

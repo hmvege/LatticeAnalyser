@@ -8,7 +8,8 @@ import json
 import types
 
 __all__ = ["FlowDataReader", "check_folder", "get_NBoots",
-           "write_data_to_file", "write_raw_analysis_to_file"]
+           "write_data_to_file", "write_raw_analysis_to_file",
+           "load_observable", "check_relative_path"]
 
 
 class _DirectoryTree:
@@ -48,8 +49,18 @@ class _DirectoryTree:
             self.observables_folder = obs_path
             self.non_flow_obs_folder_exist = True
 
+            # Peformes sort on file paths, such that they correspond to
+            # correct observable.
+            _obs_file_paths = os.listdir(self.observables_folder)
+            _tmp_list = []
+            for _obs in self.observables_list:
+                for _obs_path in _obs_file_paths:
+                    if _obs in _obs_path:
+                        _tmp_list.append(_obs_path)
+            _obs_file_paths = _tmp_list
+
             for obs, file_name in zip(self.observables_list,
-                                      os.listdir(self.observables_folder)):
+                                      _obs_file_paths):
 
                 # Removes .DS_Store
                 if obs.startswith("."):
@@ -777,21 +788,64 @@ def load_observable(params):
         data["obs"][obs] = np.loadtxt(obs_path, skiprows=_num_meta_lines)
 
     if params["verbose"]:
-        _data_size = list(map(sys.getsizeof,data["obs"].values()))
+        _data_size = list(map(sys.getsizeof, data["obs"].values()))
         print "Retrieved {0:s}. Size: {1:.2f} MB".format(
-                ", ".join(file_tree.get_found_observables()), 
-                sum(_data_size)/1024.0/1024.0)
+            ", ".join(file_tree.get_found_observables()),
+            sum(_data_size)/1024.0/1024.0)
 
     return data
 
 
+def load_slurm_data(p):
+    """
+    Loads slurm data and places it in an dictionary.
+
+    Args:
+        p: slurm .out-file path
+
+    Returns:
+        dict, dictionary with slurm data
+    """
+    slurm_data = {}
+
+    with open(p, "r") as f:
+        for l in f:
+            print l, "\r"
+
+    return slurm_data
+
 def check_folder(folder_name, dryrun=False, verbose=False):
-    # Checks that figures folder exist, and if not will create it
+    """
+    Checks that figures folder exist, and if not will create it.
+
+    Args:
+        folder_name: str, folder to check if exist.
+        dryrun: bool, default is False.
+        verbose: bool, default is False.
+    """
     if not os.path.isdir(folder_name):
         if dryrun or verbose:
             print "> mkdir %s" % folder_name
         if not dryrun:
             os.mkdir(folder_name)
+
+
+def check_relative_path(p):
+    """
+    Function for ensuring are in the correct relative path.
+
+    Args:
+        p: str, path we are checking
+
+    Return:
+        relative path to p
+    """
+    if not os.path.isdir(p):
+        p = os.path.join("..", p)
+        return check_relative_path(p)
+    else:
+        return p
+
 
 
 def get_NBoots(raw):

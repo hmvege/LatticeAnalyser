@@ -19,7 +19,12 @@ import warnings
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     import matplotlib.pyplot as plt
-    from matplotlib import cm, rc, rcParams
+    from matplotlib import rc, rcParams
+
+rc("text", usetex=True)
+rcParams["font.family"] += ["serif"]
+
+
 
 try:
     from pre_analysis.pre_analyser import pre_analysis

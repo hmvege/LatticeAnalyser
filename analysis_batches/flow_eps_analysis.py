@@ -3,12 +3,11 @@ import warnings
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     import matplotlib.pyplot as plt
+    from matplotlib import rc, rcParams
 import os
 import copy
-from matplotlib import rc, rcParams
 
 rc("text", usetex=True)
-# rc("font", **{"family": "serif", "serif": ["Computer Modern"]})
 rcParams["font.family"] += ["serif"]
 
 
