@@ -1,3 +1,6 @@
+# For Python 3 string features (much nicer than python 2)
+from __future__ import unicode_literals
+
 import sys
 import os
 import copy
@@ -6,6 +9,9 @@ import re
 import pandas as pd
 import json
 import types
+import datetime
+import calendar
+
 
 __all__ = ["FlowDataReader", "check_folder", "get_NBoots",
            "write_data_to_file", "write_raw_analysis_to_file",
@@ -808,11 +814,121 @@ def load_slurm_data(p):
     """
     slurm_data = {}
 
+    months_to_int = {v: k for k, v in enumerate(calendar.month_abbr)}
+
+    def key_cleaner(k): return str(k.split("(")[0].replace(" ", "_"))
+
     with open(p, "r") as f:
-        for l in f:
-            print l, "\r"
+
+        has_run_parmas = False
+        retrieving_run_params = False
+
+        retrieved_start_config = False
+
+        retrieved_starting_job_time = False
+        time0 = 0
+
+        for i, l in enumerate(f):
+            # print l
+            l_split = l.split(" ")
+
+            # Before has_run_params, get start time for job
+            if not has_run_parmas and not retrieving_run_params and \
+                    not retrieved_starting_job_time:
+
+                if "Starting" in l_split[0]:
+                    _tmp_job_name = re.findall(r'\("([\w\._]+)"\)', l)
+                    slurm_data["job_name"] = _tmp_job_name[0]
+
+                    _tmp_start_time = l.split(" at ")[-1]
+                    _, _month, _day, _time_stamp, _, _year = \
+                        _tmp_start_time.split(" ")
+                    _time_stamp = list(map(int, _time_stamp.split(":")))
+
+                    time0 = datetime.datetime(
+                        int(_year), months_to_int[_month], int(_day),
+                        hour=_time_stamp[0], minute=_time_stamp[1],
+                        second=_time_stamp[2])
+
+                    slurm_data[str("start_time")] = time0
+
+            # Retrieves run parameters
+            if not has_run_parmas:
+
+                if retrieving_run_params:
+
+                    # If we are not at a '=' seperator, retrieve parmas
+                    if l[0] != "=":
+
+                        _lparams = l.strip("\n").split(":")
+                        _key = key_cleaner(_lparams[0])
+                        _val = _lparams[1].lstrip(" ").rstrip(" ")
+
+                        if _val[0].isnumeric():
+
+                            # If right hand side is a number
+                            if len(_val.split(" ")) > 1:
+                                # In case we are dealing with multiple numbers
+                                slurm_data[_key] = \
+                                    list(map(int, _val.split(" ")))
+
+                            else:
+
+                                # For single number cases
+                                if _val.isdigit():
+                                    slurm_data[_key] = int(_val)
+                                else:
+                                    slurm_data[_key] = float(_val)
+
+                        else:
+
+                            if len(_val.split(",")) > 1:
+                                # For observables list
+                                slurm_data[_key] = \
+                                    list(map(str, _val.split(",")))
+
+                            else:
+
+                                # For regular string parameter
+                                slurm_data[_key] = str(_val)
+
+                # Will activate after all paramaters har been retrieved
+                if l[0] == "=" and retrieving_run_params:
+                    retrieving_run_params = False
+                    has_run_parmas = True
+
+                # Will be checked if do not have any run parameters
+                if l[0] == "=" and not retrieving_run_params:
+                    retrieving_run_params = True
+
+            # Retrieves start config
+            if not retrieved_start_config:
+                if l_split[0] == "Configuration":
+                    slurm_data["start_config"] = l_split[-1]
+                    retrieved_start_config = True
+
+            # Retrieves columns to store
+
+            # If first element is alpha, then we are writing config
+
+            # If first element i alphanumeric, then we are printing tf=0 values
+
+            # If new "=" block, then we are writing final run parameters
+
+            # After last "=" we are writing observable output files
+
+            # After that we are writing final std's
+
+            # After that we are writing total program run time
+
+            # Retrieve job usage time
+
+            # Retrieve final job end time
+
+    print slurm_data
 
     return slurm_data
+
 
 def check_folder(folder_name, dryrun=False, verbose=False):
     """
@@ -845,7 +961,6 @@ def check_relative_path(p):
         return check_relative_path(p)
     else:
         return p
-
 
 
 def get_NBoots(raw):
