@@ -802,132 +802,154 @@ def load_observable(params):
     return data
 
 
-def load_slurm_data(p):
-    """
-    Loads slurm data and places it in an dictionary.
+class SlurmDataReader:
+    def __init__(self, p):
+        """
+        Loads slurm data and places it in an dictionary.
 
-    Args:
-        p: slurm .out-file path
+        Args:
+            p: slurm .out-file path
 
-    Returns:
-        dict, dictionary with slurm data
-    """
-    slurm_data = {}
+        Returns:
+            dict, dictionary with slurm data
+        """
+        self.p = p
+        self.data = {}
+        self.months_to_int = {v: k for k, v in enumerate(calendar.month_abbr)}
 
-    months_to_int = {v: k for k, v in enumerate(calendar.month_abbr)}
 
-    def key_cleaner(k): return str(k.split("(")[0].replace(" ", "_"))
+        def key_cleaner(k): return str(k.split("(")[0].replace(" ", "_"))
 
-    with open(p, "r") as f:
+        with open(p, "r") as f:
 
-        has_run_parmas = False
-        retrieving_run_params = False
+            has_run_parmas = False
+            retrieving_run_params = False
 
-        retrieved_start_config = False
+            retrieved_start_config = False
 
-        retrieved_starting_job_time = False
-        time0 = 0
+            retrieved_starting_job_time = False
+            time0 = 0
 
-        for i, l in enumerate(f):
-            # print l
-            l_split = l.split(" ")
+            # def _read_start_time(_f):
+            #     while True
 
-            # Before has_run_params, get start time for job
-            if not has_run_parmas and not retrieving_run_params and \
-                    not retrieved_starting_job_time:
+            # _read_start_time(f)
+            # _read_parameters(f)
+            while True:
+                _tmp = f.readline()
+                print _tmp
+                if _tmp == "":
+                    break
 
-                if "Starting" in l_split[0]:
-                    _tmp_job_name = re.findall(r'\("([\w\._]+)"\)', l)
-                    slurm_data["job_name"] = _tmp_job_name[0]
+            exit(1)
 
-                    _tmp_start_time = l.split(" at ")[-1]
-                    _, _month, _day, _time_stamp, _, _year = \
-                        _tmp_start_time.split(" ")
-                    _time_stamp = list(map(int, _time_stamp.split(":")))
+            for i, l in enumerate(f):
+                # print l
+                l_split = l.split(" ")
 
-                    time0 = datetime.datetime(
-                        int(_year), months_to_int[_month], int(_day),
-                        hour=_time_stamp[0], minute=_time_stamp[1],
-                        second=_time_stamp[2])
+                # Before has_run_params, get start time for job
+                if not has_run_parmas and not retrieving_run_params and \
+                        not retrieved_starting_job_time:
 
-                    slurm_data[str("start_time")] = time0
+                    if "Starting" in l_split[0]:
+                        _tmp_job_name = re.findall(r'\("([\w\._]+)"\)', l)
+                        slurm_data["job_name"] = _tmp_job_name[0]
 
-            # Retrieves run parameters
-            if not has_run_parmas:
+                        _tmp_start_time = l.split(" at ")[-1]
+                        _, _month, _day, _time_stamp, _, _year = \
+                            _tmp_start_time.split(" ")
+                        _time_stamp = list(map(int, _time_stamp.split(":")))
 
-                if retrieving_run_params:
+                        time0 = datetime.datetime(
+                            int(_year), months_to_int[_month], int(_day),
+                            hour=_time_stamp[0], minute=_time_stamp[1],
+                            second=_time_stamp[2])
 
-                    # If we are not at a '=' seperator, retrieve parmas
-                    if l[0] != "=":
+                        slurm_data[str("start_time")] = time0
 
-                        _lparams = l.strip("\n").split(":")
-                        _key = key_cleaner(_lparams[0])
-                        _val = _lparams[1].lstrip(" ").rstrip(" ")
+                # Retrieves run parameters
+                if not has_run_parmas:
 
-                        if _val[0].isnumeric():
+                    if retrieving_run_params:
 
-                            # If right hand side is a number
-                            if len(_val.split(" ")) > 1:
-                                # In case we are dealing with multiple numbers
-                                slurm_data[_key] = \
-                                    list(map(int, _val.split(" ")))
+                        # If we are not at a '=' seperator, retrieve parmas
+                        if l[0] != "=":
 
-                            else:
+                            _lparams = l.strip("\n").split(":")
+                            _key = key_cleaner(_lparams[0])
+                            _val = _lparams[1].lstrip(" ").rstrip(" ")
 
-                                # For single number cases
-                                if _val.isdigit():
-                                    slurm_data[_key] = int(_val)
+                            if _val[0].isnumeric():
+
+                                # If right hand side is a number
+                                if len(_val.split(" ")) > 1:
+                                    # In case we are dealing with multiple numbers
+                                    slurm_data[_key] = \
+                                        list(map(int, _val.split(" ")))
+
                                 else:
-                                    slurm_data[_key] = float(_val)
 
-                        else:
-
-                            if len(_val.split(",")) > 1:
-                                # For observables list
-                                slurm_data[_key] = \
-                                    list(map(str, _val.split(",")))
+                                    # For single number cases
+                                    if _val.isdigit():
+                                        slurm_data[_key] = int(_val)
+                                    else:
+                                        slurm_data[_key] = float(_val)
 
                             else:
 
-                                # For regular string parameter
-                                slurm_data[_key] = str(_val)
+                                if len(_val.split(",")) > 1:
+                                    # For observables list
+                                    slurm_data[_key] = \
+                                        list(map(str, _val.split(",")))
 
-                # Will activate after all paramaters har been retrieved
-                if l[0] == "=" and retrieving_run_params:
-                    retrieving_run_params = False
-                    has_run_parmas = True
+                                else:
 
-                # Will be checked if do not have any run parameters
-                if l[0] == "=" and not retrieving_run_params:
-                    retrieving_run_params = True
+                                    # For regular string parameter
+                                    slurm_data[_key] = str(_val)
 
-            # Retrieves start config
-            if not retrieved_start_config:
-                if l_split[0] == "Configuration":
-                    slurm_data["start_config"] = l_split[-1]
-                    retrieved_start_config = True
+                    # Will activate after all paramaters har been retrieved
+                    if l[0] == "=" and retrieving_run_params:
+                        retrieving_run_params = False
+                        has_run_parmas = True
 
-            # Retrieves columns to store
+                    # Will be checked if do not have any run parameters
+                    if l[0] == "=" and not retrieving_run_params:
+                        retrieving_run_params = True
 
-            # If first element is alpha, then we are writing config
+                # Retrieves start config
+                if not retrieved_start_config:
+                    if l_split[0] == "Configuration":
+                        slurm_data["start_config"] = l_split[-1]
+                        retrieved_start_config = True
 
-            # If first element i alphanumeric, then we are printing tf=0 values
+                # Has to retrieve thermalization if that is required
 
-            # If new "=" block, then we are writing final run parameters
+                # Retrieves columns to store
 
-            # After last "=" we are writing observable output files
+                # If first element is alpha, then we are writing config
 
-            # After that we are writing final std's
+                # If first element i alphanumeric, then we are printing tf=0 values
 
-            # After that we are writing total program run time
+                # If new "=" block, then we are writing final run parameters
 
-            # Retrieve job usage time
+                # After last "=" we are writing observable output files
 
-            # Retrieve final job end time
+                # After that we are writing final std's
 
-    print slurm_data
+                # After that we are writing total program run time
 
-    return slurm_data
+                # Retrieve job usage time
+
+                # Retrieve final job end time
+
+        print slurm_data
+
+        # return slurm_data
+
+        def read(self, verbose=False):
+            pass
+
+            return self.data
 
 
 def check_folder(folder_name, dryrun=False, verbose=False):
