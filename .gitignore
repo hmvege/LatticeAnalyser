@@ -4,6 +4,7 @@
 *.dat
 *.zip
 *.mat
+*.json
 
 # Binary files
 *.pyc
@@ -15,6 +16,3 @@
 
 # Folders not needed
 figures/
-
-# Json files to ignore
-run_times_tmp.json
