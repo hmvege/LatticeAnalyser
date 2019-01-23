@@ -87,7 +87,8 @@ def scaling_analysis():
     flow_strong_scaling = filter_scalings(strong_scaling_times, "flow")
 
     # Splits weak scaling into gen, io, flow
-    gen_weak_scaling = filter_scalings(weak_scaling_times, "gen") # DENNE MÅ FILTRERES!! har visst kjørt den to ganger
+    gen_weak_scaling = filter_scalings(weak_scaling_times, "gen")
+    gen_weak_scaling = filter_duplicates(gen_weak_scaling)
     io_weak_scaling = filter_scalings(weak_scaling_times, "io")
     flow_weak_scaling = filter_scalings(weak_scaling_times, "flow")
 
@@ -131,17 +132,27 @@ def scaling_analysis():
 
             # Sets correct figure folder
             if _scaling == "strong":
+                _loc = "upper right"
                 figure_folder = strong_scaling_figure_folder
             elif _scaling == "weak":
+                _loc = "upper left"
                 figure_folder = weak_scaling_figure_folder
             else:
                 raise ValueError("Scaling type not recognized for"
                                  " folder: {}".format(_scaling))
 
-            plot_scaling(x, y, _sc_part.capitalize(), r"$N_p$",
+            if _sc_part == "io":
+                _label = r"Input/Output"
+            elif _sc_part == "gen":
+                _label = r"Configuration generation"
+            else:
+                _label = _sc_part.capitalize()
+
+
+            plot_scaling(x, y, _label, r"$N_p$",
                          r"$t_\mathrm{%s}$" % time_type.replace(
                              "_", r"\ ").capitalize(),
-                         figure_folder, figure_name)
+                         figure_folder, figure_name, loc=_loc)
 
 
 def filter_scalings(scaling_list, scaling_type):
@@ -152,6 +163,36 @@ def filter_scalings(scaling_list, scaling_type):
         lambda _f: True if scaling_type in _f["runname"] else False,
         scaling_list)
 
+def filter_duplicates(old_list):
+    """
+    Filter out run duplicates.
+    """
+    new_list = []
+    indices_to_remove = []
+
+    # Store the one which was run the latest
+    for i, _l1 in enumerate(old_list):
+
+        for j, _l2 in enumerate(old_list):
+
+            # If the elements is identical
+            if i == j:
+                continue
+
+            # If runnames match, it means we have a duplicate
+            if _l1["threads"] == _l2["threads"]:
+
+                # Keeps the newest of the runs
+                if _l1["start_time"] > _l2["start_time"]:
+                    indices_to_remove.append(i)
+                else:
+                    indices_to_remove.append(j)
+
+    for i, elem in enumerate(old_list):
+        if not i in indices_to_remove:
+            new_list.append(elem)
+
+    return new_list
 
 def add_numprocs(value):
     """
@@ -165,16 +206,16 @@ def add_numprocs(value):
     return sorted(return_list, key=lambda i: i["NP"])
 
 
-def plot_scaling(x, y, label, xlabel, ylabel, figfolder, figname):
+def plot_scaling(x, y, label, xlabel, ylabel, figfolder, figname, loc=None):
     """
     Plots the scaling.
     """
     fig, ax = plt.subplots()
-    ax.loglog(x, y, "o-", label=label)
+    ax.semilogx(x, y, "o-", label=label)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.grid(True)
-    ax.legend()
+    ax.legend(loc=loc)
     figpath = os.path.join(figfolder, figname)
     fig.savefig(figpath)
     print "Figure {} created.".format(figpath)

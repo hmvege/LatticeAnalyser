@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 
+
 def beta645_L32_analysis():
     from pre_analysis.pre_analyser import pre_analysis
     from post_analysis.post_analyser import post_analysis
@@ -12,11 +13,11 @@ def beta645_L32_analysis():
     # TODO: pre-analyse b645 32^4 data
     # TODO: compare b645 32^4 and b645 48^3*96 data in post analysis
 
-    #### Different batches
-    data_batch_folder = "../GluonAction/data9"
-    data_batch_folder = "../GluonAction/data10"
+    # Different batches
+    data_batch_folder = "../GluonAction/data11"
 
-    default_params = get_default_parameters(data_batch_folder=data_batch_folder)
+    default_params = get_default_parameters(
+        data_batch_folder=data_batch_folder)
     # obs_exlusions = ["plaq", "energy", "topc", "topc2", "topc4", "topcr", "topcMC", "topsus"]
     # obs_exlusions = ["energy", "topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
 
@@ -43,23 +44,23 @@ def beta645_L32_analysis():
     # observables += ["energy"]
     # default_params["observables"] = observables
 
-    #### Post analysis parameters
+    # Post analysis parameters
     line_fit_interval_points = 20
     # topsus_fit_targets = [0.3,0.4,0.5,0.58]
     # topsus_fit_targets = [0.3, 0.4, 0.5, 0.6] # tf = sqrt(8*t0)
     topsus_fit_targets = [0.6]
     energy_fit_target = 0.3
 
-    #### Different batches
+    # Different batches
     # data_batch_folder = "../GluonAction/data8"
     data_batch_folder = "../GluonAction/data10"
     # data_batch_folder = "../GluonAction/DataGiovanni"
     # data_batch_folder = "../data/topc_modes_8x16"
 
-    # Method of continuum extrapolation. 
+    # Method of continuum extrapolation.
     # Options: plateau, plateau_mean, nearest, interpolate, bootstrap
     extrapolation_methods = ["plateau", "plateau_mean", "nearest",
-        "interpolate", "bootstrap"]
+                             "interpolate", "bootstrap"]
     extrapolation_methods = ["plateau"]
     extrapolation_methods = ["bootstrap"]
     plot_continuum_fit = False
@@ -75,9 +76,9 @@ def beta645_L32_analysis():
     default_params["MC_time_splits"] = 4
     # MC_intervals = [[0, 1000], [500, 1000], [500, 1000], [175, 250]]
     MC_intervals = [None, None, None, None]
- 
+
     # Extraction point in flow time a*t_f for q0 in qtq0
-    q0_flow_times = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6] # [fermi]
+    q0_flow_times = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]  # [fermi]
 
     # Flow time indexes in percent to plot qtq0 in euclidean time at
     euclidean_time_percents = [0, 0.25, 0.50, 0.75, 1.00]
@@ -122,7 +123,7 @@ def beta645_L32_analysis():
     databeta62["topc_y_limits"] = [-12, 12]
     databeta62["topc2_y_limits"] = [-196, 196]
     databeta62["NCfgs"] = get_num_observables(
-        databeta62["batch_folder"], 
+        databeta62["batch_folder"],
         databeta62["batch_name"])
     databeta62["obs_file"] = "32_6.20"
     databeta62["MCInt"] = MC_intervals[2]
@@ -145,8 +146,24 @@ def beta645_L32_analysis():
     databeta645["NT"] = 2*databeta645["N"]
     databeta645["color"] = "#984ea3"
 
+    databeta645_32xx4 = copy.deepcopy(default_params)
+    databeta645_32xx4["flow_epsilon"] = 0.02
+    databeta645_32xx4["batch_name"] = "beta645_32x32x32x32"
+    databeta645_32xx4["beta"] = 6.45
+    databeta645_32xx4["topc_y_limits"] = [-15, 15]
+    databeta645_32xx4["topc2_y_limits"] = [-300, 300]
+    databeta645_32xx4["NCfgs"] = get_num_observables(
+        databeta645_32xx4["batch_folder"],
+        databeta645_32xx4["batch_name"])
+    databeta645_32xx4["obs_file"] = "32_6.45"
+    databeta645_32xx4["MCInt"] = MC_intervals[3]
+    databeta645_32xx4["N"] = 32
+    databeta645_32xx4["NT"] = 32
+    databeta645_32xx4["color"] = "#98A519"  # Remember
+
     # Adding relevant batches to args
-    analysis_parameter_list = [databeta60, databeta61, databeta62, databeta645]
+    analysis_parameter_list = [databeta60, databeta61, databeta62,
+                               databeta645, databeta645_32xx4]
     # analysis_parameter_list = [databeta60, databeta61, databeta62]
     # analysis_parameter_list = [databeta61, databeta62]
     # analysis_parameter_list = [databeta62]
@@ -158,30 +175,32 @@ def beta645_L32_analysis():
         default_params["observables"])
     print section_seperator + "\n"
 
-    #### Submitting main analysis
+    # Submitting main analysis
     for analysis_parameters in analysis_parameter_list:
         pre_analysis(analysis_parameters)
 
     if not analysis_parameter_list[0]["MCInt"] is None:
-        assert sum([len(plist["MCInt"]) - len(analysis_parameter_list[0]["MCInt"])
-            for plist in analysis_parameter_list]) == 0, \
+        _tmp = len(plist["MCInt"]) - len(analysis_parameter_list[0]["MCInt"])
+        assert sum([_tmp for plist in analysis_parameter_list]) == 0, \
             "unequal amount of MC intervals"
 
-    #### Submitting post-analysis data
+    # Submitting post-analysis data
     if len(analysis_parameter_list) >= 3:
         post_analysis(analysis_parameter_list, default_params["observables"],
-            topsus_fit_targets, line_fit_interval_points, energy_fit_target,
-            q0_flow_times, euclidean_time_percents,
-            extrapolation_methods=extrapolation_methods,
-            plot_continuum_fit=plot_continuum_fit,
-            post_analysis_data_type=post_analysis_data_type,
-            figures_folder=default_params["figures_folder"], 
-            gif_params=default_params["gif"], 
-            verbose=default_params["verbose"])
+                      topsus_fit_targets, line_fit_interval_points,
+                      energy_fit_target,
+                      q0_flow_times, euclidean_time_percents,
+                      extrapolation_methods=extrapolation_methods,
+                      plot_continuum_fit=plot_continuum_fit,
+                      post_analysis_data_type=post_analysis_data_type,
+                      figures_folder=default_params["figures_folder"],
+                      gif_params=default_params["gif"],
+                      verbose=default_params["verbose"])
     else:
         msg = "Need at least 3 different beta values to run post analysis"
-        msg += "(%d given)."% len(analysis_parameter_list)
+        msg += "(%d given)." % len(analysis_parameter_list)
         print msg
+
 
 if __name__ == '__main__':
     main_analysis()
