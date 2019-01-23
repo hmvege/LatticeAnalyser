@@ -11,7 +11,7 @@ import json
 import types
 import datetime
 import calendar
-
+import warnings
 
 __all__ = ["FlowDataReader", "check_folder", "get_NBoots",
            "write_data_to_file", "write_raw_analysis_to_file",
@@ -803,6 +803,10 @@ def load_observable(params):
 
 
 class SlurmDataReader:
+    """Class for reading in slurm data to a dictionary."""
+    max_small_iter = 100
+    max_large_iter = int(1e6)
+
     def __init__(self, p):
         """
         Loads slurm data and places it in an dictionary.
@@ -817,31 +821,255 @@ class SlurmDataReader:
         self.data = {}
         self.months_to_int = {v: k for k, v in enumerate(calendar.month_abbr)}
 
+    @staticmethod
+    def _key_cleaner(k):
+        """
+        Minor function for cleaning a key to dictionary,
+        in case it contains parenthesis.""
+        """
+        return str(k.split("(")[0].replace(" ", "_"))
 
-        def key_cleaner(k): return str(k.split("(")[0].replace(" ", "_"))
+    @staticmethod
+    def _clean_str_list(l):
+        """
+        Cleans string list by stripping spaces, trims whitespace and ensure 
+        ascii.
+        """
 
-        with open(p, "r") as f:
+        # Splits into observable header
+        _lsplit = list(map(lambda _ll: _ll.strip(" "), l.split(" ")))
 
-            has_run_parmas = False
-            retrieving_run_params = False
+        # Ensures ascii
+        _lsplit = list(map(str, _lsplit))
 
-            retrieved_start_config = False
+        # Removes everything of length 0
+        _lsplit = filter(lambda _ll: False if len(_ll) == 0 else True,
+                         _lsplit)
 
-            retrieved_starting_job_time = False
-            time0 = 0
+        return _lsplit
 
-            # def _read_start_time(_f):
-            #     while True
+    def _get_starting_job(self):
+        """Searches for 'Starting job' string."""
+        for i in range(self.max_small_iter):
+            l = self.f.readline()
+            if "Starting job" in l:
+                _tmp_job_name = re.findall(r'\("([\w\._]+)"\)', l)
+                self.data["job_name"] = _tmp_job_name[0]
 
-            # _read_start_time(f)
-            # _read_parameters(f)
-            while True:
-                _tmp = f.readline()
-                print _tmp
-                if _tmp == "":
-                    break
+                _tmp_start_time = l.split(" at ")[-1]
+                _, _month, _day, _time_stamp, _, _year = \
+                    _tmp_start_time.split(" ")
+                _time_stamp = list(map(int, _time_stamp.split(":")))
 
-            exit(1)
+                _start_time = datetime.datetime(
+                    int(_year), self.months_to_int[_month], int(_day),
+                    hour=_time_stamp[0], minute=_time_stamp[1],
+                    second=_time_stamp[2])
+
+                self.data[str("start_time")] = _start_time
+                break
+        else:
+            warnings.warn("Max iter reached for _get_starting_job()")
+
+    def _read_parameters(self):
+        """Reads the first '=' block which contains run parameters."""
+        start_line_counted = False
+
+        for i in range(self.max_small_iter):
+            l = self.f.readline()
+
+            # Skipps line to begin reading
+            if not start_line_counted and l[0] == "=":
+                start_line_counted = True
+                continue
+
+            # If we encounter one more "=", then break
+            if start_line_counted and l[0] == "=":
+                break
+
+            # Splits parameters
+            _lparams = l.strip("\n").split(":")
+
+            # In case we are not in the parameter section yet
+            if len(_lparams) != 2:
+                continue
+
+            _key = self._key_cleaner(_lparams[0])
+            _val = _lparams[1].lstrip(" ").rstrip(" ")
+
+            if _val[0].isnumeric():
+
+                # If right hand side is a number
+                if len(_val.split(" ")) > 1:
+                    # In case we are dealing with multiple numbers
+                    self.data[_key] = \
+                        list(map(int, _val.split(" ")))
+
+                else:
+
+                    # For single number cases
+                    if _val.isdigit():
+                        self.data[_key] = int(_val)
+                    else:
+                        self.data[_key] = float(_val)
+
+            else:
+
+                if len(_val.split(",")) > 1:
+                    # For observables list
+                    self.data[_key] = \
+                        list(map(str, _val.split(",")))
+
+                else:
+
+                    # For regular string parameter
+                    self.data[_key] = str(_val)
+        else:
+            warnings.warn("Max iter reached for _read_parameters()")
+
+    def _read_config_generation(self):
+        """
+        Reads in configuration generation till an "=" is encountered.
+        """
+
+        # Retrieves either thermalized done or configuration
+        for i in range(self.max_small_iter):
+            _l = self.f.readline()
+            if "Configuration" in _l:
+                self.data["start_config"] = \
+                    _l.split(" ")[1].lstrip(" ").rstrip(" ")
+                break
+
+            if "Thermalization complete." in _l:
+                self.data["therm_accept_rate"] = float(_l.split(" ")[-1])
+                break
+        else:
+            warnings.warn("Max iter reached for thermalization/start config "
+                          "loading _read_config_generation()")
+
+        # Reads in parameter heading
+        for i in range(self.max_small_iter):
+            _l = self.f.readline()
+
+            _lsplit = self._clean_str_list(_l)
+
+            if _lsplit[0] == "i":
+                self.data["printed_obs_header"] = _lsplit[1:-3]
+                break
+        else:
+            warnings.warn("Max iter reached for header loading in "
+                          "_read_config_generation()")
+
+        _obs_dict = {k: [] for k in self.data["printed_obs_header"]}
+        # _loaded_observables = []
+        _written_observables = []
+
+        # Reads in value/config loaded
+        for i in range(self.max_large_iter):
+            _l = self.f.readline()
+            _lsplit = self._clean_str_list(_l)
+
+            # If we encounter summary section, break
+            if _l[0] == "=":
+                break
+
+            # If we have generated a config, store that
+            if _lsplit[0].isdigit():
+                for j, _obs in enumerate(self.data["printed_obs_header"]):
+                    _obs_dict[_obs] = float(_lsplit[j+1])
+
+                _written_observables = _lsplit[-2]
+        else:
+            warnings.warn("Max iter reached for obs loading in"
+                          " _read_config_generation()")
+
+        # self.data["loaded_obs"] = _loaded_observables
+        self.data["obs"] = _obs_dict
+        self.data["written_obs"] = _written_observables
+
+    def _read_final_output(self):
+        """
+        Reads final slurm output.
+        """
+
+        for i in range(self.max_small_iter):
+            _l = self.f.readline()
+            _lsplit = _l.split(":")
+
+            if "Acceptancerate" in _lsplit[0]:
+                self.data["accept_rate"] = float(_lsplit[-1])
+                continue
+
+            if "Average update time" in _l:
+                self.data["avg_update_time"] = float(_lsplit[-2])
+                continue
+
+            if "Total update time for" in _l:
+                self.data["num_updates"] = float(_lsplit[4])
+                self.data["update_time"] = float(_lsplit[-2])
+                continue
+
+            if "=" == _l[0]:
+                break
+        else:
+            warnings.warn("Max iter reached for first '=' block in "
+                          "_read_final_output()")
+
+        for i in range(self.max_small_iter):
+            _l = self.f.readline()
+
+            
+
+            exit(
+                "Exits @ 1021: continue here an implement a method for saving output .dat files.")
+        else:
+            warnings.warn("Max iter reached for .dat file searching in "
+                          "in _read_final_output().")
+
+        for i in range(self.max_small_iter):
+            _l = self.f.readline()
+
+        else:
+            warnings.warn("Max iter reached for final obs output retrieval "
+                          "in _read_final_output().")
+
+
+        for i in range(self.max_small_iter):
+            _l = self.f.readline()
+
+        else:
+            warnings.warn("Max iter reached for total program time "
+                          "retrieval in _read_final_output().")
+
+
+
+
+    def read(self, verbose=False):
+        """Method for reading the slurm output file.
+
+        Args:
+            verbose: bool, default False. More verbose output.
+
+        Returns:
+            dictionary containing slurm file contents.
+        """
+
+        with open(self.p, "r") as self.f:
+
+            # Searches for starting string
+            self._get_starting_job()
+
+            # Searches for "="
+            self._read_parameters()
+
+            # Searches for configuration output
+            self._read_config_generation()
+
+            # Reads final values
+            self._read_final_output()
+
+            exit("SUCCESS IN SlurmDataReader\n\n")
+            print self
 
             for i, l in enumerate(f):
                 # print l
@@ -883,7 +1111,8 @@ class SlurmDataReader:
 
                                 # If right hand side is a number
                                 if len(_val.split(" ")) > 1:
-                                    # In case we are dealing with multiple numbers
+                                    # In case we are dealing with multiple
+                                    # numbers.
                                     slurm_data[_key] = \
                                         list(map(int, _val.split(" ")))
 
@@ -944,12 +1173,14 @@ class SlurmDataReader:
 
         print slurm_data
 
-        # return slurm_data
+        return self.data
 
-        def read(self, verbose=False):
-            pass
-
-            return self.data
+    def __str__(self):
+        """Pretty prints data."""
+        _str = "Slurm data for {}".format(self.p)
+        for key in self.data:
+            _str += str("\n{:40}: ".format(key)) + str(self.data[key])
+        return _str
 
 
 def check_folder(folder_name, dryrun=False, verbose=False):

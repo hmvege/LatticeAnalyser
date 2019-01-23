@@ -15,3 +15,6 @@
 
 # Folders not needed
 figures/
+
+# Json files to ignore
+run_times_tmp.json

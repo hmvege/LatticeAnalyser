@@ -17,11 +17,11 @@ rcParams["font.family"] += ["serif"]
 
 try:
     from tools.folderreadingtools import get_num_observables, check_folder, \
-        load_observable, check_relative_path, load_slurm_data
+        load_observable, check_relative_path, SlurmDataReader
 except ImportError:
     sys.path.insert(0, "../")
     from tools.folderreadingtools import get_num_observables, check_folder, \
-        load_observable, check_relative_path, load_slurm_data
+        load_observable, check_relative_path, SlurmDataReader
 
 
 def scaling_analysis():
@@ -39,6 +39,8 @@ def scaling_analysis():
     json_file = "run_times_updated.json"
     datapath = os.path.join(("/Users/hansmathiasmamenvege/Programming/LQCD/"
                              "data/scaling_output/"), json_file)
+    datapath = os.path.join(("/Users/hansmathiasmamenvege/Programming/LQCD/"
+                             "LatticeAnalyser"), json_file)
 
     slurm_output_folder = check_relative_path("../data/scaling_output")
 
@@ -46,6 +48,8 @@ def scaling_analysis():
     if not os.path.isfile(datapath):
         print "No {} found. Loading slurm data.".format(json_file)
         load_slurm_folder(slurm_output_folder)
+
+    exit("bad - read in data!!")
 
     # Basic figure setup
     base_figure_folder = check_relative_path("figures")
@@ -173,8 +177,15 @@ def load_slurm_folder(p):
     filter_function = lambda f: True if ".out" in f else False
     slurm_dict = {"runs": []}
     for f in filter(filter_function, os.listdir(p)):
-        slurm_dict["runs"].append(load_slurm_data(os.path.join(p, f)))
-        exit("Success!")
+        _tmp_slurm_data = SlurmDataReader(os.path.join(p, f))
+        slurm_dict["runs"].append(_tmp_slurm_data.read(verbose=True))
+        exit("Success! @ 182 in scaling_analysis")
+
+    json_fpath = os.path.basename(p)
+    json_fpath = json_fpath + ".json"
+    with file(json_fpath, "w+") as json_file:
+        json.dump(json_dict, json_file, indent=4)
+    print "json data dumped to {}".format(json_fpath)
 
 if __name__ == '__main__':
     scaling_analysis()
