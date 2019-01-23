@@ -848,25 +848,38 @@ class SlurmDataReader:
 
         return _lsplit
 
+    def _get_timestamp(self, l):
+        """Gets the time stamp from line l that is always printed the 
+        beginning and end of output file."""
+
+        _tmp_start_time = l.split(" at ")[-1]
+        _, _month, _day, _time_stamp, _, _year = \
+            _tmp_start_time.split(" ")
+        _time_stamp = list(map(int, _time_stamp.split(":")))
+
+        _time = datetime.datetime(
+            int(_year), self.months_to_int[_month], int(_day),
+            hour=_time_stamp[0], minute=_time_stamp[1],
+            second=_time_stamp[2])
+
+        return _time
+
     def _get_starting_job(self):
         """Searches for 'Starting job' string."""
         for i in range(self.max_small_iter):
             l = self.f.readline()
+
             if "Starting job" in l:
-                _tmp_job_name = re.findall(r'\("([\w\._]+)"\)', l)
-                self.data["job_name"] = _tmp_job_name[0]
+                # Gets job id
+                _job_id = re.findall(r"Starting job ([\d]+)", l)[0]
+                self.data["job_id"] = int(_job_id)
 
-                _tmp_start_time = l.split(" at ")[-1]
-                _, _month, _day, _time_stamp, _, _year = \
-                    _tmp_start_time.split(" ")
-                _time_stamp = list(map(int, _time_stamp.split(":")))
+                # Gets job name
+                _job_name = re.findall(r'\("([\w\._]+)"\)', l)[0]
+                self.data["job_name"] = _job_name
 
-                _start_time = datetime.datetime(
-                    int(_year), self.months_to_int[_month], int(_day),
-                    hour=_time_stamp[0], minute=_time_stamp[1],
-                    second=_time_stamp[2])
-
-                self.data[str("start_time")] = _start_time
+                # Gets start time
+                self.data[str("start_time")] = self._get_timestamp(l)
                 break
         else:
             warnings.warn("Max iter reached for _get_starting_job()")
@@ -940,9 +953,10 @@ class SlurmDataReader:
                     _l.split(" ")[1].lstrip(" ").rstrip(" ")
                 break
 
-            if "Thermalization complete." in _l:
+            if "Thermalization complete." in _l or "Termalization complete." in _l:
                 self.data["therm_accept_rate"] = float(_l.split(" ")[-1])
                 break
+
         else:
             warnings.warn("Max iter reached for thermalization/start config "
                           "loading _read_config_generation()")
@@ -951,6 +965,7 @@ class SlurmDataReader:
         for i in range(self.max_small_iter):
             _l = self.f.readline()
 
+            husk å fikse slik at en kan lese in loaded files hvis en ikke genererer!
             _lsplit = self._clean_str_list(_l)
 
             if _lsplit[0] == "i":
@@ -994,10 +1009,10 @@ class SlurmDataReader:
 
         for i in range(self.max_small_iter):
             _l = self.f.readline()
-            _lsplit = _l.split(":")
+            _lsplit = _l.strip("\n").split(" ")
 
             if "Acceptancerate" in _lsplit[0]:
-                self.data["accept_rate"] = float(_lsplit[-1])
+                self.data["accept_rate"] = float(_lsplit[1])
                 continue
 
             if "Average update time" in _l:
@@ -1015,34 +1030,79 @@ class SlurmDataReader:
             warnings.warn("Max iter reached for first '=' block in "
                           "_read_final_output()")
 
+        # List for storing .dat file output locations
+        _dat_obs_files = []
+
+        # Dictionary for storing final output values
+        _obs_final_output = {_obs: {}
+                             for _obs in self.data["printed_obs_header"]}
+
         for i in range(self.max_small_iter):
             _l = self.f.readline()
+            _lsplit = self._clean_str_list(_l)
 
-            
+            # Stores .dat files
+            if _l.startswith("/"):
+                _dat_obs_files.append(_lsplit[0])
 
-            exit(
-                "Exits @ 1021: continue here an implement a method for saving output .dat files.")
+            # Stores final obs output
+            if len(_lsplit) > 1 and \
+                    _lsplit[0] in self.data["printed_obs_header"]:
+
+                _obs_final_output[_lsplit[0]] = {
+                    "mean": float(_lsplit[1]),
+                    "var": float(_lsplit[2]),
+                    "std": float(_lsplit[3]),
+                }
+
+            # Stores program time
+            if "Program complete" in _l:
+                _times = re.findall(r"([\d]+\.[\d]+)", _l)
+                self.data["program_times"] = {
+                    "hours": float(_times[0]),
+                    "seconds": float(_times[1]),
+                }
+
+            # Stores loaded module files if 'Currently Loaded Modulefiles'
+            # is in _l.
+            if "Currently Loaded Modulefiles" in _l:
+                _l = self.f.readline()
+                # 1) gcc/5.2.0            2) openmpi.gnu/1.10.2
+                _found_modeles = re.findall(r"\d{1}\) ([\./\w]+)", _l)
+                self.data["job_modules"] = _found_modeles
+
+            # If first element is job id, store total time spent
+            if len(_lsplit) > 1 and _lsplit[0] == str(self.data["job_id"]):
+                _elapsed_time = _lsplit[-3]
+                if "-" in _elapsed_time:
+
+                    # Splits {days}-{hours}:{minutes}:{seconds}
+                    _elapsed_time = _elapsed_time.split("-")
+
+                    # Converts {hours}:{minutes}:{seconds} to integers
+                    _tmp = list(map(int, _elapsed_time[-1].split(":")))
+
+                    # Gathers results into a list
+                    _elapsed_time = [int(_elapsed_time[0])*24 + _tmp[0],
+                                     _tmp[1], _tmp[2]]
+                else:
+                    _tmp = list(map(int, _elapsed_time.split(":")))
+                    _elapsed_time = [_tmp[0], _tmp[1], _tmp[2]]
+
+                self.data["elapsed_time"] = _elapsed_time
+
+            # If first element is 'job', store get end time. Then break loop
+            if len(_lsplit) > 1 and _lsplit[0] == "Job" and \
+                    _lsplit[1] == str(self.data["job_id"]):
+                self.data["end_time"] = self._get_timestamp(_l)
+                break
+
         else:
-            warnings.warn("Max iter reached for .dat file searching in "
+            warnings.warn("Max iter reached for final output stats searching "
                           "in _read_final_output().")
 
-        for i in range(self.max_small_iter):
-            _l = self.f.readline()
-
-        else:
-            warnings.warn("Max iter reached for final obs output retrieval "
-                          "in _read_final_output().")
-
-
-        for i in range(self.max_small_iter):
-            _l = self.f.readline()
-
-        else:
-            warnings.warn("Max iter reached for total program time "
-                          "retrieval in _read_final_output().")
-
-
-
+        self.data["obs_dat_files"] = _dat_obs_files
+        self.data["obs_final_output"] = _obs_final_output
 
     def read(self, verbose=False):
         """Method for reading the slurm output file.
@@ -1067,111 +1127,6 @@ class SlurmDataReader:
 
             # Reads final values
             self._read_final_output()
-
-            exit("SUCCESS IN SlurmDataReader\n\n")
-            print self
-
-            for i, l in enumerate(f):
-                # print l
-                l_split = l.split(" ")
-
-                # Before has_run_params, get start time for job
-                if not has_run_parmas and not retrieving_run_params and \
-                        not retrieved_starting_job_time:
-
-                    if "Starting" in l_split[0]:
-                        _tmp_job_name = re.findall(r'\("([\w\._]+)"\)', l)
-                        slurm_data["job_name"] = _tmp_job_name[0]
-
-                        _tmp_start_time = l.split(" at ")[-1]
-                        _, _month, _day, _time_stamp, _, _year = \
-                            _tmp_start_time.split(" ")
-                        _time_stamp = list(map(int, _time_stamp.split(":")))
-
-                        time0 = datetime.datetime(
-                            int(_year), months_to_int[_month], int(_day),
-                            hour=_time_stamp[0], minute=_time_stamp[1],
-                            second=_time_stamp[2])
-
-                        slurm_data[str("start_time")] = time0
-
-                # Retrieves run parameters
-                if not has_run_parmas:
-
-                    if retrieving_run_params:
-
-                        # If we are not at a '=' seperator, retrieve parmas
-                        if l[0] != "=":
-
-                            _lparams = l.strip("\n").split(":")
-                            _key = key_cleaner(_lparams[0])
-                            _val = _lparams[1].lstrip(" ").rstrip(" ")
-
-                            if _val[0].isnumeric():
-
-                                # If right hand side is a number
-                                if len(_val.split(" ")) > 1:
-                                    # In case we are dealing with multiple
-                                    # numbers.
-                                    slurm_data[_key] = \
-                                        list(map(int, _val.split(" ")))
-
-                                else:
-
-                                    # For single number cases
-                                    if _val.isdigit():
-                                        slurm_data[_key] = int(_val)
-                                    else:
-                                        slurm_data[_key] = float(_val)
-
-                            else:
-
-                                if len(_val.split(",")) > 1:
-                                    # For observables list
-                                    slurm_data[_key] = \
-                                        list(map(str, _val.split(",")))
-
-                                else:
-
-                                    # For regular string parameter
-                                    slurm_data[_key] = str(_val)
-
-                    # Will activate after all paramaters har been retrieved
-                    if l[0] == "=" and retrieving_run_params:
-                        retrieving_run_params = False
-                        has_run_parmas = True
-
-                    # Will be checked if do not have any run parameters
-                    if l[0] == "=" and not retrieving_run_params:
-                        retrieving_run_params = True
-
-                # Retrieves start config
-                if not retrieved_start_config:
-                    if l_split[0] == "Configuration":
-                        slurm_data["start_config"] = l_split[-1]
-                        retrieved_start_config = True
-
-                # Has to retrieve thermalization if that is required
-
-                # Retrieves columns to store
-
-                # If first element is alpha, then we are writing config
-
-                # If first element i alphanumeric, then we are printing tf=0 values
-
-                # If new "=" block, then we are writing final run parameters
-
-                # After last "=" we are writing observable output files
-
-                # After that we are writing final std's
-
-                # After that we are writing total program run time
-
-                # Retrieve job usage time
-
-                # Retrieve final job end time
-
-        print slurm_data
 
         return self.data
 

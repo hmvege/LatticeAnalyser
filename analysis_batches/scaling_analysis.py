@@ -179,7 +179,7 @@ def load_slurm_folder(p):
     for f in filter(filter_function, os.listdir(p)):
         _tmp_slurm_data = SlurmDataReader(os.path.join(p, f))
         slurm_dict["runs"].append(_tmp_slurm_data.read(verbose=True))
-        exit("Success! @ 182 in scaling_analysis")
+        # exit("Success! @ 182 in scaling_analysis")
 
     json_fpath = os.path.basename(p)
     json_fpath = json_fpath + ".json"
