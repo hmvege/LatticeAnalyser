@@ -862,7 +862,7 @@ class SlurmDataReader:
             hour=_time_stamp[0], minute=_time_stamp[1],
             second=_time_stamp[2])
 
-        return _time
+        return "{0:%Y-%m-%d %H:%M:%S}".format(_time)
 
     def _get_starting_job(self):
         """Searches for 'Starting job' string."""
@@ -907,7 +907,7 @@ class SlurmDataReader:
             if len(_lparams) != 2:
                 continue
 
-            _key = self._key_cleaner(_lparams[0])
+            _key = self._key_cleaner(_lparams[0]).lower()
             _val = _lparams[1].lstrip(" ").rstrip(" ")
 
             if _val[0].isnumeric():
@@ -930,8 +930,11 @@ class SlurmDataReader:
 
                 if len(_val.split(",")) > 1:
                     # For observables list
+                    _cln_str = lambda _k: _k.lstrip(" ").rstrip(" ")
+
                     self.data[_key] = \
                         list(map(str, _val.split(",")))
+                    self.data[_key] = list(map(_cln_str, self.data[_key]))
 
                 else:
 
@@ -940,20 +943,32 @@ class SlurmDataReader:
         else:
             warnings.warn("Max iter reached for _read_parameters()")
 
+        # Adds some additional parameters to dict
+        self.data["runname"] = self.data["batch_name"]
+        self.data["totsize"] = self.data["lattice_dimensions"][0]**3
+        self.data["totsize"] *= self.data["lattice_dimensions"][1]
+        self.data["subdimsize"] = np.prod(self.data["sub_lattice_dimensions"])
+
+
     def _read_config_generation(self):
         """
         Reads in configuration generation till an "=" is encountered.
         """
 
+        # Loaded configs list
+        self.data["loaded_configs"] = []
+
         # Retrieves either thermalized done or configuration
-        for i in range(self.max_small_iter):
+        for i in range(self.max_large_iter):
             _l = self.f.readline()
             if "Configuration" in _l:
-                self.data["start_config"] = \
-                    _l.split(" ")[1].lstrip(" ").rstrip(" ")
+                self.data["loaded_configs"].append(
+                    _l.split(" ")[1].lstrip(" ").rstrip(" "))
                 break
 
-            if "Thermalization complete." in _l or "Termalization complete." in _l:
+            if "Thermalization complete." in _l or \
+                    "Termalization complete." in _l:
+
                 self.data["therm_accept_rate"] = float(_l.split(" ")[-1])
                 break
 
@@ -965,18 +980,24 @@ class SlurmDataReader:
         for i in range(self.max_small_iter):
             _l = self.f.readline()
 
-            husk å fikse slik at en kan lese in loaded files hvis en ikke genererer!
             _lsplit = self._clean_str_list(_l)
 
+            # If this was a pure flowing run, skip
+            if "Flowing of" in _l:
+                self.data["flown_configurations"] = int(_lsplit[2])
+                self.data["printed_obs_header"] = {"None": 0}
+                return
+
             if _lsplit[0] == "i":
-                self.data["printed_obs_header"] = _lsplit[1:-3]
+                _str_cln = lambda _k: _k.lstrip(" ").rstrip(" ").lower()
+                self.data["printed_obs_header"] = list(map(_str_cln,
+                                                           _lsplit[1:-3]))
                 break
         else:
             warnings.warn("Max iter reached for header loading in "
                           "_read_config_generation()")
 
         _obs_dict = {k: [] for k in self.data["printed_obs_header"]}
-        # _loaded_observables = []
         _written_observables = []
 
         # Reads in value/config loaded
@@ -1007,7 +1028,13 @@ class SlurmDataReader:
         Reads final slurm output.
         """
 
+
         for i in range(self.max_small_iter):
+
+            # If this was a pure flowing run, break
+            if "None" in self.data["printed_obs_header"]:
+                break
+
             _l = self.f.readline()
             _lsplit = _l.strip("\n").split(" ")
 
@@ -1041,19 +1068,21 @@ class SlurmDataReader:
             _l = self.f.readline()
             _lsplit = self._clean_str_list(_l)
 
-            # Stores .dat files
-            if _l.startswith("/"):
-                _dat_obs_files.append(_lsplit[0])
+            # Only run if we actually have looked at observables
+            if "None" != self.data["printed_obs_header"]:
+                # Stores .dat files
+                if _l.startswith("/"):
+                    _dat_obs_files.append(_lsplit[0])
 
-            # Stores final obs output
-            if len(_lsplit) > 1 and \
-                    _lsplit[0] in self.data["printed_obs_header"]:
+                # Stores final obs output
+                if len(_lsplit) > 1 and \
+                        _lsplit[0] in self.data["printed_obs_header"]:
 
-                _obs_final_output[_lsplit[0]] = {
-                    "mean": float(_lsplit[1]),
-                    "var": float(_lsplit[2]),
-                    "std": float(_lsplit[3]),
-                }
+                    _obs_final_output[_lsplit[0]] = {
+                        "mean": float(_lsplit[1]),
+                        "var": float(_lsplit[2]),
+                        "std": float(_lsplit[3]),
+                    }
 
             # Stores program time
             if "Program complete" in _l:
@@ -1062,6 +1091,7 @@ class SlurmDataReader:
                     "hours": float(_times[0]),
                     "seconds": float(_times[1]),
                 }
+                self.data["time"] = self.data["program_times"]["seconds"]
 
             # Stores loaded module files if 'Currently Loaded Modulefiles'
             # is in _l.

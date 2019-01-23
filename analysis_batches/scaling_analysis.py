@@ -36,7 +36,7 @@ def scaling_analysis():
     # Basic parameters
     verbose = True
     run_pre_analysis = True
-    json_file = "run_times_updated.json"
+    json_file = "run_times_tmp.json"
     datapath = os.path.join(("/Users/hansmathiasmamenvege/Programming/LQCD/"
                              "data/scaling_output/"), json_file)
     datapath = os.path.join(("/Users/hansmathiasmamenvege/Programming/LQCD/"
@@ -44,12 +44,19 @@ def scaling_analysis():
 
     slurm_output_folder = check_relative_path("../data/scaling_output")
 
+    slurm_json_output_path = os.path.split(datapath)[0]
+    slurm_json_output_path = os.path.join(slurm_json_output_path,
+                                          "slurm_output_data.json")
+
+    # Comment this out to use old file
+    if os.path.isfile(slurm_json_output_path):
+        datapath = slurm_json_output_path
+
     # Extract times from slurm files and put into json file
     if not os.path.isfile(datapath):
         print "No {} found. Loading slurm data.".format(json_file)
-        load_slurm_folder(slurm_output_folder)
-
-    exit("bad - read in data!!")
+        load_slurm_folder(slurm_output_folder, slurm_json_output_path)
+        datapath = slurm_json_output_path
 
     # Basic figure setup
     base_figure_folder = check_relative_path("figures")
@@ -80,7 +87,7 @@ def scaling_analysis():
     flow_strong_scaling = filter_scalings(strong_scaling_times, "flow")
 
     # Splits weak scaling into gen, io, flow
-    gen_weak_scaling = filter_scalings(weak_scaling_times, "gen")
+    gen_weak_scaling = filter_scalings(weak_scaling_times, "gen") # DENNE MÅ FILTRERES!! har visst kjørt den to ganger
     io_weak_scaling = filter_scalings(weak_scaling_times, "io")
     flow_weak_scaling = filter_scalings(weak_scaling_times, "flow")
 
@@ -97,7 +104,10 @@ def scaling_analysis():
     scalings = [gen_strong_scaling, io_strong_scaling, flow_strong_scaling,
                 gen_weak_scaling, io_weak_scaling, flow_weak_scaling]
 
-    for time_type in ["update_time", "time"]:
+    times_to_scan = ["update_time", "time"]
+    times_to_scan = ["time"]
+
+    for time_type in times_to_scan:
 
         # Loops over scaling values in scalings
         for sv in scalings:
@@ -170,22 +180,26 @@ def plot_scaling(x, y, label, xlabel, ylabel, figfolder, figname):
     print "Figure {} created.".format(figpath)
 
 
-def load_slurm_folder(p):
+def load_slurm_folder(p, json_fpath, verbose=True):
     """
     Loads all slurm data in a folder and builds a json file which it stores.
     """
-    filter_function = lambda f: True if ".out" in f else False
+    def filter_function(f): return True if ".out" in f else False
     slurm_dict = {"runs": []}
     for f in filter(filter_function, os.listdir(p)):
+        if verbose:
+            print "Reading Slurm output from ", os.path.join(p, f)
         _tmp_slurm_data = SlurmDataReader(os.path.join(p, f))
         slurm_dict["runs"].append(_tmp_slurm_data.read(verbose=True))
-        # exit("Success! @ 182 in scaling_analysis")
 
-    json_fpath = os.path.basename(p)
-    json_fpath = json_fpath + ".json"
+    assert os.path.splitext(json_fpath)[-1] == ".json", (
+        "please specify json output location")
+
     with file(json_fpath, "w+") as json_file:
-        json.dump(json_dict, json_file, indent=4)
+        json.dump(slurm_dict, json_file, indent=4)
+
     print "json data dumped to {}".format(json_fpath)
+
 
 if __name__ == '__main__':
     scaling_analysis()
