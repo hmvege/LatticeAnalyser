@@ -17,9 +17,9 @@ class EnergyPostAnalysis(PostCore):
 	observable_name_compact = "energy"
 
 	# Regular plot variables
-	y_label = r"$t^2\langle E\rangle$"
+	y_label = r"$t_f^2\langle E\rangle$"
 	x_label = r"$t_f/r_0^2$"
-	formula = r"$\langle E\rangle = -\frac{1}{64V}F_{\mu\nu}^a{F^a}^{\mu\nu}$"
+	formula = r"$\langle E\rangle = -\frac{1}{64|\Lambda|}F_{\mu\nu}^a{F^a}^{\mu\nu}$"
 
 	# Continuum plot variables
 	x_label_continuum = r"$(a/r_0)^2$"

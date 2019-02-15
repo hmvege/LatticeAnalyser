@@ -24,7 +24,7 @@ def main():
     # lattice_updates_analysis()
     # thermalization_analysis()
     # scaling_analysis()
-    beta645_L32_analysis() # TODO: complete analysis with beta 645 L=32^3 and L=96x48^3
+    # beta645_L32_analysis() # TODO: complete analysis with beta 645 L=32^3 and L=96x48^3
 
 
 if __name__ == '__main__':

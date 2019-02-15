@@ -80,19 +80,19 @@ def distribution_analysis():
 
     # Plot topc
     distribution_plotter(
-        data, "topc", r"$\sqrt{8t_f}$", r"$<Q>$", verbose=verbose)
+        data, "topc", r"$\sqrt{8t_f}$", r"$\langle Q \rangle$", verbose=verbose)
 
     # Plot topsus
     distribution_plotter(
-        data, "topsus", r"$\sqrt{8t_f}$", r"$\chi(<Q^2>)$", verbose=verbose)
+        data, "topsus", r"$\sqrt{8t_f}$", r"$\chi(\langle Q^2 \rangle)$", verbose=verbose)
 
     # Plot plaq
     distribution_plotter(
-        data, "plaq", r"$\sqrt{8t_f}$", r"$P_{\mu\nu}$", verbose=verbose)
+        data, "plaq", r"$\sqrt{8t_f}$", r"$\langle P \rangle$", verbose=verbose)
 
 
 def distribution_plotter(data, observable, xlabel, ylabel, mark_interval=10,
-                         verbose=False):
+                         flow_time=400, verbose=False):
     """
     Plots distributions to analyse how we deepend on the epsilon in data 
     generation.
@@ -141,7 +141,7 @@ def distribution_plotter(data, observable, xlabel, ylabel, mark_interval=10,
         for i, eps in enumerate(eps_values):
             ax.errorbar(obs_data[i][t]["x"], obs_data[i][t]["y"],
                         yerr=obs_data[i][t]["y_error"],
-                        label=r"$\epsilon_{rnd}=%.2f$" % eps,
+                        label=r"$\epsilon_\mathrm{rnd}=%.2f$" % eps,
                         alpha=0.5, capsize=5, fmt="_",
                         markevery=mark_interval,
                         errorevery=mark_interval)
@@ -159,21 +159,22 @@ def distribution_plotter(data, observable, xlabel, ylabel, mark_interval=10,
 
         plt.close(fig)
 
+
     # Plots eps vs obs at final flow time
     for t in data_types:
         fig = plt.figure()
         ax = fig.add_subplot(111)
 
-        x = [obs_data[i][t]["x"][-1] for i in range(len(eps_values))]
-        y = [obs_data[i][t]["y"][-1] for i in range(len(eps_values))]
-        yerr = [obs_data[i][t]["y_error"][-1] for i in range(len(eps_values))]
+        x = [obs_data[i][t]["x"][flow_time] for i in range(len(eps_values))]
+        y = [obs_data[i][t]["y"][flow_time] for i in range(len(eps_values))]
+        yerr = [obs_data[i][t]["y_error"][flow_time] for i in range(len(eps_values))]
 
         ax.errorbar(eps_values, y, yerr=yerr,
                     label=r"$t_f={0:.2f}$".format(x[0]),
                     alpha=0.5, capsize=5, fmt="_")
 
         ax.legend()
-        ax.set_xlabel(r"$\epsilon_{rnd}$")
+        ax.set_xlabel(r"$\epsilon_\mathrm{rnd}$")
         ax.set_ylabel(ylabel)
         ax.grid(True)
 
@@ -189,22 +190,22 @@ def distribution_plotter(data, observable, xlabel, ylabel, mark_interval=10,
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    y = [autocorr[i]["tau_int"][-1] for i in range(len(eps_values))]
-    yerr = [autocorr[i]["tau_int_err"][-1] for i in range(len(eps_values))]
+    y = [autocorr[i]["tau_int"][flow_time] for i in range(len(eps_values))]
+    yerr = [autocorr[i]["tau_int_err"][flow_time] for i in range(len(eps_values))]
 
     ax.errorbar(eps_values, y, yerr=yerr,
                 label=r"$t_f={0:.2f}$".format(x[0]),
-                alpha=0.5, capsize=5, fmt="_")
+                alpha=1.0, capsize=5, fmt="_")
 
     ax.legend()
-    ax.set_xlabel(r"$\epsilon_{rnd}$")
+    ax.set_xlabel(r"$\epsilon_\mathrm{rnd}$")
     ax.set_ylabel(r"$\tau_\mathrm{int}$")
     ax.grid(True)
 
     # Checks and creates relevant folder
     figname = os.path.join(folder_path,
-                           "eps_vs_tau_int_{0:s}_{1:s}.pdf".format(
-                               observable, t))
+                           "eps_vs_tau_int_{0:s}.pdf".format(
+                               observable))
     fig.savefig(figname)
     print "Created figure {}".format(figname)
 

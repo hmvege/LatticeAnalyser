@@ -182,6 +182,7 @@ def lattice_updates_analysis():
                         cbartitle=r"$\tau_\mathrm{int}$",
                         figure_folder=figure_folder)
 
+
     # Plots all of the 9 autocorrs in single figure
     plot9_figures(X_flow, X_corr, Y_up, Z_autocorr, Z_autocorr_error,
                   "topc_autocorr.pdf",
@@ -243,6 +244,13 @@ def plot9_figures(t, x, y, z, z_error, figure_name,
 
     fig, axes = plt.subplots(3, 3, sharex=True, sharey=True)
 
+    flip_axis = 0
+    t = np.flip(t, axis=flip_axis)
+    x = np.flip(x, axis=flip_axis)
+    y = np.flip(y, axis=flip_axis)
+    z = np.flip(z, axis=flip_axis)
+    z_error = np.flip(z_error, axis=flip_axis)
+
     for i in range(x.shape[0]):
         for j in range(x.shape[1]):
             axes[i, j].errorbar(
@@ -250,7 +258,7 @@ def plot9_figures(t, x, y, z, z_error, figure_name,
                 yerr=z_error[i, j],
                 label=r"$N_\mathrm{corr}=%d, N_\mathrm{up}=%d$" % (
                     x[i, j], y[i, j]),
-                alpha=0.5, capsize=5, fmt="_",
+                alpha=1.0, capsize=5, fmt="_",
                 markevery=mark_interval,
                 errorevery=mark_interval)
 

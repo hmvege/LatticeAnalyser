@@ -60,8 +60,7 @@ def scaling_analysis():
 
     # Basic figure setup
     base_figure_folder = check_relative_path("figures")
-    base_figure_folder = os.path.join(base_figure_folder,
-                                      "scaling")
+    base_figure_folder = os.path.join(base_figure_folder, "scaling")
     check_folder(base_figure_folder, verbose=verbose)
 
     # Strong scaling folder setup
@@ -85,7 +84,7 @@ def scaling_analysis():
     gen_strong_scaling = filter_scalings(strong_scaling_times, "gen")
     io_strong_scaling = filter_scalings(strong_scaling_times, "io")
     flow_strong_scaling = filter_scalings(strong_scaling_times, "flow")
-
+    
     # Splits weak scaling into gen, io, flow
     gen_weak_scaling = filter_scalings(weak_scaling_times, "gen")
     gen_weak_scaling = filter_duplicates(gen_weak_scaling)
@@ -107,6 +106,9 @@ def scaling_analysis():
 
     times_to_scan = ["update_time", "time"]
     times_to_scan = ["time"]
+
+    strong_scaling_list = []
+    weak_scaling_list = []
 
     for time_type in times_to_scan:
 
@@ -148,11 +150,38 @@ def scaling_analysis():
             else:
                 _label = _sc_part.capitalize()
 
+            _xlabel = r"$N_p$"
+            if time_type == "time":
+                _time_type = _sc_part
 
-            plot_scaling(x, y, _label, r"$N_p$",
-                         r"$t_\mathrm{%s}$" % time_type.replace(
-                             "_", r"\ ").capitalize(),
+            if _sc_part == "io":
+                _ylabel = r"$t_\mathrm{IO}[s]$"
+            else:
+                _ylabel = r"$t_\mathrm{%s}[s]$" % _time_type.replace(
+                    "_", r"\ ").capitalize()
+
+            _tmp_dict = {
+                "sc": _sc_part,
+                "x": x,
+                "y": y,
+                "label": _label,
+                "xlabel": _xlabel,
+                "ylabel": _ylabel,
+                "figure_folder": figure_folder,
+                "figure_name": figure_name,
+                "loc": _loc,
+            }
+
+            if _scaling == "strong":
+                strong_scaling_list.append(_tmp_dict)
+            else:
+                weak_scaling_list.append(_tmp_dict)
+
+            plot_scaling(x, y, _label, _xlabel, _ylabel,
                          figure_folder, figure_name, loc=_loc)
+
+    plot_all_scalings(strong_scaling_list, "strong")
+    plot_all_scalings(weak_scaling_list, "weak")
 
 
 def filter_scalings(scaling_list, scaling_type):
@@ -162,6 +191,7 @@ def filter_scalings(scaling_list, scaling_type):
     return filter(
         lambda _f: True if scaling_type in _f["runname"] else False,
         scaling_list)
+
 
 def filter_duplicates(old_list):
     """
@@ -194,6 +224,7 @@ def filter_duplicates(old_list):
 
     return new_list
 
+
 def add_numprocs(value):
     """
     Adds number of processors and returns a list sorted by this.
@@ -217,6 +248,28 @@ def plot_scaling(x, y, label, xlabel, ylabel, figfolder, figname, loc=None):
     ax.grid(True)
     ax.legend(loc=loc)
     figpath = os.path.join(figfolder, figname)
+    fig.savefig(figpath)
+    print "Figure {} created.".format(figpath)
+
+
+def plot_all_scalings(sc_list, sc_type):
+    """
+    Plots gen, flow and io scaling in one window.
+    """
+
+    fig, axes = plt.subplots(nrows=3, ncols=1)
+    sc_list = [x for _, x in sorted(
+        zip(["gen", "flow", "io"], sc_list), key=lambda k: k[1]["sc"])]
+    sc_list = [sc_list[1], sc_list[0], sc_list[2]]  # Bad hard coding
+
+    for data, ax in zip(sc_list, axes):
+        ax.semilogx(data["x"], data["y"], "o-", label=data["label"])
+        ax.set_xlabel(data["xlabel"])
+        ax.set_ylabel(data["ylabel"])
+        ax.grid(True)
+        ax.legend(loc=data["loc"])
+
+    figpath = os.path.join(data["figure_folder"], sc_type + "_all" + ".pdf")
     fig.savefig(figpath)
     print "Figure {} created.".format(figpath)
 

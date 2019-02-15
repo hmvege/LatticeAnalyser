@@ -1,11 +1,17 @@
 import numpy as np
+import os
+import copy
 import warnings
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     import matplotlib.pyplot as plt
     from matplotlib import rc, rcParams
-import os
-import copy
+    
+    # For zooming in on particular part of plot
+    from mpl_toolkits.axes_grid1.inset_locator import mark_inset
+    from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
+
+
 
 rc("text", usetex=True)
 rcParams["font.family"] += ["serif"]
@@ -48,7 +54,7 @@ def get_data(p):
 
 def observable_plotter(feps_dictionary, observable, x_limit=0,
                        x_label=r"$t_f$", y_label="", savefig_folder="",
-                       exclude_eps=[], fig_format="png"):
+                       exclude_eps=[], fig_format="png", zoom_factor=250):
     """Method for plotting an observable."""
     feps_dict = copy.deepcopy(feps_dictionary)
     if not os.path.isdir(savefig_folder):
@@ -64,6 +70,11 @@ def observable_plotter(feps_dictionary, observable, x_limit=0,
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
+    # Sets up zoom box
+    if observable == "energy":
+        axins = zoomed_inset_axes(ax, zoom_factor, loc=2)
+
+    # Plots epsilon values
     for feps in sorted(feps_dict):
         if observable == "energy":
             a = 0.09314041
@@ -76,6 +87,7 @@ def observable_plotter(feps_dictionary, observable, x_limit=0,
 
         xvals, yvals = feps_dict[feps]["data"][observable].T
         ls = feps_dict[feps]["ls"][-1]
+        mk = feps_dict[feps]["marker"][-1]
         label = r"$\epsilon_f = {:<.{w}f}$".format(
             float(feps), w=len(str(feps)) - 2)
 
@@ -84,15 +96,29 @@ def observable_plotter(feps_dictionary, observable, x_limit=0,
 
         ax.plot(xvals, yvals, label=label, linestyle=ls)
 
+        # Plots zoom box
+        if observable == "energy":
+            axins.plot(xvals, yvals, linestyle=ls)
+
     ax.legend(loc="lower right", ncol=2)
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     ax.grid(True)
+
     if observable == "energy":
-        ax.set_ylim([-0.05, 0.35])
-        ax.set_xlim([-0.05, 1.05])
+        ax.set_xlim([-0.02, 1.0])
+        ax.set_ylim([-0.01, 0.35])
     else:
         ax.set_xlim([-0.05, x_limit*1.05])
+
+    # Finalizes zoom box
+    if observable == "energy":
+        axins.set_xlim([-0.00010, 0.002])
+        axins.set_ylim([-0.00005, 0.0006])
+        # axins.grid(True)
+        plt.yticks(visible=False)
+        plt.xticks(visible=False)
+        mark_inset(ax, axins, loc1=3, loc2=4, fc="none", ec="0.5")
 
     plt.savefig(fig_name, dpi=400)
 
@@ -126,37 +152,42 @@ def get_differences(feps_dictionary, observable, diff="relative", x_limit=0,
     x_max = feps_dict[max_eps]["data"][observable][:, 0]
     y_max = feps_dict[max_eps]["data"][observable][:, 1]
 
-    if x_limit == 0:
-        x_limit, min_eps = get_max_x_limit(feps_dict, observable)
-
-    # Selects only relevant values belov given limit
-    x_min = filter(lambda x: x < x_limit, x_min)
-    y_min = y_min[:len(x_min)]
-    x_max = filter(lambda x: x < x_limit, x_max)
-    y_max = y_max[:len(x_max)]
+    # Dictionary to populate with epsilon values, x-axis values and obs values
     plot_dict = {}
 
-    # Retrieves the values closest to max value for comparison
-    for feps in sorted(feps_dict):
-        xvals, yvals = feps_dict[feps]["data"][observable].T
-        xvals = filter(lambda x: x < x_limit, xvals)
-        yvals = yvals[:len(xvals)]
+    # Smalls epsilon value to add in order to include edge points when
+    # selecting points at the edge
+    sel_eps = 1e-4
 
-        _x, _y = [], []
+    # Retrieves eps values close to eps-max points
+    for feps in sorted(feps_dict)[:-1]:
 
-        for _xmax in x_max:
-            for iv, _xv in enumerate(xvals):
-                eps = feps*1.5
-                if observable == "energy":
-                    eps = 1e-3
-                if np.abs(_xv - _xmax) < eps:
-                    _x.append(_xv)
-                    _y.append(yvals[iv])
-                    continue
+        # Sets up empty lists for populating with value to compare.
+        _xvals = []
+        _yvals = []
 
-        plot_dict[feps] = [np.asarray(_x), np.asarray(_y)]
+        # Loops over values to select from in max-eps.
+        # Ensures all values we can plot are less than x-max.
+        for _x_index in np.where(x_max < (x_min[-1] + sel_eps))[0][1:]:
 
-    x_min, y_min = plot_dict[min_eps]
+            # Selects values closest to each other for max-eps-value and 
+            # eps-values.
+            _close_values = \
+                feps_dict[feps]["data"][observable][:, 0] - x_max[_x_index]
+            _closest_index = int(np.argmin(np.abs(_close_values)))
+
+            # Retrieves values that can be compared from other epsilon value
+            _xvals.append(
+                feps_dict[feps]["data"][observable][:, 0][_closest_index])
+            _yvals.append(
+                feps_dict[feps]["data"][observable][:, 1][_closest_index])
+
+        plot_dict[feps] = [np.array(_xvals), np.array(_yvals)]
+
+    # Retrieves values for max epsilon
+    _xmax_indices = np.where(x_max < (x_min[-1] + sel_eps))[0][1:]
+    plot_dict[sorted(feps_dict.keys())[-1]] = [
+        x_max[_xmax_indices], y_max[_xmax_indices]]
 
     # Gets values to plot
     for feps in sorted(feps_dict)[1:]:
@@ -185,7 +216,7 @@ def get_differences(feps_dictionary, observable, diff="relative", x_limit=0,
 
         # Skips first element, as that tends to be zero, and may obfuscate
         # the plot.
-        plot_dict[feps] = [np.asarray(_x[1:]), np.asarray(_y[1:])]
+        plot_dict[feps] = [np.asarray(_x), np.asarray(_y)]
 
     fig_name = os.path.join(savefig_folder,
                             "{0:s}_diff_{1:s}.{2:s}".format(observable,
@@ -219,11 +250,11 @@ def get_differences(feps_dictionary, observable, diff="relative", x_limit=0,
         ax.semilogy(x_plot_values, y_plot_values, label=label,
                     linestyle=ls, marker=marker)
 
-    ax.legend(loc="upper right", ncol=2)
+    ax.legend(loc="upper center", ncol=2)
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     ax.grid(True)
-    ax.set_title(title)
+    # ax.set_title(title)
     if observable != "energy":
         ax.set_xlim([-0.05, x_limit*1.05])
 
@@ -250,17 +281,26 @@ def main():
     observables = {
         "plaq": {
             "x": r"$t_f/a^2$",
-            "y": r"$\mathrm{err}(\langle P \rangle)_\mathrm{abs}$"},
+            "y": r"$\langle P \rangle$",
+            "y_abs": r"$\mathrm{err}\big(\langle P \rangle\big)_\mathrm{abs}$",
+            "y_rel":
+                r"$\mathrm{err}\big(\langle P \rangle\big)_\mathrm{rel}$"},
         "energy": {
             "x": r"$t_f/a^2$",
-            "y": r"$\mathrm{err}(\langle E \rangle)_\mathrm{abs}$"},
+            "y": r"$\langle E \rangle$",
+            "y_abs": r"$\mathrm{err}\big(\langle E \rangle\big)_\mathrm{abs}$",
+            "y_rel":
+                r"$\mathrm{err}\big(\langle E \rangle\big)_\mathrm{rel}$"},
         "topc": {
             "x": r"$t_f/a^2$",
-            "y": r"$\mathrm{err}(\langle E \rangle)_\mathrm{abs}$"},
+            "y": r"$\langle P \rangle$",
+            "y_abs": r"$\mathrm{err}\big(\langle Q \rangle\big)_\mathrm{abs}$",
+            "y_rel":
+                r"$\mathrm{err}\big(\langle Q \rangle\big)_\mathrm{rel}$"},
         # "topct": {"x": r"$t_f/a^2$", "y": r"$\langle Q(t_e) \rangle$"},
     }
 
-    exclude_eps = [0.5]
+    exclude_eps = []
 
     # Sets up linestyles
     linestyles = [
@@ -289,21 +329,22 @@ def main():
         feps_dict[feps]["marker"] = marker
 
     for obs in observables:
+
         observable_plotter(feps_dict, obs, x_limit=1.0,
-                           x_label=observables[obs]["x"], 
+                           x_label=observables[obs]["x"],
                            y_label=observables[obs]["y"],
                            savefig_folder="../figures/flow_epsilon_test_figures",
                            exclude_eps=exclude_eps, fig_format="pdf")
 
         get_differences(feps_dict, obs, x_limit=1.0, diff="absolute",
-                        x_label=observables[obs]["x"], 
-                        y_label=observables[obs]["y"],
+                        x_label=observables[obs]["x"],
+                        y_label=observables[obs]["y_abs"],
                         savefig_folder="../figures/flow_epsilon_test_figures",
                         exclude_eps=exclude_eps)
 
         get_differences(feps_dict, obs, x_limit=0, diff="relative",
-                        x_label=observables[obs]["x"], 
-                        y_label=observables[obs]["y"],
+                        x_label=observables[obs]["x"],
+                        y_label=observables[obs]["y_rel"],
                         savefig_folder="../figures/flow_epsilon_test_figures",
                         exclude_eps=exclude_eps)
 

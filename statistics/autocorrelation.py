@@ -639,7 +639,7 @@ class FullAutocorrelation(_AutocorrelationCore):
             if (np.exp(-iW/itau) - itau/np.sqrt(iW*float(self.N))) < 0.0:
                 return iW
         else:
-            return np.jit
+            return np.nan
 
     @staticmethod
     @nb.njit(cache=True)

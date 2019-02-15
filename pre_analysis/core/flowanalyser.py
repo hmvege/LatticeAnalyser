@@ -89,7 +89,7 @@ class FlowAnalyser(object):
         # Sets lattice parameters
         self.beta = data["beta"]
         self.a, self.a_err = get_lattice_spacing(self.beta)
-        self.r0 = 0.5  # Sommer Parameters
+        self.r0 = 0.5  # The Sommer parameter
 
         # Sets the lattice sizes if one is provided
         self.lattice_size = data["lattice_size"]

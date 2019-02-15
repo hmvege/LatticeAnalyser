@@ -5,6 +5,7 @@ import copy
 import os
 import sys
 import re
+import copy as cp
 import numpy as np
 import warnings
 with warnings.catch_warnings():
@@ -35,7 +36,7 @@ def thermalization_analysis():
     verbose = True
     run_pre_analysis = True
     mark_every = 50
-    mc_cutoff = 10000
+    mc_cutoff = -1 husk å kjøre her!!
     batch_folder = check_relative_path("data/thermalization_data")
     base_figure_folder = check_relative_path("figures/")
     base_figure_folder = os.path.join(base_figure_folder,
@@ -99,8 +100,15 @@ def thermalization_analysis():
 
     plot_types = ["default", "loglog", "logx", "logy"]
 
-    y_labels = [r"$P_{\mu\nu}$", r"$\langle Q \rangle$",
-                r"$\langle E \rangle$"]
+    y_labels = [
+        [r"$P$", r"$Q$", r"$E$"],
+        [r"$\frac{|P - \langle P \rangle|}{\langle P \rangle}$", 
+            r"$\frac{|Q - \langle Q \rangle|}{\langle Q \rangle}$",
+            r"$\frac{|E - \langle E \rangle|}{\langle E \rangle}$"],
+        [r"$|P - \langle P \rangle|$", r"$|Q - \langle Q \rangle|$",
+            r"$|E - \langle E \rangle|$"]]
+    # y_labels[i_dr] = [r"$\langle P \rangle$", r"$\langle P \rangle$",
+    #             r"$\langle P \rangle$"]
 
     subplot_rows = [1, 3]
 
@@ -112,9 +120,11 @@ def thermalization_analysis():
 
     obs_list = cold_data["obs"].keys()
 
-    for dr in data_representations:
+    x_label = r"$t_\mathrm{MC}$"
+
+    for i_dr, dr in enumerate(data_representations):
         for pt in plot_types:
-            for i, obs in enumerate(obs_list):
+            for i_obs, obs in enumerate(obs_list):
                 for plot_rows in subplot_rows:
 
                     # Sets up figure folder for observable
@@ -149,12 +159,13 @@ def thermalization_analysis():
                                         _hot_rst_data],
                                     ["Cold start", "Hot start",
                                         r"Hot start, $RST$"],
-                                    r"$t_\mathrm{MC}$", y_labels[i],
+                                    x_label,
+                                    y_labels[i_dr][i_obs],
                                     figure_name,
                                     figure_folder,
                                     plot_type=pt,
-                                    x_limits=x_limits[i],
-                                    y_limits=y_limits[i],
+                                    x_limits=x_limits[i_obs],
+                                    y_limits=y_limits[i_obs],
                                     mark_every=mark_every,
                                     subplot_rows=plot_rows)
 
@@ -194,17 +205,12 @@ def modify_data(data, data_rep):
                                   "available.".format(data_rep))
 
 
-def plot_data_array(data_x, data_y, data_labels, x_label, y_label,
+def plot_data_array(data_x, data_y, data_labels, x_label, _y_label,
                     figname, figfolder, x_limits=[], y_limits=[],
                     plot_type="default", mark_every=1, subplot_rows=1):
     """
     Plots the termalization.
     """
-
-    # fortsett her! husk aa legge til modes:
-    # - samme vindu
-    # - tre vinduer
-    # - log-log / logx / logy
 
     assert len(data_x) == len(data_y) == len(data_labels), (
         "data_x, data_y and data_labels is not of equal length: "
@@ -244,11 +250,13 @@ def plot_data_array(data_x, data_y, data_labels, x_label, y_label,
         axes[i].legend()
 
     fig.text(0.5, 0.04, x_label, ha='center')
-    fig.text(0.04, 0.5, y_label, va='center', rotation='vertical')
+    fig.text(0.04, 0.5, _y_label, va='center', rotation='vertical')
 
     figpath = os.path.join(figfolder, figname)
     plt.savefig(figpath)
     print "Figure saved at path {}".format(figpath)
+
+    plt.close(fig)
 
 
 if __name__ == '__main__':
