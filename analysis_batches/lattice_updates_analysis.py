@@ -158,13 +158,13 @@ def lattice_updates_analysis():
     heatmap_plotter(N_corr, N_updates, Z_total_runtimes,
                     "topc_total_runtime.pdf",
                     xlabel=r"$N_\mathrm{corr}$", ylabel=r"$N_\mathrm{up}$",
-                    cbartitle=r"$t_\mathrm{total}$",
+                    cbartitle=r"$t_\mathrm{total}$[s]",
                     figure_folder=figure_folder)
 
     heatmap_plotter(N_corr, N_updates, Z_update_times,
                     "topc_update_runtime.pdf",
                     xlabel=r"$N_\mathrm{corr}$", ylabel=r"$N_\mathrm{up}$",
-                    cbartitle=r"$t_\mathrm{update}$",
+                    cbartitle=r"$t_\mathrm{update}$[s]",
                     figure_folder=figure_folder)
 
     # Plots final autocorrelations on grid
