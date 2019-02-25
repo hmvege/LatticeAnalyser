@@ -18,7 +18,7 @@ def main():
     # Printing settings
     section_seperator = "="*160
 
-    # main_analysis() # TODO: Run and make sure it works
+    main_analysis()
     # distribution_analysis()
     # topc_modes_analysis()
     # lattice_updates_analysis()

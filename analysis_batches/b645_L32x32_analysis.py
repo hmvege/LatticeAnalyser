@@ -1,5 +1,16 @@
 #!/usr/bin/env python2
 
+try:
+    import pre_analysis
+    import post_analysis.post_analyser as post_analysis
+    from tools.folderreadingtools import get_num_observables, check_folder
+except ImportError:
+    import sys
+    sys.path.insert(0, "../")
+    import pre_analysis
+    import post_analysis.post_analyser as post_analysis
+    from tools.folderreadingtools import get_num_observables, check_folder
+
 
 def beta645_L32_analysis():
     from pre_analysis.pre_analyser import pre_analysis
@@ -9,12 +20,13 @@ def beta645_L32_analysis():
     import copy
     import os
 
+    # TODO: merge data folders data9, data10 into data11
     # TODO: load b645 32^4 data
     # TODO: pre-analyse b645 32^4 data
     # TODO: compare b645 32^4 and b645 48^3*96 data in post analysis
 
     # Different batches
-    data_batch_folder = "../GluonAction/data11"
+    data_batch_folder = "../../data/data11"
 
     default_params = get_default_parameters(
         data_batch_folder=data_batch_folder)
@@ -53,7 +65,7 @@ def beta645_L32_analysis():
 
     # Different batches
     # data_batch_folder = "../GluonAction/data8"
-    data_batch_folder = "../GluonAction/data10"
+    data_batch_folder = "../../data/data11"
     # data_batch_folder = "../GluonAction/DataGiovanni"
     # data_batch_folder = "../data/topc_modes_8x16"
 
@@ -148,7 +160,7 @@ def beta645_L32_analysis():
 
     databeta645_32xx4 = copy.deepcopy(default_params)
     databeta645_32xx4["flow_epsilon"] = 0.02
-    databeta645_32xx4["batch_name"] = "beta645_32x32x32x32"
+    databeta645_32xx4["batch_name"] = "beta645-32xx4"
     databeta645_32xx4["beta"] = 6.45
     databeta645_32xx4["topc_y_limits"] = [-15, 15]
     databeta645_32xx4["topc2_y_limits"] = [-300, 300]
@@ -162,12 +174,13 @@ def beta645_L32_analysis():
     databeta645_32xx4["color"] = "#98A519"  # Remember
 
     # Adding relevant batches to args
+    # analysis_parameter_list = [databeta60, databeta61, databeta62,
+    #                            databeta645, databeta645_32xx4]
     analysis_parameter_list = [databeta60, databeta61, databeta62,
-                               databeta645, databeta645_32xx4]
-    # analysis_parameter_list = [databeta60, databeta61, databeta62]
+                               databeta645]
     # analysis_parameter_list = [databeta61, databeta62]
     # analysis_parameter_list = [databeta62]
-    # analysis_parameter_list = [databeta645]
+    # analysis_parameter_list = [databeta645_32xx4]
 
     section_seperator = "="*160
     print section_seperator
@@ -175,32 +188,32 @@ def beta645_L32_analysis():
         default_params["observables"])
     print section_seperator + "\n"
 
-    # Submitting main analysis
-    for analysis_parameters in analysis_parameter_list:
-        pre_analysis(analysis_parameters)
+    # # Submitting main analysis
+    # for analysis_parameters in analysis_parameter_list:
+    #     pre_analysis(analysis_parameters)
 
     if not analysis_parameter_list[0]["MCInt"] is None:
         _tmp = len(plist["MCInt"]) - len(analysis_parameter_list[0]["MCInt"])
         assert sum([_tmp for plist in analysis_parameter_list]) == 0, \
             "unequal amount of MC intervals"
 
-    # Submitting post-analysis data
-    if len(analysis_parameter_list) >= 3:
-        post_analysis(analysis_parameter_list, default_params["observables"],
-                      topsus_fit_targets, line_fit_interval_points,
-                      energy_fit_target,
-                      q0_flow_times, euclidean_time_percents,
-                      extrapolation_methods=extrapolation_methods,
-                      plot_continuum_fit=plot_continuum_fit,
-                      post_analysis_data_type=post_analysis_data_type,
-                      figures_folder=default_params["figures_folder"],
-                      gif_params=default_params["gif"],
-                      verbose=default_params["verbose"])
-    else:
-        msg = "Need at least 3 different beta values to run post analysis"
-        msg += "(%d given)." % len(analysis_parameter_list)
-        print msg
+    # # Submitting post-analysis data
+    # if len(analysis_parameter_list) >= 3:
+    #     post_analysis(analysis_parameter_list, default_params["observables"],
+    #                   topsus_fit_targets, line_fit_interval_points,
+    #                   energy_fit_target,
+    #                   q0_flow_times, euclidean_time_percents,
+    #                   extrapolation_methods=extrapolation_methods,
+    #                   plot_continuum_fit=plot_continuum_fit,
+    #                   post_analysis_data_type=post_analysis_data_type,
+    #                   figures_folder=default_params["figures_folder"],
+    #                   gif_params=default_params["gif"],
+    #                   verbose=default_params["verbose"])
+    # else:
+    #     msg = "Need at least 3 different beta values to run post analysis"
+    #     msg += "(%d given)." % len(analysis_parameter_list)
+    #     print msg
 
 
 if __name__ == '__main__':
-    main_analysis()
+    beta645_L32_analysis()

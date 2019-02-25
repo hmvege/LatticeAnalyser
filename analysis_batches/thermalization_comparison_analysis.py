@@ -36,7 +36,7 @@ def thermalization_analysis():
     verbose = True
     run_pre_analysis = True
     mark_every = 50
-    mc_cutoff = -1 husk å kjøre her!!
+    mc_cutoff = -1
     batch_folder = check_relative_path("data/thermalization_data")
     base_figure_folder = check_relative_path("figures/")
     base_figure_folder = os.path.join(base_figure_folder,
