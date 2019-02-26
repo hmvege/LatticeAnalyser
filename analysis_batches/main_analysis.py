@@ -10,9 +10,10 @@ def main_analysis():
 
     #### Different batches
     # data_batch_folder = "../GluonAction/data8"
-    data_batch_folder = "../GluonAction/data9"
+    data_batch_folder = "../GluonAction/data11"
     # data_batch_folder = "../GluonAction/DataGiovanni"
     # data_batch_folder = "../data/topc_modes_8x16"
+    data_batch_folder = "../data/data11"
 
     default_params = get_default_parameters(data_batch_folder=data_batch_folder)
     # obs_exlusions = ["plaq", "energy", "topc", "topc2", "topc4", "topcr", "topcMC", "topsus"]
@@ -50,7 +51,7 @@ def main_analysis():
 
     #### Different batches
     # data_batch_folder = "../GluonAction/data8"
-    data_batch_folder = "../GluonAction/data9"
+    data_batch_folder = "../GluonAction/data11"
     # data_batch_folder = "../GluonAction/DataGiovanni"
     # data_batch_folder = "../data/topc_modes_8x16"
 
@@ -62,9 +63,6 @@ def main_analysis():
     extrapolation_methods = ["bootstrap"]
     plot_continuum_fit = False
 
-    # Topcr reference value. Options: [float], t0beta, article, t0
-    topcr_t0 = "t0beta"
-
     # Number of different sectors we will analyse in euclidean time
     default_params["numsplits_eucl"] = 4
     intervals_eucl = [None, None, None, None]
@@ -72,6 +70,7 @@ def main_analysis():
     # Number of different sectors we will analyse in monte carlo time
     default_params["MC_time_splits"] = 4
     # MC_intervals = [[0, 1000], [500, 1000], [500, 1000], [175, 250]]
+    # MC_intervals = [[0, 1000], [0, 1000], [0, 2000], [125, 250]]
     MC_intervals = [None, None, None, None]
  
     # Extraction point in flow time a*t_f for q0 in qtq0
@@ -156,9 +155,9 @@ def main_analysis():
         default_params["observables"])
     print section_seperator + "\n"
 
-    #### Submitting main analysis
-    for analysis_parameters in analysis_parameter_list:
-        pre_analysis(analysis_parameters)
+    # #### Submitting main analysis
+    # for analysis_parameters in analysis_parameter_list:
+    #     pre_analysis(analysis_parameters)
 
     if not analysis_parameter_list[0]["MCInt"] is None:
         assert sum([len(plist["MCInt"]) - len(analysis_parameter_list[0]["MCInt"])

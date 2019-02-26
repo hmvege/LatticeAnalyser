@@ -225,6 +225,7 @@ class TopcRPostAnalysis(PostCore):
 		for beta in self.beta_values:
 			values = {}
 			values["a"] = get_lattice_spacing(beta)[0]
+			values["sqrt8t"] = values["a"]*np.sqrt(8*data[beta]["x"])
 			values["x"] = values["a"]* np.sqrt(8*data[beta]["x"])
 			values["y"] = data[beta]["y"]
 			values["y_err"] = data[beta]["y_error"]

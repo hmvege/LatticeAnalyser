@@ -34,8 +34,8 @@ def post_analysis(beta_parameter_list, observables,
 	q0_flow_times, euclidean_time_percents, extrapolation_methods="nearest",
 	plot_continuum_fit=False, figures_folder="figures", 
 	post_analysis_data_type=["bootstrap", "jackknife", "unanalyzed"], 
-	bval_to_plot="all", topcr_tf="t0beta", gif_params=None, t0_value_extraction=None, 
-	verbose=False):
+	bval_to_plot="all", topcr_tf="t0beta", gif_params=None, 
+	t0_value_extraction=None, verbose=False):
 	"""
 	Post analysis of the flow observables.
 
@@ -119,11 +119,14 @@ def post_analysis(beta_parameter_list, observables,
 
 			for analysis_type in post_analysis_data_type:
 				energy_analysis.set_analysis_data_type(analysis_type)
+
 				
 				print energy_analysis
 				if verbose:
 					print "Energy extrapolation method: ", extrapolation_method
 					print "Energy analysis type: ", analysis_type
+
+				energy_analysis.plot_autocorrelation()
 
 				energy_analysis.plot()
 				energy_analysis.plot(x_limits=[-0.015,0.15], 
@@ -154,6 +157,8 @@ def post_analysis(beta_parameter_list, observables,
 					extrapolation_method=extrapolation_method, 
 					W0=energy_fit_target, plot_fit=False)
 
+
+
 				# # Retrofits the energy for continiuum limit
 				# energy_analysis.plot_continuum(0.3, 0.015, 
 				# 	extrapolation_method=extrapolation_method)
@@ -173,6 +178,9 @@ def post_analysis(beta_parameter_list, observables,
 				w_t_energy_analysis.set_analysis_data_type(analysis_type)
 
 				print w_t_energy_analysis
+
+				w_t_energy_analysis.plot_autocorrelation()
+
 				if verbose:
 					print "Wt extrapolation method: ", extrapolation_method
 					print "Wt analysis type: ", analysis_type
@@ -204,6 +212,7 @@ def post_analysis(beta_parameter_list, observables,
 			plaq_analysis.set_analysis_data_type(analysis_type)
 			print plaq_analysis
 			plaq_analysis.plot()
+			plaq_analysis.plot_autocorrelation()
 
 
 	if "topc" in observables:
@@ -213,6 +222,7 @@ def post_analysis(beta_parameter_list, observables,
 			topc_analysis.set_analysis_data_type(analysis_type)
 			print topc_analysis
 			topc_analysis.plot(y_limits=[-5,5])
+			topc_analysis.plot_autocorrelation()
 			# comparison_values["topc"][analysis_type] = \
 			# 	topc_analysis.get_values("t0", analysis_type)
 
@@ -227,6 +237,7 @@ def post_analysis(beta_parameter_list, observables,
 			topc2_analysis.set_analysis_data_type(analysis_type)
 			print topc2_analysis
 			topc2_analysis.plot()
+			topc2_analysis.plot_autocorrelation()
 
 			# comparison_values["topc2"][analysis_type] = \
 			# 	topc2_analysis.get_values("t0", analysis_type)
@@ -238,6 +249,7 @@ def post_analysis(beta_parameter_list, observables,
 			topc4_analysis.set_analysis_data_type(analysis_type)
 			print topc4_analysis
 			topc4_analysis.plot()
+			topc4_analysis.plot_autocorrelation()
 
 	if "topcr" in observables:
 		topcr_analysis = TopcRPostAnalysis(data, 
@@ -270,6 +282,7 @@ def post_analysis(beta_parameter_list, observables,
 
 			topcrmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 
+
 	if "topct" in observables:
 		topct_analysis = TopctPostAnalysis(data, 
 			figures_folder=figures_folder, verbose=verbose)
@@ -285,6 +298,7 @@ def post_analysis(beta_parameter_list, observables,
 				# 	analysis_type)
 
 			topct_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+			topct_analysis.plot_autocorrelation()
 
 	if "topcte" in observables:
 		topcte_analysis = TopcteIntervalPostAnalysis(data, 
@@ -300,6 +314,7 @@ def post_analysis(beta_parameter_list, observables,
 				topcte_analysis.plot_interval(int_keys)
 
 			topcte_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+			topcte_analysis.plot_autocorrelation()
 
 	if "topcMC" in observables:
 		topcmc_analysis = TopcMCIntervalPostAnalysis(data, 
@@ -316,6 +331,7 @@ def post_analysis(beta_parameter_list, observables,
 				topcmc_analysis.plot_interval(int_keys)
 
 			topcmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+			topcmc_analysis.plot_autocorrelation()
 
 	# Loops over different extrapolation methods
 	for extrapolation_method in extrapolation_methods:
@@ -325,6 +341,7 @@ def post_analysis(beta_parameter_list, observables,
 			for analysis_type in post_analysis_data_type:
 				topsus_analysis.set_analysis_data_type(analysis_type)
 				topsus_analysis.plot()
+				topsus_analysis.plot_autocorrelation()
 				for cont_target in topsus_fit_targets:
 					topsus_analysis.plot_continuum(cont_target, 
 						extrapolation_method=extrapolation_method,
@@ -366,6 +383,7 @@ def post_analysis(beta_parameter_list, observables,
 
 				topsusqtq0_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
 				topsusqtq0_analysis.plot_series([3,4,5,6], beta=bval_to_plot)
+				topsusqtq0_analysis.plot_autocorrelation()
 
 		if "topsust" in observables:
 			topsust_analysis = TopsustPostAnalysis(data,
@@ -389,6 +407,7 @@ def post_analysis(beta_parameter_list, observables,
 							topsust_analysis.get_linefit_parameters())
 
 				topsust_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+				topsust_analysis.plot_autocorrelation()
 
 		if "topsuste" in observables:
 			topsuste_analysis = TopsusteIntervalPostAnalysis(data, 
@@ -412,6 +431,7 @@ def post_analysis(beta_parameter_list, observables,
 							topsuste_analysis.get_linefit_parameters())
 
 				topsuste_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+				topsuste_analysis.plot_autocorrelation()
 
 		if "topsusMC" in observables:
 			topsusmc_analysis = TopsusMCIntervalPostAnalysis(data,
@@ -436,6 +456,7 @@ def post_analysis(beta_parameter_list, observables,
 							topsusmc_analysis.get_linefit_parameters())
 
 				topsusmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+				topsusmc_analysis.plot_autocorrelation()
 
 	if "qtq0e" in observables:
 		qtq0e_analysis = QtQ0EuclideanPostAnalysis(data, 

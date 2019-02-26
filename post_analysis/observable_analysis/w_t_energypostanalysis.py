@@ -99,6 +99,7 @@ class WtPostAnalysis(PostCore):
             values["a"], values["a_err"] = get_lattice_spacing(beta)
             values["xraw"] = data[beta]["x"] # t_f/a^2
             values["t"] = values["xraw"]*values["a"]**2
+            values["sqrt8t"] = values["a"]*np.sqrt(8*data[beta]["x"])
             values["x"] = values["t"]/self.r0**2
             values["y"] = data[beta]["y"]
             values["y_err"] = data[beta]["y_error"]

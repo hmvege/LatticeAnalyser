@@ -105,6 +105,7 @@ class EnergyPostAnalysis(PostCore):
 			values["beta"] = beta
 			values["a"], values["a_err"] = get_lattice_spacing(beta)
 			values["t"] = data[beta]["x"]*values["a"]**2
+			values["sqrt8t"] = values["a"]*np.sqrt(8*data[beta]["x"])
 			values["x"] = values["t"]/self.r0**2
 			values["y"] = data[beta]["y"]*data[beta]["x"]**2
 			values["y_err"] = data[beta]["y_error"]*data[beta]["x"]**2

@@ -36,7 +36,7 @@ def thermalization_analysis():
     verbose = True
     run_pre_analysis = True
     mark_every = 50
-    mc_cutoff = -1
+    mc_cutoff = -1 # Skip every 100 points with 2000 therm-steps!!
     batch_folder = check_relative_path("data/thermalization_data")
     base_figure_folder = check_relative_path("figures/")
     base_figure_folder = os.path.join(base_figure_folder,

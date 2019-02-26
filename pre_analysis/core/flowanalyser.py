@@ -1,5 +1,9 @@
 #!/usr/bin/env python2
 
+from matplotlib import rc, rcParams
+import types
+import copy
+import multiprocessing
 from tools.folderreadingtools import FlowDataReader
 from tools.folderreadingtools import check_folder
 from tools.folderreadingtools import write_data_to_file
@@ -16,13 +20,9 @@ import warnings
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     import matplotlib.pyplot as plt
-import multiprocessing
-import copy
-import types
 
 __all__ = ["FlowAnalyser"]
 
-from matplotlib import rc, rcParams
 rc("text", usetex=True)
 # rc("font", **{"family": "sans-serif", "serif": ["Computer Modern"]})
 rcParams["font.family"] += ["serif"]
@@ -40,6 +40,8 @@ class FlowAnalyser(object):
     fname_addon = ""
     section_seperator = "="*160
     hbarc = 0.19732697  # eV micro m
+
+    include_title = False
 
     # Function derivative to be used in the autocorrelation class
     function_derivative = [ptools._default_return]
@@ -334,9 +336,9 @@ class FlowAnalyser(object):
 
         if self.parallel:
             # Sets up jobs for parallel processing
-            input_values = zip( [self.y[:, i] for i in xrange(self.NFlows)],
-                                [N_bs for i in xrange(self.NFlows)],
-                                [index_lists for i in xrange(self.NFlows)])
+            input_values = zip([self.y[:, i] for i in xrange(self.NFlows)],
+                               [N_bs for i in xrange(self.NFlows)],
+                               [index_lists for i in xrange(self.NFlows)])
 
             # Initializes multiprocessing
             pool = multiprocessing.Pool(processes=self.numprocs)
@@ -623,15 +625,17 @@ class FlowAnalyser(object):
 
         # Sets up the title and filename strings
         title_string = r"Jacknife of %s" % self.observable_name
-        fname_path = os.path.join(self.observable_output_folder_path,
-                                  "{0:<s}_jackknife_beta{1:<s}{2:<s}.png".format(
-                                      self.observable_name_compact, str(
-                                          self.beta).replace('.', '_'),
-                                      self.fname_addon))
+        fname_path = os.path.join(
+            self.observable_output_folder_path,
+            "{0:<s}_jackknife_beta{1:<s}{2:<s}.png".format(
+                self.observable_name_compact, str(
+                    self.beta).replace('.', '_'),
+                self.fname_addon))
 
         # Plots the jackknifed data
         self.__plot_error_core(x, correction_function(y),
-                               error_correction_function(y, y_std), title_string, fname_path)
+                               error_correction_function(y, y_std),
+                               title_string, fname_path)
 
     def plot_boot(self, x=None, correction_function=lambda x: x,
                   error_correction_function=None, _plot_bs=True):
@@ -681,21 +685,24 @@ class FlowAnalyser(object):
                 title_string = r"%s, " % self.observable_name
             title_string += r"$N_\mathrm{bootstraps}=%d$" % self.N_bs
 
-            fname_path = os.path.join(self.observable_output_folder_path,
-                                      "{0:<s}_bootstrap_Nbs{2:<d}_beta{1:<s}{3:<s}.png".format(
-                                          self.observable_name_compact,
-                                          str(self.beta).replace('.', '_'),
-                                          self.N_bs, self.fname_addon))
+            fname_path = os.path.join(
+                self.observable_output_folder_path,
+                "{0:<s}_bootstrap_Nbs{2:<d}_beta{1:<s}{3:<s}.png".format(
+                    self.observable_name_compact,
+                    str(self.beta).replace('.', '_'),
+                    self.N_bs, self.fname_addon))
         else:
             title_string = r"%s" % self.observable_name
-            fname_path = os.path.join(self.observable_output_folder_path,
-                                      "{0:<s}_original_beta{1:<s}{2:<s}.png".format(
-                                          self.observable_name_compact,
-                                          str(self.beta).replace('.', '_'), self.fname_addon))
+            fname_path = os.path.join(
+                self.observable_output_folder_path,
+                "{0:<s}_original_beta{1:<s}{2:<s}.png".format(
+                    self.observable_name_compact,
+                    str(self.beta).replace('.', '_'), self.fname_addon))
 
         # Plots either bootstrapped or regular stuff
         self.__plot_error_core(x, correction_function(y),
-                               error_correction_function(y, y_std), title_string, fname_path)
+                               error_correction_function(y, y_std),
+                               title_string, fname_path)
 
     def plot_original(self, x=None, correction_function=lambda x: x,
                       error_correction_function=None):
@@ -732,7 +739,7 @@ class FlowAnalyser(object):
 
         # Plots the error bar
         ax.errorbar(x, y, yerr=y_std, fmt=".", color="0", ecolor="r",
-                    markevery=self.mark_interval, 
+                    markevery=self.mark_interval,
                     errorevery=self.error_mark_interval)
 
         # Plots hline/vline at specified position.
@@ -748,7 +755,8 @@ class FlowAnalyser(object):
         ax.set_ylabel(self.y_label)
         ax.set_ylim(self.y_limits)
         ax.grid(True)
-        ax.set_title(title_string)
+        if self.include_title:
+            ax.set_title(title_string)
         if not isinstance(self.fig_label, types.NoneType):
             ax.legend([self.fig_label])
         if not self.dryrun:
@@ -794,10 +802,11 @@ class FlowAnalyser(object):
         # Sets up the title and filename strings
         title_string = r"Autocorrelation of %s, $t_f=%.2f$" % (
             self.observable_name, flow_time_index*self.flow_epsilon)
-        fname_path = os.path.join(self.observable_output_folder_path,
-                                  "{0:<s}_autocorrelation_flowt{1:<d}_beta{2:<s}{3:<s}.png".format(
-                                      self.observable_name_compact, flow_time_index,
-                                      str(self.beta).replace('.', '_'), self.fname_addon))
+        fname_path = os.path.join(
+            self.observable_output_folder_path,
+            "{0:<s}_autocorrelation_flowt{1:<d}_beta{2:<s}{3:<s}.png".format(
+                self.observable_name_compact, flow_time_index,
+                str(self.beta).replace('.', '_'), self.fname_addon))
 
         # Plots the autocorrelations
         fig = plt.figure()
@@ -809,7 +818,8 @@ class FlowAnalyser(object):
         ax.set_xlim(0, N_autocorr)
         ax.set_xlabel(r"Lag $h$")
         ax.set_ylabel(r"$R = \frac{C_h}{C_0}$")
-        ax.set_title(title_string)
+        if self.include_title:
+            ax.set_title(title_string)
         start, end = ax.get_ylim()
         ax.yaxis.set_ticks(np.arange(start, end, 0.2))
         ax.grid(True)
@@ -832,10 +842,11 @@ class FlowAnalyser(object):
         # Gives title and file name
         title_string = r"$\tau_\mathrm{int}$ of %s, $N_\mathrm{cfg}=%2d$" % (
             self.observable_name, self.N_configurations)
-        fname_path = os.path.join(self.observable_output_folder_path,
-                                  "{0:<s}_integrated_ac_time_beta{1:<s}{2:<s}.png".format(
-                                      self.observable_name_compact,
-                                      str(self.beta).replace('.', '_'), self.fname_addon))
+        fname_path = os.path.join(
+            self.observable_output_folder_path,
+            "{0:<s}_integrated_ac_time_beta{1:<s}{2:<s}.png".format(
+                self.observable_name_compact,
+                str(self.beta).replace('.', '_'), self.fname_addon))
 
         # Sets up the plot
         fig = plt.figure()
@@ -847,7 +858,8 @@ class FlowAnalyser(object):
                         alpha=0.5, edgecolor='', facecolor='#6699ff')
         ax.set_xlabel(r"$\sqrt{8t_f}$")
         ax.set_ylabel(r"$\tau_\mathrm{int}$")
-        ax.set_title(title_string)
+        if self.include_title:
+            ax.set_title(title_string)
         ax.grid(True)
         if not self.dryrun:
             fig.savefig(fname_path, dpi=self.dpi)
@@ -900,13 +912,14 @@ class FlowAnalyser(object):
         assert flow_time_index < N_unanalyzed, assertion_str
 
         # Sets up title and file name strings
-        title_string = r"Spread of %s, $t_f=%.2f$" % (self.observable_name,
-                                                      flow_time_index*self.flow_epsilon)
-        fname_path = os.path.join(self.observable_output_folder_path,
-                                  "{0:<s}_histogram_flowt{1:>04d}_beta{2:<s}{3:<s}.png".format(
-                                      self.observable_name_compact, abs(
-                                          flow_time_index),
-                                      str(self.beta).replace('.', '_'), self.fname_addon))
+        title_string = r"Spread of %s, $t_f=%.2f$" % (
+            self.observable_name, flow_time_index*self.flow_epsilon)
+        fname_path = os.path.join(
+            self.observable_output_folder_path,
+            "{0:<s}_histogram_flowt{1:>04d}_beta{2:<s}{3:<s}.png".format(
+                self.observable_name_compact, abs(
+                    flow_time_index),
+                str(self.beta).replace('.', '_'), self.fname_addon))
 
         # Sets up plot
         fig = plt.figure()
@@ -998,17 +1011,19 @@ class FlowAnalyser(object):
         histogram_slices = sorted(_hist_slices)
 
         # Ensures flow time is within bounds.
-        assertion_str = ("Too many histogram slices provided is out of bounds: "
-                         " [%s]" % ", ".join([str(iHist) for iHist in histogram_slices]))
+        assertion_str = (
+            "Too many histogram slices provided is out of bounds: "
+            " [%s]" % ", ".join([str(iHist) for iHist in histogram_slices]))
         assert len(histogram_slices) == 3, assertion_str
 
         # Sets up title and file name strings
         title_string = r"Evolution of %s" % self.observable_name
-        fname_path = os.path.join(self.observable_output_folder_path,
-                                  "{0:<s}_multihistogram_beta{1:<s}{2:<s}.png".format(
-                                      self.observable_name_compact, str(
-                                          self.beta).replace('.', '_'),
-                                      self.fname_addon))
+        fname_path = os.path.join(
+            self.observable_output_folder_path,
+            "{0:<s}_multihistogram_beta{1:<s}{2:<s}.png".format(
+                self.observable_name_compact, str(
+                    self.beta).replace('.', '_'),
+                self.fname_addon))
 
         # Plots histograms
         fig, axes = plt.subplots(3, 1, sharey=True, sharex=True)
@@ -1032,7 +1047,8 @@ class FlowAnalyser(object):
         # Closes figure for garbage collection
         plt.close(fig)
 
-    def plot_mc_history(self, flow_time_index, correction_function=lambda x: x):
+    def plot_mc_history(self, flow_time_index,
+                        correction_function=lambda x: x):
         """
         Plots the Monte Carlo history at a given flow time .
 
@@ -1055,10 +1071,11 @@ class FlowAnalyser(object):
         # Sets up title and file name strings
         title_string = r"Monte Carlo history at $t_f = %.2f$" % (
             flow_time_index*self.flow_epsilon)
-        fname_path = os.path.join(self.observable_output_folder_path,
-                                  "{0:<s}_mchistory_flowt{1:>04d}_beta{2:<s}{3:<s}.png".format(
-                                      self.observable_name_compact, flow_time_index,
-                                      str(self.beta).replace('.', '_'), self.fname_addon))
+        fname_path = os.path.join(
+            self.observable_output_folder_path,
+            "{0:<s}_mchistory_flowt{1:>04d}_beta{2:<s}{3:<s}.png".format(
+                self.observable_name_compact, flow_time_index,
+                str(self.beta).replace('.', '_'), self.fname_addon))
 
         # Sets up plot
         fig = plt.figure()
@@ -1067,7 +1084,8 @@ class FlowAnalyser(object):
                 color="0")
         ax.set_xlabel(r"Monte Carlo time")
         ax.set_ylabel(self.y_label)
-        ax.set_title(title_string)
+        if self.include_title:
+            ax.set_title(title_string)
         ax.grid(True)
         if not isinstance(self.fig_label, types.NoneType):
             ax.legend([self.fig_label])
@@ -1094,7 +1112,8 @@ class FlowAnalyser(object):
         # Add parallel run info
         return_string += info_string("Parallel", "{}".format(self.parallel))
         if self.parallel:
-            return_string += info_string("Numprocs", "{}".format(self.numprocs))
+            return_string += info_string("Numprocs",
+                                         "{}".format(self.numprocs))
 
         return_string += "\n" + "="*160
         return return_string
