@@ -119,7 +119,7 @@ def topc_modes_analysis():
         # print data_("topc")["obs"].shape
 
     # Flow time to plots
-    flow_times = [0, 250, 600]
+    flow_times = [0, 25, 50, 100, 150, 250, 450, 600]
 
     # Histogram plotting
     xlim = 7.5
@@ -142,7 +142,7 @@ def topc_modes_analysis():
             ax.set_xlim(-xlim, xlim)
 
             if i == 1:
-                ax.set_ylabel(r"$Hits$")
+                ax.set_ylabel(r"Hits(normalized)")
             elif i == 2:
                 ax.set_xlabel(r"$Q$")
 

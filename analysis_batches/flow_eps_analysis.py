@@ -54,7 +54,7 @@ def get_data(p):
 
 def observable_plotter(feps_dictionary, observable, x_limit=0,
                        x_label=r"$t_f$", y_label="", savefig_folder="",
-                       exclude_eps=[], fig_format="png", zoom_factor=250):
+                       exclude_eps=[], fig_format="pdf", zoom_factor=250):
     """Method for plotting an observable."""
     feps_dict = copy.deepcopy(feps_dictionary)
     if not os.path.isdir(savefig_folder):

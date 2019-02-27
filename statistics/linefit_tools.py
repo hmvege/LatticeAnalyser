@@ -603,7 +603,7 @@ def _test_simple_line_fit():
                       xw_fit + xw_fit_error, label=r"$x_{0,w}\pm\sigma_{x_0,w}$",
                       alpha=0.5, color="tab:orange")
     ax2.legend(loc="best", prop={"size": 8})
-    fig1.savefig("tests/line_fit_example.png", dpi=400)
+    fig1.savefig("tests/line_fit_example.pdf", dpi=400)
     plt.show()
     plt.close(fig1)
 
@@ -763,7 +763,7 @@ def _test_bootstrap(x, y, x0, _f=lambda _x, a, b: _x*a + b, N_bs=50):
                   label=r"$x_0$ fit target")
     ax_bs.legend(loc="best")
     ax_bs.set_ylim(0, 5)
-    fig_name = "tests/bootstrap_inverse_fit.png"
+    fig_name = "tests/bootstrap_inverse_fit.pdf"
     # print "%s saved." % fig_name
     fig_bs.savefig(fig_name, dpi=400)
     # plt.show()
@@ -811,7 +811,7 @@ def _test_plateau(x, y, x0, _f=lambda _x, a, b: _x*a + b):
                  lfit.LineFit.chi_squared(y_mean, y_err, y0_mean_chi2))
     ax.axvline(x0, color="tab:grey", linestyle=":", label=r"$x_0$ fit target")
     ax.legend(loc="best", prop={"size": 8})
-    fig.savefig("tests/plateau_inverse_fit.png", dpi=400)
+    fig.savefig("tests/plateau_inverse_fit.pdf", dpi=400)
     # plt.show()
     plt.close(fig)
 
@@ -855,7 +855,7 @@ def _test_plateau_mean(x, y, x0, _f=lambda _x, a, b: _x*a + b):
                  lfit.LineFit.chi_squared(y_mean, y_err, y_hat))
     ax.axvline(x0, color="tab:grey", linestyle=":", label=r"$x_0$ fit target")
     ax.legend(loc="best", prop={"size": 8})
-    fig.savefig("tests/plateau_mean_inverse_fit.png", dpi=400)
+    fig.savefig("tests/plateau_mean_inverse_fit.pdf", dpi=400)
     # plt.show()
     plt.close(fig)
 
@@ -888,7 +888,7 @@ def _test_interpolation(x, y, x0, _f=lambda _x, a, b: _x*a + b, k_spline=1):
     ax_spl.axvline(x0, color="tab:grey", linestyle=":",
                    label=r"$x_0$ fit target")
     ax_spl.legend(loc="best", prop={"size": 8})
-    fig_spl.savefig("tests/spline_inverse_fit.png", dpi=400)
+    fig_spl.savefig("tests/spline_inverse_fit.pdf", dpi=400)
     # plt.show()
     plt.close(fig_spl)
 
@@ -917,7 +917,7 @@ def _test_nearest(x, y, x0, _f=lambda _x, a, b: _x*a + b):
     ax.fill_between(x_hat, err_lower, err_upper, alpha=0.5, color="tab:blue")
     ax.set_title("Nearest value")
     ax.legend(loc="best")
-    fig.savefig("tests/nearest_inverse_fit.png", dpi=400)
+    fig.savefig("tests/nearest_inverse_fit.pdf", dpi=400)
     # plt.show()
     plt.close(fig)
 

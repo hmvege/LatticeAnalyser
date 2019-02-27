@@ -225,7 +225,7 @@ class _AutocorrelationCore(object):
         ax.grid(True)
         ax.legend()
         if dryrun:
-            fig.savefig("tests/autocorrelation_%s.png" % filename)
+            fig.savefig("tests/autocorrelation_%s.pdf" % filename)
 
 
 class Autocorrelation(_AutocorrelationCore):
@@ -790,7 +790,7 @@ Improvement(propagated/semi-propagated):        {10:<.3f}""".format(
                  fontsize=14)
     ax.grid(True)
     if store_plots:
-        fig.savefig("tests/relative_differences_in_ac_methods.png")
+        fig.savefig("tests/relative_differences_in_ac_methods.pdf")
 
 
 def _testFullAC(data, N_bins, store_plots, time_ac_functions):
