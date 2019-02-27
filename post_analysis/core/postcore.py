@@ -322,6 +322,18 @@ class PostCore(object):
 
         plt.close(fig)
 
+    def plot_autocorrelation_at(self, t_flow=0):
+        """
+        Plots autocorrelation at a given flow time t_flow.
+        """
+        pass
+
+    def plot_mc_history_at(self, t_flow=0):
+        """
+        Plots the Monte-Carlo history at a given flow time t_flow.
+        """
+        pass
+
     def _get_plot_figure_name(self, output_folder=None,
                               figure_name_appendix=""):
         """Retrieves appropriate figure file name."""

@@ -24,7 +24,7 @@ def main_analysis():
 
     # observables = observables_euclidean_time
     # observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
-    observables = ["topsusMC"]
+    # observables = ["topsusMC"]
     # observables = ["topcr", "qtq0eff"]
     # observables = ["topcte"]
     # observables = observables_euclidean_time
@@ -35,10 +35,9 @@ def main_analysis():
     # observables = ["qtq0eff", "qtq0e"] + ["topsust", "topsuste", "topsusMC", "topsusqtq0"]
     # observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
     # observables = ["topcr"]
-    # exit("CHECK TOPCR!! @ 34 in main_analysis.py")
     # observables = ["topsuste"]
     # observables = ["qtq0effMC"]
-    observables = ["energy"]
+    # observables = ["energy"]
     # observables = ["w_t_energy"]
     # observables = ["plaq", "energy", "topc", "topct"]
 
@@ -49,7 +48,7 @@ def main_analysis():
     line_fit_interval_points = 20
     # topsus_fit_targets = [0.3,0.4,0.5,0.58]
     # topsus_fit_targets = [0.3, 0.4, 0.5, 0.6] # tf = sqrt(8*t0)
-    topsus_fit_targets = [0.6]
+    topsus_fit_targets = [0.6] # TODO: add "t0", "w0"
     energy_fit_target = 0.3
 
     #### Different batches

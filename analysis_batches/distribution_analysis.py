@@ -67,9 +67,9 @@ def distribution_analysis():
 
     # exit("not performing the regular pre-analysis.")
 
-    # # Submitting distribution analysis
-    # for analysis_parameters in dist_param_list:
-    #     pre_analysis.pre_analysis(analysis_parameters)
+    # Submitting distribution analysis
+    for analysis_parameters in dist_param_list:
+        pre_analysis.pre_analysis(analysis_parameters)
 
     # Use post_analysis data for further analysis.
     data = {}

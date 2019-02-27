@@ -515,6 +515,8 @@ def pre_analysis(parameters):
 
     section_seperator = "="*160
     print(section_seperator)
+    print "Running pre-analysis for {}\n".format(
+        ", ".join(parameters["observables"]))
 
     # Runs through the different observables and analyses each one
     if "plaq" in parameters["observables"]:
