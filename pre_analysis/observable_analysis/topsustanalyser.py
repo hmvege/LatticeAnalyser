@@ -9,8 +9,8 @@ class TopsustAnalyser(TopsusAnalyserCore):
     """Analysis of the topological susceptibility in Euclidean Time."""
     observable_name = "Topological Susceptibility in Euclidean Time"
     observable_name_compact = "topsust"
-    x_label = r"$\sqrt{8t_{f}}[fm]$"
-    y_label = r"$\chi^{1/4}(\langle Q_t Q_{t_\mathrm{euclidean}} \rangle) [GeV]$"
+    x_label = r"$\sqrt{8t_{f}}$ [fm]"
+    y_label = r"$\chi_{t_f}^{1/4}(\langle Q_t Q_{t_\mathrm{euclidean}} \rangle)$ [GeV]"
 
     def __init__(self, *args, **kwargs):
         super(TopsustAnalyser, self).__init__(*args, **kwargs)

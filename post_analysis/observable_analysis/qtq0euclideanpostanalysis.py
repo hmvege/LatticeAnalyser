@@ -16,7 +16,7 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 	"""Class for plotting different QteQte0 a specific flow time together."""
 	observable_name = ""
 	observable_name_compact = "qtq0e"
-	x_label = r"$t_e[fm]$"
+	x_label = r"$t_e$ [fm]"
 	y_label = r"$\langle Q_{t_e} Q_{t_{e,0}} \rangle$" # $\chi_t^{1/4}[GeV]$
 	sub_obs = True
 	sub_sub_obs = True
@@ -59,7 +59,7 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 
 	# def create_gif(self):
 	# 	"""Creates a gif from images in gif the gif folder."""
-	# 	fig_base_name = "post_analysis_%s_%s_tf*.png" % (
+	# 	fig_base_name = "post_analysis_%s_%s_tf*.pdf" % (
 	# 		self.observable_name_compact, self.analysis_data_type)
 
 	# 	gif_path = os.path.join(self.output_folder_path,
@@ -161,7 +161,7 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 
 		check_folder(output_folder, False, True)
 
-		fname = "post_analysis_%s_%s_tf%4.4f%s.png" % (self.observable_name_compact,
+		fname = "post_analysis_%s_%s_tf%4.4f%s.pdf" % (self.observable_name_compact,
 			self.analysis_data_type, self.interval_index[0], figure_name_appendix)
 		return os.path.join(output_folder, fname)
 
@@ -208,7 +208,7 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 			self.data_raw[self.analysis_data_type],
 			euclidean_percent=euclidean_percent)
 
-		fname = "post_analysis_%s_%s_te%04d.png" % (
+		fname = "post_analysis_%s_%s_te%04d.pdf" % (
 			self.observable_name_compact,
 			self.analysis_data_type, euclidean_percent)
 

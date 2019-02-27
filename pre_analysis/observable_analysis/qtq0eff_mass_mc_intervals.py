@@ -10,7 +10,7 @@ class QtQ0EffectiveMassMCAnalyser(QtQ0EffectiveMassAnalyser):
     """Correlator of <QtQ0> in euclidean time analysis class."""
     observable_name = r""
     observable_name_compact = "qtq0effmc"
-    x_label = r"$t_e[fm]$"
+    x_label = r"$t_e$ [fm]"
     y_label = r"$am_\textrm{eff} = \ln \frac{\langle Q_{t_e} Q_0 \rangle}{\langle Q_{t_e+1} Q_0 \rangle}$"
     mark_interval = 1
     error_mark_interval = 1

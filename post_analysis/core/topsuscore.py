@@ -18,10 +18,10 @@ class TopsusCore(PostCore):
 	obs_name_latex = "MISSING LATEX NAME FOR TOPSUS"
 
 	# Regular plot variables
-	x_label = r"$\sqrt{8t_f}[fm]$"
+	x_label = r"$\sqrt{8t_f}$ [fm]"
 
 	# Continuum plot variables
-	y_label_continuum = r"$\chi^{1/4}[GeV]$"
+	y_label_continuum = r"$\chi_{t_f}^{1/4}$ [GeV]"
 	# x_label_continuum = r"$a/{{r_0}^2}$"
 	x_label_continuum = r"$a^2/t_0$"
 
@@ -279,7 +279,7 @@ class TopsusCore(PostCore):
 
 		# Saves figure
 		fname = os.path.join(self.output_folder_path, 
-			"post_analysis_extrapmethod%s_%s_continuum%s_%s.png" % (
+			"post_analysis_extrapmethod%s_%s_continuum%s_%s.pdf" % (
 				extrapolation_method, self.observable_name_compact,
 				str(fit_target).replace(".",""), self.analysis_data_type))
 		fig.savefig(fname, dpi=self.dpi)

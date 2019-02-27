@@ -17,7 +17,7 @@ class TopcRMCIntervalPostAnalysis(MultiPlotCore, PostCore):
 
     observable_name = r"$R=\frac{\langle Q^4 \rangle_C}{\langle Q^2 \rangle}$"
     observable_name_compact = "topcrMC"
-    x_label = r"$\sqrt{8t_{f}}[fm]$"
+    x_label = r"$\sqrt{8t_{f}}$ [fm]"
     y_label = r"$R$"
 
     formula = r", $R = \langle Q^4_C \rangle = \langle Q^4 \rangle - $"

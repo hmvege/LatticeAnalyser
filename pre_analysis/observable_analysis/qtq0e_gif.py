@@ -10,7 +10,7 @@ class QtQ0EGif(QtQ0EuclideanAnalyser):
 	"""Correlator of <QtQ0> in euclidean time analysis class."""
 	observable_name = r""
 	observable_name_compact = "qtq0e_gif"
-	x_label = r"$t_e[fm]$"
+	x_label = r"$t_e$ [fm]"
 	y_label = r"$\langle Q_{t_e} Q_{t_{e,0}} \rangle [GeV]$"
 	mark_interval = 1
 	error_mark_interval = 1

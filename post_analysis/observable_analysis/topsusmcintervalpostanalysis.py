@@ -8,8 +8,8 @@ class TopsusMCIntervalPostAnalysis(MultiPlotCore, TopsusCore):
 	observable_name = "Topological Susceptibility in MC Time"
 	observable_name_compact = "topsusMC"
 	obs_name_latex = r"\chi^{1/4}(\expect{Q^2_{MC_\text{int}}})"
-	x_label = r"$\sqrt{8t_{f}}[fm]$"
-	y_label = r"$\chi^{1/4} [GeV]$"
+	x_label = r"$\sqrt{8t_{f}}$ [fm]"
+	y_label = r"$\chi^{1/4}$ [GeV]"
 	sub_obs = True
 	descr = "Intervals in Monte Carlo time"
 	subfolder_type = "MCInt"

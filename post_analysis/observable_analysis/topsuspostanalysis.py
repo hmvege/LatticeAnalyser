@@ -12,12 +12,12 @@ class TopsusPostAnalysis(TopsusCore):
 	"""Default topological susceptibility."""
 	observable_name = "Topological Susceptibility"
 	observable_name_compact = "topsus"
-	obs_name_latex = r"\chi^{1/4}(\expect{Q^2})"
+	obs_name_latex = r"\chi_{t_f}^{1/4}(\expect{Q^2})"
 
 	# Regular plot variables
-	x_label = r"$\sqrt{8t_{f}}[fm]$"
-	y_label = r"$\chi_t^{1/4}[GeV]$"
-	formula = r"$\chi_t^{1/4}=\frac{\hbar c}{aV^{1/4}}\langle Q^2 \rangle^{1/4}$"
+	x_label = r"$\sqrt{8t_{f}}$ [fm]"
+	y_label = r"$\chi_{t_f}^{1/4}$ [GeV]"
+	formula = r"$\chi_{t_f}^{1/4}=\frac{\hbar c}{aV^{1/4}}\langle Q^2 \rangle^{1/4}$"
 
 	# Continuum plot variables
 	y_label_continuum = r"$\chi^{1/4}[GeV]$"

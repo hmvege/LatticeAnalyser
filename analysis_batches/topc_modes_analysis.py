@@ -35,7 +35,7 @@ def topc_modes_analysis():
     """Analysis for different lattice sizes and their topological charges."""
     default_params = get_default_parameters(data_batch_folder="temp")
 
-    run_pre_analysis = False
+    run_pre_analysis = True
     verbose = True
 
     data_path = "../data/"
@@ -67,7 +67,7 @@ def topc_modes_analysis():
     smaug12x24_data_beta60_analysis["topc_y_limits"] = [-4, 4]
     smaug12x24_data_beta60_analysis["num_bins_per_int"] = 16
     smaug12x24_data_beta60_analysis["bin_range"] = [-4.5, 4.5]
-    smaug12x24_data_beta60_analysis["hist_flow_times"] = [0, 250, 600]
+    smaug12x24_data_beta60_analysis["hist_flow_times"] = [0, 100, 600]
     smaug12x24_data_beta60_analysis["NCfgs"] = get_num_observables(
         smaug12x24_data_beta60_analysis["batch_folder"],
         smaug12x24_data_beta60_analysis["batch_name"])
@@ -84,7 +84,7 @@ def topc_modes_analysis():
     smaug16x32_data_beta61_analysis["topc_y_limits"] = [-8, 8]
     smaug16x32_data_beta61_analysis["num_bins_per_int"] = 16
     smaug16x32_data_beta61_analysis["bin_range"] = [-7.5, 7.5]
-    smaug16x32_data_beta61_analysis["hist_flow_times"] = [0, 250, 600]
+    smaug16x32_data_beta61_analysis["hist_flow_times"] = [0, 100, 400]
     smaug16x32_data_beta61_analysis["NCfgs"] = get_num_observables(
         smaug16x32_data_beta61_analysis["batch_folder"],
         smaug16x32_data_beta61_analysis["batch_name"])
@@ -93,9 +93,10 @@ def topc_modes_analysis():
     smaug16x32_data_beta61_analysis["NT"] = 32
     smaug16x32_data_beta61_analysis["color"] = "#377eb8"
 
-    param_list = [smaug8x16_data_beta60_analysis,
-                  smaug12x24_data_beta60_analysis,
-                  smaug16x32_data_beta61_analysis]
+    param_list = [
+        smaug8x16_data_beta60_analysis,
+        smaug12x24_data_beta60_analysis,
+        smaug16x32_data_beta61_analysis]
 
     if run_pre_analysis:
         # Submitting analysis
@@ -115,7 +116,6 @@ def topc_modes_analysis():
                      "beta": param["beta"],
                      "N": param["N"]})
 
-
         # print data_("topc")["obs"].shape
 
     # Flow time to plots
@@ -123,17 +123,20 @@ def topc_modes_analysis():
 
     # Histogram plotting
     xlim = 7.5
-    NBins = np.arange(-xlim,xlim,0.05)
+    NBins = np.arange(-xlim, xlim, 0.05)
     for t_f in flow_times:
         # Adds unanalyzed data
-        fig, axes = plt.subplots(3, 1, sharey=False, sharex=True)
+        fig, axes = plt.subplots(len(param_list), 1,
+                                 sharey=False, sharex=True)
+        axes = np.atleast_1d(axes)
         for i, ax in enumerate(axes):
             lab = r"${0:d}^3\times{1:d}$, $\beta={2:.2f}$".format(
                 data[i]["N"], data[i]["N"]*2, data[i]["beta"])
 
             weights = np.ones_like(data[i]["data"][t_f])
             weights /= len(data[i]["data"][t_f])
-            ax.hist(data[i]["data"][t_f], bins=NBins, label=lab, weights=weights)
+            ax.hist(data[i]["data"][t_f], bins=NBins,
+                    label=lab, weights=weights)
             ax.legend(loc="upper right")
             ax.grid(True)
             ax.set_xlim(-xlim, xlim)
@@ -152,7 +155,6 @@ def topc_modes_analysis():
         fig.savefig(figpath)
         print "Figure saved at {0:s}".format(figpath)
         plt.close(fig)
-
 
 
 if __name__ == '__main__':

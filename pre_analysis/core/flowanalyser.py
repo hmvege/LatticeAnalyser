@@ -627,7 +627,7 @@ class FlowAnalyser(object):
         title_string = r"Jacknife of %s" % self.observable_name
         fname_path = os.path.join(
             self.observable_output_folder_path,
-            "{0:<s}_jackknife_beta{1:<s}{2:<s}.png".format(
+            "{0:<s}_jackknife_beta{1:<s}{2:<s}.pdf".format(
                 self.observable_name_compact, str(
                     self.beta).replace('.', '_'),
                 self.fname_addon))
@@ -687,7 +687,7 @@ class FlowAnalyser(object):
 
             fname_path = os.path.join(
                 self.observable_output_folder_path,
-                "{0:<s}_bootstrap_Nbs{2:<d}_beta{1:<s}{3:<s}.png".format(
+                "{0:<s}_bootstrap_Nbs{2:<d}_beta{1:<s}{3:<s}.pdf".format(
                     self.observable_name_compact,
                     str(self.beta).replace('.', '_'),
                     self.N_bs, self.fname_addon))
@@ -695,7 +695,7 @@ class FlowAnalyser(object):
             title_string = r"%s" % self.observable_name
             fname_path = os.path.join(
                 self.observable_output_folder_path,
-                "{0:<s}_original_beta{1:<s}{2:<s}.png".format(
+                "{0:<s}_original_beta{1:<s}{2:<s}.pdf".format(
                     self.observable_name_compact,
                     str(self.beta).replace('.', '_'), self.fname_addon))
 
@@ -804,7 +804,7 @@ class FlowAnalyser(object):
             self.observable_name, flow_time_index*self.flow_epsilon)
         fname_path = os.path.join(
             self.observable_output_folder_path,
-            "{0:<s}_autocorrelation_flowt{1:<d}_beta{2:<s}{3:<s}.png".format(
+            "{0:<s}_autocorrelation_flowt{1:<d}_beta{2:<s}{3:<s}.pdf".format(
                 self.observable_name_compact, flow_time_index,
                 str(self.beta).replace('.', '_'), self.fname_addon))
 
@@ -844,7 +844,7 @@ class FlowAnalyser(object):
             self.observable_name, self.N_configurations)
         fname_path = os.path.join(
             self.observable_output_folder_path,
-            "{0:<s}_integrated_ac_time_beta{1:<s}{2:<s}.png".format(
+            "{0:<s}_integrated_ac_time_beta{1:<s}{2:<s}.pdf".format(
                 self.observable_name_compact,
                 str(self.beta).replace('.', '_'), self.fname_addon))
 
@@ -916,7 +916,7 @@ class FlowAnalyser(object):
             self.observable_name, flow_time_index*self.flow_epsilon)
         fname_path = os.path.join(
             self.observable_output_folder_path,
-            "{0:<s}_histogram_flowt{1:>04d}_beta{2:<s}{3:<s}.png".format(
+            "{0:<s}_histogram_flowt{1:>04d}_beta{2:<s}{3:<s}.pdf".format(
                 self.observable_name_compact, abs(
                     flow_time_index),
                 str(self.beta).replace('.', '_'), self.fname_addon))
@@ -1011,16 +1011,15 @@ class FlowAnalyser(object):
         histogram_slices = sorted(_hist_slices)
 
         # Ensures flow time is within bounds.
-        assertion_str = (
+        assert len(histogram_slices) == 3, (
             "Too many histogram slices provided is out of bounds: "
             " [%s]" % ", ".join([str(iHist) for iHist in histogram_slices]))
-        assert len(histogram_slices) == 3, assertion_str
 
         # Sets up title and file name strings
         title_string = r"Evolution of %s" % self.observable_name
         fname_path = os.path.join(
             self.observable_output_folder_path,
-            "{0:<s}_multihistogram_beta{1:<s}{2:<s}.png".format(
+            "{0:<s}_multihistogram_beta{1:<s}{2:<s}.pdf".format(
                 self.observable_name_compact, str(
                     self.beta).replace('.', '_'),
                 self.fname_addon))
@@ -1028,8 +1027,9 @@ class FlowAnalyser(object):
         # Plots histograms
         fig, axes = plt.subplots(3, 1, sharey=True, sharex=True)
         for iHist, ax in zip(histogram_slices, axes):
+            t_f = iHist * self.flow_epsilon
             ax.hist(self.unanalyzed_y_data[iHist],
-                    bins=NBins, label=r"$t_f=%d$" % iHist, density=True)
+                    bins=NBins, label=r"$t_f=%.2f$" % t_f, density=True)
             ax.grid(True)
             ax.legend(loc="upper right")
             if iHist == histogram_slices[1]:
@@ -1073,7 +1073,7 @@ class FlowAnalyser(object):
             flow_time_index*self.flow_epsilon)
         fname_path = os.path.join(
             self.observable_output_folder_path,
-            "{0:<s}_mchistory_flowt{1:>04d}_beta{2:<s}{3:<s}.png".format(
+            "{0:<s}_mchistory_flowt{1:>04d}_beta{2:<s}{3:<s}.pdf".format(
                 self.observable_name_compact, flow_time_index,
                 str(self.beta).replace('.', '_'), self.fname_addon))
 

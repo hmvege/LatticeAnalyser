@@ -47,14 +47,11 @@ class EnergyPostAnalysis(PostCore):
 		Calculates the W(t) used in the scale setting definition given in
 		http://xxx.lanl.gov/pdf/1203.4469v2
 		"""
-		t = np.zeros(len(x) - 2)
+		t = t_unscaled[1:-1]
 		W = np.zeros(len(x) - 2)
 		W_err = np.zeros(len(x) - 2)
 		W_raw = np.zeros((len(x) - 2, y_raw.shape[-1]))
 		dE_raw = np.zeros((len(x) - 2, y_raw.shape[-1]))
-		for i in xrange(1, len(y) - 1):
-			# t[i-1] = x[i]
-			t[i-1] = t_unscaled[i]
 
 		dE = self.derivative(y, feps)
 		for iBoot in xrange(W_raw.shape[-1]):
@@ -74,29 +71,28 @@ class EnergyPostAnalysis(PostCore):
 		for i in xrange(1, len(y) - 1):
 			# W_err[i-1] = np.sqrt((2*t[i-1]**2*y_err[i])**2)# + (t[i-1]**3*np.sqrt(2)*y_err[i]/feps)**2)
 			# print np.std(W_raw[i-1])
+			W_err[i-1] = np.std(W_raw[i-1])
 			# W_err[i-1] = np.sqrt((2*t[i-1]**2*y_err[i])**2 + (t[i-1]**3*np.std(W_raw[i-1]))**2)
 			# W_err[i-1] = np.sqrt((2*t[i-1]**2*y_err[i])**2)
-			W_err[i-1] = np.sqrt((2*t[i-1]**2*y_err[i])**2 + (y_err[i+1]/(2*feps))**2 + (y_err[i-1]/(2*feps))**2 )
+			# W_err[i-1] = np.sqrt((2*t[i-1]**2*y_err[i])**2 + (y_err[i+1]/(2*feps))**2 + (y_err[i-1]/(2*feps))**2 )
 
-		# Sets up the x-axis value for t_f*a^2
-		ta2 = np.zeros(len(x) - 2)
-		for i in xrange(1, len(y) - 1):
-			ta2[i-1] = t_unscaled[i] 
+		# # Sets up the x-axis value for t_f*a^2
+		# ta2 = np.zeros(len(x) - 2)
+		# for i in xrange(1, len(y) - 1):
+		# 	ta2[i-1] = t_unscaled[i] 
 
-		# # plt.plot(x_der, y_der)
-		# # plt.errorbar(t, W, yerr=W_err)
+		# W = np.mean(W_raw, axis=1)
 		# plt.plot(x[1:-1], W, color="tab:red", alpha=0.5)
 		# plt.fill_between(x[1:-1], W-W_err, W+W_err, alpha=0.5, edgecolor='',
 		# 	facecolor="tab:red")
 		# plt.grid(True)
-		# # plt.hlines(0.3,t[0], t[-1], linestyle=":", alpha=0.75, color="gray")
 		# plt.hlines(0.3,x[1], x[-2], linestyle=":", alpha=0.75, color="gray")
-		# plt.xlabel(r"$t/{r_0^2}$")
-		# plt.ylabel(r"$W(t)$")
+		# plt.xlabel(r"$t_f/{r_0^2}$")
+		# plt.ylabel(r"$W(t_f)$")
 		# plt.show()
 		# exit(1)
 
-		return ta2, W, W_err, W_raw
+		return t_unscaled, W, W_err, W_raw
 
 	def _initiate_plot_values(self, data, data_raw):
 		# Sorts data into a format specific for the plotting method
@@ -223,7 +219,7 @@ class EnergyPostAnalysis(PostCore):
 
 		# Saves figure
 		fname = os.path.join(self.output_folder_path, 
-			"post_analysis_extrapmethod%s_t0reference_continuum_%s.png" % (
+			"post_analysis_extrapmethod%s_t0reference_continuum_%s.pdf" % (
 				extrapolation_method, self.analysis_data_type))
 		fig.savefig(fname, dpi=self.dpi)
 		if self.verbose:
@@ -320,8 +316,6 @@ class EnergyPostAnalysis(PostCore):
 		w0err_values = []
 
 		for beta, bval in sorted(self.plot_values.items(), key=lambda i: i[0]):
-			# print bval["tder"]
-			# exit("ENERGY")
 			y0, w0, w0_err, _, _ = extract_fit_target(W0, bval["tder"], bval["W"],
 				y_err=bval["W_err"], y_raw=bval["W_raw"], 
 				tau_int=bval["tau_int"][1:-1], 
@@ -385,7 +379,7 @@ class EnergyPostAnalysis(PostCore):
 
 		# Saves figure
 		fname = os.path.join(self.output_folder_path, 
-			"post_analysis_extrapmethod%s_w0reference_continuum_%s.png" % (
+			"post_analysis_extrapmethod%s_w0reference_continuum_%s.pdf" % (
 				extrapolation_method, self.analysis_data_type))
 		fig.savefig(fname, dpi=self.dpi)
 		if self.verbose:
@@ -631,7 +625,7 @@ class EnergyPostAnalysis(PostCore):
 
 	# 	# Saves figure
 	# 	fname = os.path.join(self.output_folder_path, 
-	# 		("post_analysis_%s_continuum%s_%s.png" % 
+	# 		("post_analysis_%s_continuum%s_%s.pdf" % 
 	# 			(self.observable_name_compact, str(fit_target).replace(".",""),
 	# 				fit_type.strip("_"))))
 

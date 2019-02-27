@@ -4,7 +4,7 @@ class Topc4PostAnalysis(PostCore):
 	"""Post-analysis of the topsus with Q^4."""
 	observable_name = r"$Q^4$"
 	observable_name_compact = "topc4"
-	x_label = r"$\sqrt{8t_{f}}[fm]$"
+	x_label = r"$\sqrt{8t_{f}}$ [fm]"
 	y_label = r"$\langle Q^4 \rangle$" # 1/8 correct?
 
 def main():

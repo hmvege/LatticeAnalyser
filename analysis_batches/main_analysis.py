@@ -15,13 +15,16 @@ def main_analysis():
     # data_batch_folder = "../data/topc_modes_8x16"
     data_batch_folder = "../data/data11"
 
-    default_params = get_default_parameters(data_batch_folder=data_batch_folder)
     # obs_exlusions = ["plaq", "energy", "topc", "topc2", "topc4", "topcr", "topcMC", "topsus"]
     # obs_exlusions = ["energy", "topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
+    obs_exlusions = ["w_t_energy"]
+    default_params = get_default_parameters(
+        data_batch_folder=data_batch_folder, 
+        obs_exlusions=obs_exlusions)
 
     # observables = observables_euclidean_time
     # observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
-    # observables = ["topsusMC"]
+    observables = ["topsusMC"]
     # observables = ["topcr", "qtq0eff"]
     # observables = ["topcte"]
     # observables = observables_euclidean_time
@@ -35,7 +38,7 @@ def main_analysis():
     # exit("CHECK TOPCR!! @ 34 in main_analysis.py")
     # observables = ["topsuste"]
     # observables = ["qtq0effMC"]
-    # observables = ["energy"]
+    observables = ["energy"]
     # observables = ["w_t_energy"]
     # observables = ["plaq", "energy", "topc", "topct"]
 
@@ -59,7 +62,7 @@ def main_analysis():
     # Options: plateau, plateau_mean, nearest, interpolate, bootstrap
     extrapolation_methods = ["plateau", "plateau_mean", "nearest",
         "interpolate", "bootstrap"]
-    extrapolation_methods = ["plateau"]
+    # extrapolation_methods = ["plateau"]
     extrapolation_methods = ["bootstrap"]
     plot_continuum_fit = False
 
@@ -70,7 +73,7 @@ def main_analysis():
     # Number of different sectors we will analyse in monte carlo time
     default_params["MC_time_splits"] = 4
     # MC_intervals = [[0, 1000], [500, 1000], [500, 1000], [175, 250]]
-    # MC_intervals = [[0, 1000], [0, 1000], [0, 2000], [125, 250]]
+    # MC_intervals = [[0, 1000], [0, 1000], [0, 2000], [0, 125]]
     MC_intervals = [None, None, None, None]
  
     # Extraction point in flow time a*t_f for q0 in qtq0

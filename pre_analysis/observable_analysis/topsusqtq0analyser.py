@@ -9,8 +9,8 @@ class TopsusQtQ0Analyser(TopsusAnalyserCore):
     """Topological susceptibility QtQ0 analysis class."""
     observable_name = r"$\chi(\langle Q_t Q_{t_0} \rangle)^{1/4}$"
     observable_name_compact = "topsusqtq0"
-    x_label = r"$\sqrt{8t_{f}}[fm]$"
-    y_label = r"$\chi(\langle Q_{t} Q_{t_0} \rangle)^{1/4} [GeV]$"
+    x_label = r"$\sqrt{8t_{f}}$ [fm]"
+    y_label = r"$\chi_{t_f}(\langle Q_{t} Q_{t_0} \rangle)^{1/4}$ [GeV]"
 
     def __init__(self, *args, **kwargs):
         super(TopsusQtQ0Analyser, self).__init__(*args, **kwargs)

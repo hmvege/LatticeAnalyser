@@ -4,8 +4,8 @@ class PlaquetteAnalyser(FlowAnalyser):
 	"""Plaquette analysis class."""
 	observable_name = "Plaquette"
 	observable_name_compact = "plaq"
-	x_label = r"$\sqrt{8t_{f}}[fm]$"
-	y_label = r"$P_{\mu\nu}$"
+	x_label = r"$\sqrt{8t_{f}}$ [fm]"
+	y_label = r"$\langle P \rangle$"
 
 
 def main():

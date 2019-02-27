@@ -120,7 +120,7 @@ class MultiPlotCore(PostCore):
 		if isinstance(output_folder, types.NoneType):
 			output_folder = os.path.join(self.output_folder_path, "slices")
 		check_folder(output_folder, False, True)
-		fname = "post_analysis_%s_%s_int%s%s.png" % (
+		fname = "post_analysis_%s_%s_int%s%s.pdf" % (
 			self.observable_name_compact, self.analysis_data_type, 
 			self.intervals_str_compact, figure_name_appendix)
 		return os.path.join(output_folder, fname)
@@ -207,7 +207,7 @@ class MultiPlotCore(PostCore):
 			error_shape: plot with error bands or with error bars. 
 				Options: band, bars
 			fname: str, figure name. Default is 
-				post_analysis_{obs_name}_{analysis_type}.png
+				post_analysis_{obs_name}_{analysis_type}.pdf
 		"""
 
 		old_rc_paramx = plt.rcParams['xtick.labelsize']
@@ -296,7 +296,7 @@ class MultiPlotCore(PostCore):
 		check_folder(folder_path, False, True)
 
 		if isinstance(fname, types.NoneType):
-			fpath = os.path.join(folder_path, "post_analysis_%s_%s.png" % (
+			fpath = os.path.join(folder_path, "post_analysis_%s_%s.pdf" % (
 				self.observable_name_compact, self.analysis_data_type))
 		else:
 			fpath = os.path.join(folder_path, fname)

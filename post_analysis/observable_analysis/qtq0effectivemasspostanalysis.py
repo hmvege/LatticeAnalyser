@@ -21,7 +21,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 	observable_name += r"$am_\textrm{eff} = \log \frac{C(t_e)}{C(t_e+1)}$, "
 	observable_name += r"$C(t_e)=\langle q_t q_0\rangle$"
 	observable_name_compact = "qtq0eff"
-	x_label = r"$t_e[\textrm{fm}]$"
+	x_label = r"$t_e$ [fm]"
 	y_label = r"$r_0 m_\textrm{eff}$"
 	sub_obs = True
 	hbarc = 0.19732697 #eV micro m
@@ -150,7 +150,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 		if isinstance(output_folder, types.NoneType):
 			output_folder = os.path.join(self.output_folder_path, "slices")
 		check_folder(output_folder, False, True)
-		fname = "post_analysis_%s_%s_tf%f%s.png" % (
+		fname = "post_analysis_%s_%s_tf%f%s.pdf" % (
 			self.observable_name_compact,self.analysis_data_type, 
 			self.interval_index, figure_name_appendix)
 		return os.path.join(output_folder, fname)

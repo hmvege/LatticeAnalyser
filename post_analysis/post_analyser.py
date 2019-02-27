@@ -334,15 +334,15 @@ def post_analysis(beta_parameter_list, observables,
 			topcmc_analysis.plot_autocorrelation()
 
 	# Loops over different extrapolation methods
-	for extrapolation_method in extrapolation_methods:
-		if "topsus" in observables:
-			topsus_analysis = TopsusPostAnalysis(data, 
-				figures_folder=figures_folder, verbose=verbose)
-			for analysis_type in post_analysis_data_type:
-				topsus_analysis.set_analysis_data_type(analysis_type)
-				topsus_analysis.plot()
-				topsus_analysis.plot_autocorrelation()
-				for cont_target in topsus_fit_targets:
+	if "topsus" in observables:
+		topsus_analysis = TopsusPostAnalysis(data, 
+			figures_folder=figures_folder, verbose=verbose)
+		for analysis_type in post_analysis_data_type:
+			topsus_analysis.set_analysis_data_type(analysis_type)
+			topsus_analysis.plot()
+			topsus_analysis.plot_autocorrelation()
+			for cont_target in topsus_fit_targets:
+				for extrapolation_method in extrapolation_methods:
 					topsus_analysis.plot_continuum(cont_target, 
 						extrapolation_method=extrapolation_method,
 						plot_continuum_fit=plot_continuum_fit)
@@ -352,16 +352,17 @@ def post_analysis(beta_parameter_list, observables,
 						topsus_analysis.get_linefit_parameters())
 
 
-		if "topsusqtq0" in observables:
-			topsusqtq0_analysis = TopsusQtQ0PostAnalysis(data,
-				figures_folder=figures_folder, verbose=verbose)
+	if "topsusqtq0" in observables:
+		topsusqtq0_analysis = TopsusQtQ0PostAnalysis(data,
+			figures_folder=figures_folder, verbose=verbose)
 
-			interval_dict_list = topsusqtq0_analysis.setup_intervals()
+		interval_dict_list = topsusqtq0_analysis.setup_intervals()
 
-			for analysis_type in post_analysis_data_type:
-				topsusqtq0_analysis.set_analysis_data_type(analysis_type)
-				print topsusqtq0_analysis
+		for analysis_type in post_analysis_data_type:
+			topsusqtq0_analysis.set_analysis_data_type(analysis_type)
+			print topsusqtq0_analysis
 
+			for extrapolation_method in extrapolation_methods:
 				for int_keys in interval_dict_list:
 
 					if (list(set(int_keys))[0] == "0.00" and 
@@ -381,23 +382,24 @@ def post_analysis(beta_parameter_list, observables,
 							analysis_type,
 							topsusqtq0_analysis.get_linefit_parameters())
 
-				topsusqtq0_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
-				topsusqtq0_analysis.plot_series([3,4,5,6], beta=bval_to_plot)
-				topsusqtq0_analysis.plot_autocorrelation()
+			topsusqtq0_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+			topsusqtq0_analysis.plot_series([3,4,5,6], beta=bval_to_plot)
+			topsusqtq0_analysis.plot_autocorrelation()
 
-		if "topsust" in observables:
-			topsust_analysis = TopsustPostAnalysis(data,
-				figures_folder=figures_folder, verbose=verbose)
+	if "topsust" in observables:
+		topsust_analysis = TopsustPostAnalysis(data,
+			figures_folder=figures_folder, verbose=verbose)
 
-			interval_dict_list = topsust_analysis.setup_intervals()
+		interval_dict_list = topsust_analysis.setup_intervals()
 
-			for analysis_type in post_analysis_data_type:
-				topsust_analysis.set_analysis_data_type(analysis_type)
-				print topsust_analysis
+		for analysis_type in post_analysis_data_type:
+			topsust_analysis.set_analysis_data_type(analysis_type)
+			print topsust_analysis
 
-				for int_keys in interval_dict_list:
-					topsust_analysis.plot_interval(int_keys)
-					for cont_target in topsus_fit_targets:
+			for int_keys in interval_dict_list:
+				topsust_analysis.plot_interval(int_keys)
+				for cont_target in topsus_fit_targets:
+					for extrapolation_method in extrapolation_methods:
 						topsust_analysis.plot_continuum(cont_target, int_keys,
 							extrapolation_method=extrapolation_method)
 
@@ -406,22 +408,23 @@ def post_analysis(beta_parameter_list, observables,
 							analysis_type,
 							topsust_analysis.get_linefit_parameters())
 
-				topsust_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
-				topsust_analysis.plot_autocorrelation()
+			topsust_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+			topsust_analysis.plot_autocorrelation()
 
-		if "topsuste" in observables:
-			topsuste_analysis = TopsusteIntervalPostAnalysis(data, 
-				figures_folder=figures_folder, verbose=verbose)
+	if "topsuste" in observables:
+		topsuste_analysis = TopsusteIntervalPostAnalysis(data, 
+			figures_folder=figures_folder, verbose=verbose)
 
-			interval_dict_list = topsuste_analysis.setup_intervals(
-				intervals=interval_setup(beta_parameter_list, "Eucl"))
+		interval_dict_list = topsuste_analysis.setup_intervals(
+			intervals=interval_setup(beta_parameter_list, "Eucl"))
 
-			for analysis_type in post_analysis_data_type:
-				topsuste_analysis.set_analysis_data_type(analysis_type)
-				print topsuste_analysis
-				for int_keys in interval_dict_list:
-					topsuste_analysis.plot_interval(int_keys)
-					for cont_target in topsus_fit_targets:
+		for analysis_type in post_analysis_data_type:
+			topsuste_analysis.set_analysis_data_type(analysis_type)
+			print topsuste_analysis
+			for int_keys in interval_dict_list:
+				topsuste_analysis.plot_interval(int_keys)
+				for cont_target in topsus_fit_targets:
+					for extrapolation_method in extrapolation_methods:
 						topsuste_analysis.plot_continuum(cont_target, int_keys,
 							extrapolation_method=extrapolation_method)
 
@@ -430,23 +433,24 @@ def post_analysis(beta_parameter_list, observables,
 							analysis_type,
 							topsuste_analysis.get_linefit_parameters())
 
-				topsuste_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
-				topsuste_analysis.plot_autocorrelation()
+			topsuste_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+			topsuste_analysis.plot_autocorrelation()
 
-		if "topsusMC" in observables:
-			topsusmc_analysis = TopsusMCIntervalPostAnalysis(data,
-				figures_folder=figures_folder, verbose=verbose)
+	if "topsusMC" in observables:
+		topsusmc_analysis = TopsusMCIntervalPostAnalysis(data,
+			figures_folder=figures_folder, verbose=verbose)
 
-			interval_dict_list = topsusmc_analysis.setup_intervals(
-				intervals=interval_setup(beta_parameter_list, "MC"))
+		interval_dict_list = topsusmc_analysis.setup_intervals(
+			intervals=interval_setup(beta_parameter_list, "MC"))
 
-			for analysis_type in post_analysis_data_type:
-				topsusmc_analysis.set_analysis_data_type(analysis_type)
-				print topsusmc_analysis
-			
-				for int_keys in interval_dict_list:
-					topsusmc_analysis.plot_interval(int_keys)
-					for cont_target in topsus_fit_targets:
+		for analysis_type in post_analysis_data_type:
+			topsusmc_analysis.set_analysis_data_type(analysis_type)
+			print topsusmc_analysis
+		
+			for int_keys in interval_dict_list:
+				topsusmc_analysis.plot_interval(int_keys)
+				for cont_target in topsus_fit_targets:
+					for extrapolation_method in extrapolation_methods:
 						topsusmc_analysis.plot_continuum(cont_target, int_keys,
 							extrapolation_method=extrapolation_method)
 
@@ -455,8 +459,8 @@ def post_analysis(beta_parameter_list, observables,
 							analysis_type,
 							topsusmc_analysis.get_linefit_parameters())
 
-				topsusmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
-				topsusmc_analysis.plot_autocorrelation()
+			topsusmc_analysis.plot_series([0,1,2,3], beta=bval_to_plot)
+			topsusmc_analysis.plot_autocorrelation()
 
 	if "qtq0e" in observables:
 		qtq0e_analysis = QtQ0EuclideanPostAnalysis(data, 

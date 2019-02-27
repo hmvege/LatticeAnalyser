@@ -6,8 +6,8 @@ class TopsusAnalyserCore(FlowAnalyser):
 	"""Topological susceptibility analysis base class."""
 	observable_name = "Topological Susceptibility"
 	observable_name_compact = "topsus"
-	x_label = r"$\sqrt{8t_f}[fm]$"
-	y_label = r"$\chi_t^{1/4}[GeV]$"
+	x_label = r"$\sqrt{8t_f}$ [fm]"
+	y_label = r"$\chi_{t_f}^{1/4}$ [GeV]"
 	NTemporal = {6.0: 48, 6.1: 56, 6.2: 64, 6.45: 96}
 	histogram_bins = 100
 

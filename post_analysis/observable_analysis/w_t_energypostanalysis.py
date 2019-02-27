@@ -17,9 +17,9 @@ class WtPostAnalysis(PostCore):
     observable_name_compact = "w_t_energy"
 
     # Regular plot variables
-    y_label = r"$W(t)$"
+    y_label = r"$W(t_f)$"
     x_label = r"$t_f/r_0^2$"
-    formula = r"$W(t) = t\frac{\partial}{\partial t_f}\left(t_f^2\langle E \rangle\right)$"
+    formula = r"$W(t_f) = t_f \frac{\partial}{\partial t_f}\left(t_f^2\langle E \rangle\right)$"
 
     # Continuum plot variables
     x_label_continuum = r"$(a/r_0)^2$"
@@ -209,7 +209,7 @@ class WtPostAnalysis(PostCore):
 
         # Saves figure
         fname = os.path.join(self.output_folder_path, 
-            "post_analysis_extrapmethod%s_w0reference_continuum_%s.png" % (
+            "post_analysis_extrapmethod%s_w0reference_continuum_%s.pdf" % (
                 extrapolation_method, self.analysis_data_type))
         fig.savefig(fname, dpi=self.dpi)
         if self.verbose:

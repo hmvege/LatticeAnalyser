@@ -21,7 +21,7 @@ class QtQ0EffectiveMassMCIntervalsPostAnalysis(MultiPlotCore):
 	observable_name += r"$am_\textrm{eff} = \log \frac{C(t_e)}{C(t_e+1)}$, "
 	observable_name += r"$C(t_e)=\langle q_t q_0\rangle$"
 	observable_name_compact = "qtq0effmc"
-	x_label = r"$t_e[\textrm{fm}]$"
+	x_label = r"$t_e$ [fm]"
 	y_label = r"$r_0 m_\textrm{eff}$"
 	sub_obs = True
 	sub_sub_obs = True
@@ -106,7 +106,7 @@ class QtQ0EffectiveMassMCIntervalsPostAnalysis(MultiPlotCore):
 		if isinstance(output_folder, types.NoneType):
 			output_folder = os.path.join(self.output_folder_path, "slices")
 		check_folder(output_folder, False, True)
-		fname = "post_analysis_%s_%s_tf%f_mc%s%s.png" % (
+		fname = "post_analysis_%s_%s_tf%f_mc%s%s.pdf" % (
 			self.observable_name_compact,self.analysis_data_type, 
 			self.interval_index, self.mc_int_str, figure_name_appendix)
 		return os.path.join(output_folder, fname)

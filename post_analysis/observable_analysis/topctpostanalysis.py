@@ -4,7 +4,7 @@ class TopctPostAnalysis(MultiPlotCore):
 	"""Post-analysis of the topological charge at fixed euclidean time."""
 	observable_name = "Topological Charge at a fixed Euclidean Time"
 	observable_name_compact = "topct"
-	x_label = r"$\sqrt{8t_f}[fm]$"
+	x_label = r"$\sqrt{8t_f}$ [fm]"
 	y_label = r"$\langle Q_{t_e} \rangle$"
 	sub_obs = True
 	subfolder_type = "teucl"

@@ -5,10 +5,10 @@ class EnergyAnalyser(FlowAnalyser):
 	observable_name = "Energy"
 	observable_name_compact = "energy"
 	# Dimensionsless, Implied multiplication by a^2
-	x_label = r"$t/r_0^2$"
+	x_label = r"$t_f/r_0^2$"
 	# Energy is dimension 4, while t^2 is dimension inverse 4, or 
 	# length/time which is inverse energy, see Peskin and Schroeder
-	y_label = r"$t^2\langle E \rangle$" 
+	y_label = r"$t_f^2\langle E \rangle$" 
 
 	def __init__(self, *args, **kwargs):
 		super(EnergyAnalyser, self).__init__(*args, **kwargs)

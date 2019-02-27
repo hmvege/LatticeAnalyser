@@ -9,7 +9,7 @@ class TopcrAnalyser(FlowAnalyser):
 	"""Cumulant ratio <Q^4>_C/<Q^2> analysis class."""
 	observable_name = r"$R=\frac{\langle Q^4 \rangle_C}{\langle Q^2 \rangle}$"
 	observable_name_compact = "topqr"
-	x_label = r"$\sqrt{8t_{f}}[fm]$"
+	x_label = r"$\sqrt{8t_{f}}$ [fm]"
 	y_label = r"$R=\frac{\langle Q^4 \rangle_C}{\langle Q^2 \rangle}$"
 
 	formula = r", $\langle Q^4_C \rangle = \langle Q^4 \rangle - 3 \langle Q^2 \rangle^2 $"

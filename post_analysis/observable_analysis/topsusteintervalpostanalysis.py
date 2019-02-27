@@ -9,8 +9,8 @@ class TopsusteIntervalPostAnalysis(MultiPlotCore, TopsusCore):
 	observable_name = "Topological Susceptibility in Euclidean time intervals"
 	observable_name_compact = "topsuste"
 	obs_name_latex = r"\chi^{1/4}(\expect{Q^2_{E_\text{int}}})"
-	x_label = r"$\sqrt{8t_{f}}[fm]$"
-	y_label = r"$\chi^{1/4} [GeV]$"
+	x_label = r"$\sqrt{8t_{f}}$ [fm]"
+	y_label = r"$\chi_{t_f}^{1/4}$ [GeV]"
 	sub_obs = True
 	descr = "Intervals in euclidean time"
 	subfolder_type = "teInt"

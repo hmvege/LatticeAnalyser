@@ -9,8 +9,8 @@ class QtQ0EuclideanAnalyser(FlowAnalyser):
 	"""Correlator of <QtQ0> in euclidean time analysis class."""
 	observable_name = r""
 	observable_name_compact = "qtq0e"
-	x_label = r"$t_e[fm]$"
-	y_label = r"$\langle Q_{t_e} Q_{t_{e,0}} \rangle [GeV]$"
+	x_label = r"$t_e$ [fm]"
+	y_label = r"$\langle Q_{t_e} Q_{t_{e,0}} \rangle$ [GeV]"
 	mark_interval = 1
 	error_mark_interval = 1
 

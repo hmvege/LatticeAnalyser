@@ -10,8 +10,8 @@ class TopsusteIntervalAnalyser(EuclideanIntervalAnalyser, TopsusAnalyserCore):
 	"""
 	observable_name = "Topological Susceptibility in Euclidean time"
 	observable_name_compact = "topsuste"
-	x_label = r"$\sqrt{8t_{f}}[fm]$"
-	y_label = r"$\chi^{1/4} [GeV]$"
+	x_label = r"$\sqrt{8t_{f}}$ [fm]"
+	y_label = r"$\chi_{t_f}^{1/4}$ [GeV]"
 
 	def __init__(self, *args, **kwargs):
 		super(TopsusteIntervalAnalyser, self).__init__(*args, **kwargs)

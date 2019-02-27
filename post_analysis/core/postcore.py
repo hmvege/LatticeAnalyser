@@ -265,6 +265,11 @@ class PostCore(object):
         """
         Method for plotting the autocorrelations in a single window.
         """
+        if self.sub_obs or self.sub_sub_obs:
+            print ("Skipping AC-plot for %s due to containing "
+                   "subobs.".format(self.observable_name))
+            return
+            
         if self.verbose:
             print "Plotting %s autocorrelation for betas %s together" % (
                 self.observable_name_compact,
@@ -322,7 +327,7 @@ class PostCore(object):
         """Retrieves appropriate figure file name."""
         if isinstance(output_folder, types.NoneType):
             output_folder = self.output_folder_path
-        fname = "post_analysis_%s_%s%s.png" % (self.observable_name_compact,
+        fname = "post_analysis_%s_%s%s.pdf" % (self.observable_name_compact,
                                                self.analysis_data_type, figure_name_appendix)
         return os.path.join(output_folder, fname)
 
