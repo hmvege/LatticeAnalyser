@@ -19,10 +19,9 @@ def _extract_inverse(fit_target, X, Y, Y_err):
     Simple method for finding the x axis value to a target value.
 
     Returns: 
-        min(fit_target - X)
-        error(min(fit_target - X))
+        min(fit_target - Y)
+        error(min(fit_target - Y))
     """
-    # Y_err = np.asarray(Y_err)
 
     # Finds the target value
     min_index = np.argmin(np.abs(fit_target - Y))
@@ -273,8 +272,9 @@ def _extract_plateau_mean_fit(fit_target, f, x, y, y_err, inverse_fit=False):
 
 
 def _extract_bootstrap_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
-                           tau_int_err=None, plot_samples=False, F=lambda _y: _y, FDer=lambda _y,
-                           _yerr: _yerr, inverse_fit=False, full=False):
+                           tau_int_err=None, plot_samples=False, 
+                           F=lambda _y: _y,  FDer=lambda _y, _yerr: _yerr, 
+                           inverse_fit=False, full=False):
     """
     Extract y0 with y0err at a given x0 by using line fitting the y_raw data.
     Error will be corrected by line fitting tau int and getting the exact

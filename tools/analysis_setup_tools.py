@@ -3,7 +3,7 @@ from table_printer import TablePrinter
 import tools.sciprint as sciprint
 import numpy as np
 import types
-
+import pickle
 
 def _check_splits(N, numsplits):
     """Checks if the temporal dimension has been split into good .intervals"""
@@ -137,8 +137,8 @@ def write_fit_parameters_to_file(fparams, fname, skip_values=None,
         fw = 14
         dict_keys = OrderedDict([
             ("observable_type", {"name": "obs", "w": 14, "type": "s"}),
-            ("descr", {"name": "description", "w": 35, "type": "s"}),
-            ("fit_target", {"name": "sqrt(8t_0)", "w": 11, "type": ".2f"}),
+            ("descr", {"name": "description", "w": 40, "type": "s"}),
+            ("fit_target", {"name": "sqrt(8t_0)", "w": 45, "type": "s"}),
             ("extrap_method", {"name": "extrap.-method", "w": 15, "type": "s"}),
             ("interval", {"name": "interval/slice", "w": 60, "type": "s"}),
             ("analysis_type", {"name": "atype", "w": 12, "type": "s"}),
@@ -178,7 +178,7 @@ def write_fit_parameters_to_file(fparams, fname, skip_values=None,
         # Obs  sqrt(8t)  extrap.method  int/slice  chi^2  topsus  Nf
         table_header = [r"$\mathcal{O}$", r"$\sqrt{8t_{f,0,\text{extrap}}}$", 
             "Extrap. method", "Interval/slice", r"$\chi^2$", 
-            r"$\chi^{\frac{1}{4}}$", r"$N_F$"]
+            r"$\chi_{t_f}^{\frac{1}{4}}$", r"$N_F$"]
         table_body = [
             [fp["obs_name_latex"] for fp in sorted_parameter_list],
             [fp["fit_target"] for fp in sorted_parameter_list],
@@ -194,9 +194,26 @@ def write_fit_parameters_to_file(fparams, fname, skip_values=None,
 
         width_list = [len(tab)+2 for tab in table_header]
         width_list[0] = 45
+        width_list[1] = 45
         width_list[3] = 30
         topsus_table = TablePrinter(table_header, table_body)
         topsus_table.print_table(width=width_list, ignore_latex_cols=[2])
+
+
+def load_pickle(pickle_file_name):
+    """Loads a pickle from given pickle_file_name."""
+    with open(pickle_file_name, "rb") as f:
+        data = pickle.load(f)
+        print("Pickle file loaded: {}".format(pickle_file_name))
+    return data
+
+
+def save_pickle(pickle_file_name, data):
+    """Saves data as a pickle."""
+    with open(pickle_file_name, "wb") as f:
+        pickle.dump(data, f)
+        print("Data pickled and dumped to: {:s}".format(pickle_file_name))
+
 
 
 def main():

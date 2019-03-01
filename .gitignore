@@ -5,6 +5,7 @@
 *.zip
 *.mat
 *.json
+*.pkl
 
 # Binary files
 *.pyc

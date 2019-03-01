@@ -23,7 +23,7 @@ def main_analysis():
         obs_exlusions=obs_exlusions)
 
     # observables = observables_euclidean_time
-    # observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
+    observables = ["topsus"]#, "topsust", "topsuste", "topsusMC", "topsusqtq0"]
     # observables = ["topsusMC"]
     # observables = ["topcr", "qtq0eff"]
     # observables = ["topcte"]
@@ -42,14 +42,17 @@ def main_analysis():
     # observables = ["plaq", "energy", "topc", "topct"]
 
     # observables += ["energy"]
-    # default_params["observables"] = observables
+    default_params["observables"] = observables
 
     #### Post analysis parameters
     line_fit_interval_points = 20
     # topsus_fit_targets = [0.3,0.4,0.5,0.58]
     # topsus_fit_targets = [0.3, 0.4, 0.5, 0.6] # tf = sqrt(8*t0)
-    topsus_fit_targets = [0.6] # TODO: add "t0", "w0"
+    topsus_fit_targets = [0.6, "t0", "w0", "t0cont", "w0cont"]
     energy_fit_target = 0.3
+
+    # Will try to use pickled reference scale instead
+    use_pickled_reference_scale = True
 
     #### Different batches
     # data_batch_folder = "../GluonAction/data8"

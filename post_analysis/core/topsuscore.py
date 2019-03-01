@@ -1,3 +1,7 @@
+import types
+import copy
+import os
+import numpy as np
 from postcore import PostCore
 from tools.latticefunctions import get_lattice_spacing
 from tools.latticefunctions import witten_veneziano
@@ -6,317 +10,393 @@ import warnings
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     import matplotlib.pyplot as plt
-import numpy as np
-import os
-import copy
-import types
+
 
 class TopsusCore(PostCore):
-	"""Core class for all topological susceptiblity calculations."""
-	observable_name = "topsus_core"
-	observable_name_compact = "topsus_core"
-	obs_name_latex = "MISSING LATEX NAME FOR TOPSUS"
+    """Core class for all topological susceptiblity calculations."""
+    observable_name = "topsus_core"
+    observable_name_compact = "topsus_core"
+    obs_name_latex = "MISSING LATEX NAME FOR TOPSUS"
 
-	# Regular plot variables
-	x_label = r"$\sqrt{8t_f}$ [fm]"
+    # Regular plot variables
+    x_label = r"$\sqrt{8t_f}$ [fm]"
 
-	# Continuum plot variables
-	y_label_continuum = r"$\chi_{t_f}^{1/4}$ [GeV]"
-	# x_label_continuum = r"$a/{{r_0}^2}$"
-	x_label_continuum = r"$a^2/t_0$"
+    # Continuum plot variables
+    y_label_continuum = r"$\chi_{t_f}^{1/4}$ [GeV]"
+    # x_label_continuum = r"$a/{{r_0}^2}$"
+    x_label_continuum = r"$a^2/t_0$"
 
-	# For specialized observables
-	extra_continuum_msg = ""
+    # For specialized observables
+    extra_continuum_msg = ""
 
-	# For topsus function
-	hbarc = 0.19732697 #eV micro m
+    # For topsus function
+    hbarc = 0.19732697  # eV micro m
 
-	chi_const = {}
-	chi_const_err = {}
-	chi = {}
-	chi_der = {}
+    chi_const = {}
+    chi_const_err = {}
+    chi = {}
+    chi_der = {}
 
-	# For description in printing the different parameters from fit 
-	descr = ""
+    # For description in printing the different parameters from fit
+    descr = ""
 
-	# Description for the extrapolation method in fit
-	extrapolation_method = ""
+    # Description for the extrapolation method in fit
+    extrapolation_method = ""
 
-	# String for intervals
-	intervals_str = ""
+    # String for intervals
+    intervals_str = ""
 
-	def __init__(self, *args, **kwargs):
-		super(TopsusCore, self).__init__(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super(TopsusCore, self).__init__(*args, **kwargs)
 
-	def set_analysis_data_type(self, *args, **kwargs):
-		self._initialize_topsus_func()
-		super(TopsusCore, self).set_analysis_data_type(*args, **kwargs)
+    def set_analysis_data_type(self, *args, **kwargs):
+        self._initialize_topsus_func()
+        super(TopsusCore, self).set_analysis_data_type(*args, **kwargs)
 
-	def _initialize_topsus_func_const(self):
-		"""Sets the constant in the topsus function for found beta values."""
-		for beta in self.beta_values:
-			a, a_err = get_lattice_spacing(beta)
-			V = self.lattice_sizes[beta][0]**3 * self.lattice_sizes[beta][1]
-			V = float(V)
-			self.chi_const[beta] = self.hbarc/a/V**0.25
-			self.chi_const_err[beta] = self.hbarc*a_err/a**2/V**0.25
+    def _initialize_topsus_func_const(self):
+        """Sets the constant in the topsus function for found beta values."""
+        for beta in self.beta_values:
+            a, a_err = get_lattice_spacing(beta)
+            V = self.lattice_sizes[beta][0]**3 * self.lattice_sizes[beta][1]
+            V = float(V)
+            self.chi_const[beta] = self.hbarc/a/V**0.25
+            self.chi_const_err[beta] = self.hbarc*a_err/a**2/V**0.25
 
-	def _initialize_topsus_func(self):
-		"""Sets the topsus function for all found beta values."""
+    def _initialize_topsus_func(self):
+        """Sets the topsus function for all found beta values."""
 
-		self._initialize_topsus_func_const()
+        self._initialize_topsus_func_const()
 
-		# Bad hardcoding due to functions stored in a dictionary in a loop is
-		# not possible.
-		if 6.0 in self.beta_values:
-			self.chi[6.0] = lambda qq: self.chi_const[6.0]*qq**(0.25)
-			self.chi_der[6.0] = lambda qq, qqerr: \
-				np.sqrt((self.chi_const_err[6.0]*qq**0.25)**2 +\
-				(0.25*self.chi_const[6.0]*qqerr/qq**(0.75))**2)
+        # Bad hardcoding due to functions stored in a dictionary in a loop is
+        # not possible.
+        if 6.0 in self.beta_values:
+            self.chi[6.0] = lambda qq: self.chi_const[6.0]*qq**(0.25)
+            self.chi_der[6.0] = lambda qq, qqerr: \
+                np.sqrt((self.chi_const_err[6.0]*qq**0.25)**2 +
+                        (0.25*self.chi_const[6.0]*qqerr/qq**(0.75))**2)
 
-		if 6.1 in self.beta_values:
-			self.chi[6.1] = lambda qq: self.chi_const[6.1]*qq**(0.25)
-			self.chi_der[6.1] = lambda qq, qqerr: \
-				np.sqrt((self.chi_const_err[6.1]*qq**0.25)**2 +\
-				(0.25*self.chi_const[6.1]*qqerr/qq**(0.75))**2)
+        if 6.1 in self.beta_values:
+            self.chi[6.1] = lambda qq: self.chi_const[6.1]*qq**(0.25)
+            self.chi_der[6.1] = lambda qq, qqerr: \
+                np.sqrt((self.chi_const_err[6.1]*qq**0.25)**2 +
+                        (0.25*self.chi_const[6.1]*qqerr/qq**(0.75))**2)
 
-		if 6.2 in self.beta_values:
-			self.chi[6.2] = lambda qq: self.chi_const[6.2]*qq**(0.25)
-			self.chi_der[6.2] = lambda qq, qqerr: \
-				np.sqrt((self.chi_const_err[6.2]*qq**0.25)**2 +\
-				(0.25*self.chi_const[6.2]*qqerr/qq**(0.75))**2)
+        if 6.2 in self.beta_values:
+            self.chi[6.2] = lambda qq: self.chi_const[6.2]*qq**(0.25)
+            self.chi_der[6.2] = lambda qq, qqerr: \
+                np.sqrt((self.chi_const_err[6.2]*qq**0.25)**2 +
+                        (0.25*self.chi_const[6.2]*qqerr/qq**(0.75))**2)
 
-		if 6.45 in self.beta_values:
-			self.chi[6.45] = lambda qq: self.chi_const[6.45]*qq**(0.25)
-			self.chi_der[6.45] = lambda qq, qqerr: \
-				np.sqrt((self.chi_const_err[6.45]*qq**0.25)**2 +\
-				(0.25*self.chi_const[6.45]*qqerr/qq**(0.75))**2)
+        if 6.45 in self.beta_values:
+            self.chi[6.45] = lambda qq: self.chi_const[6.45]*qq**(0.25)
+            self.chi_der[6.45] = lambda qq, qqerr: \
+                np.sqrt((self.chi_const_err[6.45]*qq**0.25)**2 +
+                        (0.25*self.chi_const[6.45]*qqerr/qq**(0.75))**2)
 
-	def plot_continuum(self, fit_target, title_addendum="",
-		extrapolation_method="bootstrap", plateau_fit_size=20,
-		interpolation_rank=3, plot_continuum_fit=False):
-		"""Method for plotting the continuum limit of topsus at a given 
-		fit_target.
+    def get_fit_targets(self, fit_target):
+        """Sets up the fit targets."""
 
-		Args:
-			fit_target: float, value of where we extrapolate from.
-			title_addendum: str, optional, default is an empty string, ''. 
-				Adds string to end of title.
-			extrapolation_method: str, optional, method of selecting the 
-				extrapolation point to do the continuum limit. Method will be
-				used on y values and tau int. Choices:
-					- plateau: line fits points neighbouring point in order to 
-						reduce the error bars using y_raw for covariance matrix.
-					- plateau_mean: line fits points neighbouring point in order to
-						reduce the error bars. Line will be weighted by the y_err.
-					- nearest: line fit from the point nearest to what we seek
-					- interpolate: linear interpolation in order to retrieve value
-						and error. Does not work in conjecture with use_raw_values.
-					- bootstrap: will create multiple line fits, and take average. 
-						Assumes y_raw is the bootstrapped or jackknifed samples.
-			plateau_size: int, optional. Number of points in positive and 
-				negative direction to extrapolate fit target value from. This 
-				value also applies to the interpolation interval. Default is 20.
-			interpolation_rank: int, optional. Interpolation rank to use if 
-				extrapolation method is interpolation Default is 3.
-			raw_func: function, optional, will modify the bootstrap data after 
-				samples has been taken by this function.
-			raw_func_err: function, optional, will propagate the error of the 
-				bootstrapped line fitted data, raw_func_err(y, yerr). Calculated
-				by regular error propagation.
-		"""
-		self.extrapolation_method = extrapolation_method
-		if not isinstance(self.reference_values, types.NoneType):
-			if extrapolation_method in self.reference_values.keys():
-				# Checking that the extrapolation method selected can be used.
-				t0_values = self.reference_values[self.extrapolation_method]\
-					[self.analysis_data_type]
-			else:
-				# If the extrapolation method is not among the used methods.
-				t0_values = self.reference_values.values()[0]\
-					[self.analysis_data_type]
-		else:
-			t0_values = None
+        if isinstance(fit_target, str):
+            tmp_ref = (self.reference_values[self.extrapolation_method]
+                       [self.analysis_data_type])
+            # Either t0 or w0
+            if fit_target == "t0":
 
-		# Retrieves data for analysis.
-		if fit_target == -1:
-			fit_target = self.plot_values[max(self.plot_values)]["x"][-1]
+                # get t0/a^2
+                fit_targets = [np.sqrt(8*tmp_ref[_b]["t0"])
+                               for _b in self.beta_values]
+                self.fit_target = r"t_0"
 
-		a, a_err, a_norm_factor, a_norm_factor_err, obs, obs_raw, obs_err, \
-			tau_int_corr = [], [], [], [], [], [], [], []
+            elif fit_target == "w0":
 
-		for beta in sorted(self.plot_values):
-			x = self.plot_values[beta]["x"]
-			y = self.plot_values[beta]["y"]
-			y_err = self.plot_values[beta]["y_err"]
-			y_raw = self.plot_values[beta]["y_raw"]
+                # get w0/a^2
+                fit_targets = [np.sqrt(8*tmp_ref[_b]["w0"]**2)
+                               for _b in self.beta_values]
+                self.fit_target = r"w_0"
 
-			if self.with_autocorr:
-				tau_int = self.plot_values[beta]["tau_int"]
-				tau_int_err = self.plot_values[beta]["tau_int_err"]
-			else:
-				tau_int = None
-				tau_int_err = None
+            elif fit_target == "t0cont":
 
-			# Extrapolation of point to use in continuum extrapolation
-			res = extract_fit_target(fit_target, x, y, y_err, 
-				y_raw=y_raw, tau_int=tau_int, 
-				tau_int_err=tau_int_err, 
-				extrapolation_method=extrapolation_method, 
-				plateau_size=plateau_fit_size, interpolation_rank=3, 
-				plot_fit=plot_continuum_fit, raw_func=self.chi[beta],
-				raw_func_err=self.chi_der[beta], plot_samples=False, 
-				verbose=False)
+                # Continuum fit of t0
+                fit_targets = [np.sqrt(8*tmp_ref["t0cont"])
+                               for _b in self.beta_values]
+                self.fit_target = (
+                    r"\sqrt{8 t_{0,\mathrm{cont}}}=%.4f"
+                    % np.sqrt(8*tmp_ref["t0cont"]*self.r0**2))
 
-			_x0, _y0, _y0_error, _y0_raw, _tau_int0 = res
+            elif fit_target == "w0cont":
 
-			if np.isnan([_y0, _y0_error]).any():
-				print "NaN type detected: skipping calculation"
-				return
+                # Continuum fit of w0
+                fit_targets = [np.sqrt(8*tmp_ref["w0cont"]**2)
+                               for _b in self.beta_values]
+                self.fit_target = (r"\sqrt{w_{0,\mathrm{cont}}^2} = %.4f"
+                                   % np.sqrt(8*(tmp_ref["w0cont"])**2))
 
-			if self.verbose:
-				msg = "Beta = %4.2f Topsus = %14.12f +/- %14.12f" % (
-					beta, _y0, _y0_error)
+            else:
 
-			a.append(self.plot_values[beta]["a"])
-			a_err.append(self.plot_values[beta]["a_err"])
+                raise KeyError("Fit target key '{}' not "
+                               "reecognized.".format(fit_target))
 
-			if isinstance(t0_values, types.NoneType):
-				a_norm_factor.append(_x0)
-				a_norm_factor_err.append(0)
-			else:
-				a_norm_factor.append(t0_values["t0cont"])
-				a_norm_factor_err.append(t0_values["t0cont_err"])
+        elif isinstance(fit_target, float):
+            fit_targets = [fit_target for _b in self.beta_values]
+            self.fit_target = (r"\sqrt{8 t_{f,0,\mathrm{extrap}}} = %.2f" %
+                               fit_target)
+        else:
+            raise ValueError("Fit target not recognized: "
+                             "{}".format(fit_target))
 
-				if self.verbose:
-					msg += " t0 = %14.12f" % (t0_values["t0cont"]\
-						/ (self.plot_values[beta]["a"]**2) * self.r0**2)
+        return fit_targets
 
-			if self.verbose:
-				print msg
+    def plot_continuum(self, fit_target, title_addendum="",
+                       extrapolation_method="bootstrap",
+                       plateau_fit_size=20, interpolation_rank=3,
+                       plot_continuum_fit=False):
+        """Method for plotting the continuum limit of topsus at a given
+        fit_target.
 
-			obs.append(_y0)
-			obs_err.append(_y0_error)
-			obs_raw.append(_y0_raw)
-			tau_int_corr.append(_tau_int0)
+        Args:
+            fit_target: float or str. If float, will choose corresponding
+                float time t_f value of where we extrapolate from. If string,
+                one can choose either 't0', 't0cont', 'w0' and 'w0cont'. 't0' 
+                and 'w0' will use values for given beta value. For 't0cont' 
+                and 'w0cont' will use extrapolated values to select topsus 
+                values from.
+            title_addendum: str, optional, default is an empty string, ''.
+                Adds string to end of title.
+            extrapolation_method: str, optional, method of selecting the
+                extrapolation point to do the continuum limit. Method will be
+                used on y values and tau int. Choices:
+                    - plateau: line fits points neighbouring point in order to
+                        reduce the error bars using y_raw for covariance
+                        matrix.
+                    - plateau_mean: line fits points neighbouring point in
+                        order to reduce the error bars. Line will be weighted
+                        by the y_err.
+                    - nearest: line fit from the point nearest to what we seek
+                    - interpolate: linear interpolation in order to retrieve
+                        value and error. Does not work in conjecture with
+                        use_raw_values.
+                    - bootstrap: will create multiple line fits, and take
+                        average. Assumes y_raw is the bootstrapped or
+                        jackknifed samples.
+            plateau_size: int, optional. Number of points in positive and
+                negative direction to extrapolate fit target value from. This
+                value also applies to the interpolation interval. Default is
+                20.
+            interpolation_rank: int, optional. Interpolation rank to use if
+                extrapolation method is interpolation Default is 3.
+            raw_func: function, optional, will modify the bootstrap data after
+                samples has been taken by this function.
+            raw_func_err: function, optional, will propagate the error of the
+                bootstrapped line fitted data, raw_func_err(y, yerr).
+                Calculated by regular error propagation.
+        """
+        self.extrapolation_method = extrapolation_method
+        if not isinstance(self.reference_values, types.NoneType):
+            if extrapolation_method in self.reference_values.keys():
+                # Checking that the extrapolation method selected can be used.
+                t0_values = (self.reference_values[self.extrapolation_method]
+                             [self.analysis_data_type])
+            else:
+                # If the extrapolation method is not among the used methods.
+                t0_values = self.reference_values.values()[
+                    0][self.analysis_data_type]
+        else:
+            t0_values = None
 
-		# Makes lists into arrays
-		a = np.asarray(a)[::-1]
-		a_err = np.asarray(a_err)[::-1]
-		a_norm_factor = np.asarray(a_norm_factor)[::-1]
-		a_norm_factor_err = np.asarray(a_norm_factor_err)[::-1]
-		a_squared = a**2 / a_norm_factor
-		a_squared_err = np.sqrt((2*a*a_err/a_norm_factor)**2 \
-			+ (a**2*a_norm_factor_err/a_norm_factor**2)**2)
-		obs = np.asarray(obs)[::-1]
-		obs_err = np.asarray(obs_err)[::-1]
+        # Retrieves data for analysis.
+        if fit_target == -1:
+            fit_target = self.plot_values[max(self.plot_values)]["x"][-1]
 
-		# Continuum limit arrays
-		N_cont = 1000
-		a_squared_cont = np.linspace(-0.0025, a_squared[-1]*1.1, N_cont)
+        fit_targets = self.get_fit_targets(fit_target)
+        print "Fit targets: ", fit_targets
 
-		# Fits to continuum and retrieves values to be plotted
-		continuum_fit = LineFit(a_squared, obs, obs_err)
+        a, a_err, a_norm_factor, a_norm_factor_err, obs, obs_raw, obs_err, \
+            tau_int_corr = [], [], [], [], [], [], [], []
 
-		y_cont, y_cont_err, fit_params, chi_squared = \
-			continuum_fit.fit_weighted(a_squared_cont)
-		self.chi_squared = chi_squared
-		self.fit_params = fit_params
-		self.fit_target = fit_target
+        for i, beta in enumerate(sorted(self.plot_values)):
+            x = self.plot_values[beta]["x"]
+            y = self.plot_values[beta]["y"]
+            y_err = self.plot_values[beta]["y_err"]
+            y_raw = self.plot_values[beta]["y_raw"]
 
-		# continuum_fit.plot(True)
+            if self.with_autocorr:
+                tau_int = self.plot_values[beta]["tau_int"]
+                tau_int_err = self.plot_values[beta]["tau_int_err"]
+            else:
+                tau_int = None
+                tau_int_err = None
 
-		# Gets the continium value and its error
-		y0_cont, y0_cont_err, _, _, = \
-			continuum_fit.fit_weighted(0.0)
+            # Extrapolation of point to use in continuum extrapolation
+            res = extract_fit_target(
+                fit_targets[i], x, y, y_err, y_raw=y_raw, tau_int=tau_int,
+                tau_int_err=tau_int_err,
+                extrapolation_method=extrapolation_method,
+                plateau_size=plateau_fit_size, interpolation_rank=3,
+                plot_fit=plot_continuum_fit, raw_func=self.chi[beta],
+                raw_func_err=self.chi_der[beta], plot_samples=False,
+                verbose=False)
 
-		# Matplotlib requires 2 point to plot error bars at
-		a0_squared = [0, 0]
-		y0 = [y0_cont[0], y0_cont[0]]
-		y0_err = [y0_cont_err[0][0], y0_cont_err[1][0]]
+            _x0, _y0, _y0_error, _y0_raw, _tau_int0 = res
 
-		# Stores the chi continuum
-		self.topsus_continuum = y0[0]
-		self.topsus_continuum_error = (y0_err[1] - y0_err[0])/2.0
+            # In case something is wrong -> skip
+            if np.isnan([_y0, _y0_error]).any():
+                print "NaN type detected: skipping calculation"
+                return
 
-		y0_err = [self.topsus_continuum_error, self.topsus_continuum_error]
+            if self.verbose:
+                msg = "Beta = %4.2f Topsus = %14.12f +/- %14.12f" % (
+                    beta, _y0, _y0_error)
 
-		# Sets of title string with the chi squared and fit target
-		title_string = r"$t_{f,0} = %.2f[fm], \chi^2 = %.2f$" % (
-			self.fit_target, self.chi_squared)
-		title_string += title_addendum
+            a.append(self.plot_values[beta]["a"])
+            a_err.append(self.plot_values[beta]["a_err"])
 
-		# Creates figure and plot window
-		fig = plt.figure()
-		ax = fig.add_subplot(111)
+            if isinstance(t0_values, types.NoneType):
+                a_norm_factor.append(_x0)
+                a_norm_factor_err.append(0)
+            else:
+                a_norm_factor.append(t0_values["t0cont"])
+                a_norm_factor_err.append(t0_values["t0cont_err"])
 
-		# Plots linefit with errorband
-		ax.plot(a_squared_cont, y_cont, color="tab:blue", alpha=0.5)
-		ax.fill_between(a_squared_cont, y_cont_err[0], y_cont_err[1],
-			alpha=0.5, edgecolor='', facecolor="tab:blue")
+                if self.verbose:
+                    _tmp = t0_values["t0cont"]/(self.plot_values[beta]["a"]**2)
+                    _tmp *= self.r0**2
+                    msg += " t0 = %14.12f" % (_tmp)
 
-		# Plot lattice points
-		ax.errorbar(a_squared, obs, xerr=a_squared_err, yerr=obs_err, fmt="o",
-			color="tab:orange", ecolor="tab:orange")
+            if self.verbose:
+                print msg
 
-		# plots continuum limit, 5 is a good value for cap size
-		ax.errorbar(a0_squared, y0,
-			yerr=y0_err, fmt="o", capsize=None,
-			capthick=1, color="tab:red", ecolor="tab:red",
-			label=r"$\chi^{1/4}=%.3f\pm%.3f$" % (self.topsus_continuum,
-				self.topsus_continuum_error))
+            obs.append(_y0)
+            obs_err.append(_y0_error)
+            obs_raw.append(_y0_raw)
+            tau_int_corr.append(_tau_int0)
 
-		ax.set_ylabel(self.y_label_continuum)
-		ax.set_xlabel(self.x_label_continuum)
-		ax.set_title(title_string)
-		ax.set_xlim(a_squared_cont[0], a_squared_cont[-1])
-		ax.legend()
-		ax.grid(True)
+        # Makes lists into arrays
+        a = np.asarray(a)[::-1]
+        a_err = np.asarray(a_err)[::-1]
+        a_norm_factor = np.asarray(a_norm_factor)[::-1]
+        a_norm_factor_err = np.asarray(a_norm_factor_err)[::-1]
+        a_squared = a**2 / a_norm_factor
+        a_squared_err = np.sqrt((2*a*a_err/a_norm_factor)**2
+                                + (a**2*a_norm_factor_err/a_norm_factor**2)**2)
+        obs = np.asarray(obs)[::-1]
+        obs_err = np.asarray(obs_err)[::-1]
 
-		if self.verbose:
-			print "Target: %.16f +/- %.16f" % (self.topsus_continuum,
-				self.topsus_continuum_error)
+        # Continuum limit arrays
+        N_cont = 1000
+        a_squared_cont = np.linspace(-0.0025, a_squared[-1]*1.1, N_cont)
 
-		# Saves figure
-		fname = os.path.join(self.output_folder_path, 
-			"post_analysis_extrapmethod%s_%s_continuum%s_%s.pdf" % (
-				extrapolation_method, self.observable_name_compact,
-				str(fit_target).replace(".",""), self.analysis_data_type))
-		fig.savefig(fname, dpi=self.dpi)
+        # Fits to continuum and retrieves values to be plotted
+        continuum_fit = LineFit(a_squared, obs, obs_err)
 
-		if self.verbose:
-			print "Continuum plot of %s created in %s" % (
-				self.observable_name_compact, fname)
+        y_cont, y_cont_err, fit_params, chi_squared = \
+            continuum_fit.fit_weighted(a_squared_cont)
+        self.chi_squared = chi_squared
+        self.fit_params = fit_params
 
-		# plt.show()
-		plt.close(fig)
+        # continuum_fit.plot(True)
 
-		self.print_continuum_estimate()
+        # Gets the continium value and its error
+        y0_cont, y0_cont_err, _, _, = \
+            continuum_fit.fit_weighted(0.0)
 
-	def get_linefit_parameters(self):
-		"""Returns the chi^2, a, a_err, b, b_err."""
-		return self.chi_squared, self.fit_params, self.topsus_continuum, \
-			self.topsus_continuum_error, self.NF, self.NF_error, \
-			self.fit_target, self.intervals_str, self.descr, \
-			self.extrapolation_method, self.obs_name_latex
+        # Matplotlib requires 2 point to plot error bars at
+        a0_squared = [0, 0]
+        y0 = [y0_cont[0], y0_cont[0]]
+        y0_err = [y0_cont_err[0][0], y0_cont_err[1][0]]
 
-	def print_continuum_estimate(self):
-		"""Prints the NF from the Witten-Veneziano formula."""
-		self.NF, self.NF_error = witten_veneziano(self.topsus_continuum, 
-			self.topsus_continuum_error)
-		msg = "Observable: %s" % self.observable_name_compact
-		msg += "\n    Fit target: %.4f" % self.fit_target
-		msg += "\n    Topsus = %.16f" % self.topsus_continuum
-		msg += "\n    Topsus_error = %.16f" % self.topsus_continuum_error
-		msg += "\n    N_f = %.16f" % self.NF
-		msg += "\n    N_f_error = %.16f" % self.NF_error
-		msg += "\n    Chi^2 = %.16f" % self.chi_squared
-		msg += self.extra_continuum_msg
-		msg += "\n"
-		print msg 
+        # Stores the chi continuum
+        self.topsus_continuum = y0[0]
+        self.topsus_continuum_error = (y0_err[1] - y0_err[0])/2.0
+
+        y0_err = [self.topsus_continuum_error, self.topsus_continuum_error]
+
+        # Sets of title string with the chi squared and fit target
+        if isinstance(self.fit_target, str):
+            title_string = r"$%s, \chi^2 = %.2f$" % (
+                self.fit_target, self.chi_squared)
+        else:
+            title_string = r"$t_{f,0} = %.2f[fm], \chi^2 = %.2f$" % (
+                self.fit_target, self.chi_squared)
+        title_string += title_addendum
+
+        # Creates figure and plot window
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+        # Plots linefit with errorband
+        ax.plot(a_squared_cont, y_cont, color="tab:blue", alpha=0.5)
+        ax.fill_between(a_squared_cont, y_cont_err[0], y_cont_err[1],
+                        alpha=0.5, edgecolor='', facecolor="tab:blue")
+
+        # Plot lattice points
+        ax.errorbar(a_squared, obs, xerr=a_squared_err, yerr=obs_err, fmt="o",
+                    color="tab:orange", ecolor="tab:orange")
+
+        # plots continuum limit, 5 is a good value for cap size
+        ax.errorbar(a0_squared, y0,
+                    yerr=y0_err, fmt="o", capsize=None,
+                    capthick=1, color="tab:red", ecolor="tab:red",
+                    label=r"$\chi_{t_f}^{1/4}=%.3f\pm%.3f$" % (
+                        self.topsus_continuum, self.topsus_continuum_error))
+
+        ax.set_ylabel(self.y_label_continuum)
+        ax.set_xlabel(self.x_label_continuum)
+        ax.set_title(title_string)
+        ax.set_xlim(a_squared_cont[0], a_squared_cont[-1])
+        ax.legend()
+        ax.grid(True)
+
+        if self.verbose:
+            print "Target: %.16f +/- %.16f" % (self.topsus_continuum,
+                                               self.topsus_continuum_error)
+
+        # Saves figure
+        fname = os.path.join(
+            self.output_folder_path,
+            "post_analysis_extrapmethod%s_%s_continuum%s_%s.pdf" % (
+                extrapolation_method, self.observable_name_compact,
+                str(fit_target).replace(".", ""), self.analysis_data_type))
+
+        fig.savefig(fname, dpi=self.dpi)
+
+        if self.verbose:
+            print "Continuum plot of %s created in %s" % (
+                self.observable_name_compact, fname)
+
+        # plt.show()
+        plt.close(fig)
+
+        self.print_continuum_estimate()
+
+    def get_linefit_parameters(self):
+        """Returns the chi^2, a, a_err, b, b_err."""
+        return self.chi_squared, self.fit_params, self.topsus_continuum, \
+            self.topsus_continuum_error, self.NF, self.NF_error, \
+            self.fit_target, self.intervals_str, self.descr, \
+            self.extrapolation_method, self.obs_name_latex
+
+    def print_continuum_estimate(self):
+        """Prints the NF from the Witten-Veneziano formula."""
+        self.NF, self.NF_error = witten_veneziano(self.topsus_continuum,
+                                                  self.topsus_continuum_error)
+        msg = "Observable: %s" % self.observable_name_compact
+        if isinstance(self.fit_target, str):
+            msg += "\n    Fit target: %s" % self.fit_target
+        else:
+            msg += "\n    Fit target: %.4f" % self.fit_target
+        msg += "\n    Topsus = %.16f" % self.topsus_continuum
+        msg += "\n    Topsus_error = %.16f" % self.topsus_continuum_error
+        msg += "\n    N_f = %.16f" % self.NF
+        msg += "\n    N_f_error = %.16f" % self.NF_error
+        msg += "\n    Chi^2 = %.16f" % self.chi_squared
+        msg += self.extra_continuum_msg
+        msg += "\n"
+        print msg
+
 
 def main():
-	exit("Exit: TopsusCore not intended to be a standalone module.")
+    exit("Exit: TopsusCore not intended to be a standalone module.")
+
 
 if __name__ == '__main__':
-	main()
+    main()

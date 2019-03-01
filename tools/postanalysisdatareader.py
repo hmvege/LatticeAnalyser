@@ -131,7 +131,7 @@ class PostAnalysisDataReader:
                             sub_obs_raw[sub_obs] = _raw
                             _beta_values.append(_beta)
 
-                    # Places the retrieved sub-folder observables into 
+                    # Places the retrieved sub-folder observables into
                     # dictionary.
                     obs_data_raw[obs] = sub_obs_raw
                 else:
@@ -232,7 +232,7 @@ class PostAnalysisDataReader:
             _print_latex_list.append(b["print_latex"])
 
         assert len(set(_print_latex_list)), (
-        	"check input parameters: print_latex differs for parameters.")
+            "check input parameters: print_latex differs for parameters.")
 
         self.print_latex = _print_latex_list[0]
 
@@ -404,7 +404,7 @@ class PostAnalysisDataReader:
         obs_data["unanalyzed"] = copy.deepcopy(unanalyzed_data)
         obs_data["bootstrap"] = copy.deepcopy(bs_data)
         obs_data["jackknife"] = copy.deepcopy(jk_data)
-        # obs_data["flow_time"] 	= copy.deepcopy(t)
+        # obs_data["flow_time"]     = copy.deepcopy(t)
 
         if autocorr:
             tau_int = retrieved_data[:, 7]
@@ -428,8 +428,8 @@ class PostAnalysisDataReader:
     def _get_bin(self, folder):
         """Gets binary data."""
         assert len(os.listdir(folder)) == 1, (
-        	"unrecognized/multiple files in binary folder %s: %s" % (
-        		folder, ", ".join(os.listdir(folder))))
+            "unrecognized/multiple files in binary folder %s: %s" % (
+                folder, ", ".join(os.listdir(folder))))
         return np.load(os.path.join(folder, self._get_dir_content(folder)[0]))
 
     @staticmethod
@@ -539,8 +539,11 @@ class PostAnalysisDataReader:
             self.raw_analysis[analysis_type][beta][observable_name] = {}
 
         if sub_obs != None:
-            if sub_obs not in self.raw_analysis[analysis_type][beta][observable_name]:
-                self.raw_analysis[analysis_type][beta][observable_name][sub_obs] = {}
+            if sub_obs not in \
+                    self.raw_analysis[analysis_type][beta][observable_name]:
+
+                self.raw_analysis[analysis_type][
+                    beta][observable_name][sub_obs] = {}
 
     def _retrieve_sub_sub(self, obs_dir_path):
         """
