@@ -35,6 +35,14 @@ class PostCore(object):
     sub_sub_obs = False
     interval = []
 
+    # Color setup for continuum plots
+    cont_error_color = "#0c2c84" # For the single continuum point
+    cont_axvline_color = "#000000"
+    fit_color = "#225ea8"
+    fit_fill_color = "#225ea8"
+    lattice_points_color = "#000000"
+
+
     def __init__(self, data, with_autocorr=True, figures_folder="../figures",
                  verbose=False, dryrun=False):
         """
@@ -88,46 +96,47 @@ class PostCore(object):
 
         for atype in self.analysis_types:
             for beta in self.beta_values:
+                _tmp = data.data_observables[observable][beta]
                 if self.sub_obs:
                     if self.sub_sub_obs:
-                        for subobs in data.data_observables[observable][beta]:
+                        for subobs in _tmp:
                             # Sets sub-sub intervals
                             self.observable_intervals[beta][subobs] = \
-                                data.data_observables[observable][beta][subobs].keys(
+                                _tmp[subobs].keys(
                             )
 
                             # Sets up additional subsub-dictionaries
                             self.data[atype][beta][subobs] = {}
 
-                            for subsubobs in data.data_observables[observable][beta][subobs]:
+                            for subsubobs in _tmp[subobs]:
 
                                 self.data[atype][beta][subobs][subsubobs] = \
-                                    data.data_observables[observable][beta][subobs][subsubobs][self.ac][atype]
+                                    _tmp[subobs][subsubobs][self.ac][atype]
 
                                 if self.with_autocorr:
-                                    self.data[atype][beta][subobs][subsubobs]["ac"] = data.data_observables[
-                                        observable][beta][subobs][subsubobs]["with_autocorr"]["autocorr"]
+                                    self.data[atype][beta][subobs][subsubobs]["ac"] = \
+                                        _tmp[subobs][subsubobs]["with_autocorr"]["autocorr"]
 
                     else:
                         # Fills up observable intervals
                         self.observable_intervals[beta] = \
-                            data.data_observables[observable][beta].keys()
+                            _tmp.keys()
 
-                        for subobs in data.data_observables[observable][beta]:
+                        for subobs in _tmp:
 
                             self.data[atype][beta][subobs] = \
-                                data.data_observables[observable][beta][subobs][self.ac][atype]
+                                _tmp[subobs][self.ac][atype]
 
                             if self.with_autocorr:
                                 self.data[atype][beta][subobs]["ac"] = \
-                                    data.data_observables[observable][beta][subobs]["with_autocorr"]["autocorr"]
+                                    _tmp[subobs]["with_autocorr"]["autocorr"]
 
                 else:
-                    self.data[atype][beta] = data.data_observables[observable][beta][self.ac][atype]
+                    self.data[atype][beta] = _tmp[self.ac][atype]
 
                     if self.with_autocorr:
                         self.data[atype][beta]["ac"] = \
-                            data.data_observables[observable][beta]["with_autocorr"]["autocorr"]
+                            _tmp["with_autocorr"]["autocorr"]
 
         self.data_raw = {}
         for atype in data.raw_analysis:

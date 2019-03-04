@@ -102,17 +102,19 @@ class TopsusCore(PostCore):
             # Either t0 or w0
             if fit_target == "t0":
 
-                # get t0/a^2
+                # Sets up sqrt(8*t0)
                 fit_targets = [np.sqrt(8*tmp_ref[_b]["t0"])
                                for _b in self.beta_values]
-                self.fit_target = r"t_0"
+                self.fit_target = r"\sqrt{8t_0}=[%s]".format(
+                    ", ".join(["%.4f".format(_t) for _t in fit_targets]))
 
             elif fit_target == "w0":
 
-                # get w0/a^2
+                # Sets up sqrt(8*w0^2)
                 fit_targets = [np.sqrt(8*tmp_ref[_b]["w0"]**2)
                                for _b in self.beta_values]
-                self.fit_target = r"w_0"
+                self.fit_target = r"\sqrt{8w_0^2}=[%s]".format(
+                    ", ".join(["%.4f".format(_t) for _t in fit_targets]))
 
             elif fit_target == "t0cont":
 
@@ -323,19 +325,25 @@ class TopsusCore(PostCore):
         fig = plt.figure()
         ax = fig.add_subplot(111)
 
-        # Plots linefit with errorband
-        ax.plot(a_squared_cont, y_cont, color="tab:blue", alpha=0.5)
+        # Plots an ax-line at 0
+        ax.axvline(0, linestyle="dashed",
+                   color=self.cont_axvline_color, linewidth=0.5)
+
+        # Plots the fit
+        ax.plot(a_squared_cont, y_cont, color=self.fit_color, alpha=0.5)
         ax.fill_between(a_squared_cont, y_cont_err[0], y_cont_err[1],
-                        alpha=0.5, edgecolor='', facecolor="tab:blue")
+                        alpha=0.5, edgecolor='', facecolor=self.fit_fill_color)
 
         # Plot lattice points
         ax.errorbar(a_squared, obs, xerr=a_squared_err, yerr=obs_err, fmt="o",
-                    color="tab:orange", ecolor="tab:orange")
+                    capsize=5, capthick=1, color=self.lattice_points_color,
+                    ecolor=self.lattice_points_color)
 
         # plots continuum limit, 5 is a good value for cap size
         ax.errorbar(a0_squared, y0,
-                    yerr=y0_err, fmt="o", capsize=None,
-                    capthick=1, color="tab:red", ecolor="tab:red",
+                    yerr=y0_err, fmt="o", capsize=5,
+                    capthick=1, color=self.cont_error_color,
+                    ecolor=self.cont_error_color,
                     label=r"$\chi_{t_f}^{1/4}=%.3f\pm%.3f$" % (
                         self.topsus_continuum, self.topsus_continuum_error))
 

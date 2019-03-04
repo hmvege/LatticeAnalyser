@@ -37,7 +37,7 @@ def main_analysis():
     # observables = ["topcr"]
     # observables = ["topsuste"]
     # observables = ["qtq0effMC"]
-    # observables = ["energy"]
+    observables = ["energy"]
     # observables = ["w_t_energy"]
     # observables = ["plaq", "energy", "topc", "topct"]
 

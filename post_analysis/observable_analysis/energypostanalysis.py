@@ -215,7 +215,10 @@ class EnergyPostAnalysis(PostCore):
                 extrapolation_method, self.analysis_data_type))
         self.plot_continuum_fit(a_squared_cont, y_cont, y_cont_err,
                                 chi_squared, a_values, a_values_err,
-                                y, yerr, fname, r"$\frac{8t_0}{r_0}$",
+                                y, yerr, 0, 0,
+                                self.sqrt_8t0_cont, self.sqrt_8t0_cont_error,
+                                r"\frac{\sqrt{8t_{0,\mathrm{cont}}}}{r_0}",
+                                fname, r"$\frac{\sqrt{8t_0}}{r_0}$",
                                 r"$a^2/t_0$")
 
         self.extrapolation_method = extrapolation_method
@@ -324,13 +327,9 @@ class EnergyPostAnalysis(PostCore):
                 extrapolation_method=extrapolation_method, plateau_size=10,
                 inverse_fit=True, **kwargs)
 
-            # Remember: w0 has units of [fm]
+            # NOTE: w0 has units of [fm].
             # t_w0 = a^2 * t_f / r0^2
-            # Returns t_w0 = (w0)^2 / r0^2
-
-            tmp_w0 = (bval["tder"] / (bval["a"]**2))
-            # tmp_w0 = (t_w0 / (bval["a"]**2))
-            # print bval["W"]
+            # Returns t_w0 = (w0)^2 / r0^2.
 
             # Lattice spacing
             a_values.append(bval["a"]**2)
@@ -376,14 +375,16 @@ class EnergyPostAnalysis(PostCore):
                 extrapolation_method, self.analysis_data_type))
         self.plot_continuum_fit(a_squared_cont, y_cont, y_cont_err,
                                 chi_squared, a_values, a_values_err,
-                                w0_values, w0err_values, fname,
+                                w0_values, w0err_values,
+                                0, 0, self.w0_cont, self.w0_cont_error,
+                                r"w_{0,\mathrm{cont}}", fname,
                                 r"$w_0[\mathrm{fm}]$",
                                 r"$a^2[\mathrm{GeV}^{-2}]$")
 
         # Reverses values for storage.
         a_values, a_values_err, w0_values, w0err_values, = map(
-        	lambda k: np.flip(k, 0),
-			(a_values, a_values_err, w0_values, w0err_values))
+            lambda k: np.flip(k, 0),
+            (a_values, a_values_err, w0_values, w0err_values))
 
         # Populates dictionary with w0 values for each beta value
         _tmp_beta_dict = {
@@ -458,21 +459,41 @@ class EnergyPostAnalysis(PostCore):
 
     def plot_continuum_fit(self, a_squared_cont, y_cont, y_cont_err,
                            chi_squared, x_fit, x_fit_err, y_fit, y_fit_err,
-                           figname, xlabel, ylabel):
+                           a0_cont, a0err_cont, y0_cont, y0err_cont,
+                           cont_label, figname, xlabel, ylabel):
         """
         Creates continuum extrapolation plot.
         """
+
         fig = plt.figure()
         ax = fig.add_subplot(111)
-        # Plots linefit with errorband
-        ax.plot(a_squared_cont, y_cont, color="tab:red", alpha=0.5,
-                label=r"$\chi=%.2f$" % chi_squared)
+
+        # Plots an ax-line at 0
+        ax.axvline(0, linestyle="dashed",
+                   color=self.cont_axvline_color, zorder=5, linewidth=1.0)
+
+        # Plots the fit
+        ax.plot(a_squared_cont, y_cont, color=self.fit_color, alpha=0.5,
+                label=r"$\chi=%.2f$" % chi_squared, zorder=10)
         ax.fill_between(a_squared_cont, y_cont_err[0],
                         y_cont_err[1], alpha=0.5, edgecolor='',
-                        facecolor="tab:red")
-        ax.axvline(0, linestyle="dashed", color="tab:red")
+                        facecolor=self.fit_fill_color, zorder=0)
+
+        # Plots lattice points
         ax.errorbar(x_fit, y_fit, xerr=x_fit_err, yerr=y_fit_err, fmt="o",
-                    capsize=5, capthick=1, color="#000000", ecolor="#000000")
+                    capsize=5, capthick=1, color=self.lattice_points_color,
+                    ecolor=self.lattice_points_color, zorder=15)
+
+        # Plots the continuum limit errorbar
+        ax.errorbar(a0_cont, y0_cont,
+                    xerr=[[a0err_cont], [a0err_cont]],
+                    yerr=[[y0err_cont], [y0err_cont]],
+                    fmt="o", capsize=5, capthick=1, 
+                    color=self.cont_error_color, elinewidth=2.0,
+                    ecolor=self.cont_error_color, 
+                    label=r"$%s=%.3f\pm%.3f$" % (
+                        cont_label, y0_cont, y0err_cont), zorder=15)
+
         ax.set_ylabel(xlabel)
         ax.set_xlabel(ylabel)
         ax.set_xlim(a_squared_cont[0], a_squared_cont[-1])
