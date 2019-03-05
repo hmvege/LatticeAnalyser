@@ -105,16 +105,16 @@ class TopsusCore(PostCore):
                 # Sets up sqrt(8*t0)
                 fit_targets = [np.sqrt(8*tmp_ref[_b]["t0"])
                                for _b in self.beta_values]
-                self.fit_target = r"\sqrt{8t_0}=[%s]".format(
-                    ", ".join(["%.4f".format(_t) for _t in fit_targets]))
+                self.fit_target = r"\sqrt{8t_0}=[%s]" % (
+                    str(", ".join(["{0:.4f}".format(_t) for _t in fit_targets])))
 
             elif fit_target == "w0":
 
                 # Sets up sqrt(8*w0^2)
                 fit_targets = [np.sqrt(8*tmp_ref[_b]["w0"]**2)
                                for _b in self.beta_values]
-                self.fit_target = r"\sqrt{8w_0^2}=[%s]".format(
-                    ", ".join(["%.4f".format(_t) for _t in fit_targets]))
+                self.fit_target = r"\sqrt{8w_0^2}=[%s]" % (
+                    ", ".join(["{0:.4f}".format(_t) for _t in fit_targets]))
 
             elif fit_target == "t0cont":
 

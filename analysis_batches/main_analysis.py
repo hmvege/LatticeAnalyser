@@ -37,7 +37,7 @@ def main_analysis():
     # observables = ["topcr"]
     # observables = ["topsuste"]
     # observables = ["qtq0effMC"]
-    observables = ["energy"]
+    # observables = ["energy"]
     # observables = ["w_t_energy"]
     # observables = ["plaq", "energy", "topc", "topct"]
 
@@ -53,12 +53,6 @@ def main_analysis():
 
     # Will try to use pickled reference scale instead
     use_pickled_reference_scale = True
-
-    #### Different batches
-    # data_batch_folder = "../GluonAction/data8"
-    data_batch_folder = "../GluonAction/data11"
-    # data_batch_folder = "../GluonAction/DataGiovanni"
-    # data_batch_folder = "../data/topc_modes_8x16"
 
     # Method of continuum extrapolation. 
     # Options: plateau, plateau_mean, nearest, interpolate, bootstrap
