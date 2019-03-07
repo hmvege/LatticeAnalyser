@@ -41,7 +41,7 @@ def main_analysis():
     # observables = ["w_t_energy"]
     # observables = ["plaq", "energy", "topc", "topct"]
 
-    # observables += ["energy"]
+    observables += ["energy"]
     default_params["observables"] = observables
 
     #### Post analysis parameters
@@ -154,9 +154,9 @@ def main_analysis():
         default_params["observables"])
     print section_seperator + "\n"
 
-    # #### Submitting main analysis
-    # for analysis_parameters in analysis_parameter_list:
-    #     pre_analysis(analysis_parameters)
+    #### Submitting main analysis
+    for analysis_parameters in analysis_parameter_list:
+        pre_analysis(analysis_parameters)
 
     if not analysis_parameter_list[0]["MCInt"] is None:
         assert sum([len(plist["MCInt"]) - len(analysis_parameter_list[0]["MCInt"])

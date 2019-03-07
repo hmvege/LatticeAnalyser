@@ -267,7 +267,7 @@ class TopcRPostAnalysis(PostCore):
 	@staticmethod
 	def ratio_error(x, xerr, y, yerr):
 		"""Returns the ratio and and error between two quantities."""
-		return x/y, np.sqrt((xerr/y)**2 + (x*yerr/y**2)**2)
+		return x/y, np.sqrt((xerr/y)**2 + (x*yerr/y**2)**2 - 2*xerr*yerr*x/y**3)
 
 	def _print_data(self, atype="bootstrap"):
 		"""Prints data."""
