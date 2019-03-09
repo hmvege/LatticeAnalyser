@@ -12,7 +12,7 @@ from analysis_batches.topc_modes_analysis import topc_modes_analysis
 from analysis_batches.thermalization_comparison_analysis \
     import thermalization_analysis
 from analysis_batches.b645_L32x32_analysis import beta645_L32_analysis
-
+from analysis_batches.scaling_analysis import scaling_analysis
 
 def main():
     # Printing settings

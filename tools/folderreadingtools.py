@@ -1255,6 +1255,8 @@ def write_data_to_file(analysis_object, save_as_txt=False):
             analysis_object.integrated_autocorrelation_time_error)
         sqrt2tau_int = copy.deepcopy(
             analysis_object.autocorrelation_error_correction)
+        tau_raw = copy.deepcopy(analysis_object.autocorrelations)
+        tau_error_raw = copy.deepcopy(analysis_object.autocorrelations_errors)
         data = np.stack((x, y_org, y_err_org, y_bs, y_err_bs,
                          y_jk, y_err_jk, tau_int, tau_int_err,
                          sqrt2tau_int), axis=1)

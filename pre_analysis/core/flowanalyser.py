@@ -584,6 +584,10 @@ class FlowAnalyser(object):
         if store_raw_ac_error_correction:
             self.save_raw_analysis_data(self.autocorrelation_error_correction,
                                         "autocorrelation")
+            self.save_raw_analysis_data(self.autocorrelations,
+                                        "autocorrelation_raw")
+            self.save_raw_analysis_data(self.autocorrelations_errors,
+                                        "autocorrelation_raw_error")
 
         # Sets performed flag to true
         self.autocorrelation_performed = True

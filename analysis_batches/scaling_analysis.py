@@ -84,7 +84,7 @@ def scaling_analysis():
     gen_strong_scaling = filter_scalings(strong_scaling_times, "gen")
     io_strong_scaling = filter_scalings(strong_scaling_times, "io")
     flow_strong_scaling = filter_scalings(strong_scaling_times, "flow")
-    
+
     # Splits weak scaling into gen, io, flow
     gen_weak_scaling = filter_scalings(weak_scaling_times, "gen")
     gen_weak_scaling = filter_duplicates(gen_weak_scaling)
@@ -106,6 +106,9 @@ def scaling_analysis():
 
     times_to_scan = ["update_time", "time"]
     times_to_scan = ["time"]
+
+    # For speedup and retrieving parallelizability fraction.
+    min_procs = 8
 
     strong_scaling_list = []
     weak_scaling_list = []
@@ -155,18 +158,28 @@ def scaling_analysis():
                 _time_type = _sc_part
 
             if _sc_part == "io":
-                _ylabel = r"$t_\mathrm{IO}[s]$"
+                _ylabel = r"$t_\mathrm{IO}$[s]"
             else:
-                _ylabel = r"$t_\mathrm{%s}[s]$" % _time_type.replace(
+                _ylabel = r"$t_\mathrm{%s}$[s]" % _time_type.replace(
                     "_", r"\ ").capitalize()
+
+            # Sets speedup labels
+            if _sc_part == "io":
+                _ylabel_speedup = (r"$t_{\mathrm{IO},p=%s}/t_{\mathrm{IO},p}$"
+                                   "[s]" % min_procs)
+            else:
+                _tmp = _time_type.replace("_", r"\ ").capitalize()
+                _ylabel_speedup = (r"$t_{\mathrm{%s},p=%s}/t_{\mathrm{%s},p}$"
+                    "[s]" % (_tmp, min_procs, _tmp))
 
             _tmp_dict = {
                 "sc": _sc_part,
-                "x": x,
-                "y": y,
+                "x": np.asarray(x),
+                "y": np.asarray(y),
                 "label": _label,
                 "xlabel": _xlabel,
                 "ylabel": _ylabel,
+                "ylabel_speedup": _ylabel_speedup,
                 "figure_folder": figure_folder,
                 "figure_name": figure_name,
                 "loc": _loc,
@@ -177,11 +190,13 @@ def scaling_analysis():
             else:
                 weak_scaling_list.append(_tmp_dict)
 
-            plot_scaling(x, y, _label, _xlabel, _ylabel,
-                         figure_folder, figure_name, loc=_loc)
+            # plot_scaling(x, y, _label, _xlabel, _ylabel,
+            #              figure_folder, figure_name, loc=_loc)
 
-    plot_all_scalings(strong_scaling_list, "strong")
-    plot_all_scalings(weak_scaling_list, "weak")
+    # plot_all_scalings(strong_scaling_list, "strong")
+    # plot_all_scalings(weak_scaling_list, "weak")
+    plot_speedup(strong_scaling_list, "strong")
+    # amdahls_law(strong_scaling_list, "strong")
 
 
 def filter_scalings(scaling_list, scaling_type):
@@ -293,6 +308,33 @@ def load_slurm_folder(p, json_fpath, verbose=True):
         json.dump(slurm_dict, json_file, indent=4)
 
     print "json data dumped to {}".format(json_fpath)
+
+
+def plot_speedup(sc_list, sc_type):
+    """Plots the speedup of a program."""
+    fig, axes = plt.subplots(nrows=3, ncols=1)
+    sc_list = [x for _, x in sorted(
+        zip(["gen", "flow", "io"], sc_list), key=lambda k: k[1]["sc"])]
+    sc_list = [sc_list[1], sc_list[0], sc_list[2]]  # Bad hard coding
+
+    for data in sc_list:
+        data["y"] = data["y"][0] / data["y"]
+
+    for data, ax in zip(sc_list, axes):
+        ax.semilogx(data["x"], data["y"], "o-", label=data["label"])
+        ax.set_xlabel(data["xlabel"])
+        ax.set_ylabel(data["ylabel_speedup"])
+        ax.grid(True)
+        ax.legend(loc=data["loc"])
+
+    figpath = os.path.join(
+        data["figure_folder"], "speedup_" + sc_type + "_all" + ".pdf")
+    fig.savefig(figpath)
+    print "Figure {} created.".format(figpath)
+
+
+def amdahls_law(sc_list, sc_type):
+    """Uses Amdahl's law to get the fraction that can be parallelized."""
 
 
 if __name__ == '__main__':

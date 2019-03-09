@@ -216,11 +216,6 @@ class TopsusCore(PostCore):
             tau_int_corr = [], [], [], [], [], [], [], []
 
         for i, beta in enumerate(sorted(self.plot_values)):
-            x = self.plot_values[beta]["x"]
-            y = self.plot_values[beta]["y"]
-            y_err = self.plot_values[beta]["y_err"]
-            y_raw = self.plot_values[beta]["y_raw"]
-
             if self.with_autocorr:
                 tau_int = self.plot_values[beta]["tau_int"]
                 tau_int_err = self.plot_values[beta]["tau_int_err"]
@@ -230,8 +225,11 @@ class TopsusCore(PostCore):
 
             # Extrapolation of point to use in continuum extrapolation
             res = extract_fit_target(
-                fit_targets[i], x, y, y_err, y_raw=y_raw, tau_int=tau_int,
-                tau_int_err=tau_int_err,
+                fit_targets[i],  self.plot_values[beta]["x"],
+                self.plot_values[beta]["y"],
+                self.plot_values[beta]["y_err"],
+                y_raw=self.plot_values[beta]["y_raw"],
+                tau_int=tau_int, tau_int_err=tau_int_err,
                 extrapolation_method=extrapolation_method,
                 plateau_size=plateau_fit_size, interpolation_rank=3,
                 plot_fit=plot_continuum_fit, raw_func=self.chi[beta],

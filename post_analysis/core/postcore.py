@@ -36,12 +36,11 @@ class PostCore(object):
     interval = []
 
     # Color setup for continuum plots
-    cont_error_color = "#0c2c84" # For the single continuum point
+    cont_error_color = "#0c2c84"  # For the single continuum point
     cont_axvline_color = "#000000"
     fit_color = "#225ea8"
     fit_fill_color = "#225ea8"
     lattice_points_color = "#000000"
-
 
     def __init__(self, data, with_autocorr=True, figures_folder="../figures",
                  verbose=False, dryrun=False):
@@ -83,15 +82,17 @@ class PostCore(object):
 
         self.flow_epsilon = {b: data.flow_epsilon[b] for b in self.beta_values}
 
-        # Only sets this variable if we have sub-intervals in order to avoid bugs.
+        # Only sets this variable if we have sub-intervals in order to avoid
+        # bugs.
         if self.sub_obs:
             self.observable_intervals = {b: {} for b in self.beta_values}
             # for beta in self.beta_values:
-            # 	self.observable_intervals[beta] = {}
+            #   self.observable_intervals[beta] = {}
 
         # Checks that the observable is among the available data
         assert_msg = ("%s is not among current data(%s). Have the pre analysis"
-                      " been performed?" % (observable, ", ".join(data.observable_list)))
+                      " been performed?" % (observable,
+                                            ", ".join(data.observable_list)))
         assert observable in data.observable_list, assert_msg
 
         for atype in self.analysis_types:
@@ -139,9 +140,15 @@ class PostCore(object):
                             _tmp["with_autocorr"]["autocorr"]
 
         self.data_raw = {}
+        self.ac_raw = {}
+
         for atype in data.raw_analysis:
             if atype == "autocorrelation":
-                self.ac_raw = data.raw_analysis[atype]
+                self.ac_raw["tau"] = data.raw_analysis[atype]
+            elif atype == "autocorrelation_raw":
+                self.ac_raw["ac_raw"] = data.raw_analysis[atype]
+            elif atype == "autocorrelation_raw_error":
+                self.ac_raw["ac_raw_error"] = data.raw_analysis[atype]
             else:
                 self.data_raw[atype] = data.raw_analysis[atype]
 
@@ -149,8 +156,10 @@ class PostCore(object):
         # different beta batches match
         err_msg = ("Number of bootstraps do not match number "
                    "of different beta values")
-        assert np.asarray([get_NBoots(self.data_raw["bootstrap"][i])
-                           for i in self.data_raw["bootstrap"].keys()]).all(), err_msg
+        assertion_bool = \
+            np.asarray([get_NBoots(self.data_raw["bootstrap"][i])
+                        for i in self.data_raw["bootstrap"].keys()]).all()
+        assert assertion_bool, err_msg
 
         self.NBoots = get_NBoots(self.data_raw["bootstrap"])
 
@@ -163,7 +172,8 @@ class PostCore(object):
 
         # Creates output folder
         self.post_anlaysis_folder = os.path.join(self.figures_folder,
-                                                 data.batch_name, "post_analysis")
+                                                 data.batch_name,
+                                                 "post_analysis")
         check_folder(self.post_anlaysis_folder, dryrun=self.dryrun,
                      verbose=self.verbose)
 
@@ -181,6 +191,10 @@ class PostCore(object):
         self.analysis_types = atypes
         if "autocorrelation" in self.analysis_types:
             self.analysis_types.remove("autocorrelation")
+        if "autocorrelation_raw" in self.analysis_types:
+            self.analysis_types.remove("autocorrelation_raw")
+        if "autocorrelation_raw_error" in self.analysis_types:
+            self.analysis_types.remove("autocorrelation_raw_error")
 
     def _check_plot_values(self):
         """Checks if we have set the analysis data type yet."""
@@ -215,24 +229,41 @@ class PostCore(object):
             values["y"] = data[beta]["y"]
             values["y_err"] = data[beta]["y_error"]
             values["y_raw"] = data_raw[beta][self.observable_name_compact]
-            values["y_uraw"] = self.data_raw["unanalyzed"][beta][self.observable_name_compact]
-
-            # print values["y_raw"].shape, values["y_uraw"].shape
-            # print "%s beta: %f" % (self.observable_name_compact, beta)
-            # print np.mean(values["y_raw"][-1,:]), np.std(values["y_raw"][-1,:])
-            # print np.mean(values["y_uraw"][-1,:]), np.std(values["y_uraw"][-1,:])
+            values["y_uraw"] = \
+                self.data_raw["unanalyzed"][beta][self.observable_name_compact]
 
             if self.with_autocorr:
                 values["tau_int"] = data[beta]["ac"]["tau_int"]
                 values["tau_int_err"] = data[beta]["ac"]["tau_int_err"]
+                values["tau_raw"] = self.ac_raw["ac_raw"][beta]
+                values["tau_raw_err"] = self.ac_raw["ac_raw_error"][beta]
             else:
                 values["tau_int"] = None
                 values["tau_int_err"] = None
+                values["tau_raw"] = None
+                values["tau_raw_err"] = None
             values["label"] = r"%s $\beta=%2.2f$" % (
                 self.size_labels[beta], beta)
             values["color"] = self.colors[beta]
 
             self.plot_values[beta] = values
+
+    def _extract_flow_time_index(self, target_flow):
+        """
+        Returns index corresponding to given flow time
+
+        Args:
+            target_flow: float, some fraction between 0.0-0.6 usually
+        """
+
+        for beta_ in self.plot_values:
+            assert target_flow < self.plot_values[beta_]["x"][-1], (
+                "Flow time exceeding bounds for %f which has max flow "
+                "time value of %f" % (beta_, self.plot_values[beta_]["x"][-1]))
+
+        # Selects and returns fit target index
+        return [np.argmin(np.abs(self.plot_values[beta_]["x"] - target_flow))
+                for beta_ in sorted(self.plot_values)]
 
     def plot(self, x_limits=False, y_limits=False, plot_with_formula=False,
              error_shape="band", figure_folder=None, plot_vline_at=None,
@@ -245,40 +276,43 @@ class PostCore(object):
         Args:
                 x_limits: limits of the x-axis. Default is False.
                 y_limits: limits of the y-axis. Default is False.
-                plot_with_formula: bool, default is false, is True will look for 
-                        formula for the y-value to plot in title.
-                figure_folder: optional, default is None. If default, will place
-                        figures in figures/{batch_name}/post_analysis/{observable_name}
-                plot_vline_at: optional, float. If present, will plot a vline at 
-                        position given position.
-                plot_hline_at: optional, float. If present, will plot a hline at 
-                        position given position.
+                plot_with_formula: bool, default is false, is True will look 
+                        for formula for the y-value to plot in title.
+                figure_folder: optional, default is None. If default, will 
+                        place figures in 
+                        figures/{batch_name}/post_analysis/{observable_name}
+                plot_vline_at: optional, float. If present, will plot a vline 
+                        at position given position.
+                plot_hline_at: optional, float. If present, will plot a hline 
+                        at position given position.
                 figure_name_appendix: optional, str, adds provided string to 
                         filename. Default is adding nothing.
                 show_plot: optional, bool, will show plot figure.
-                zoom_box, optional, nested list of floats, will create a zoomed 
-                        in subplot in figure at location [[xmin, xmax], [ymin, ymax]].
+                zoom_box, optional, nested list of floats, will create a 
+                        zoomed in subplot in figure at 
+                        location [[xmin, xmax], [ymin, ymax]].
         """
 
         self._plot_core(self.plot_values, x_label=self.x_label,
-                        y_label=self.y_label, x_limits=x_limits, y_limits=y_limits,
-                        plot_with_formula=plot_with_formula, error_shape=error_shape,
-                        figure_folder=figure_folder, plot_vline_at=plot_vline_at,
+                        y_label=self.y_label, x_limits=x_limits,
+                        y_limits=y_limits, plot_with_formula=plot_with_formula,
+                        error_shape=error_shape, figure_folder=figure_folder,
+                        plot_vline_at=plot_vline_at,
                         plot_hline_at=plot_hline_at,
                         figure_name_appendix=figure_name_appendix,
                         show_plot=show_plot, zoom_box=zoom_box)
 
     def plot_autocorrelation(self, x_limits=False, y_limits=False,
-                             figure_folder=None, plot_vline_at=None, plot_hline_at=None,
-                             show_plot=False):
+                             figure_folder=None, plot_vline_at=None,
+                             plot_hline_at=None, show_plot=False):
         """
         Method for plotting the autocorrelations in a single window.
         """
         if self.sub_obs or self.sub_sub_obs:
-            print ("Skipping AC-plot for %s due to containing "
-                   "subobs.".format(self.observable_name))
+            print("Skipping AC-plot for %s due to containing "
+                  "subobs.".format(self.observable_name))
             return
-            
+
         if self.verbose:
             print "Plotting %s autocorrelation for betas %s together" % (
                 self.observable_name_compact,
@@ -331,17 +365,172 @@ class PostCore(object):
 
         plt.close(fig)
 
-    def plot_autocorrelation_at(self, t_flow=0):
+    def plot_autocorrelation_at(self, target_flow=0.0, x_limits=False,
+                                y_limits=False, figure_folder=None,
+                                plot_vline_at=None, plot_hline_at=None,
+                                show_plot=False):
         """
-        Plots autocorrelation at a given flow time t_flow.
+        Plots autocorrelation at a given flow time target_flow.
         """
-        pass
 
-    def plot_mc_history_at(self, t_flow=0):
+        if self.sub_obs or self.sub_sub_obs:
+            print("Skipping AC-plot for %s due to containing "
+                  "subobs.".format(self.observable_name))
+            return
+
+        self._check_plot_values()
+
+        # Selects fit target
+        flow_indices = self._extract_flow_time_index(target_flow)
+
+        if self.verbose:
+            print("Plotting %s autocorrelation at %.2f (indexes at %s) for "
+                  "betas %s together" % (
+                      self.observable_name_compact, target_flow, str(
+                          flow_indices),
+                      ", ".join([str(b) for b in self.plot_values])))
+
+        fig, axes = plt.subplots(
+            nrows=len(self.plot_values), ncols=1, dpi=self.dpi, sharey=True)
+
+        ax0 = fig.add_subplot(111, frameon=False)
+        # hide tick and tick label of the big axes
+        ax0.tick_params(labelcolor='none', top=False, bottom=False,
+                        left=False, right=False)
+
+        # Retrieves values to plot
+        for _ax_val in zip(range(len(flow_indices)), axes,
+                           sorted(self.plot_values), flow_indices):
+            i, ax, beta, flow_index = _ax_val
+
+            # Sets up values to plot
+            y = self.plot_values[beta]["tau_raw"][self.observable_name_compact][flow_index]
+            y_err = self.plot_values[beta]["tau_raw_err"][self.observable_name_compact][flow_index]
+            x = np.arange(*y.shape)
+            ax.plot(x, y, "-", label=self.plot_values[beta]["label"],
+                    color=self.colors[beta])
+            ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, edgecolor="",
+                            facecolor=self.colors[beta])
+
+            ax.grid(True)
+            ax.legend(prop={"size": 8})
+
+            if i != len(flow_indices) - 1:
+                ax.tick_params(labelbottom=False)
+
+        # Basic plotting commands
+        ax.set_xlabel(r"Lag $h$")
+        ax0.set_ylabel(r"$R=\frac{C_h}{C_0}$")
+
+        # Sets axes limits if provided
+        if x_limits != False:
+            ax.set_xlim(x_limits)
+        if y_limits != False:
+            ax.set_ylim(y_limits)
+
+        # Plots a vertical line at position "plot_vline_at"
+        if not isinstance(plot_vline_at, types.NoneType):
+            ax.axvline(plot_vline_at, linestyle="--", color="0", alpha=0.3)
+
+        # Plots a horizontal line at position "plot_hline_at"
+        if not isinstance(plot_hline_at, types.NoneType):
+            ax.axhline(plot_hline_at, linestyle="--", color="0", alpha=0.3)
+
+        # Saves and closes figure
+        fname = self._get_plot_figure_name(
+            output_folder=figure_folder,
+            figure_name_appendix=("_autocorr_tflow{0:s}".format(
+                "{0:.2f}".format(target_flow).replace(".", "_"))))
+        plt.savefig(fname)
+        if self.verbose:
+            print "Figure saved in %s" % fname
+
+        if show_plot:
+            plt.show()
+
+        plt.close(fig)
+
+    def plot_mc_history_at(self, target_flow=0, x_limits=False,
+                                y_limits=False, figure_folder=None,
+                                plot_vline_at=None, plot_hline_at=None,
+                                show_plot=False):
         """
-        Plots the Monte-Carlo history at a given flow time t_flow.
+        Plots the Monte-Carlo history at a given flow time target_flow.
         """
-        pass
+        if self.sub_obs or self.sub_sub_obs:
+            print("Skipping MC-history plot for %s due to containing "
+                  "subobs.".format(self.observable_name))
+            return
+
+        self._check_plot_values()
+
+        # Selects fit target
+        flow_indices = self._extract_flow_time_index(target_flow)
+
+        if self.verbose:
+            print("Plotting %s MC-history at %.2f (indexes at %s) for "
+                  "betas %s together" % (
+                      self.observable_name_compact, target_flow, str(
+                          flow_indices),
+                      ", ".join([str(b) for b in self.plot_values])))
+
+        fig, axes = plt.subplots(
+            nrows=len(self.plot_values), ncols=1, dpi=self.dpi)
+
+        ax0 = fig.add_subplot(111, frameon=False)
+        # hide tick and tick label of the big axes
+        ax0.tick_params(labelcolor='none', top=False, bottom=False,
+                        left=False, right=False)
+
+        # Retrieves values to plot
+        for _ax_val in zip(range(len(flow_indices)), axes,
+                           sorted(self.plot_values), flow_indices):
+            i, ax, beta, flow_index = _ax_val
+
+            # Sets up values to plot
+            y = self.plot_values[beta]["y_uraw"][flow_index]
+            x = np.arange(*y.shape)
+            ax.plot(x, y, "-", label=self.plot_values[beta]["label"],
+                    color=self.colors[beta])
+
+            ax.grid(True)
+            ax.legend(prop={"size": 8})
+
+            if i != len(flow_indices) - 1:
+                ax.tick_params(labelbottom=False)
+
+        # Basic plotting commands
+        ax.set_xlabel(r"Monte-Carlo history")
+        ax0.set_ylabel(r"${}$".format(self.y_label))
+
+        # Sets axes limits if provided
+        if x_limits != False:
+            ax.set_xlim(x_limits)
+        if y_limits != False:
+            ax.set_ylim(y_limits)
+
+        # Plots a vertical line at position "plot_vline_at"
+        if not isinstance(plot_vline_at, types.NoneType):
+            ax.axvline(plot_vline_at, linestyle="--", color="0", alpha=0.3)
+
+        # Plots a horizontal line at position "plot_hline_at"
+        if not isinstance(plot_hline_at, types.NoneType):
+            ax.axhline(plot_hline_at, linestyle="--", color="0", alpha=0.3)
+
+        # Saves and closes figure
+        fname = self._get_plot_figure_name(
+            output_folder=figure_folder,
+            figure_name_appendix=("_mchist_tflow{0:s}".format(
+                "{0:.2f}".format(target_flow).replace(".", "_"))))
+        plt.savefig(fname)
+        if self.verbose:
+            print "Figure saved in %s" % fname
+
+        if show_plot:
+            plt.show()
+
+        plt.close(fig)
+
 
     def _get_plot_figure_name(self, output_folder=None,
                               figure_name_appendix=""):
@@ -349,7 +538,8 @@ class PostCore(object):
         if isinstance(output_folder, types.NoneType):
             output_folder = self.output_folder_path
         fname = "post_analysis_%s_%s%s.pdf" % (self.observable_name_compact,
-                                               self.analysis_data_type, figure_name_appendix)
+                                               self.analysis_data_type,
+                                               figure_name_appendix)
         return os.path.join(output_folder, fname)
 
     def get_values(self, tf, atype, extrap_method=None):
@@ -358,12 +548,13 @@ class PostCore(object):
 
         Args:
                 tf: float or str. (float) flow time at a given t_f/a^2. If 
-                        string is "t0", will return the flow time at reference value
-                        t0/a^2 from t^2<E>=0.3 for a given beta. "tfbeta" will use the
-                        t0 value for each particular beta value.
+                        string is "t0", will return the flow time at reference 
+                        value t0/a^2 from t^2<E>=0.3 for a given beta. 
+                        "tfbeta" will use the t0 value for each particular 
+                        beta value.
                 atype: str, type of analysis we have performed.
-                extrap_method: str, type of extrapolation technique used. If None,
-                        will use method which is present.
+                extrap_method: str, type of extrapolation technique used. If 
+                        None, will use method which is present.
 
         Returns:
                 {beta: {t0, y0, y0_error}
@@ -391,17 +582,19 @@ class PostCore(object):
             values[beta]["t0"] = self.t0[beta]
             values[beta]["y0"] = self.plot_values[beta]["y"][tf_index]
             values[beta]["y_err0"] = self.plot_values[beta]["y_err"][tf_index]
-            values[beta]["tau_int0"] = self.plot_values[beta]["tau_int"][tf_index]
-            values[beta]["tau_int_err0"] = self.plot_values[beta]["tau_int_err"][tf_index]
+            values[beta]["tau_int0"] = \
+                self.plot_values[beta]["tau_int"][tf_index]
+            values[beta]["tau_int_err0"] = \
+                self.plot_values[beta]["tau_int_err"][tf_index]
 
         return_dict = {"obs": self.observable_name_compact, "data": values}
         return return_dict
 
     def _plot_core(self, plot_values, observable_name_compact=None,
                    x_label="x", y_label="y", x_limits=False, y_limits=False,
-                   plot_with_formula=False, error_shape="band", figure_folder=None,
-                   plot_vline_at=None, plot_hline_at=None, figure_name_appendix="",
-                   show_plot=False, zoom_box=None):
+                   plot_with_formula=False, error_shape="band",
+                   figure_folder=None, plot_vline_at=None, plot_hline_at=None,
+                   figure_name_appendix="", show_plot=False, zoom_box=None):
         """
         Function for making a basic plot of all the different beta values
         together.
@@ -467,10 +660,12 @@ class PostCore(object):
                     axins.plot(x, y, "-", label=value["label"],
                                color=self.colors[beta])
                     axins.fill_between(x, y - y_err, y + y_err, alpha=0.5,
-                                       edgecolor="", facecolor=self.colors[beta])
+                                       edgecolor="",
+                                       facecolor=self.colors[beta])
                 elif error_shape == "bars":
-                    axins.errorbar(x, y, yerr=y_err, capsize=5, fmt="_", ls=":",
-                                   label=value["label"], color=self.colors[beta],
+                    axins.errorbar(x, y, yerr=y_err, capsize=5, fmt="_",
+                                   ls=":", label=value["label"],
+                                   color=self.colors[beta],
                                    ecolor=self.colors[beta])
 
         if not isinstance(zoom_box, type(None)):
@@ -502,10 +697,10 @@ class PostCore(object):
         # # Sets the title string
         # title_string = r"%s" % self.observable_name
         # if plot_with_formula:
-        # 	title_string += r" %s" % self.formula
+        #   title_string += r" %s" % self.formula
 
         # if self.observable_name_compact == "energy":
-        # 	ax.ticklabel_format(style="sci", axis="y", scilimits=(1,10))
+        #   ax.ticklabel_format(style="sci", axis="y", scilimits=(1,10))
 
         # Sets axes limits if provided
         if x_limits != False:
@@ -522,8 +717,9 @@ class PostCore(object):
             ax.axhline(plot_hline_at, linestyle="--", color="0", alpha=0.3)
 
         # Saves and closes figure
-        fname = self._get_plot_figure_name(output_folder=figure_folder,
-                                           figure_name_appendix=figure_name_appendix)
+        fname = self._get_plot_figure_name(
+            output_folder=figure_folder,
+            figure_name_appendix=figure_name_appendix)
         plt.savefig(fname)
         if self.verbose:
             print "Figure saved in %s" % fname

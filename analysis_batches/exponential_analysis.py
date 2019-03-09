@@ -49,8 +49,8 @@ def analyse_precision(input_file, output_folder, figure_folder):
 
     # Create plot
     fig, ax = plt.subplots(1, 1, sharey=False, sharex=True)
-    # ax.semilogy(data["data"][0], data["data"][2], "-x", # Luscher
-    #             color="#33a02c", label=data["header"][2])
+    ax.semilogy(data["data"][0], data["data"][2], "-x", # Luscher
+                color="#33a02c", label=data["header"][2])
     ax.semilogy(data["data"][0], data["data"][3], "->", # Morningstar
                 color="#1f78b4", label=data["header"][3])
     ax.semilogy(data["data"][0], data["data"][8], "-o",
@@ -63,7 +63,6 @@ def analyse_precision(input_file, output_folder, figure_folder):
     figname = os.path.join(figure_folder, "precision.pdf")
     fig.savefig(figname)
     print("Figure saved at {}".format(figname))
-    plt.show()
     plt.close(fig)
 
 
@@ -98,10 +97,10 @@ def analyse_times(input_file, output_folder, figure_folder):
 
     # Create plot
     fig, axes = plt.subplots(2, 1, sharey=False, sharex=True)
-    axes[0].plot(data["data"][0], data["data"][1],
+    axes[0].plot(data["data"][0], data["data"][1], "o-",
                  color="#1f78b4", label=data["header"][1])
     axes[1].axhline(1.0, linestyle="--", alpha=1.0, color="#a6cee3")
-    axes[1].semilogy(data["data"][0], data["data"][2],
+    axes[1].semilogy(data["data"][0], data["data"][2], "o-",
                      color="#1f78b4", label=data["header"][2])
     for ax in axes:
         ax.grid(True)
@@ -113,7 +112,6 @@ def analyse_times(input_file, output_folder, figure_folder):
     figname = os.path.join(figure_folder, "timing.pdf")
     fig.savefig(figname)
     print("Figure saved at {}".format(figname))
-    plt.show()
     plt.close(fig)
 
 

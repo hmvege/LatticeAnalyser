@@ -7,9 +7,10 @@ from collections import OrderedDict
 import numpy as np
 import os
 
+
 class TopcRPostAnalysis(PostCore):
 	"""
-	Post-analysis of the topc ratio with Q^4_C/Q^2. Requires that Q4 and Q2 
+	Post-analysis of the topc ratio with Q^4_C/Q^2. Requires that Q4 and Q2
 	has been imported.
 	"""
 
@@ -23,14 +24,14 @@ class TopcRPostAnalysis(PostCore):
 
 	print_latex = False
 
-	dpi=400
+	dpi = 400
 
 	lattice_sizes = {}
 
-	def __init__(self, data, with_autocorr=True, figures_folder="../figures", 
+	def __init__(self, data, with_autocorr=True, figures_folder="../figures",
 		verbose=False, dryrun=False):
 		"""
-		Initializes this specialized form of finding the ratio of different 
+		Initializes this specialized form of finding the ratio of different
 		topological charge definitions.
 		"""
 		if with_autocorr:
@@ -52,23 +53,23 @@ class TopcRPostAnalysis(PostCore):
 		self._setup_analysis_types(data.analysis_types)
 
 		# Q^2
-		self.topc2 = {atype: {beta: {} for beta in self.beta_values} \
+		self.topc2 = {atype: {beta: {} for beta in self.beta_values}
 			for atype in self.analysis_types}
-		
+
 		# Q^4
-		self.topc4 = {atype: {beta: {} for beta in self.beta_values} \
+		self.topc4 = {atype: {beta: {} for beta in self.beta_values}
 			for atype in self.analysis_types}
 
 		# Q^4_C
-		self.topc4C = {atype: {beta: {} for beta in self.beta_values} \
+		self.topc4C = {atype: {beta: {} for beta in self.beta_values}
 			for atype in self.analysis_types}
 
 		# R = Q^4_C / Q^2
-		self.topcR = {atype: {beta: {} for beta in self.beta_values} \
+		self.topcR = {atype: {beta: {} for beta in self.beta_values}
 			for atype in self.analysis_types}
 
 		# Data will be copied from R
-		self.data = {atype: {beta: {} for beta in self.beta_values} \
+		self.data = {atype: {beta: {} for beta in self.beta_values}
 			for atype in self.analysis_types}
 
 		# Q^2 and Q^4 raw bs values
@@ -77,10 +78,15 @@ class TopcRPostAnalysis(PostCore):
 		self.topc4c_raw = {}
 		self.topcR_raw = {}
 		self.data_raw = {}
+		self.ac_raw = {}
 
 		for atype in data.raw_analysis:
 			if atype == "autocorrelation":
-				self.ac_raw = data.raw_analysis[atype]
+				self.ac_raw["tau"] = data.raw_analysis[atype]
+			elif atype == "autocorrelation_raw":
+				self.ac_raw["ac_raw"] = data.raw_analysis[atype]
+			elif atype == "autocorrelation_raw_error":
+				self.ac_raw["ac_raw_error"] = data.raw_analysis[atype]
 			else:
 				self.data_raw[atype] = data.raw_analysis[atype]
 

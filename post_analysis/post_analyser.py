@@ -3,7 +3,6 @@ from tools.postanalysisdatareader import PostAnalysisDataReader
 from tools.analysis_setup_tools import append_fit_params, \
     write_fit_parameters_to_file, get_intervals, interval_setup, \
     save_pickle, load_pickle
-from tools.value_comparer import ValueCMP
 import types
 import numpy as np
 import os
@@ -101,27 +100,12 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
         for extrap_method in extrapolation_methods
     }
 
-    # cmp_values = ValueCMP(observables, post_analysis_data_type,
-    #                       verbose=verbose)
-
-    # comparison_values = {obs: {extrap_method: {atype: {}
-    # 			for atype in post_analysis_data_type}
-    # 		for extrap_method in extrapolation_methods}
-    # 	for obs in observables
-    # }
-
-    # # Dictionary to store values we are to write out to file in.
-    # comparison_values = {obs: {atype: {}
-    # 		for atype in post_analysis_data_type}
-    # 	for obs in observables
-    # }
-
     if "energy" in observables:
 
-        for extrapolation_method in extrapolation_methods:
+        energy_analysis = EnergyPostAnalysis(
+            data, figures_folder=figures_folder, verbose=verbose)
 
-            energy_analysis = EnergyPostAnalysis(
-                data, figures_folder=figures_folder, verbose=verbose)
+        for extrapolation_method in extrapolation_methods:
 
             for analysis_type in post_analysis_data_type:
                 energy_analysis.set_analysis_data_type(analysis_type)
@@ -182,14 +166,20 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
 
                 # # Plot running coupling
                 # energy_analysis.coupling_fit()
+
+        for t_flow in q0_flow_times:
+            energy_analysis.plot_autocorrelation_at(target_flow=t_flow)
+            energy_analysis.plot_mc_history_at(target_flow=t_flow)
+
     else:
         reference_scale = None
 
     if "w_t_energy" in observables:
-        for extrapolation_method in extrapolation_methods:
 
-            w_t_energy_analysis = WtPostAnalysis(
-                data, figures_folder=figures_folder, verbose=verbose)
+        w_t_energy_analysis = WtPostAnalysis(
+            data, figures_folder=figures_folder, verbose=verbose)
+
+        for extrapolation_method in extrapolation_methods:
 
             for analysis_type in post_analysis_data_type:
                 w_t_energy_analysis.set_analysis_data_type(analysis_type)
@@ -220,6 +210,11 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
                 # w0_reference_scale[extrapolation_method][analysis_type] = \
                 # 	w0_dict
 
+        for t_flow in q0_flow_times:
+            w_t_energy_analysis.plot_autocorrelation_at(target_flow=t_flow)
+            w_t_energy_analysis.plot_mc_history_at(target_flow=t_flow)
+
+
     # Loads/saves pickle file if it exists
     reference_scale_file = "reference_scale.pkl"
     if os.path.isfile(reference_scale_file) and \
@@ -240,6 +235,9 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
             print plaq_analysis
             plaq_analysis.plot()
             plaq_analysis.plot_autocorrelation()
+            for t_flow in q0_flow_times:
+                plaq_analysis.plot_autocorrelation_at(target_flow=t_flow)
+                plaq_analysis.plot_mc_history_at(target_flow=t_flow)
 
     if "topc" in observables:
         topc_analysis = TopcPostAnalysis(
@@ -249,11 +247,9 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
             print topc_analysis
             topc_analysis.plot(y_limits=[-5, 5])
             topc_analysis.plot_autocorrelation()
-            # comparison_values["topc"][analysis_type] = \
-            # 	topc_analysis.get_values("t0", analysis_type)
-
-            # cmp_values.append(topc_analysis.get_values("t0", analysis_type),
-            # 	analysis_type)
+            for t_flow in q0_flow_times:
+                topc_analysis.plot_autocorrelation_at(target_flow=t_flow)
+                topc_analysis.plot_mc_history_at(target_flow=t_flow)
 
     if "topc2" in observables:
         topc2_analysis = Topc2PostAnalysis(
@@ -263,9 +259,9 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
             print topc2_analysis
             topc2_analysis.plot()
             topc2_analysis.plot_autocorrelation()
-
-            # comparison_values["topc2"][analysis_type] = \
-            # 	topc2_analysis.get_values("t0", analysis_type)
+            for t_flow in q0_flow_times:
+                topc2_analysis.plot_autocorrelation_at(target_flow=t_flow)
+                topc2_analysis.plot_mc_history_at(target_flow=t_flow)
 
     if "topc4" in observables:
         topc4_analysis = Topc4PostAnalysis(
@@ -275,6 +271,9 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
             print topc4_analysis
             topc4_analysis.plot()
             topc4_analysis.plot_autocorrelation()
+            for t_flow in q0_flow_times:
+                topc4_analysis.plot_autocorrelation_at(target_flow=t_flow)
+                topc4_analysis.plot_mc_history_at(target_flow=t_flow)
 
     if "topcr" in observables:
         topcr_analysis = TopcRPostAnalysis(
@@ -318,9 +317,6 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
             print topct_analysis
             for int_keys in interval_dict_list:
                 topct_analysis.plot_interval(int_keys)
-                # cmp_values.append(topct_analysis.get_values("t0",
-                #                                             analysis_type),
-                #                   analysis_type)
 
             topct_analysis.plot_series([0, 1, 2, 3], beta=bval_to_plot)
             topct_analysis.plot_autocorrelation()
@@ -360,8 +356,10 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
 
     # Loops over different extrapolation methods
     if "topsus" in observables:
+
         topsus_analysis = TopsusPostAnalysis(
             data, figures_folder=figures_folder, verbose=verbose)
+
         for analysis_type in post_analysis_data_type:
             topsus_analysis.set_analysis_data_type(analysis_type)
             topsus_analysis.plot()
@@ -377,6 +375,10 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
                         topsus_analysis.observable_name_compact,
                         analysis_type,
                         topsus_analysis.get_linefit_parameters())
+
+            for t_flow in q0_flow_times:
+                topsus_analysis.plot_autocorrelation_at(target_flow=t_flow)
+                topsus_analysis.plot_mc_history_at(target_flow=t_flow)
 
     if "topsusqtq0" in observables:
         topsusqtq0_analysis = TopsusQtQ0PostAnalysis(
