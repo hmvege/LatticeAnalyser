@@ -411,17 +411,11 @@ class PostAnalysisDataReader:
             tau_int_err = retrieved_data[:, 8]
             sqrt2tau_int = retrieved_data[:, 9]
 
-            # Loads the raw autocorrelation data
-            # tau_raw = load data her da
-            # tau_error_raw = 
-
             # Populates autocorr dictionary
             ac_data = {
                 "tau_int": tau_int,
                 "tau_int_err": tau_int_err,
                 "sqrt2tau_int": sqrt2tau_int,
-                # "tau_raw":tau_raw,
-                # "tau_error_raw": tau_error_raw,
             }
             obs_data["autocorr"] = copy.deepcopy(ac_data)
 
