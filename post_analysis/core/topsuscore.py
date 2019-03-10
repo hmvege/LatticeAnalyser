@@ -210,7 +210,8 @@ class TopsusCore(PostCore):
             fit_target = self.plot_values[max(self.plot_values)]["x"][-1]
 
         fit_targets = self.get_fit_targets(fit_target)
-        print "Fit targets: ", fit_targets
+        if self.verbose:
+            print "Fit targets: ", fit_targets
 
         a, a_err, a_norm_factor, a_norm_factor_err, obs, obs_raw, obs_err, \
             tau_int_corr = [], [], [], [], [], [], [], []

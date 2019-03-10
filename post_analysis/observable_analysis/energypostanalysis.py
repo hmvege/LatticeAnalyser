@@ -110,6 +110,8 @@ class EnergyPostAnalysis(PostCore):
             values["y"] = data[beta]["y"]*data[beta]["x"]**2
             values["y_err"] = data[beta]["y_error"]*data[beta]["x"]**2
             values["flow_epsilon"] = self.flow_epsilon[beta]
+            values["y_uraw"] = \
+                self.data_raw["unanalyzed"][beta][self.observable_name_compact]
 
             # Calculates the energy derivatve
             values["tder"], values["W"], values["W_err"], values["W_raw"] = \
@@ -121,9 +123,13 @@ class EnergyPostAnalysis(PostCore):
             if self.with_autocorr:
                 values["tau_int"] = data[beta]["ac"]["tau_int"]
                 values["tau_int_err"] = data[beta]["ac"]["tau_int_err"]
+                values["tau_raw"] = self.ac_raw["ac_raw"][beta]
+                values["tau_raw_err"] = self.ac_raw["ac_raw_error"][beta]
             else:
                 values["tau_int"] = None
                 values["tau_int_err"] = None
+                values["tau_raw"] = None
+                values["tau_raw_err"] = None
 
             # Calculates the t^2<E> for the raw values
             values[self.analysis_data_type] = \
@@ -134,6 +140,24 @@ class EnergyPostAnalysis(PostCore):
                                (self.size_labels[beta], beta))
 
             self.plot_values[beta] = values
+
+    def _extract_flow_time_index(self, target_flow):
+        """
+        Returns index corresponding to given flow time
+
+        Args:
+            target_flow: float, some fraction between 0.0-0.6 usually
+        """
+
+        for beta_ in self.plot_values:
+            assert target_flow < self.plot_values[beta_]["sqrt8t"][-1], (
+                "Flow time exceeding bounds for %f which has max flow "
+                "time value of %f" % (beta_, self.plot_values[beta_]["x"][-1]))
+
+        # Selects and returns fit target index
+        return [np.argmin(np.abs(self.plot_values[beta_]["sqrt8t"] - target_flow))
+                for beta_ in sorted(self.plot_values)]
+
 
     def get_t0_scale(self, extrapolation_method="plateau_mean", E0=0.3,
                      **kwargs):

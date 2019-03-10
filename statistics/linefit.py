@@ -99,8 +99,8 @@ class LineFit:
                                 "override those, which is prohibited.")
 
         if isinstance(x_arr, types.NoneType):
-            x_arr = np.linspace(self.x[self.x_lower],
-                                self.x[self.x_upper], 100)
+            x_arr = np.linspace(self.x_lower,
+                                self.x_upper, 100)
         else:
             x_arr = np.atleast_1d(x_arr)
 

@@ -398,6 +398,7 @@ class PostCore(object):
         ax0.tick_params(labelcolor='none', top=False, bottom=False,
                         left=False, right=False)
 
+
         # Retrieves values to plot
         for _ax_val in zip(range(len(flow_indices)), axes,
                            sorted(self.plot_values), flow_indices):
@@ -501,7 +502,7 @@ class PostCore(object):
 
         # Basic plotting commands
         ax.set_xlabel(r"Monte-Carlo history")
-        ax0.set_ylabel(r"${}$".format(self.y_label))
+        ax0.set_ylabel(self.y_label)
 
         # Sets axes limits if provided
         if x_limits != False:

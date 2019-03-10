@@ -16,4 +16,4 @@
 *.DS_Store
 
 # Folders not needed
-figures/
+figures*

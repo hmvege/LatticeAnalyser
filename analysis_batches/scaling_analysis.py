@@ -15,23 +15,30 @@ rc("text", usetex=True)
 rcParams["font.family"] += ["serif"]
 
 
+# Color setup for continuum plots
+cont_error_color = "#0c2c84"  # For the single continuum point
+cont_axvline_color = "#000000"
+fit_color = "#225ea8"
+fit_fill_color = "#225ea8"
+lattice_points_color = "#000000"
+
+
+
 try:
     from tools.folderreadingtools import get_num_observables, check_folder, \
         load_observable, check_relative_path, SlurmDataReader
+    from statistics.linefit import LineFit
 except ImportError:
     sys.path.insert(0, "../")
     from tools.folderreadingtools import get_num_observables, check_folder, \
         load_observable, check_relative_path, SlurmDataReader
+    from statistics.linefit import LineFit
 
 
 def scaling_analysis():
     """
     Scaling analysis.
     """
-
-    # TODO: complete load slurm output function
-    # TODO: add line fitting procedure to plot_scaling function
-    # TODO: double check what I am plotting makes sense(see pdf)
 
     # Basic parameters
     verbose = True
@@ -190,13 +197,12 @@ def scaling_analysis():
             else:
                 weak_scaling_list.append(_tmp_dict)
 
-            # plot_scaling(x, y, _label, _xlabel, _ylabel,
-            #              figure_folder, figure_name, loc=_loc)
+    #         plot_scaling(x, y, _label, _xlabel, _ylabel,
+    #                      figure_folder, figure_name, loc=_loc)
 
     # plot_all_scalings(strong_scaling_list, "strong")
     # plot_all_scalings(weak_scaling_list, "weak")
     plot_speedup(strong_scaling_list, "strong")
-    # amdahls_law(strong_scaling_list, "strong")
 
 
 def filter_scalings(scaling_list, scaling_type):
@@ -317,25 +323,56 @@ def plot_speedup(sc_list, sc_type):
         zip(["gen", "flow", "io"], sc_list), key=lambda k: k[1]["sc"])]
     sc_list = [sc_list[1], sc_list[0], sc_list[2]]  # Bad hard coding
 
-    for data in sc_list:
+
+
+    for i, data in enumerate(sc_list):
         data["y"] = data["y"][0] / data["y"]
+        print "Speedup and parallelizability for %s:" % data["label"]
+        f = amdahls_law_inverse(data["y"], data["x"])
+
+        # Makes a linear fit of the values above p=256
+        L = LineFit(data["x"], f)
+        L.fit()
+
+        sc_list[i]["f"] = np.mean(f[4:])
+        sc_list[i]["f_err"] = np.std(f[4:])
+        sc_list[i]["Sp"] = amdahls_law(data["x"], sc_list[i]["f"])
+        sc_list[i]["Sp_err"] = amdahls_law_error(data["x"], sc_list[i]["f"], sc_list[i]["f_err"])
+
+        for p_, y_, f_ in zip(data["x"], data["y"], f):
+            print "p = %5d  S(p) = %10.4f  f = %f" % (p_, y_, f_)
+
 
     for data, ax in zip(sc_list, axes):
-        ax.semilogx(data["x"], data["y"], "o-", label=data["label"])
+
+        ax.semilogx(data["x"], data["y"], "o-", label=data["label"], color=cont_error_color)
+        # ax.plot(data["x"], data["Sp"], "o-", label=r"Amdahl's law, $f=%.2f$" % data["f"], color=fit_color)
+        # ax.fill_between(data["x"], data["Sp"] - data["Sp_err"], data["Sp"] + data["Sp_err"], alpha=0.5,
+        #                         edgecolor="", facecolor=fit_fill_color)
         ax.set_xlabel(data["xlabel"])
         ax.set_ylabel(data["ylabel_speedup"])
         ax.grid(True)
-        ax.legend(loc=data["loc"])
+        ax.legend(loc="lower right")
 
     figpath = os.path.join(
         data["figure_folder"], "speedup_" + sc_type + "_all" + ".pdf")
     fig.savefig(figpath)
+
     print "Figure {} created.".format(figpath)
 
 
-def amdahls_law(sc_list, sc_type):
-    """Uses Amdahl's law to get the fraction that can be parallelized."""
+def amdahls_law(p, f):
+    return 1.0 / (1.0 + f*(1.0/p - 1.0))
 
+
+def amdahls_law_error(p, f, f_err):
+    return f_err * (1.0/p - 1.0) / (1.0 + f*(1.0/p - 1.0))**2
+
+
+def amdahls_law_inverse(Sp, p):
+    """Uses Amdahl's law solved for f to get the fraction that can 
+    be parallelized."""
+    return (1.0 - Sp) / (Sp * (1.0/p - 1.0))
 
 if __name__ == '__main__':
     scaling_analysis()

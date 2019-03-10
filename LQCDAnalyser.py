@@ -14,17 +14,28 @@ from analysis_batches.thermalization_comparison_analysis \
 from analysis_batches.b645_L32x32_analysis import beta645_L32_analysis
 from analysis_batches.scaling_analysis import scaling_analysis
 
+
 def main():
     # Printing settings
     section_seperator = "="*160
 
-    main_analysis()
+    # Default params
+    run_pre_analysis = True
+    run_post_analysis = True
+
+    # Overriding params for what to run
+    # run_pre_analysis = False
+    run_post_analysis = False
+
+    # main_analysis(run_pre_analysis=run_pre_analysis,
+    #               run_post_analysis=run_post_analysis)
     # distribution_analysis()
     # topc_modes_analysis()
     # lattice_updates_analysis()
     # thermalization_analysis()
     # scaling_analysis()
-    # beta645_L32_analysis() # TODO: complete analysis with beta 645 L=32^3 and L=96x48^3
+    beta645_L32_analysis(run_pre_analysis=run_pre_analysis,
+                         run_post_analysis=run_post_analysis)
 
 
 if __name__ == '__main__':

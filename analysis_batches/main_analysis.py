@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-def main_analysis():
+def main_analysis(run_pre_analysis=True, run_post_analysis=True):
     from pre_analysis.pre_analyser import pre_analysis
     from post_analysis.post_analyser import post_analysis
     from default_analysis_params import get_default_parameters
@@ -17,14 +17,14 @@ def main_analysis():
 
     # obs_exlusions = ["plaq", "energy", "topc", "topc2", "topc4", "topcr", "topcMC", "topsus"]
     # obs_exlusions = ["energy", "topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
-    obs_exlusions = ["w_t_energy"]
+    obs_exlusions = ["w_t_energy", "energy"]
     default_params = get_default_parameters(
         data_batch_folder=data_batch_folder, 
         obs_exlusions=obs_exlusions)
 
     # observables = observables_euclidean_time
     observables = ["topsus"]#, "topsust", "topsuste", "topsusMC", "topsusqtq0"]
-    # observables = ["topsusMC"]
+    observables = ["topsusMC"]
     # observables = ["topcr", "qtq0eff"]
     # observables = ["topcte"]
     # observables = observables_euclidean_time
@@ -41,9 +41,9 @@ def main_analysis():
     # observables = ["w_t_energy"]
     # observables = ["plaq", "energy", "topc", "topct"]
 
-    observables += ["energy"]
-    # observables = ["plaq"]
-    # default_params["observables"] = observables
+    # observables += ["energy"]
+    observables = ["plaq"]
+    default_params["observables"] = observables
 
     #### Post analysis parameters
     line_fit_interval_points = 20
@@ -144,10 +144,6 @@ def main_analysis():
 
     # Adding relevant batches to args
     analysis_parameter_list = [databeta60, databeta61, databeta62, databeta645]
-    # analysis_parameter_list = [databeta60, databeta61, databeta62]
-    # analysis_parameter_list = [databeta61, databeta62]
-    # analysis_parameter_list = [databeta62]
-    # analysis_parameter_list = [databeta645]
 
     section_seperator = "="*160
     print section_seperator
@@ -155,26 +151,31 @@ def main_analysis():
         default_params["observables"])
     print section_seperator + "\n"
 
-    # #### Submitting main analysis
-    # for analysis_parameters in analysis_parameter_list:
-    #     pre_analysis(analysis_parameters)
+    #### Submitting main analysis
+    if run_pre_analysis:
+        for analysis_parameters in analysis_parameter_list:
+            pre_analysis(analysis_parameters)
 
     if not analysis_parameter_list[0]["MCInt"] is None:
-        assert sum([len(plist["MCInt"]) - len(analysis_parameter_list[0]["MCInt"])
+        assert sum(
+            [len(plist["MCInt"]) - len(analysis_parameter_list[0]["MCInt"])
             for plist in analysis_parameter_list]) == 0, \
             "unequal amount of MC intervals"
 
     #### Submitting post-analysis data
     if len(analysis_parameter_list) >= 3:
-        post_analysis(analysis_parameter_list, default_params["observables"],
-            topsus_fit_targets, line_fit_interval_points, energy_fit_target,
-            q0_flow_times, euclidean_time_percents,
-            extrapolation_methods=extrapolation_methods,
-            plot_continuum_fit=plot_continuum_fit,
-            post_analysis_data_type=post_analysis_data_type,
-            figures_folder=default_params["figures_folder"], 
-            gif_params=default_params["gif"], 
-            verbose=default_params["verbose"])
+        if run_post_analysis:
+            post_analysis(analysis_parameter_list, 
+                default_params["observables"],
+                topsus_fit_targets, line_fit_interval_points, 
+                energy_fit_target,
+                q0_flow_times, euclidean_time_percents,
+                extrapolation_methods=extrapolation_methods,
+                plot_continuum_fit=plot_continuum_fit,
+                post_analysis_data_type=post_analysis_data_type,
+                figures_folder=default_params["figures_folder"], 
+                gif_params=default_params["gif"], 
+                verbose=default_params["verbose"])
     else:
         msg = "Need at least 3 different beta values to run post analysis"
         msg += "(%d given)."% len(analysis_parameter_list)

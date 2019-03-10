@@ -52,8 +52,8 @@ class PostAnalysisDataReader:
         # Reference Scale, must be set after initial loading if it to be used
         self.reference_values = None
 
-        # Iterates over the different beta value folders
-        for beta_folder in self.beta_folders:
+        # Iterates over the different beta value folders, i.e. different datasets
+        for beta_folder in self.data_run_folders:
             # Construct beta post analysis folder path
             beta_dir_path = os.path.join(beta_folder, "post_analysis_data")
 
@@ -191,7 +191,7 @@ class PostAnalysisDataReader:
 
     def _set_batch_name(self, batch_parameters):
         """Sets batch name and batch folder."""
-        self.beta_folders = [os.path.join(b["batch_folder"], b["batch_name"])
+        self.data_run_folders = [os.path.join(b["batch_folder"], b["batch_name"])
                              for b in batch_parameters]
 
         # Splits all of the paths

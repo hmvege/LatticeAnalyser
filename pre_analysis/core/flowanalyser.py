@@ -13,6 +13,7 @@ from statistics.jackknife import Jackknife
 from statistics.bootstrap import Bootstrap
 from statistics.autocorrelation import Autocorrelation, FullAutocorrelation, \
     PropagatedAutocorrelation
+from statistics.blocking import block, Blocking
 import statistics.parallel_tools as ptools
 import os
 import numpy as np
@@ -196,6 +197,15 @@ class FlowAnalyser(object):
         self.integrated_autocorrelation_time = np.ones(self.NFlows)
         self.integrated_autocorrelation_time_error = np.zeros(self.NFlows)
         self.autocorrelation_error_correction = np.ones(self.NFlows)
+
+        # Blocking analysis content
+        self.blocking_sizes = []
+        self.blocked_variances = []
+        self.blocked_data = []
+        # self.blocked_bootstrap_raw = np.zeros((self.NFlows, self.N_bs))
+        self.blocked_bootstrap = np.empty(self.NFlows)
+        self.blocked_bootstrap_std = np.empty(self.NFlows)
+
 
     def _set_q0_time_and_index(self, q0_flow_time):
         """
@@ -591,6 +601,26 @@ class FlowAnalyser(object):
 
         # Sets performed flag to true
         self.autocorrelation_performed = True
+
+    def block(self):
+        # Blocking analysis content
+        self.blocking_sizes = []
+        self.blocked_variances = np.empty(self.NFlows)
+        self.blocked_data = np.empty(self.NFlows)
+        # self.blocked_bootstrap_raw = np.zeros((self.NFlows, self.N_bs))
+        self.blocked_bootstrap = np.empty(self.NFlows)
+        self.blocked_bootstrap_std = np.empty(self.NFlows)
+
+        for i in range(self.NFlows):
+            # self.blocked_variances[i] = block(self.y)
+            _tmp = Blocking(self.y)
+            _tmp.plot()
+
+            self.blocked_variances[i] = _tmp.blocked_variances[i]
+            self.blocked_data[i] = _tmp.blocked_values[i]
+
+        print self.blocked_variances
+
 
     def plot_jackknife(self, x=None, correction_function=lambda x: x,
                        error_correction_function=None):
