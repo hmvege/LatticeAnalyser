@@ -39,7 +39,7 @@ def main_analysis(run_pre_analysis=True, run_post_analysis=True):
     # observables = ["qtq0effMC"]
     # observables = ["energy"]
     # observables = ["w_t_energy"]
-    # observables = ["plaq", "energy", "topc", "topct"]
+    observables = ["plaq", "energy", "topc", "topsus", "topc2", "topc4"]
 
     # observables += ["energy"]
     observables = ["topc"]
@@ -84,11 +84,14 @@ def main_analysis(run_pre_analysis=True, run_post_analysis=True):
     post_analysis_data_type = ["bootstrap", "jackknife", "unanalyzed"]
     post_analysis_data_type = ["bootstrap"]
 
+    # Blocking
+    default_params["blocking_analysis"] = True
+
     ########## Main analysis ##########
     databeta60 = copy.deepcopy(default_params)
     databeta60["batch_name"] = "beta60"
     databeta60["beta"] = 6.0
-    databeta60["block_size"] = 50
+    databeta60["block_size"] = 10 # None
     databeta60["topc_y_limits"] = [-9, 9]
     databeta60["topc2_y_limits"] = [-81, 81]
     databeta60["NCfgs"] = get_num_observables(
@@ -103,7 +106,7 @@ def main_analysis(run_pre_analysis=True, run_post_analysis=True):
     databeta61 = copy.deepcopy(default_params)
     databeta61["batch_name"] = "beta61"
     databeta61["beta"] = 6.1
-    databeta61["block_size"] = 50
+    databeta61["block_size"] = 10 # None
     databeta61["topc_y_limits"] = [-12, 12]
     databeta61["topc2_y_limits"] = [-144, 144]
     databeta61["NCfgs"] = get_num_observables(
@@ -118,7 +121,7 @@ def main_analysis(run_pre_analysis=True, run_post_analysis=True):
     databeta62 = copy.deepcopy(default_params)
     databeta62["batch_name"] = "beta62"
     databeta62["beta"] = 6.2
-    databeta62["block_size"] = 50
+    databeta62["block_size"] = 10 # None
     databeta62["topc_y_limits"] = [-12, 12]
     databeta62["topc2_y_limits"] = [-196, 196]
     databeta62["NCfgs"] = get_num_observables(
@@ -134,7 +137,7 @@ def main_analysis(run_pre_analysis=True, run_post_analysis=True):
     databeta645["flow_epsilon"] = 0.02
     databeta645["batch_name"] = "beta645"
     databeta645["beta"] = 6.45
-    databeta645["block_size"] = 50
+    databeta645["block_size"] = 25 # None
     databeta645["topc_y_limits"] = [-15, 15]
     databeta645["topc2_y_limits"] = [-300, 300]
     databeta645["NCfgs"] = get_num_observables(

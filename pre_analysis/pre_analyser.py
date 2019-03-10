@@ -7,20 +7,24 @@ import types
 from tqdm import tqdm
 
 
-def analyse_default(analysis_object, N_bs, NBins=None, skip_histogram=False,
+def analyse_default(analysis_object, N_bs, perform_blocking_analysis=False,
+                    block_size=None,  NBins=None, skip_histogram=False,
                     bs_index_lists=None, hist_flow_times=None):
     """Default analysis method for pre-analysis."""
     print(analysis_object)
-    analysis_object.boot(N_bs, index_lists=bs_index_lists)
-    analysis_object.jackknife()
 
+    # analysis_object.boot(N_bs, index_lists=bs_index_lists)
+    # analysis_object.jackknife()
     # analysis_object.save_post_analysis_data()
     # analysis_object.plot_original()
     # analysis_object.plot_boot()
     # analysis_object.plot_jackknife()
+    # analysis_object.autocorrelation()
 
-    analysis_object.autocorrelation()
-    analysis_object.block()
+    if perform_blocking_analysis:
+        analysis_object.block(block_size=block_size)
+
+        Legg til original, boot og jackknife plottere her for blocking
 
     # analysis_object.plot_autocorrelation(0)
     # analysis_object.plot_autocorrelation(-1)
@@ -40,19 +44,14 @@ def analyse_default(analysis_object, N_bs, NBins=None, skip_histogram=False,
     #                     int(analysis_object.NFlows * 0.50),
     #                     int(analysis_object.NFlows * 0.75), -1
     #                     ]
-
     #         for iHist in hist_pts:
     #             analysis_object.plot_histogram(iHist, NBins=NBins)
-
     #         analysis_object.plot_multihist([hist_pts[0], hist_pts[2],
     #                                         hist_pts[-1]], NBins=NBins)
-
     #     else:
     #         for iHist in hist_flow_times:
     #             analysis_object.plot_histogram(iHist, NBins=NBins)
-
     #         analysis_object.plot_multihist(hist_flow_times, NBins=NBins)
-
     # analysis_object.plot_integrated_correlation_time()
     # analysis_object.save_post_analysis_data()  # save_as_txt=False
 
@@ -85,7 +84,9 @@ def analyse_plaq(params):
         params["data"]("plaq"),
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
-    analyse_default(plaq_analysis, params["N_bs"])
+    analyse_default(plaq_analysis, params["N_bs"], 
+                    perform_blocking_analysis=params["blocking_analysis"],
+                    block_size=params["block_size"])
 
 
 def analyse_energy(params):
@@ -94,7 +95,9 @@ def analyse_energy(params):
         params["data"]("energy"),
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
-    analyse_default(energy_analysis, params["N_bs"])
+    analyse_default(energy_analysis, params["N_bs"],
+        perform_blocking_analysis=params["blocking_analysis"],
+                    block_size=params["block_size"])
 
 
 def analyse_w_t_energy(params):
@@ -111,7 +114,9 @@ def analyse_topsus(params):
         params["data"]("topc"),
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
-    analyse_default(topsus_analysis, params["N_bs"])
+    analyse_default(topsus_analysis, params["N_bs"], 
+                    perform_blocking_analysis=params["blocking_analysis"],
+                    block_size=params["block_size"])
 
 
 def analyse_topc(params):
@@ -124,7 +129,9 @@ def analyse_topc(params):
     N_bin_range = params["bin_range"]
     N_bins = 1 + (N_bin_range[-1] + N_bin_range[1])*params["num_bins_per_int"]
     bins = np.linspace(N_bin_range[0], N_bin_range[1], N_bins)
-    analyse_default(topc_analysis, params["N_bs"],
+    analyse_default(topc_analysis, params["N_bs"], 
+                    perform_blocking_analysis=params["blocking_analysis"],
+                    block_size=params["block_size"],
                     NBins=bins, hist_flow_times=params["hist_flow_times"])
 
 
@@ -135,7 +142,9 @@ def analyse_topc2(params):
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
     topc2_analysis.y_limits = params["topc2_y_limits"]
-    analyse_default(topc2_analysis, params["N_bs"], NBins=150)
+    analyse_default(topc2_analysis, params["N_bs"], 
+                    perform_blocking_analysis=params["blocking_analysis"],
+                    block_size=params["block_size"], NBins=150)
 
 
 def analyse_topc4(params):
@@ -144,7 +153,9 @@ def analyse_topc4(params):
         params["data"]("topc"),
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
-    analyse_default(topc4_analysis, params["N_bs"])
+    analyse_default(topc4_analysis, params["N_bs"], 
+                    perform_blocking_analysis=params["blocking_analysis"],
+                    block_size=params["block_size"])
 
 
 def analyse_topcr(params):
@@ -171,8 +182,12 @@ def analyse_topcr(params):
                                        size=(N_bs, N_cfgs_topc2))
 
     analyse_default(topc2_analysis, N_bs, NBins=150,
-                    bs_index_lists=bs_index_lists)
-    analyse_default(topc4_analysis, N_bs, bs_index_lists=bs_index_lists)
+                    bs_index_lists=bs_index_lists, 
+                    perform_blocking_analysis=params["blocking_analysis"],
+                    block_size=params["block_size"])
+    analyse_default(topc4_analysis, N_bs, bs_index_lists=bs_index_lists, 
+                    perform_blocking_analysis=params["blocking_analysis"],
+                    block_size=params["block_size"])
 
 
 def analyse_topcrMC(params):
@@ -261,7 +276,9 @@ def analyse_qtq0_effective_mass(params):
         if q0_flow_time != 0.6:  # Only zeroth flow
             continue
         qtq0eff_analysis.set_time(q0_flow_time)
-        analyse_default(qtq0eff_analysis, params["N_bs"])
+        analyse_default(qtq0eff_analysis, params["N_bs"], 
+                    perform_blocking_analysis=params["blocking_analysis"],
+                    block_size=params["block_size"])
 
 
 def analyse_qtq0_effective_mass_mc(params):

@@ -603,33 +603,61 @@ class FlowAnalyser(object):
         # Sets performed flag to true
         self.autocorrelation_performed = True
 
-    def block(self, block_size=None, create_blocking_plots=False):
+    def block(self, block_size=None, N_bs=500):
         """
         Runs a blocking analysis to retrieve a uncorrelated set of data, 
         which it then bootstraps and analyses further.
 
+        Assumes block_size is equal for all variables.
+
         Args:
-            block_size: int, optional. Block size.
-            create_blocking_plots: bool, optional. Will create blocking 
-                figures(which is costly) if True for specifying 
-                blocking size.
+            block_size: int, optional. Block size. Will create blocking plots
+                if not provided, assuming one needs to figure out the block 
+                size.
+            N_bs: int, number of bootstraps to perform
         """
 
         # Blocking analysis content
-        self.blocking_sizes = []
-        self.blocked_variances = np.empty(self.NFlows)
-        self.blocked_data = np.empty(self.NFlows)
-        # self.blocked_bootstrap_raw = np.zeros((self.NFlows, self.N_bs))
-        self.blocked_bootstrap = np.empty(self.NFlows)
-        self.blocked_bootstrap_std = np.empty(self.NFlows)
+        self.block_sizes = block_size
+        self.blocked_mean = np.empty(self.NFlows)
+        self.blocked_std = np.empty(self.NFlows)
 
-        if create_blocking_plots:
+        # Sets up blocked array
+        self.blocked_bootstrap_mean = np.empty(self.NFlows)
+        self.blocked_bootstrap_std = np.empty(self.NFlows)
+        self.blocked_bootstrap_raw = np.empty((self.NFlows, N_bs))
+
+        if isinstance(block_size, type(None)):
             fig, ax = plt.subplots(nrows=1, ncols=1)
+        else:
+            self.N_blocked_samples = \
+                int(self.N_configurations/float(block_size))
+
+            bs_index_lists = np.random.randint(
+                self.N_blocked_samples, size=(N_bs, self.N_blocked_samples))
+
+            # Sets up array for blocked samples
+            self.blocked_raw = np.empty((self.NFlows, self.N_blocked_samples))
 
         for i in range(0, self.NFlows):
-            # self.blocked_variances[i] = block(self.y)
-            # print np.std(self.y[:,0])
-            _block_values = Blocking(self.y[:, i], block_size=block_size)
+
+            # Retrieves blocked values
+            _block = Blocking(self.y[:, i], block_size=block_size)
+
+            # Only retrieves blocked values if block size has been provided.
+            if not isinstance(block_size, type(None)):
+                assert len(_block.blocked_values) == 1
+
+                self.blocked_raw[i] = _block.blocked_values[0]
+                self.blocked_std[i] = np.sqrt(
+                    _block.blocked_variances[0])
+
+                _bs_blocked = Bootstrap(
+                    self.blocked_raw[i], N_bs, index_lists=bs_index_lists)
+                self.blocked_bootstrap_raw[i] = _bs_blocked.bs_data
+                self.blocked_bootstrap_std[i] = _bs_blocked.bs_std
+                self.blocked_mean[i] = _bs_blocked.bs_avg
+
             # _tmp.plot()
             # print _tmp.block_sizes
             # print len(_tmp.blocked_values)
@@ -657,21 +685,32 @@ class FlowAnalyser(object):
             # self.blocked_variances[i] = _tmp.blocked_variances[i]
             # self.blocked_data[i] = _tmp.blocked_values[i]
 
-            if create_blocking_plots and i % 10 == 0:
-                ax.plot(_block_values.block_sizes[::-1],
-                        _block_values.blocked_variances[::-1],
+            if isinstance(block_size, type(None)) and i % 10 == 0:
+                ax.plot(_block.block_sizes[::-1],
+                        _block.blocked_variances[::-1],
                         alpha=0.25, color="#225ea8")
 
-        if create_blocking_plots:
+        if isinstance(block_size, type(None)):
             ax.set_title(r"$\beta=%.2f, %d^3\times %d$" % (
                 self.beta, self.NSpatial, self.NTemporal))
             ax.set_xlabel(r"Block size")
             ax.set_ylabel(r"Sample variance")
+            ax.set_xlim(-5, 125)
             ax.grid(True)
             figname = os.path.join(
                 self.observable_output_folder_path,
                 "blocking_%s.pdf" % self.observable_name_compact)
             fig.savefig(figname)
+            print "Figure saved at %s" % figname
+
+        else:
+            self.blocked_bootstrap_raw = np.asarray(self.blocked_bootstrap_raw)
+            self.blocked_raw = np.asarray(self.blocked_raw)
+
+            self.save_raw_analysis_data(self.blocked_bootstrap_raw,
+                                        "blocked_bootstrap")
+            self.save_raw_analysis_data(self.blocked_raw,
+                                        "blocked_bootstrap")
 
     def plot_jackknife(self, x=None, correction_function=lambda x: x,
                        error_correction_function=None):
@@ -723,20 +762,24 @@ class FlowAnalyser(object):
                                title_string, fname_path)
 
     def plot_boot(self, x=None, correction_function=lambda x: x,
-                  error_correction_function=None, _plot_bs=True):
+                  error_correction_function=None, _plot_bs=True,
+                  _plot_blocked_results=False):
         """
         Function for plotting the bootstrapped data.
 
         Args:
-                x: optional values to plot along the x-axis. Default is plotting
-                        self.a*np.sqrt(8*t).
+                x: optional values to plot along the x-axis. Default is 
+                        plotting self.a*np.sqrt(8*t).
                 correction_function: function to correct y-axis values with.
                         Default is to leave them unmodified.
-                error_correction_function: function that corrects the error term.
-                        Takes y and y_err. Default is this being equal to correction 
-                        function.
+                error_correction_function: function that corrects the error 
+                        term. Takes y and y_err. Default is this being equal 
+                        to correction function.
                 _plot_bs: internval argument for plotting the bootstrapped and
                         non-bootstrapped values. Default is True.
+                _plot_blocked_results: bool, plots blocked results with their 
+                        error correction instead of sqrt{2tau_int}. Default 
+                        is False.
 
         Raises:
                 ValueError: if bootstrap has not been performed yet.
@@ -757,8 +800,11 @@ class FlowAnalyser(object):
 
         # Determines if we are to plot bootstrap or original and retrieves data
         if _plot_bs:
-            y = self.bs_y
-            y_std = self.bs_y_std*self.autocorrelation_error_correction
+            if _plot_blocked_results:
+                y = self.blocked_bootstrap_std
+            else:
+                y = self.bs_y
+                y_std = self.bs_y_std*self.autocorrelation_error_correction
         else:
             y = self.unanalyzed_y
             y_std = self.unanalyzed_y_std*self.autocorrelation_error_correction

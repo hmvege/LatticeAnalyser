@@ -79,11 +79,14 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True):
     # Data types to be looked at in the post-analysis.
     post_analysis_data_type = ["bootstrap", "jackknife", "unanalyzed"]
     post_analysis_data_type = ["bootstrap"]
+    # Blocking
+    default_params["blocking_analysis"] = True
 
     ########## Main analysis ##########
     databeta60 = copy.deepcopy(default_params)
     databeta60["batch_name"] = "beta60"
     databeta60["beta"] = 6.0
+    databeta60["block_size"] = None
     databeta60["topc_y_limits"] = [-9, 9]
     databeta60["topc2_y_limits"] = [-81, 81]
     databeta60["NCfgs"] = get_num_observables(
@@ -98,6 +101,7 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True):
     databeta61 = copy.deepcopy(default_params)
     databeta61["batch_name"] = "beta61"
     databeta61["beta"] = 6.1
+    databeta61["block_size"] = None
     databeta61["topc_y_limits"] = [-12, 12]
     databeta61["topc2_y_limits"] = [-144, 144]
     databeta61["NCfgs"] = get_num_observables(
@@ -112,10 +116,11 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True):
     databeta62 = copy.deepcopy(default_params)
     databeta62["batch_name"] = "beta62"
     databeta62["beta"] = 6.2
+    databeta62["block_size"] = None
     databeta62["topc_y_limits"] = [-12, 12]
     databeta62["topc2_y_limits"] = [-196, 196]
     databeta62["NCfgs"] = get_num_observables(
-        databeta62["batch_folder"],
+        databeta62["batch_folder"], 
         databeta62["batch_name"])
     databeta62["obs_file"] = "32_6.20"
     databeta62["MCInt"] = MC_intervals[2]
@@ -127,6 +132,7 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True):
     databeta645["flow_epsilon"] = 0.02
     databeta645["batch_name"] = "beta645"
     databeta645["beta"] = 6.45
+    databeta645["block_size"] = None
     databeta645["topc_y_limits"] = [-15, 15]
     databeta645["topc2_y_limits"] = [-300, 300]
     databeta645["NCfgs"] = get_num_observables(
@@ -142,6 +148,7 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True):
     databeta645_32xx4["flow_epsilon"] = 0.02
     databeta645_32xx4["batch_name"] = "beta645-32xx4"
     databeta645_32xx4["beta"] = 6.45
+    databeta645_32xx4["block_size"] = None
     databeta645_32xx4["topc_y_limits"] = [-15, 15]
     databeta645_32xx4["topc2_y_limits"] = [-300, 300]
     databeta645_32xx4["NCfgs"] = get_num_observables(

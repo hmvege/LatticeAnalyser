@@ -6,7 +6,6 @@ import multiprocessing
 import re
 import time
 import numba as nb
-_res = 
 
 
 @nb.njit(cache=True)
