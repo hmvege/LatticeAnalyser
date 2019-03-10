@@ -6,10 +6,11 @@ import multiprocessing
 import re
 import time
 import numba as nb
+_res = 
 
 
 @nb.njit(cache=True)
-def block_core(data, block_size):
+def _block_core(data, block_size):
     """
     Blocking method.
     """
@@ -34,10 +35,12 @@ class Blocking:
     Blocking method av implemented by Flyvebjerg
     """
 
-    def __init__(self, data, N_proc=1):
+    def __init__(self, data, block_size=None, N_proc=1):
         """
         Args:
             data: numpy array, datasets.
+            block_size: int, optional. If specified, will simply return blocked 
+                data set and its variance. Default is None.
             N_proc: int, optional, number of threads to run in parallel for.
         """
 
@@ -46,13 +49,20 @@ class Blocking:
         N = len(data)
 
         # Setting up blocks
-        self.block_sizes = self.factors(N)[::-1][1:-1]
+        # self.block_sizes = self.factors(N)[::-1][1:-1]
+        self.block_sizes = np.arange(1, N)[:N/2]
 
         self.blocked_values = []
         self.blocked_variances = []
 
-        for block_size in self.block_sizes:
-            _res = block_core(data, block_size)
+        if not isinstance(block_size, type(None)):
+            _res = _res = _block_core(data, block_size)
+            self.blocked_values.append(_res[0])
+            self.blocked_variances.append(_res[1])
+            return 
+
+        for _block_size in self.block_sizes:
+            _res = _block_core(data, _block_size)
             self.blocked_values.append(_res[0])
             self.blocked_variances.append(_res[1])
 
@@ -67,7 +77,7 @@ class Blocking:
         Plots the variance vs block sizes.
         """
         plt.semilogx(self.block_sizes[::-1], self.blocked_variances[::-1],
-                     "o-", color="#225ea8")
+                     "-", color="#225ea8")
         plt.xlabel(r"Block size")
         plt.ylabel(r"$\sigma^2$")
         plt.grid(True)
@@ -128,8 +138,8 @@ def test():
     print "Test data: %g +/- %g" % (np.mean(test_data), np.std(test_data))
     print "Autoblocking:", np.sqrt(block(test_data)[0])
 
-    b = Blocking(test_data)
-    # b.plot()
+    b = Blocking(test_data[:100000])
+    b.plot()
     print b.block_sizes
 
 

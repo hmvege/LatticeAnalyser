@@ -603,10 +603,16 @@ class FlowAnalyser(object):
         # Sets performed flag to true
         self.autocorrelation_performed = True
 
-    def block(self):
+    def block(self, block_size=None, create_blocking_plots=False):
         """
         Runs a blocking analysis to retrieve a uncorrelated set of data, 
         which it then bootstraps and analyses further.
+
+        Args:
+            block_size: int, optional. Block size.
+            create_blocking_plots: bool, optional. Will create blocking 
+                figures(which is costly) if True for specifying 
+                blocking size.
         """
 
         # Blocking analysis content
@@ -617,12 +623,13 @@ class FlowAnalyser(object):
         self.blocked_bootstrap = np.empty(self.NFlows)
         self.blocked_bootstrap_std = np.empty(self.NFlows)
 
-        fig, ax = plt.subplots(nrows=1, ncols=1)
+        if create_blocking_plots:
+            fig, ax = plt.subplots(nrows=1, ncols=1)
 
         for i in range(0, self.NFlows):
             # self.blocked_variances[i] = block(self.y)
             # print np.std(self.y[:,0])
-            _tmp = Blocking(self.y[:, i])
+            _block_values = Blocking(self.y[:, i], block_size=block_size)
             # _tmp.plot()
             # print _tmp.block_sizes
             # print len(_tmp.blocked_values)
@@ -650,17 +657,21 @@ class FlowAnalyser(object):
             # self.blocked_variances[i] = _tmp.blocked_variances[i]
             # self.blocked_data[i] = _tmp.blocked_values[i]
 
-            if i % 10 == 0:
-                ax.plot(_tmp.block_sizes[::-1], _tmp.blocked_variances[::-1],
+            if create_blocking_plots and i % 10 == 0:
+                ax.plot(_block_values.block_sizes[::-1],
+                        _block_values.blocked_variances[::-1],
                         alpha=0.25, color="#225ea8")
 
-        ax.set_title(r"$\beta=%.2f, %d^3\times %d$" % (
-            self.beta, self.NSpatial, self.NTemporal))
-        ax.set_xlabel(r"Block size")
-        ax.set_ylabel(r"Variance")
-        ax.grid(True)
-        plt.show()
-        # print self.blocked_variances
+        if create_blocking_plots:
+            ax.set_title(r"$\beta=%.2f, %d^3\times %d$" % (
+                self.beta, self.NSpatial, self.NTemporal))
+            ax.set_xlabel(r"Block size")
+            ax.set_ylabel(r"Sample variance")
+            ax.grid(True)
+            figname = os.path.join(
+                self.observable_output_folder_path,
+                "blocking_%s.pdf" % self.observable_name_compact)
+            fig.savefig(figname)
 
     def plot_jackknife(self, x=None, correction_function=lambda x: x,
                        error_correction_function=None):
