@@ -172,11 +172,11 @@ def scaling_analysis():
 
             # Sets speedup labels
             if _sc_part == "io":
-                _ylabel_speedup = (r"$t_{\mathrm{IO},p=%s}/t_{\mathrm{IO},p}$"
+                _ylabel_speedup = (r"$t_{\mathrm{IO},N_{p=%s}}/t_{\mathrm{IO},N_p}$"
                                    "[s]" % min_procs)
             else:
                 _tmp = _time_type.replace("_", r"\ ").capitalize()
-                _ylabel_speedup = (r"$t_{\mathrm{%s},p=%s}/t_{\mathrm{%s},p}$"
+                _ylabel_speedup = (r"$t_{\mathrm{%s},N_{p=%s}}/t_{\mathrm{%s},N_p}$"
                     "[s]" % (_tmp, min_procs, _tmp))
 
             _tmp_dict = {
@@ -197,11 +197,11 @@ def scaling_analysis():
             else:
                 weak_scaling_list.append(_tmp_dict)
 
-    #         plot_scaling(x, y, _label, _xlabel, _ylabel,
-    #                      figure_folder, figure_name, loc=_loc)
+            plot_scaling(x, y, _label, _xlabel, _ylabel,
+                         figure_folder, figure_name, loc=_loc)
 
-    # plot_all_scalings(strong_scaling_list, "strong")
-    # plot_all_scalings(weak_scaling_list, "weak")
+    plot_all_scalings(strong_scaling_list, "strong")
+    plot_all_scalings(weak_scaling_list, "weak")
     plot_speedup(strong_scaling_list, "strong")
 
 
@@ -345,7 +345,7 @@ def plot_speedup(sc_list, sc_type):
 
     for data, ax in zip(sc_list, axes):
 
-        ax.semilogx(data["x"], data["y"], "o-", label=data["label"], color=cont_error_color)
+        ax.semilogx(data["x"], data["y"], "o-", label=data["label"])
         # ax.plot(data["x"], data["Sp"], "o-", label=r"Amdahl's law, $f=%.2f$" % data["f"], color=fit_color)
         # ax.fill_between(data["x"], data["Sp"] - data["Sp_err"], data["Sp"] + data["Sp_err"], alpha=0.5,
         #                         edgecolor="", facecolor=fit_fill_color)

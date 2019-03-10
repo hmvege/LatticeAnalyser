@@ -76,6 +76,9 @@ class Jackknife:
 		self.jk_avg -= (self.N - 1) * self.jk_avg_biased
 		self.jk_avg_unbiased = self.jk_avg
 
+		# Ensures we get the proper width of the histogram.
+		self.jk_data = (self.N - 1) * self.jk_data
+
 	@timing_function
 	def _perform_jk(self,data):
 		"""

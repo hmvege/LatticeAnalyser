@@ -27,15 +27,15 @@ def main():
     # run_pre_analysis = False
     run_post_analysis = False
 
-    # main_analysis(run_pre_analysis=run_pre_analysis,
-    #               run_post_analysis=run_post_analysis)
+    main_analysis(run_pre_analysis=run_pre_analysis,
+                  run_post_analysis=run_post_analysis)
     # distribution_analysis()
     # topc_modes_analysis()
     # lattice_updates_analysis()
     # thermalization_analysis()
     # scaling_analysis()
-    beta645_L32_analysis(run_pre_analysis=run_pre_analysis,
-                         run_post_analysis=run_post_analysis)
+    # beta645_L32_analysis(run_pre_analysis=run_pre_analysis,
+    #                      run_post_analysis=run_post_analysis)
 
 
 if __name__ == '__main__':

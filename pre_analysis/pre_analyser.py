@@ -11,48 +11,50 @@ def analyse_default(analysis_object, N_bs, NBins=None, skip_histogram=False,
                     bs_index_lists=None, hist_flow_times=None):
     """Default analysis method for pre-analysis."""
     print(analysis_object)
-    # analysis_object.boot(N_bs, index_lists=bs_index_lists)
-    # analysis_object.jackknife()
+    analysis_object.boot(N_bs, index_lists=bs_index_lists)
+    analysis_object.jackknife()
+
     # analysis_object.save_post_analysis_data()
     # analysis_object.plot_original()
     # analysis_object.plot_boot()
     # analysis_object.plot_jackknife()
-    # analysis_object.autocorrelation()
+
+    analysis_object.autocorrelation()
     analysis_object.block()
-    exit("Blocking successful")
-    analysis_object.plot_autocorrelation(0)
-    analysis_object.plot_autocorrelation(-1)
-    analysis_object.plot_mc_history(0)
-    analysis_object.plot_mc_history(int(analysis_object.NFlows * 0.25))
-    analysis_object.plot_mc_history(int(analysis_object.NFlows * 0.50))
-    analysis_object.plot_mc_history(int(analysis_object.NFlows * 0.75))
-    analysis_object.plot_mc_history(-1)
-    analysis_object.plot_original()
-    analysis_object.plot_boot()
-    analysis_object.plot_jackknife()
-    if not skip_histogram:
-        if isinstance(hist_flow_times, types.NoneType):
-            # Plots histogram at the beginning, during and end.
-            hist_pts = [0,
-                        int(analysis_object.NFlows * 0.25),
-                        int(analysis_object.NFlows * 0.50),
-                        int(analysis_object.NFlows * 0.75), -1
-                        ]
 
-            for iHist in hist_pts:
-                analysis_object.plot_histogram(iHist, NBins=NBins)
+    # analysis_object.plot_autocorrelation(0)
+    # analysis_object.plot_autocorrelation(-1)
+    # analysis_object.plot_mc_history(0)
+    # analysis_object.plot_mc_history(int(analysis_object.NFlows * 0.25))
+    # analysis_object.plot_mc_history(int(analysis_object.NFlows * 0.50))
+    # analysis_object.plot_mc_history(int(analysis_object.NFlows * 0.75))
+    # analysis_object.plot_mc_history(-1)
+    # analysis_object.plot_original()
+    # analysis_object.plot_boot()
+    # analysis_object.plot_jackknife()
+    # if not skip_histogram:
+    #     if isinstance(hist_flow_times, types.NoneType):
+    #         # Plots histogram at the beginning, during and end.
+    #         hist_pts = [0,
+    #                     int(analysis_object.NFlows * 0.25),
+    #                     int(analysis_object.NFlows * 0.50),
+    #                     int(analysis_object.NFlows * 0.75), -1
+    #                     ]
 
-            analysis_object.plot_multihist([hist_pts[0], hist_pts[2],
-                                            hist_pts[-1]], NBins=NBins)
+    #         for iHist in hist_pts:
+    #             analysis_object.plot_histogram(iHist, NBins=NBins)
 
-        else:
-            for iHist in hist_flow_times:
-                analysis_object.plot_histogram(iHist, NBins=NBins)
+    #         analysis_object.plot_multihist([hist_pts[0], hist_pts[2],
+    #                                         hist_pts[-1]], NBins=NBins)
 
-            analysis_object.plot_multihist(hist_flow_times, NBins=NBins)
+    #     else:
+    #         for iHist in hist_flow_times:
+    #             analysis_object.plot_histogram(iHist, NBins=NBins)
 
-    analysis_object.plot_integrated_correlation_time()
-    analysis_object.save_post_analysis_data()  # save_as_txt=False
+    #         analysis_object.plot_multihist(hist_flow_times, NBins=NBins)
+
+    # analysis_object.plot_integrated_correlation_time()
+    # analysis_object.save_post_analysis_data()  # save_as_txt=False
 
 
 def gif_analysis(gif_analysis_obj, gif_flow_range, N_bs,
@@ -494,24 +496,6 @@ def pre_analysis(parameters):
     batch_name = parameters["batch_name"]
     batch_folder = parameters["batch_folder"]
     figures_folder = parameters["figures_folder"]
-
-    # # Retrieves data
-    # obs_data = FlowDataReader(
-    #     batch_name, batch_folder, figures_folder,
-    #     load_binary_file=parameters["load_binary_file"],
-    #     save_to_binary=parameters["save_to_binary"],
-    #     flow_epsilon=parameters["flow_epsilon"], NCfgs=parameters["NCfgs"],
-    #     create_perflow_data=parameters["create_perflow_data"],
-    #     correct_energy=parameters["correct_energy"],
-    #     N_spatial=parameters["N"], N_temporal=parameters["NT"],
-    #     verbose=parameters["verbose"], dryrun=parameters["dryrun"])
-
-    # # Writes a parameters file for the post analysis
-    # obs_data.write_parameter_file()
-
-    # # Builds parameters list to be passed to analyser
-    # params = {"data": obs_data}
-    # params.update(parameters)
 
     obs_data, params = get_data_parameters(parameters)
 

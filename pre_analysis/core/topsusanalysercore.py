@@ -8,7 +8,6 @@ class TopsusAnalyserCore(FlowAnalyser):
 	observable_name_compact = "topsus"
 	x_label = r"$\sqrt{8t_f}$ [fm]"
 	y_label = r"$\chi_{t_f}^{1/4}$ [GeV]"
-	NTemporal = {6.0: 48, 6.1: 56, 6.2: 64, 6.45: 96}
 	histogram_bins = 100
 
 	def __init__(self, *args, **kwargs):

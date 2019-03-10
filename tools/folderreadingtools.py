@@ -561,6 +561,8 @@ class FlowDataReader:
             self.data[obs]["t"] = _data_obj.data_x
             self.data[obs]["obs"] = _data_obj.data_y
             self.data[obs]["beta"] = _data_obj.meta_data["beta"]
+            self.data[obs]["N"] = self.N
+            self.data[obs]["NT"] = self.NT
             self.data[obs]["lattice_size"] = self.lattice_size
             self.data[obs]["FlowEpsilon"] = _data_obj.meta_data["FlowEpsilon"]
             self.data[obs]["NFlows"] = _data_obj.meta_data["NFlows"]
@@ -636,6 +638,8 @@ class FlowDataReader:
 
             # Fills in different parameters
             self.data[obs]["beta"] = beta
+            self.data[obs]["N"] = self.N
+            self.data[obs]["NT"] = self.NT
             self.data[obs]["FlowEpsilon"] = flow_epsilon
             self.data[obs]["NFlows"] = self.data[obs]["obs"].shape[1]
             self.data[obs]["batch_name"] = self.batch_name

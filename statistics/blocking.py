@@ -7,26 +7,26 @@ import re
 import time
 import numba as nb
 
-nb.njit(cache=True)
 
-
-def block_core(data, N, N_block_size):
+@nb.njit(cache=True)
+def block_core(data, block_size):
     """
     Blocking method.
     """
 
     # Gets the size of each block
-    block_size = N / N_block_size
+    num_blocks = len(data) / block_size
 
-    blocked_values = np.empty(N_block_size)
-    for j in range(0, N_block_size):
+    blocked_values = np.empty(num_blocks)
+    for j in range(0, num_blocks):
         blocked_values[j] = np.sum(data[j*block_size:(j+1)*block_size])
         blocked_values[j] /= block_size
 
-    X = np.sum(blocked_values)/float(N_block_size)
-    XX = np.sum(blocked_values**2)/float(N_block_size)
+    X = np.sum(blocked_values)/float(num_blocks)
+    XX = np.sum(blocked_values**2)/float(num_blocks)
 
-    return blocked_values, (XX - X*X)/N_block_size, block_size, N_block_size
+    # return blocked_values, (XX - X*X)/num_blocks, block_size, num_blocks
+    return blocked_values, np.var(blocked_values)/float(num_blocks)
 
 
 class Blocking:
@@ -46,38 +46,15 @@ class Blocking:
         N = len(data)
 
         # Setting up blocks
-        N_block_sizes = []  # Number of blocks we divide into
-        temp_N = N
-        while temp_N > 1e6:
-            temp_N /= 10
-        N_block_sizes = self.factors(temp_N)[::-1]
-
-        # N_block_sizes = N_block_sizes[:-2]
-        N_blocks = len(N_block_sizes)
-
-        # Blocks in parallel
-        # pool = multiprocessing.Pool(processes=N_proc)
-        # res = pool.map(block_core, N_block_sizes)
-        # pool.close()
+        self.block_sizes = self.factors(N)[::-1][1:-1]
 
         self.blocked_values = []
         self.blocked_variances = []
-        self.block_sizes = []
-        self.N_block_sizes = []
 
-        for N_block_size in N_block_sizes:
-            _res = block_core(data, N, N_block_size)
+        for block_size in self.block_sizes:
+            _res = block_core(data, block_size)
             self.blocked_values.append(_res[0])
             self.blocked_variances.append(_res[1])
-            self.block_sizes.append(_res[2])
-            self.N_block_sizes.append(_res[3])
-
-
-        # self.blocked_values = res[:, 0]
-        # self.blocked_variances = res[:, 1]
-        # self.block_sizes = res[:, 2]
-        # self.N_block_sizes = res[:, 3]
-
 
     @staticmethod
     def factors(number):
@@ -89,8 +66,9 @@ class Blocking:
         """
         Plots the variance vs block sizes.
         """
-        plt.semilogx(self.block_sizes[::-1], self.blocked_variances[::-1])
-        plt.xlabel("Block size")
+        plt.semilogx(self.block_sizes[::-1], self.blocked_variances[::-1],
+                     "o-", color="#225ea8")
+        plt.xlabel(r"Block size")
         plt.ylabel(r"$\sigma^2$")
         plt.grid(True)
         plt.show()
@@ -109,6 +87,8 @@ def block(x):
     s, gamma = np.zeros(d), np.zeros(d)
     mu = np.mean(x)
 
+    vals = []
+
     # estimate the auto-covariance and variances
     # for each blocking transformation
     for i in np.arange(0, d):
@@ -118,18 +98,19 @@ def block(x):
         # estimate variance of x
         s[i] = np.var(x)
         # perform blocking transformation
+        vals.append(x)
         x = 0.5*(x[0::2] + x[1::2])
 
     # generate the test observator M_k from the theorem
     M = (np.cumsum(((gamma/s)**2*2**np.arange(1, d+1)[::-1])[::-1]))[::-1]
 
     # we need a list of magic numbers
-    q = np. array([6.634897,  9.210340,  11.344867, 13.276704, 15.086272,
-                   16.811894, 18.475307, 20.090235, 21.665994, 23.209251,
-                   24.724970, 26.216967, 27.688250, 29.141238, 30.577914,
-                   31.999927, 33.408664, 34.805306, 36.190869, 37.566235,
-                   38.932173, 40.289360, 41.638398, 42.979820, 44.314105,
-                   45.641683, 46.962942, 48.278236, 49.587884, 50.892181])
+    q = np.array([6.634897,  9.210340,  11.344867, 13.276704, 15.086272,
+                  16.811894, 18.475307, 20.090235, 21.665994, 23.209251,
+                  24.724970, 26.216967, 27.688250, 29.141238, 30.577914,
+                  31.999927, 33.408664, 34.805306, 36.190869, 37.566235,
+                  38.932173, 40.289360, 41.638398, 42.979820, 44.314105,
+                  45.641683, 46.962942, 48.278236, 49.587884, 50.892181])
 
     # use magic to determine when we should have stopped blocking
     for k in np.arange(0, d):
@@ -137,4 +118,20 @@ def block(x):
             break
     if (k >= d-1):
         print("Warning: Use more data")
-    return s[k]/2**(d-k)
+
+    return s[k]/2**(d-k), 2**(d-k), vals[k]
+
+
+def test():
+    test_data = np.fromfile("tests/blocking_test_data")
+
+    print "Test data: %g +/- %g" % (np.mean(test_data), np.std(test_data))
+    print "Autoblocking:", np.sqrt(block(test_data)[0])
+
+    b = Blocking(test_data)
+    # b.plot()
+    print b.block_sizes
+
+
+if __name__ == '__main__':
+    test()

@@ -93,6 +93,8 @@ class FlowAnalyser(object):
         self.beta = data["beta"]
         self.a, self.a_err = get_lattice_spacing(self.beta)
         self.r0 = 0.5  # The Sommer parameter
+        self.NSpatial = data["N"]
+        self.NTemporal = data["NT"]
 
         # Sets the lattice sizes if one is provided
         self.lattice_size = data["lattice_size"]
@@ -205,7 +207,6 @@ class FlowAnalyser(object):
         # self.blocked_bootstrap_raw = np.zeros((self.NFlows, self.N_bs))
         self.blocked_bootstrap = np.empty(self.NFlows)
         self.blocked_bootstrap_std = np.empty(self.NFlows)
-
 
     def _set_q0_time_and_index(self, q0_flow_time):
         """
@@ -603,6 +604,11 @@ class FlowAnalyser(object):
         self.autocorrelation_performed = True
 
     def block(self):
+        """
+        Runs a blocking analysis to retrieve a uncorrelated set of data, 
+        which it then bootstraps and analyses further.
+        """
+
         # Blocking analysis content
         self.blocking_sizes = []
         self.blocked_variances = np.empty(self.NFlows)
@@ -611,16 +617,50 @@ class FlowAnalyser(object):
         self.blocked_bootstrap = np.empty(self.NFlows)
         self.blocked_bootstrap_std = np.empty(self.NFlows)
 
-        for i in range(self.NFlows):
+        fig, ax = plt.subplots(nrows=1, ncols=1)
+
+        for i in range(0, self.NFlows):
             # self.blocked_variances[i] = block(self.y)
-            _tmp = Blocking(self.y)
-            _tmp.plot()
+            # print np.std(self.y[:,0])
+            _tmp = Blocking(self.y[:, i])
+            # _tmp.plot()
+            # print _tmp.block_sizes
+            # print len(_tmp.blocked_values)
 
-            self.blocked_variances[i] = _tmp.blocked_variances[i]
-            self.blocked_data[i] = _tmp.blocked_values[i]
+            # print "Unanalyzed: ", np.mean(self.y[:,i]), np.std(self.y[:,i]), np.std(self.y[:,i]) / np.sqrt(len(self.y[:,i])), "\n"
 
-        print self.blocked_variances
+            # print "Blocked: ", [np.mean(_i) for _i in _tmp.blocked_values], np.sqrt(_tmp.blocked_variances)
 
+            # blocked_var = block(self.y[:,i])
+
+            # optimal_block_index = np.argmin(np.abs(_tmp.block_sizes - blocked_var[1]))
+            # print blocked_var[1], _tmp.block_sizes[optimal_block_index], len(blocked_var[2])
+            # exit(1)
+            # print "Autoblocking: ", np.sqrt(blocked_var[0]), np.sqrt(blocked_var[1]), blocked_var[2], np.sqrt(blocked_var[3])
+            # print blocked_var[4].mean(), blocked_var[4].std()#/np.sqrt(len(blocked_var[4]))
+
+            # print _tmp.blocked_values[optimal_block_index]
+            # bs = Bootstrap(_tmp.blocked_values[optimal_block_index], 500)
+            # print "Unanalyzed:", np.mean(self.y[:,i]), np.std(self.y[:,i])
+            # print "Blocked:", bs.avg_original, bs.std_original
+            # print "Bootstrapped:", bs.bs_avg, bs.bs_std
+            # print self.bs_y[i], self.bs_y_std[i]*self.autocorrelation_error_correction[i]
+            # exit("Ok @ 622 flowanalyser.py")
+
+            # self.blocked_variances[i] = _tmp.blocked_variances[i]
+            # self.blocked_data[i] = _tmp.blocked_values[i]
+
+            if i % 10 == 0:
+                ax.plot(_tmp.block_sizes[::-1], _tmp.blocked_variances[::-1],
+                        alpha=0.25, color="#225ea8")
+
+        ax.set_title(r"$\beta=%.2f, %d^3\times %d$" % (
+            self.beta, self.NSpatial, self.NTemporal))
+        ax.set_xlabel(r"Block size")
+        ax.set_ylabel(r"Variance")
+        ax.grid(True)
+        plt.show()
+        # print self.blocked_variances
 
     def plot_jackknife(self, x=None, correction_function=lambda x: x,
                        error_correction_function=None):

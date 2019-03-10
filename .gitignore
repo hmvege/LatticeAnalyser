@@ -17,3 +17,6 @@
 
 # Folders not needed
 figures*
+
+# Test data
+statistics/tests/blocking_test_data
