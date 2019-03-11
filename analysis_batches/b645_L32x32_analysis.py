@@ -28,16 +28,18 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True):
     # Different batches
     data_batch_folder = "../data/data11"
 
+    obs_exlusions = ["w_t_energy", "energy", "topcMC", "topsusMC", "qtq0effMC"]
     default_params = get_default_parameters(
-        data_batch_folder=data_batch_folder)
+        data_batch_folder=data_batch_folder, 
+        obs_exlusions=obs_exlusions)
 
     # Post analysis figures folder
     figures_folder = "figures_b645_32xx4"
 
-    # observables = observables_euclidean_time
     # observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
     observables = ["plaq", "topc", "topc2",
                    "topc4", "topcr", "topsus"]
+    observables = ["topsus"]
 
     # observables += ["energy"]
     default_params["observables"] = observables
@@ -79,14 +81,18 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True):
     # Data types to be looked at in the post-analysis.
     post_analysis_data_type = ["bootstrap", "jackknife", "unanalyzed"]
     post_analysis_data_type = ["bootstrap"]
+
     # Blocking
     default_params["blocking_analysis"] = True
+
+    # Check to only generate data for post-analysis
+    default_params["only_generate_data"] = True
 
     ########## Main analysis ##########
     databeta60 = copy.deepcopy(default_params)
     databeta60["batch_name"] = "beta60"
     databeta60["beta"] = 6.0
-    databeta60["block_size"] = None
+    databeta60["block_size"] = 10 # None
     databeta60["topc_y_limits"] = [-9, 9]
     databeta60["topc2_y_limits"] = [-81, 81]
     databeta60["NCfgs"] = get_num_observables(
@@ -101,7 +107,7 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True):
     databeta61 = copy.deepcopy(default_params)
     databeta61["batch_name"] = "beta61"
     databeta61["beta"] = 6.1
-    databeta61["block_size"] = None
+    databeta61["block_size"] = 10 # None
     databeta61["topc_y_limits"] = [-12, 12]
     databeta61["topc2_y_limits"] = [-144, 144]
     databeta61["NCfgs"] = get_num_observables(
@@ -116,7 +122,7 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True):
     databeta62 = copy.deepcopy(default_params)
     databeta62["batch_name"] = "beta62"
     databeta62["beta"] = 6.2
-    databeta62["block_size"] = None
+    databeta62["block_size"] = 10 # None
     databeta62["topc_y_limits"] = [-12, 12]
     databeta62["topc2_y_limits"] = [-196, 196]
     databeta62["NCfgs"] = get_num_observables(
@@ -132,7 +138,7 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True):
     databeta645["flow_epsilon"] = 0.02
     databeta645["batch_name"] = "beta645"
     databeta645["beta"] = 6.45
-    databeta645["block_size"] = None
+    databeta645["block_size"] = 25 # None
     databeta645["topc_y_limits"] = [-15, 15]
     databeta645["topc2_y_limits"] = [-300, 300]
     databeta645["NCfgs"] = get_num_observables(
@@ -148,7 +154,7 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True):
     databeta645_32xx4["flow_epsilon"] = 0.02
     databeta645_32xx4["batch_name"] = "beta645-32xx4"
     databeta645_32xx4["beta"] = 6.45
-    databeta645_32xx4["block_size"] = None
+    databeta645_32xx4["block_size"] = 40 # None
     databeta645_32xx4["topc_y_limits"] = [-15, 15]
     databeta645_32xx4["topc2_y_limits"] = [-300, 300]
     databeta645_32xx4["NCfgs"] = get_num_observables(
@@ -166,6 +172,8 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True):
 
     analysis_parameter_list = [databeta60, databeta61, databeta62,
                                databeta645_32xx4]
+
+    analysis_parameter_list = [databeta645_32xx4]
 
     section_seperator = "="*160
     print section_seperator
@@ -185,8 +193,8 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True):
             "unequal amount of MC intervals"
 
     # Submitting post-analysis data
-    if len(analysis_parameter_list) >= 3:
-        if run_post_analysis:
+    if run_post_analysis:
+        if len(analysis_parameter_list) >= 3:
             post_analysis(analysis_parameter_list,
                           default_params["observables"],
                           topsus_fit_targets, line_fit_interval_points,
@@ -198,10 +206,10 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True):
                           figures_folder=figures_folder,
                           gif_params=default_params["gif"],
                           verbose=default_params["verbose"])
-    else:
-        msg = "Need at least 3 different beta values to run post analysis"
-        msg += "(%d given)." % len(analysis_parameter_list)
-        print msg
+        else:
+            msg = "Need at least 3 different beta values to run post analysis"
+            msg += "(%d given)." % len(analysis_parameter_list)
+            print msg
 
 
 if __name__ == '__main__':

@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 
+
 def main_analysis(run_pre_analysis=True, run_post_analysis=True):
     from pre_analysis.pre_analyser import pre_analysis
     from post_analysis.post_analyser import post_analysis
@@ -8,44 +9,28 @@ def main_analysis(run_pre_analysis=True, run_post_analysis=True):
     import copy
     import os
 
-    #### Different batches
+    # Different batches
     # data_batch_folder = "../GluonAction/data8"
     data_batch_folder = "../GluonAction/data11"
     # data_batch_folder = "../GluonAction/DataGiovanni"
     # data_batch_folder = "../data/topc_modes_8x16"
     data_batch_folder = "../data/data11"
 
-    # obs_exlusions = ["plaq", "energy", "topc", "topc2", "topc4", "topcr", "topcMC", "topsus"]
-    # obs_exlusions = ["energy", "topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
-    obs_exlusions = ["w_t_energy", "energy"]
+    obs_exlusions = ["w_t_energy", "energy", "topcMC", "topsusMC", "qtq0effMC"]
     default_params = get_default_parameters(
-        data_batch_folder=data_batch_folder, 
+        data_batch_folder=data_batch_folder,
         obs_exlusions=obs_exlusions)
 
     # observables = observables_euclidean_time
-    observables = ["topsus"]#, "topsust", "topsuste", "topsusMC", "topsusqtq0"]
-    observables = ["topsusMC"]
-    # observables = ["topcr", "qtq0eff"]
-    # observables = ["topcte"]
-    # observables = observables_euclidean_time
-    # observables = ["topcr", "topsus"]
-    # observables = ["topsust", "topsuste", "topsusqtq0"]
-    # observables = ["topcrMC"]
-    # observables = ["qtq0eff", "qtq0e"] + ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
-    # observables = ["qtq0eff", "qtq0e"] + ["topsust", "topsuste", "topsusMC", "topsusqtq0"]
-    # observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
-    # observables = ["topcr"]
-    # observables = ["topsuste"]
-    # observables = ["qtq0effMC"]
+    # , "topsust", "topsuste", "topsusMC", "topsusqtq0"]
+    observables = ["topsus"]
     # observables = ["energy"]
     # observables = ["w_t_energy"]
-    observables = ["plaq", "energy", "topc", "topsus", "topc2", "topc4"]
+    observables = ["plaq", "energy", "topc", "topsus", "topc2", "topc4", "qtq0eff"]
 
-    # observables += ["energy"]
-    observables = ["topc"]
     default_params["observables"] = observables
 
-    #### Post analysis parameters
+    # Post analysis parameters
     line_fit_interval_points = 20
     # topsus_fit_targets = [0.3,0.4,0.5,0.58]
     # topsus_fit_targets = [0.3, 0.4, 0.5, 0.6] # tf = sqrt(8*t0)
@@ -55,10 +40,10 @@ def main_analysis(run_pre_analysis=True, run_post_analysis=True):
     # Will try to use pickled reference scale instead
     use_pickled_reference_scale = True
 
-    # Method of continuum extrapolation. 
+    # Method of continuum extrapolation.
     # Options: plateau, plateau_mean, nearest, interpolate, bootstrap
     extrapolation_methods = ["plateau", "plateau_mean", "nearest",
-        "interpolate", "bootstrap"]
+                             "interpolate", "bootstrap"]
     # extrapolation_methods = ["plateau"]
     extrapolation_methods = ["bootstrap"]
     plot_continuum_fit = False
@@ -72,26 +57,30 @@ def main_analysis(run_pre_analysis=True, run_post_analysis=True):
     # MC_intervals = [[0, 1000], [500, 1000], [500, 1000], [175, 250]]
     # MC_intervals = [[0, 1000], [0, 1000], [0, 2000], [0, 125]]
     MC_intervals = [None, None, None, None]
- 
+
     # Extraction point in flow time a*t_f for q0 in qtq0
-    q0_flow_times = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6] # [fermi]
+    q0_flow_times = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]  # [fermi]
 
     # Flow time indexes in percent to plot qtq0 in euclidean time at
     euclidean_time_percents = [0, 0.25, 0.50, 0.75, 1.00]
     # euclidean_time_percents = [0]
 
     # Data types to be looked at in the post-analysis.
-    post_analysis_data_type = ["bootstrap", "jackknife", "unanalyzed"]
+    post_analysis_data_type = [
+        "bootstrap", "jackknife", "unanalyzed", "blocked", "blocked_bs"]
     post_analysis_data_type = ["bootstrap"]
 
     # Blocking
     default_params["blocking_analysis"] = True
 
+    # Check to only generate data for post-analysis
+    default_params["only_generate_data"] = True
+
     ########## Main analysis ##########
     databeta60 = copy.deepcopy(default_params)
     databeta60["batch_name"] = "beta60"
     databeta60["beta"] = 6.0
-    databeta60["block_size"] = 10 # None
+    databeta60["block_size"] = 10  # None
     databeta60["topc_y_limits"] = [-9, 9]
     databeta60["topc2_y_limits"] = [-81, 81]
     databeta60["NCfgs"] = get_num_observables(
@@ -106,7 +95,7 @@ def main_analysis(run_pre_analysis=True, run_post_analysis=True):
     databeta61 = copy.deepcopy(default_params)
     databeta61["batch_name"] = "beta61"
     databeta61["beta"] = 6.1
-    databeta61["block_size"] = 10 # None
+    databeta61["block_size"] = 10  # None
     databeta61["topc_y_limits"] = [-12, 12]
     databeta61["topc2_y_limits"] = [-144, 144]
     databeta61["NCfgs"] = get_num_observables(
@@ -121,11 +110,11 @@ def main_analysis(run_pre_analysis=True, run_post_analysis=True):
     databeta62 = copy.deepcopy(default_params)
     databeta62["batch_name"] = "beta62"
     databeta62["beta"] = 6.2
-    databeta62["block_size"] = 10 # None
+    databeta62["block_size"] = 10  # None
     databeta62["topc_y_limits"] = [-12, 12]
     databeta62["topc2_y_limits"] = [-196, 196]
     databeta62["NCfgs"] = get_num_observables(
-        databeta62["batch_folder"], 
+        databeta62["batch_folder"],
         databeta62["batch_name"])
     databeta62["obs_file"] = "32_6.20"
     databeta62["MCInt"] = MC_intervals[2]
@@ -137,7 +126,7 @@ def main_analysis(run_pre_analysis=True, run_post_analysis=True):
     databeta645["flow_epsilon"] = 0.02
     databeta645["batch_name"] = "beta645"
     databeta645["beta"] = 6.45
-    databeta645["block_size"] = 25 # None
+    databeta645["block_size"] = 25  # None
     databeta645["topc_y_limits"] = [-15, 15]
     databeta645["topc2_y_limits"] = [-300, 300]
     databeta645["NCfgs"] = get_num_observables(
@@ -159,7 +148,7 @@ def main_analysis(run_pre_analysis=True, run_post_analysis=True):
         default_params["observables"])
     print section_seperator + "\n"
 
-    #### Submitting main analysis
+    # Submitting main analysis
     if run_pre_analysis:
         for analysis_parameters in analysis_parameter_list:
             pre_analysis(analysis_parameters)
@@ -167,27 +156,28 @@ def main_analysis(run_pre_analysis=True, run_post_analysis=True):
     if not analysis_parameter_list[0]["MCInt"] is None:
         assert sum(
             [len(plist["MCInt"]) - len(analysis_parameter_list[0]["MCInt"])
-            for plist in analysis_parameter_list]) == 0, \
+             for plist in analysis_parameter_list]) == 0, \
             "unequal amount of MC intervals"
 
-    #### Submitting post-analysis data
-    if len(analysis_parameter_list) >= 3:
-        if run_post_analysis:
-            post_analysis(analysis_parameter_list, 
-                default_params["observables"],
-                topsus_fit_targets, line_fit_interval_points, 
-                energy_fit_target,
-                q0_flow_times, euclidean_time_percents,
-                extrapolation_methods=extrapolation_methods,
-                plot_continuum_fit=plot_continuum_fit,
-                post_analysis_data_type=post_analysis_data_type,
-                figures_folder=default_params["figures_folder"], 
-                gif_params=default_params["gif"], 
-                verbose=default_params["verbose"])
-    else:
-        msg = "Need at least 3 different beta values to run post analysis"
-        msg += "(%d given)."% len(analysis_parameter_list)
-        print msg
+    # Submitting post-analysis data
+    if run_post_analysis:
+        if len(analysis_parameter_list) >= 3:
+            post_analysis(analysis_parameter_list,
+                          default_params["observables"],
+                          topsus_fit_targets, line_fit_interval_points,
+                          energy_fit_target,
+                          q0_flow_times, euclidean_time_percents,
+                          extrapolation_methods=extrapolation_methods,
+                          plot_continuum_fit=plot_continuum_fit,
+                          post_analysis_data_type=post_analysis_data_type,
+                          figures_folder=default_params["figures_folder"],
+                          gif_params=default_params["gif"],
+                          verbose=default_params["verbose"])
+        else:
+            msg = "Need at least 3 different beta values to run post analysis"
+            msg += "(%d given)." % len(analysis_parameter_list)
+            print msg
+
 
 if __name__ == '__main__':
     main_analysis()

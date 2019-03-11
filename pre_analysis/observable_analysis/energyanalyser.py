@@ -21,13 +21,14 @@ class EnergyAnalyser(FlowAnalyser):
 	def correction_function(self, y):
 		return y * self.x * self.x # factor 0.5 left out
 
-	def plot_original(self):
-		super(EnergyAnalyser, self).plot_boot(x=self.x_vals, 
-			correction_function=self.correction_function, _plot_bs=False)
+	def plot_original(self, **kwargs):
+		super(EnergyAnalyser, self).plot_bootstrap(x=self.x_vals, 
+			correction_function=self.correction_function, _plot_bs=False, 
+			**kwargs)
 
-	def plot_boot(self):
-		super(EnergyAnalyser, self).plot_boot(x=self.x_vals, 
-			correction_function=self.correction_function)
+	def plot_bootstrap(self, **kwargs):
+		super(EnergyAnalyser, self).plot_bootstrap(x=self.x_vals, 
+			correction_function=self.correction_function, **kwargs)
 
 	def plot_jackknife(self):
 		super(EnergyAnalyser, self).plot_jackknife(x=self.x_vals, 

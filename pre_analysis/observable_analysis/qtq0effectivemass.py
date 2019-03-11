@@ -142,12 +142,12 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 		kwargs["error_correction_function"] = self.C_err
 		super(QtQ0EffectiveMassAnalyser, self).plot_jackknife(*args, **kwargs)
 
-	def plot_boot(self, *args, **kwargs):
+	def plot_bootstrap(self, *args, **kwargs):
 		"""Making sure we are plotting with in euclidean time."""
 		kwargs["x"] = self.x
 		kwargs["correction_function"] = self.C
 		kwargs["error_correction_function"] = self.C_err
-		super(QtQ0EffectiveMassAnalyser, self).plot_boot(*args, **kwargs)
+		super(QtQ0EffectiveMassAnalyser, self).plot_bootstrap(*args, **kwargs)
 
 	def plot_histogram(self, *args, **kwargs):
 		print "Skipping histogram for %s" % self.observable_name_compact

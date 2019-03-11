@@ -2,7 +2,7 @@ from folderreadingtools import check_folder
 import os
 import re
 import numpy as np
-import copy
+import copy as cp
 import json
 import types
 
@@ -52,7 +52,8 @@ class PostAnalysisDataReader:
         # Reference Scale, must be set after initial loading if it to be used
         self.reference_values = None
 
-        # Iterates over the different beta value folders, i.e. different datasets
+        # Iterates over the different beta value folders, i.e. different
+        # datasets.
         for beta_folder in self.data_run_folders:
             # Construct beta post analysis folder path
             beta_dir_path = os.path.join(beta_folder, "post_analysis_data")
@@ -149,7 +150,7 @@ class PostAnalysisDataReader:
             self.beta_values.append(beta)
 
             # Stores batch data
-            self.data_batches[beta] = copy.deepcopy(observables_data)
+            self.data_batches[beta] = cp.deepcopy(observables_data)
 
             # Stores the binary data
             self.data_raw[beta] = obs_data_raw
@@ -191,8 +192,9 @@ class PostAnalysisDataReader:
 
     def _set_batch_name(self, batch_parameters):
         """Sets batch name and batch folder."""
-        self.data_run_folders = [os.path.join(b["batch_folder"], b["batch_name"])
-                             for b in batch_parameters]
+        self.data_run_folders = [os.path.join(b["batch_folder"],
+                                              b["batch_name"])
+                                 for b in batch_parameters]
 
         # Splits all of the paths
         _folders = [os.path.split(b["batch_folder"]) for b in batch_parameters]
@@ -391,25 +393,34 @@ class PostAnalysisDataReader:
         bs_y_error = retrieved_data[:, 4]
         jk_y = retrieved_data[:, 5]
         jk_y_error = retrieved_data[:, 6]
+        block_mean = retrieved_data[:, 7]
+        block_std = retrieved_data[:, 8]
+        block_bootstrap_mean = retrieved_data[:, 9]
+        block_bootstrap_std = retrieved_data[:, 10]
 
         # Stores data into dictionaries
         unanalyzed_data = {"y": y, "y_error": y_error, "x": t}
         bs_data = {"y": bs_y, "y_error": bs_y_error, "x": t}
         jk_data = {"y": jk_y, "y_error": jk_y_error, "x": t}
+        block_data = {"y": block_mean, "y_error": block_std, "x": t}
+        block_bs_data = {"y": block_bootstrap_mean,
+                         "y_error": block_bootstrap_std, "x": t}
 
         # Stores flow time
 
         # Stores observable data
-        obs_data["beta"] = copy.deepcopy(meta_data["beta"])
-        obs_data["unanalyzed"] = copy.deepcopy(unanalyzed_data)
-        obs_data["bootstrap"] = copy.deepcopy(bs_data)
-        obs_data["jackknife"] = copy.deepcopy(jk_data)
-        # obs_data["flow_time"]     = copy.deepcopy(t)
+        obs_data["beta"] = cp.deepcopy(meta_data["beta"])
+        obs_data["unanalyzed"] = cp.deepcopy(unanalyzed_data)
+        obs_data["bootstrap"] = cp.deepcopy(bs_data)
+        obs_data["jackknife"] = cp.deepcopy(jk_data)
+        obs_data["blocked"] = cp.deepcopy(block_data)
+        obs_data["blocked_bootstrap"] = cp.deepcopy(block_bs_data)
+        # obs_data["flow_time"]     = cp.deepcopy(t)
 
         if autocorr:
-            tau_int = retrieved_data[:, 7]
-            tau_int_err = retrieved_data[:, 8]
-            sqrt2tau_int = retrieved_data[:, 9]
+            tau_int = retrieved_data[:, 11]
+            tau_int_err = retrieved_data[:, 12]
+            sqrt2tau_int = retrieved_data[:, 13]
 
             # Populates autocorr dictionary
             ac_data = {
@@ -417,7 +428,7 @@ class PostAnalysisDataReader:
                 "tau_int_err": tau_int_err,
                 "sqrt2tau_int": sqrt2tau_int,
             }
-            obs_data["autocorr"] = copy.deepcopy(ac_data)
+            obs_data["autocorr"] = cp.deepcopy(ac_data)
 
         if self.verbose:
             print "Data retrieved from %s" % observable_file

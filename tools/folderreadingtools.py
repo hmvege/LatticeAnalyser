@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import sys
 import os
-import copy
+import copy as cp
 import numpy as np
 import re
 import pandas as pd
@@ -498,7 +498,7 @@ class FlowDataReader:
         self.observables = self.data.keys()
 
     def __call__(self, obs):
-        return copy.deepcopy(self.data[obs])
+        return cp.deepcopy(self.data[obs])
 
     def has_observable(self, obs):
         """Checks that the observable we are retrieving exists."""
@@ -1234,34 +1234,48 @@ def write_data_to_file(analysis_object, save_as_txt=False):
     check_folder(post_analysis_folder, dryrun, verbose=verbose)
 
     # Retrieves analyzed data
-    x = copy.deepcopy(analysis_object.x)
-    y_org = copy.deepcopy(analysis_object.unanalyzed_y)
-    y_err_org = copy.deepcopy(
+    x = cp.deepcopy(analysis_object.x)
+    y_org = cp.deepcopy(analysis_object.unanalyzed_y)
+    y_err_org = cp.deepcopy(
         analysis_object.unanalyzed_y_std *
         analysis_object.autocorrelation_error_correction)
-    y_bs = copy.deepcopy(analysis_object.bs_y)
-    y_err_bs = copy.deepcopy(
+    y_bs = cp.deepcopy(analysis_object.bs_y)
+    y_err_bs = cp.deepcopy(
         analysis_object.bs_y_std *
         analysis_object.autocorrelation_error_correction)
-    y_jk = copy.deepcopy(analysis_object.jk_y)
-    y_err_jk = copy.deepcopy(
+    y_jk = cp.deepcopy(analysis_object.jk_y)
+    y_err_jk = cp.deepcopy(
         analysis_object.jk_y_std *
         analysis_object.autocorrelation_error_correction)
 
+    if not analysis_object.blocking_performed:
+        raise RuntimeError("Blocking data is missing.")
+
     # Stacks data to be written to file together
     if not analysis_object.autocorrelation_performed:
-        data = np.stack((x, y_org, y_err_org, y_bs, y_err_bs,
-                         y_jk, y_err_jk), axis=1)
+
+        data = np.stack(
+            (x, y_org, y_err_org, y_bs, y_err_bs, y_jk, y_err_jk, 
+             cp.deepcopy(analysis_object.blocked_mean),
+             cp.deepcopy(analysis_object.blocked_std),
+             cp.deepcopy(analysis_object.blocked_bootstrap_mean),
+             cp.deepcopy(analysis_object.blocked_bootstrap_std)), axis=1)
+
     else:
-        tau_int = copy.deepcopy(
+        tau_int = cp.deepcopy(
             analysis_object.integrated_autocorrelation_time)
-        tau_int_err = copy.deepcopy(
+        tau_int_err = cp.deepcopy(
             analysis_object.integrated_autocorrelation_time_error)
-        sqrt2tau_int = copy.deepcopy(
+        sqrt2tau_int = cp.deepcopy(
             analysis_object.autocorrelation_error_correction)
-        data = np.stack((x, y_org, y_err_org, y_bs, y_err_bs,
-                         y_jk, y_err_jk, tau_int, tau_int_err,
-                         sqrt2tau_int), axis=1)
+
+        data = np.stack(
+            (x, y_org, y_err_org, y_bs, y_err_bs, y_jk, y_err_jk, 
+             cp.deepcopy(analysis_object.blocked_mean),
+             cp.deepcopy(analysis_object.blocked_std),
+             cp.deepcopy(analysis_object.blocked_bootstrap_mean),
+             cp.deepcopy(analysis_object.blocked_bootstrap_std),
+             tau_int, tau_int_err, sqrt2tau_int), axis=1)
 
     # Retrieves compact analysis name
     observable = analysis_object.observable_name_compact

@@ -72,10 +72,10 @@ class WtEnergyAnalyser(FlowAnalyser):
 			method="wolff_full")
 
 	def plot_original(self):
-		super(WtEnergyAnalyser, self).plot_boot(x=self.x_vals, _plot_bs=False)
+		super(WtEnergyAnalyser, self).plot_bootstrap(x=self.x_vals, _plot_bs=False)
 
-	def plot_boot(self):
-		super(WtEnergyAnalyser, self).plot_boot(x=self.x_vals)
+	def plot_bootstrap(self):
+		super(WtEnergyAnalyser, self).plot_bootstrap(x=self.x_vals)
 
 	def plot_jackknife(self):
 		super(WtEnergyAnalyser, self).plot_jackknife(x=self.x_vals)

@@ -43,22 +43,18 @@ class Blocking:
             N_proc: int, optional, number of threads to run in parallel for.
         """
 
-        # TODO: Include bootstrap analysis inside here as well? Or afterwards?
-
-        N = len(data)
+        if not isinstance(block_size, type(None)):
+            _res = _block_core(data, block_size)
+            self.blocked_values = [_res[0]]
+            self.blocked_variances = [_res[1]]
+            return 
 
         # Setting up blocks
-        # self.block_sizes = self.factors(N)[::-1][1:-1]
+        N = len(data)
         self.block_sizes = np.arange(1, N)[:N/2]
 
         self.blocked_values = []
         self.blocked_variances = []
-
-        if not isinstance(block_size, type(None)):
-            _res = _res = _block_core(data, block_size)
-            self.blocked_values.append(_res[0])
-            self.blocked_variances.append(_res[1])
-            return 
 
         for _block_size in self.block_sizes:
             _res = _block_core(data, _block_size)

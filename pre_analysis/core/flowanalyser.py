@@ -201,6 +201,7 @@ class FlowAnalyser(object):
         self.autocorrelation_error_correction = np.ones(self.NFlows)
 
         # Blocking analysis content
+        self.blocking_performed = False
         self.blocking_sizes = []
         self.blocked_variances = []
         self.blocked_data = []
@@ -603,7 +604,7 @@ class FlowAnalyser(object):
         # Sets performed flag to true
         self.autocorrelation_performed = True
 
-    def block(self, block_size=None, N_bs=500):
+    def block(self, block_size=None, N_bs=500, F=None, F_error=None):
         """
         Runs a blocking analysis to retrieve a uncorrelated set of data, 
         which it then bootstraps and analyses further.
@@ -615,6 +616,10 @@ class FlowAnalyser(object):
                 if not provided, assuming one needs to figure out the block 
                 size.
             N_bs: int, number of bootstraps to perform
+            F: optional argument for function that will modify data.
+                Default is None.
+            F_error: optional argument for F function for propagating
+                error. Default is None.
         """
 
         # Blocking analysis content
@@ -622,14 +627,16 @@ class FlowAnalyser(object):
         self.blocked_mean = np.empty(self.NFlows)
         self.blocked_std = np.empty(self.NFlows)
 
-        # Sets up blocked array
+        # Sets up blocked bootstrap arrays
         self.blocked_bootstrap_mean = np.empty(self.NFlows)
         self.blocked_bootstrap_std = np.empty(self.NFlows)
         self.blocked_bootstrap_raw = np.empty((self.NFlows, N_bs))
 
         if isinstance(block_size, type(None)):
+            # We are running analysis in order to check optimal blocking
             fig, ax = plt.subplots(nrows=1, ncols=1)
         else:
+            # If we are running in order to simple get optimal block size
             self.N_blocked_samples = \
                 int(self.N_configurations/float(block_size))
 
@@ -649,14 +656,15 @@ class FlowAnalyser(object):
                 assert len(_block.blocked_values) == 1
 
                 self.blocked_raw[i] = _block.blocked_values[0]
-                self.blocked_std[i] = np.sqrt(
-                    _block.blocked_variances[0])
+                self.blocked_std[i] = np.sqrt(_block.blocked_variances[0])
 
                 _bs_blocked = Bootstrap(
                     self.blocked_raw[i], N_bs, index_lists=bs_index_lists)
                 self.blocked_bootstrap_raw[i] = _bs_blocked.bs_data
                 self.blocked_bootstrap_std[i] = _bs_blocked.bs_std
-                self.blocked_mean[i] = _bs_blocked.bs_avg
+                self.blocked_bootstrap_mean[i] = _bs_blocked.bs_avg
+
+                self.blocked_mean[i] = _bs_blocked.avg_original
 
             # _tmp.plot()
             # print _tmp.block_sizes
@@ -690,6 +698,19 @@ class FlowAnalyser(object):
                         _block.blocked_variances[::-1],
                         alpha=0.25, color="#225ea8")
 
+        # Sets default parameters
+        if F == None:
+            F = ptools._default_return
+        if F_error == None:
+            F_error = ptools._default_error_return
+
+        # Corrects functions if necessary
+        self.blocked_bootstrap_std = F_error(
+            self.blocked_bootstrap_mean, self.blocked_bootstrap_std)
+        self.blocked_bootstrap_mean = F(self.blocked_bootstrap_mean)
+        self.blocked_std = F_error(self.blocked_mean, self.blocked_std)
+        self.blocked_mean = F(self.blocked_mean)
+
         if isinstance(block_size, type(None)):
             ax.set_title(r"$\beta=%.2f, %d^3\times %d$" % (
                 self.beta, self.NSpatial, self.NTemporal))
@@ -701,7 +722,7 @@ class FlowAnalyser(object):
                 self.observable_output_folder_path,
                 "blocking_%s.pdf" % self.observable_name_compact)
             fig.savefig(figname)
-            print "Figure saved at %s" % figname
+            print "Blocking analysis done. Figure saved at %s" % figname
 
         else:
             self.blocked_bootstrap_raw = np.asarray(self.blocked_bootstrap_raw)
@@ -711,6 +732,9 @@ class FlowAnalyser(object):
                                         "blocked_bootstrap")
             self.save_raw_analysis_data(self.blocked_raw,
                                         "blocked_bootstrap")
+
+        self.N_block_bs = N_bs
+        self.blocking_performed = True
 
     def plot_jackknife(self, x=None, correction_function=lambda x: x,
                        error_correction_function=None):
@@ -756,14 +780,18 @@ class FlowAnalyser(object):
                     self.beta).replace('.', '_'),
                 self.fname_addon))
 
+        # Adds noErrorCorrection if we are not blocking
+        if not plot_blocked:
+            fname_path = self.__check_ac(fname_path)
+
         # Plots the jackknifed data
         self.__plot_error_core(x, correction_function(y),
                                error_correction_function(y, y_std),
                                title_string, fname_path)
 
-    def plot_boot(self, x=None, correction_function=lambda x: x,
-                  error_correction_function=None, _plot_bs=True,
-                  _plot_blocked_results=False):
+    def plot_bootstrap(self, x=None, correction_function=lambda x: x,
+                       error_correction_function=None, _plot_bs=True,
+                       plot_blocked=False):
         """
         Function for plotting the bootstrapped data.
 
@@ -777,7 +805,7 @@ class FlowAnalyser(object):
                         to correction function.
                 _plot_bs: internval argument for plotting the bootstrapped and
                         non-bootstrapped values. Default is True.
-                _plot_blocked_results: bool, plots blocked results with their 
+                plot_blocked: bool, plots blocked results with their 
                         error correction instead of sqrt{2tau_int}. Default 
                         is False.
 
@@ -787,7 +815,10 @@ class FlowAnalyser(object):
 
         # Checks that the bootstrap has been performed.
         if not self.bootstrap_performed and _plot_bs:
-            raise ValueError("Bootstrap has not been performed yet.")
+            if not plot_blocked:
+                raise ValueError("Bootstrap has not been performed yet.")
+        if not self.blocking_performed and plot_blocked:
+            raise ValueError("Blocking has not been performed yet.")
 
         # Retrieves relevant data and sets up the arrays to be plotted
         if isinstance(x, types.NoneType):
@@ -800,35 +831,65 @@ class FlowAnalyser(object):
 
         # Determines if we are to plot bootstrap or original and retrieves data
         if _plot_bs:
-            if _plot_blocked_results:
-                y = self.blocked_bootstrap_std
+            if plot_blocked:
+                y = self.blocked_bootstrap_mean
+                y_std = self.blocked_bootstrap_std
             else:
                 y = self.bs_y
                 y_std = self.bs_y_std*self.autocorrelation_error_correction
         else:
-            y = self.unanalyzed_y
-            y_std = self.unanalyzed_y_std*self.autocorrelation_error_correction
+            if plot_blocked:
+                y = self.blocked_mean
+                y_std = self.blocked_std
+            else:
+                y = self.unanalyzed_y
+                y_std = self.unanalyzed_y_std
+                y_std *=self.autocorrelation_error_correction
 
         # Sets up the title and filename strings
         if _plot_bs:
+
+            # Base name
             title_string = ""
             if len(self.observable_name) != 0:
                 title_string = r"%s, " % self.observable_name
-            title_string += r"$N_\mathrm{bootstraps}=%d$" % self.N_bs
+
+            if plot_blocked:
+                plot_type = "bs-blocked"
+                N_bs = self.N_block_bs
+                fname_addon = ""
+            else:
+                plot_type = "bootstrap"
+                N_bs = self.N_bs
+                fname_addon = self.fname_addon
+
+            title_string += r"$N_\mathrm{%s}=%d$" % (plot_type, N_bs)
 
             fname_path = os.path.join(
                 self.observable_output_folder_path,
-                "{0:<s}_bootstrap_Nbs{2:<d}_beta{1:<s}{3:<s}.pdf".format(
+                "{0:<s}_{4:s}_Nbs{2:<d}_beta{1:<s}{3:<s}.pdf".format(
                     self.observable_name_compact,
                     str(self.beta).replace('.', '_'),
-                    self.N_bs, self.fname_addon))
+                    N_bs, fname_addon, plot_type))
         else:
+            if plot_blocked:
+                plot_type = "blocked"
+                fname_addon = ""
+            else:
+                plot_type = "original"
+                fname_addon = self.fname_addon
+
             title_string = r"%s" % self.observable_name
             fname_path = os.path.join(
                 self.observable_output_folder_path,
-                "{0:<s}_original_beta{1:<s}{2:<s}.pdf".format(
+                "{0:<s}_{3:s}_beta{1:<s}{2:<s}.pdf".format(
                     self.observable_name_compact,
-                    str(self.beta).replace('.', '_'), self.fname_addon))
+                    str(self.beta).replace('.', '_'), fname_addon,
+                    plot_type))
+
+        # Adds noErrorCorrection if we are not blocking
+        if not plot_blocked:
+            fname_path = self.__check_ac(fname_path)
 
         # Plots either bootstrapped or regular stuff
         self.__plot_error_core(x, correction_function(y),
@@ -836,23 +897,24 @@ class FlowAnalyser(object):
                                title_string, fname_path)
 
     def plot_original(self, x=None, correction_function=lambda x: x,
-                      error_correction_function=None):
+                      error_correction_function=None, plot_blocked=False):
         """
         Plots the default analysis, mean and std of the observable.
 
         Args:
-                x: optional values to plot along the x-axis. Default is plotting
-                        self.a*np.sqrt(8*t).
+                x: optional values to plot along the x-axis. Default is 
+                        plotting self.a*np.sqrt(8*t).
                 correction_function: function to correct y-axis values with.
                         Default is to leave them unmodified.
-                error_correction_function: function that corrects the error term.
-                        Takes y and y_err. Default is this being equal to correction 
-                        function.
+                error_correction_function: function that corrects the error 
+                        term. Takes y and y_err. Default is this being equal 
+                        to correction function.
 
         """
-        self.plot_boot(x=x, correction_function=correction_function,
-                       error_correction_function=error_correction_function,
-                       _plot_bs=False)
+        self.plot_bootstrap(
+            x=x, correction_function=correction_function,
+            error_correction_function=error_correction_function,
+            _plot_bs=False, plot_blocked=plot_blocked)
 
     def __plot_error_core(self, x, y, y_std, title_string, fname):
         """
@@ -891,7 +953,7 @@ class FlowAnalyser(object):
         if not isinstance(self.fig_label, types.NoneType):
             ax.legend([self.fig_label])
         if not self.dryrun:
-            fig.savefig(self.__check_ac(fname), dpi=self.dpi)
+            fig.savefig(fname, dpi=self.dpi)
         if self.verbose or self.dryrun:
             print("Figure created in %s" % fname)
 

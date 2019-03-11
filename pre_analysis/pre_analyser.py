@@ -9,51 +9,62 @@ from tqdm import tqdm
 
 def analyse_default(analysis_object, N_bs, perform_blocking_analysis=False,
                     block_size=None,  NBins=None, skip_histogram=False,
-                    bs_index_lists=None, hist_flow_times=None):
+                    bs_index_lists=None, hist_flow_times=None,
+                    only_generate_data=False):
     """Default analysis method for pre-analysis."""
     print(analysis_object)
 
-    # analysis_object.boot(N_bs, index_lists=bs_index_lists)
-    # analysis_object.jackknife()
-    # analysis_object.save_post_analysis_data()
-    # analysis_object.plot_original()
-    # analysis_object.plot_boot()
-    # analysis_object.plot_jackknife()
-    # analysis_object.autocorrelation()
-
     if perform_blocking_analysis:
         analysis_object.block(block_size=block_size)
+        if isinstance(block_size, type(None)):
+            print "Blocking analysis done."
+            return
 
-        Legg til original, boot og jackknife plottere her for blocking
+        if not only_generate_data:
+            analysis_object.plot_bootstrap(plot_blocked=True)
+            analysis_object.plot_original(plot_blocked=True)
 
-    # analysis_object.plot_autocorrelation(0)
-    # analysis_object.plot_autocorrelation(-1)
-    # analysis_object.plot_mc_history(0)
-    # analysis_object.plot_mc_history(int(analysis_object.NFlows * 0.25))
-    # analysis_object.plot_mc_history(int(analysis_object.NFlows * 0.50))
-    # analysis_object.plot_mc_history(int(analysis_object.NFlows * 0.75))
-    # analysis_object.plot_mc_history(-1)
-    # analysis_object.plot_original()
-    # analysis_object.plot_boot()
-    # analysis_object.plot_jackknife()
-    # if not skip_histogram:
-    #     if isinstance(hist_flow_times, types.NoneType):
-    #         # Plots histogram at the beginning, during and end.
-    #         hist_pts = [0,
-    #                     int(analysis_object.NFlows * 0.25),
-    #                     int(analysis_object.NFlows * 0.50),
-    #                     int(analysis_object.NFlows * 0.75), -1
-    #                     ]
-    #         for iHist in hist_pts:
-    #             analysis_object.plot_histogram(iHist, NBins=NBins)
-    #         analysis_object.plot_multihist([hist_pts[0], hist_pts[2],
-    #                                         hist_pts[-1]], NBins=NBins)
-    #     else:
-    #         for iHist in hist_flow_times:
-    #             analysis_object.plot_histogram(iHist, NBins=NBins)
-    #         analysis_object.plot_multihist(hist_flow_times, NBins=NBins)
-    # analysis_object.plot_integrated_correlation_time()
-    # analysis_object.save_post_analysis_data()  # save_as_txt=False
+    analysis_object.boot(N_bs, index_lists=bs_index_lists)
+    analysis_object.jackknife()
+    analysis_object.save_post_analysis_data()  # Save non-autocorrelation data
+
+    if not only_generate_data:
+        analysis_object.plot_original()
+        analysis_object.plot_bootstrap()
+        analysis_object.plot_jackknife()
+
+    analysis_object.autocorrelation()
+
+    if not only_generate_data:
+        analysis_object.plot_autocorrelation(0)
+        analysis_object.plot_autocorrelation(-1)
+        analysis_object.plot_mc_history(0)
+        analysis_object.plot_mc_history(int(analysis_object.NFlows * 0.25))
+        analysis_object.plot_mc_history(int(analysis_object.NFlows * 0.50))
+        analysis_object.plot_mc_history(int(analysis_object.NFlows * 0.75))
+        analysis_object.plot_mc_history(-1)
+        analysis_object.plot_original()
+        analysis_object.plot_bootstrap()
+        analysis_object.plot_jackknife()
+        if not skip_histogram:
+            if isinstance(hist_flow_times, types.NoneType):
+                # Plots histogram at the beginning, during and end.
+                hist_pts = [0,
+                            int(analysis_object.NFlows * 0.25),
+                            int(analysis_object.NFlows * 0.50),
+                            int(analysis_object.NFlows * 0.75), -1
+                            ]
+                for iHist in hist_pts:
+                    analysis_object.plot_histogram(iHist, NBins=NBins)
+                analysis_object.plot_multihist([hist_pts[0], hist_pts[2],
+                                                hist_pts[-1]], NBins=NBins)
+            else:
+                for iHist in hist_flow_times:
+                    analysis_object.plot_histogram(iHist, NBins=NBins)
+                analysis_object.plot_multihist(hist_flow_times, NBins=NBins)
+        analysis_object.plot_integrated_correlation_time()
+
+    analysis_object.save_post_analysis_data()  # save_as_txt=False
 
 
 def gif_analysis(gif_analysis_obj, gif_flow_range, N_bs,
@@ -84,9 +95,10 @@ def analyse_plaq(params):
         params["data"]("plaq"),
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
-    analyse_default(plaq_analysis, params["N_bs"], 
+    analyse_default(plaq_analysis, params["N_bs"],
                     perform_blocking_analysis=params["blocking_analysis"],
-                    block_size=params["block_size"])
+                    block_size=params["block_size"],
+                    only_generate_data=params["only_generate_data"])
 
 
 def analyse_energy(params):
@@ -96,8 +108,9 @@ def analyse_energy(params):
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
     analyse_default(energy_analysis, params["N_bs"],
-        perform_blocking_analysis=params["blocking_analysis"],
-                    block_size=params["block_size"])
+                    perform_blocking_analysis=params["blocking_analysis"],
+                    block_size=params["block_size"],
+                    only_generate_data=params["only_generate_data"])
 
 
 def analyse_w_t_energy(params):
@@ -105,7 +118,8 @@ def analyse_w_t_energy(params):
         params["data"]("energy"),
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
-    analyse_default(w_t_energy_analysis, params["N_bs"])
+    analyse_default(w_t_energy_analysis, params["N_bs"],
+                    only_generate_data=params["only_generate_data"])
 
 
 def analyse_topsus(params):
@@ -114,9 +128,10 @@ def analyse_topsus(params):
         params["data"]("topc"),
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
-    analyse_default(topsus_analysis, params["N_bs"], 
+    analyse_default(topsus_analysis, params["N_bs"],
                     perform_blocking_analysis=params["blocking_analysis"],
-                    block_size=params["block_size"])
+                    block_size=params["block_size"],
+                    only_generate_data=params["only_generate_data"])
 
 
 def analyse_topc(params):
@@ -129,10 +144,11 @@ def analyse_topc(params):
     N_bin_range = params["bin_range"]
     N_bins = 1 + (N_bin_range[-1] + N_bin_range[1])*params["num_bins_per_int"]
     bins = np.linspace(N_bin_range[0], N_bin_range[1], N_bins)
-    analyse_default(topc_analysis, params["N_bs"], 
+    analyse_default(topc_analysis, params["N_bs"],
                     perform_blocking_analysis=params["blocking_analysis"],
                     block_size=params["block_size"],
-                    NBins=bins, hist_flow_times=params["hist_flow_times"])
+                    NBins=bins, hist_flow_times=params["hist_flow_times"],
+                    only_generate_data=params["only_generate_data"])
 
 
 def analyse_topc2(params):
@@ -142,9 +158,10 @@ def analyse_topc2(params):
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
     topc2_analysis.y_limits = params["topc2_y_limits"]
-    analyse_default(topc2_analysis, params["N_bs"], 
+    analyse_default(topc2_analysis, params["N_bs"],
                     perform_blocking_analysis=params["blocking_analysis"],
-                    block_size=params["block_size"], NBins=150)
+                    block_size=params["block_size"], NBins=150,
+                    only_generate_data=params["only_generate_data"])
 
 
 def analyse_topc4(params):
@@ -153,9 +170,10 @@ def analyse_topc4(params):
         params["data"]("topc"),
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
-    analyse_default(topc4_analysis, params["N_bs"], 
+    analyse_default(topc4_analysis, params["N_bs"],
                     perform_blocking_analysis=params["blocking_analysis"],
-                    block_size=params["block_size"])
+                    block_size=params["block_size"],
+                    only_generate_data=params["only_generate_data"])
 
 
 def analyse_topcr(params):
@@ -182,12 +200,14 @@ def analyse_topcr(params):
                                        size=(N_bs, N_cfgs_topc2))
 
     analyse_default(topc2_analysis, N_bs, NBins=150,
-                    bs_index_lists=bs_index_lists, 
+                    bs_index_lists=bs_index_lists,
                     perform_blocking_analysis=params["blocking_analysis"],
-                    block_size=params["block_size"])
-    analyse_default(topc4_analysis, N_bs, bs_index_lists=bs_index_lists, 
+                    block_size=params["block_size"],
+                    only_generate_data=params["only_generate_data"])
+    analyse_default(topc4_analysis, N_bs, bs_index_lists=bs_index_lists,
                     perform_blocking_analysis=params["blocking_analysis"],
-                    block_size=params["block_size"])
+                    block_size=params["block_size"],
+                    only_generate_data=params["only_generate_data"])
 
 
 def analyse_topcrMC(params):
@@ -221,8 +241,10 @@ def analyse_topcrMC(params):
         assert N_cfgs_topc2 == N_cfgs_topc4, "NCfgs differ in topc2 and topc4."
 
         analyse_default(topc2_analysis, N_bs, NBins=150,
-                        bs_index_lists=bs_index_lists)
-        analyse_default(topc4_analysis, N_bs, bs_index_lists=bs_index_lists)
+                        bs_index_lists=bs_index_lists,
+                        only_generate_data=params["only_generate_data"])
+        analyse_default(topc4_analysis, N_bs, bs_index_lists=bs_index_lists,
+                        only_generate_data=params["only_generate_data"])
 
 
 def analyse_topsus_qtq0(params):
@@ -238,7 +260,8 @@ def analyse_topsus_qtq0(params):
     for q0_flow_time in params["q0_flow_times"]:
         topsus_qtq0_analysis.setQ0(q0_flow_time)
         analyse_default(topsus_qtq0_analysis, params["N_bs"],
-                        skip_histogram=True)
+                        skip_histogram=True,
+                        only_generate_data=params["only_generate_data"])
 
 
 def analyse_qtq0e(params):
@@ -255,7 +278,8 @@ def analyse_qtq0e(params):
     for q0_flow_time in params["q0_flow_times"]:
         for euclidean_percent in params["euclidean_time_percents"]:
             qtq0_analysis.set_time(q0_flow_time, euclidean_percent)
-            analyse_default(qtq0_analysis, params["N_bs"])
+            analyse_default(qtq0_analysis, params["N_bs"],
+                            only_generate_data=params["only_generate_data"])
 
 
 def analyse_qtq0_effective_mass(params):
@@ -276,9 +300,10 @@ def analyse_qtq0_effective_mass(params):
         if q0_flow_time != 0.6:  # Only zeroth flow
             continue
         qtq0eff_analysis.set_time(q0_flow_time)
-        analyse_default(qtq0eff_analysis, params["N_bs"], 
-                    perform_blocking_analysis=params["blocking_analysis"],
-                    block_size=params["block_size"])
+        analyse_default(qtq0eff_analysis, params["N_bs"],
+                        perform_blocking_analysis=params["blocking_analysis"],
+                        block_size=params["block_size"],
+                        only_generate_data=params["only_generate_data"])
 
 
 def analyse_qtq0_effective_mass_mc(params):
@@ -311,7 +336,8 @@ def analyse_qtq0_effective_mass_mc(params):
 
             analyse_eff_mass_MC.set_time(q0_flow_time)
             analyse_default(analyse_eff_mass_MC, params["N_bs"],
-                            bs_index_lists=bs_index_lists)
+                            bs_index_lists=bs_index_lists,
+                            only_generate_data=params["only_generate_data"])
 
 
 def analyse_topct(params):
@@ -333,7 +359,8 @@ def analyse_topct(params):
 
     for ie in indexes:
         topct_analysis.setEQ0(ie)
-        analyse_default(topct_analysis, params["N_bs"])
+        analyse_default(topct_analysis, params["N_bs"],
+                        only_generate_data=params["only_generate_data"])
 
 
 def analyse_topsust(params):
@@ -354,7 +381,8 @@ def analyse_topsust(params):
     indexes[0] += 1
     for ie in indexes:
         topct_analysis.setEQ0(ie)
-        analyse_default(topct_analysis, params["N_bs"], skip_histogram=True)
+        analyse_default(topct_analysis, params["N_bs"], skip_histogram=True,
+                        only_generate_data=params["only_generate_data"])
 
 
 def analyse_topcte_intervals(params):
@@ -384,7 +412,8 @@ def analyse_topcte_intervals(params):
 
     for t_int in t_interval:
         analyse_topcte.set_t_interval(t_int)
-        analyse_default(analyse_topcte, params["N_bs"])
+        analyse_default(analyse_topcte, params["N_bs"],
+                        only_generate_data=params["only_generate_data"])
 
 
 def analyse_topsuste_intervals(params):
@@ -414,7 +443,8 @@ def analyse_topsuste_intervals(params):
 
     for t_int in t_interval:
         analyse_topsuste.set_t_interval(t_int)
-        analyse_default(analyse_topsuste, params["N_bs"])
+        analyse_default(analyse_topsuste, params["N_bs"],
+                        only_generate_data=params["only_generate_data"])
 
 
 def analyse_topcMCTime(params):
@@ -434,7 +464,8 @@ def analyse_topcMCTime(params):
             verbose=params["verbose"])
 
         analyse_default(analyse_topcMC, params["N_bs"],
-                        bs_index_lists=bs_index_lists)
+                        bs_index_lists=bs_index_lists,
+                        only_generate_data=params["only_generate_data"])
 
 
 def analyse_topsusMCTime(params):
@@ -455,7 +486,8 @@ def analyse_topsusMCTime(params):
             verbose=params["verbose"])
 
         analyse_default(analyse_topcMC, params["N_bs"],
-                        bs_index_lists=bs_index_lists)
+                        bs_index_lists=bs_index_lists,
+                        only_generate_data=params["only_generate_data"])
 
 
 def get_data_parameters(parameters):
@@ -494,6 +526,7 @@ def get_data_parameters(parameters):
     params = {"data": obs_data}
     params.update(parameters)
     return obs_data, params
+
 
 def pre_analysis(parameters):
     """
@@ -536,8 +569,8 @@ def pre_analysis(parameters):
         analyse_topc2(params)
     if "topc4" in parameters["observables"]:
         analyse_topc4(params)
-    if "topcr" in parameters["observables"]:
-        analyse_topcr(params)
+    # if "topcr" in parameters["observables"]:
+    #     analyse_topcr(params) # Only in post analysis
     if "topcrMC" in parameters["observables"]:
         analyse_topcrMC(params)
     if "topct" in parameters["observables"]:
