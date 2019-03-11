@@ -503,18 +503,24 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
         (extrapolation_method, ", ".join(extrap_method_list))))
     assert extrapolation_method in extrap_method_list, extrap_method_err
 
-    if isinstance(tau_int, types.NoneType):
-        tau_int = 0.5*np.ones(len(x))
-    if isinstance(tau_int_err, types.NoneType):
-        tau_int_err = np.zeros(len(x))
-
     if inverse_fit:
         fit_index = np.argmin(np.abs(y - fit_target))
     else:
         fit_index = np.argmin(np.abs(x - fit_target))
 
+    # Fit range limits
     ilow = fit_index - plateau_size
     ihigh = fit_index + plateau_size
+
+    # In case we do not have tau int
+    if not isinstance(tau_int, types.NoneType):
+        tau_int_ = tau_int[ilow:ihigh]
+    else:
+        tau_int_ = tau_int
+    if not isinstance(tau_int_err, types.NoneType):
+        tau_int_err_ = tau_int_err[ilow:ihigh]
+    else:
+        tau_int_err_ = tau_int_err
 
     def _f(_x, a, b):
         return _x*a + b
@@ -522,7 +528,7 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
     if extrapolation_method == "plateau":
         y0, y0_error, tau_int0, chi_squared = lfit_tools._extract_plateau_fit(
             fit_target, _f, x[ilow:ihigh], y[ilow:ihigh], y_err[ilow:ihigh],
-            y_raw[ilow:ihigh], tau_int[ilow:ihigh], tau_int_err[ilow:ihigh],
+            y_raw[ilow:ihigh], tau_int_, tau_int_err_,
             inverse_fit=inverse_fit)
 
     elif extrapolation_method == "plateau_mean":
@@ -537,7 +543,7 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
         y0, y0_error, tau_int0 = lfit_tools._extract_bootstrap_fit(
             fit_target, _f, x[ilow:ihigh],
             y[ilow:ihigh], y_err[ilow:ihigh], y_raw[ilow:ihigh],
-            tau_int[ilow:ihigh], tau_int_err[ilow:ihigh], F=raw_func,
+            tau_int_, tau_int_err_, F=raw_func,
             FDer=raw_func_der, inverse_fit=inverse_fit)
 
     elif extrapolation_method == "nearest":

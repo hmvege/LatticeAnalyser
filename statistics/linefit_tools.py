@@ -393,9 +393,6 @@ def _extract_bootstrap_fit(fit_target, f, x, y, y_err, y_raw, tau_int=None,
     y0_std = np.std(F(y0_sample))*np.sqrt(2*tau_int0)
     # print y0_std
 
-    # print y0_std
-    # exit(1)
-
     if plot_samples:
         sample_mean = F(np.mean(plot_ymean, axis=1))
         sample_std = FDer(np.mean(plot_ymean, axis=1),

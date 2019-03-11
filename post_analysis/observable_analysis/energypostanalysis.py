@@ -1,5 +1,5 @@
 import numba as nb
-import copy
+import copy as cp
 import os
 import numpy as np
 from post_analysis.core.postcore import PostCore
@@ -100,31 +100,32 @@ class EnergyPostAnalysis(PostCore):
 
     def _initiate_plot_values(self, data, data_raw):
         # Sorts data into a format specific for the plotting method
-        for beta in sorted(data.keys()):
+        for bn in self.sorted_batch_names:
             values = {}
-            values["beta"] = beta
-            values["a"], values["a_err"] = get_lattice_spacing(beta)
-            values["t"] = data[beta]["x"]*values["a"]**2
-            values["sqrt8t"] = values["a"]*np.sqrt(8*data[beta]["x"])
+            values["beta"] = self.beta_values[bn]
+            values["a"], values["a_err"] = get_lattice_spacing(values["beta"])
+            values["t"] = data[bn]["x"]*values["a"]**2
+            values["sqrt8t"] = values["a"]*np.sqrt(8*data[bn]["x"])
             values["x"] = values["t"]/self.r0**2
-            values["y"] = data[beta]["y"]*data[beta]["x"]**2
-            values["y_err"] = data[beta]["y_error"]*data[beta]["x"]**2
-            values["flow_epsilon"] = self.flow_epsilon[beta]
+            values["y"] = data[bn]["y"]*data[bn]["x"]**2
+            values["y_err"] = data[bn]["y_error"]*data[bn]["x"]**2
+            values["flow_epsilon"] = self.flow_epsilon[bn]
+            values["y_raw"] = data_raw[bn][self.observable_name_compact]
             values["y_uraw"] = \
-                self.data_raw["unanalyzed"][beta][self.observable_name_compact]
+                self.data_raw["unanalyzed"][bn][self.observable_name_compact]
 
             # Calculates the energy derivatve
             values["tder"], values["W"], values["W_err"], values["W_raw"] = \
-                self.calculateW(values["t"], data[beta]["y"],
-                                data[beta]["y_error"],
-                                data_raw[beta][self.observable_name_compact],
-                                values["flow_epsilon"], data[beta]["x"])
+                self.calculateW(values["t"], data[bn]["y"],
+                                data[bn]["y_error"],
+                                data_raw[bn][self.observable_name_compact],
+                                values["flow_epsilon"], data[bn]["x"])
 
-            if self.with_autocorr:
-                values["tau_int"] = data[beta]["ac"]["tau_int"]
-                values["tau_int_err"] = data[beta]["ac"]["tau_int_err"]
-                values["tau_raw"] = self.ac_raw["ac_raw"][beta]
-                values["tau_raw_err"] = self.ac_raw["ac_raw_error"][beta]
+            if self.with_autocorr and not "blocked" in self.analysis_data_type:
+                values["tau_int"] = data[bn]["ac"]["tau_int"]
+                values["tau_int_err"] = data[bn]["ac"]["tau_int_err"]
+                values["tau_raw"] = self.ac_raw["ac_raw"][bn]
+                values["tau_raw_err"] = self.ac_raw["ac_raw_error"][bn]
             else:
                 values["tau_int"] = None
                 values["tau_int_err"] = None
@@ -133,13 +134,13 @@ class EnergyPostAnalysis(PostCore):
 
             # Calculates the t^2<E> for the raw values
             values[self.analysis_data_type] = \
-                (data_raw[beta][self.observable_name_compact].T
-                 * (data[beta]["x"]**2)).T
+                (data_raw[bn][self.observable_name_compact].T
+                 * (data[bn]["x"]**2)).T
 
             values["label"] = (r"%s $\beta=%2.2f$" %
-                               (self.size_labels[beta], beta))
+                               (self.size_labels[bn], values["beta"]))
 
-            self.plot_values[beta] = values
+            self.plot_values[bn] = values
 
     def _extract_flow_time_index(self, target_flow):
         """
@@ -149,14 +150,14 @@ class EnergyPostAnalysis(PostCore):
             target_flow: float, some fraction between 0.0-0.6 usually
         """
 
-        for beta_ in self.plot_values:
-            assert target_flow < self.plot_values[beta_]["sqrt8t"][-1], (
+        for bn in self.batch_names:
+            assert target_flow < self.plot_values[bn]["sqrt8t"][-1], (
                 "Flow time exceeding bounds for %f which has max flow "
-                "time value of %f" % (beta_, self.plot_values[beta_]["x"][-1]))
+                "time value of %f" % (bn, self.plot_values[bn]["x"][-1]))
 
         # Selects and returns fit target index
-        return [np.argmin(np.abs(self.plot_values[beta_]["sqrt8t"] - target_flow))
-                for beta_ in sorted(self.plot_values)]
+        return [np.argmin(np.abs(self.plot_values[bn]["sqrt8t"] - target_flow))
+                for bn in self.sorted_batch_names]
 
 
     def get_t0_scale(self, extrapolation_method="plateau_mean", E0=0.3,
@@ -174,7 +175,7 @@ class EnergyPostAnalysis(PostCore):
                 E0: float, optional. Default is 0.3.
 
         Returns:
-                t0: dictionary of t0 values for each of the betas, and a 
+                t0: dictionary of t0 values for each of the batches, and a 
                         continuum value extrapolation.
         """
         if self.verbose:
@@ -187,7 +188,8 @@ class EnergyPostAnalysis(PostCore):
         t0_values = []
         t0err_values = []
 
-        for beta, bval in sorted(self.plot_values.items(), key=lambda i: i[0]):
+        for bn in self.sorted_batch_names:
+            bval = self.plot_values[bn]
             y0, t0, t0_err, _, _ = extract_fit_target(
                 E0, bval["t"], bval["y"],
                 y_err=bval["y_err"], y_raw=bval[self.analysis_data_type],
@@ -252,31 +254,31 @@ class EnergyPostAnalysis(PostCore):
             lambda k: np.flip(k, 0),
             (a_values, a_values_err, t0_values, t0err_values))
 
-        _tmp_beta_dict = {
-            b: {
+        _tmp_batch_dict = {
+            bn: {
                 "t0": t0_values[i],
                 "t0err": t0err_values[i],
-                "t0a2": t0_values[i]/self.plot_values[b]["a"]**2,
+                "t0a2": t0_values[i]/self.plot_values[bn]["a"]**2,
                 # Including error term in lattice spacing, a
                 "t0a2err": np.sqrt((t0err_values[i] / \
-                                    self.plot_values[b]["a"]**2)**2 \
-                                   + (2*self.plot_values[b]["a_err"] * \
+                                    self.plot_values[bn]["a"]**2)**2 \
+                                   + (2*self.plot_values[bn]["a_err"] * \
                                       t0_values[i] /\
-                                      self.plot_values[b]["a"]**3)**2),
+                                      self.plot_values[bn]["a"]**3)**2),
                 "t0r02": t0_values[i]/self.r0**2,
                 "t0r02err": t0err_values[i]/self.r0**2,
-                "aL": self.plot_values[b]["a"]*self.lattice_sizes[b][0],
-                "aLerr": (self.plot_values[b]["a_err"] \
-                          * self.lattice_sizes[b][0]),
-                "L": self.lattice_sizes[b][0],
-                "a": self.plot_values[beta]["a"],
-                "a_err": self.plot_values[b]["a_err"],
+                "aL": self.plot_values[bn]["a"]*self.lattice_sizes[bn][0],
+                "aLerr": (self.plot_values[bn]["a_err"] \
+                          * self.lattice_sizes[bn][0]),
+                "L": self.lattice_sizes[bn][0],
+                "a": self.plot_values[bn]["a"],
+                "a_err": self.plot_values[bn]["a_err"],
             }
-            for i, b in enumerate(self.beta_values)
+            for i, bn in enumerate(self.batch_names)
         }
 
         t0_dict = {"t0cont": self.t0_cont, "t0cont_err": self.t0_cont_error}
-        t0_dict.update(_tmp_beta_dict)
+        t0_dict.update(_tmp_batch_dict)
 
         if self.verbose:
             print "t0 reference values table: "
@@ -284,13 +286,14 @@ class EnergyPostAnalysis(PostCore):
                 self.sqrt_8t0_cont, self.sqrt_8t0_cont_error)
             print "t0 = %.16f +/- %.16f" % (self.t0_cont,
                                             self.t0_cont_error)
-            for b in self.beta_values:
+            for bn in self.batch_names:
                 msg = "beta = %.2f || t0 = %10f +/- %-10f" % (
-                    b, t0_dict[b]["t0"], t0_dict[b]["t0err"])
+                    self.beta_values[bn], t0_dict[bn]["t0"], 
+                    t0_dict[bn]["t0err"])
                 msg += " || t0/a^2 = %10f +/- %-10f" % (
-                    t0_dict[b]["t0a2"], t0_dict[b]["t0a2err"])
+                    t0_dict[bn]["t0a2"], t0_dict[bn]["t0a2err"])
                 msg += " || t0/r0^2 = %10f +/- %-10f" % (
-                    t0_dict[b]["t0r02"], t0_dict[b]["t0r02err"])
+                    t0_dict[bn]["t0r02"], t0_dict[bn]["t0r02err"])
                 print msg
 
         if self.print_latex:
@@ -300,23 +303,23 @@ class EnergyPostAnalysis(PostCore):
             header = [r"$\beta$", r"$t_0/a^2$", r"$t_0/{r_0^2}$", r"$L/a$",
                       r"$L[\fm]$", r"$a[\fm]$"]
 
-            bvals = self.beta_values
+            bvals = self.batch_names
             tab = [
-                [r"{0:.2f}".format(b) for b in bvals],
+                [r"{0:.2f}".format(self.beta_values[bn]) for bn in bvals],
                 [r"{0:s}".format(sciprint.sciprint(
-                    t0_dict[b]["t0a2"],
-                    t0_dict[b]["t0a2err"])) for b in bvals],
+                    t0_dict[bn]["t0a2"],
+                    t0_dict[bn]["t0a2err"])) for bn in bvals],
                 [r"{0:s}".format(sciprint.sciprint(
-                    t0_dict[b]["t0r02"],
-                    t0_dict[b]["t0r02err"])) for b in bvals],
-                [r"{0:d}".format(self.lattice_sizes[b][0]) for b in bvals],
+                    t0_dict[bn]["t0r02"],
+                    t0_dict[bn]["t0r02err"])) for bn in bvals],
+                [r"{0:d}".format(self.lattice_sizes[bn][0]) for bn in bvals],
                 [r"{0:s}".format(sciprint.sciprint(
-                    self.lattice_sizes[b][0]*self.plot_values[b]["a"],
-                    self.lattice_sizes[b][0]*self.plot_values[b]["a_err"]))
-                 for b in bvals],
+                    self.lattice_sizes[bn][0]*self.plot_values[bn]["a"],
+                    self.lattice_sizes[bn][0]*self.plot_values[bn]["a_err"]))
+                 for bn in bvals],
                 [r"{0:s}".format(sciprint.sciprint(
-                    self.plot_values[b]["a"],
-                    self.plot_values[b]["a_err"])) for b in bvals],
+                    self.plot_values[bn]["a"],
+                    self.plot_values[bn]["a_err"])) for bn in bvals],
             ]
 
             ptab = TablePrinter(header, tab)
@@ -342,12 +345,25 @@ class EnergyPostAnalysis(PostCore):
         w0a_values = []
         w0aerr_values = []
 
-        for beta, bval in sorted(self.plot_values.items(), key=lambda i: i[0]):
+        # Since we are slicing tau int, and it will only be ignored
+        # if it is None in extract_fit_targets, we set it manually
+        # if we have provided it.
+
+        for bn in self.sorted_batch_names:
+            bval = self.plot_values[bn]
+
+            # Sets correct tau int to pass to fit extraction
+            if "blocked" in self.analysis_data_type:
+                _tmp_tau_int = None
+                _tmp_tau_int_err = None
+            else:
+                _tmp_tau_int = bval["tau_int"][1:-1]
+                _tmp_tau_int_err = bval["tau_int_err"][1:-1]
+
             y0, t_w0, t_w0_err, _, _ = extract_fit_target(
                 W0, bval["tder"], bval["W"],
                 y_err=bval["W_err"], y_raw=bval["W_raw"],
-                tau_int=bval["tau_int"][1:-1],
-                tau_int_err=bval["tau_int_err"][1:-1],
+                tau_int=_tmp_tau_int, tau_int_err=_tmp_tau_int_err,
                 extrapolation_method=extrapolation_method, plateau_size=10,
                 inverse_fit=True, **kwargs)
 
@@ -410,23 +426,23 @@ class EnergyPostAnalysis(PostCore):
             lambda k: np.flip(k, 0),
             (a_values, a_values_err, w0_values, w0err_values))
 
-        # Populates dictionary with w0 values for each beta value
-        _tmp_beta_dict = {
-            b: {
+        # Populates dictionary with w0 values for each batch
+        _tmp_batch_dict = {
+            bn: {
                 "w0": w0_values[i],
                 "w0err": w0err_values[i],
                 "w0a": w0a_values[i],
                 "w0aerr": w0aerr_values[i],
                 "w0r0": w0_values[i]/self.r0,
                 "w0r0err": w0err_values[i]/self.r0,
-                "aL": self.plot_values[b]["a"]*self.lattice_sizes[b][0],
-                "aLerr": (self.plot_values[b]["a_err"]
-                          * self.lattice_sizes[b][0]),
-                "L": self.lattice_sizes[b][0],
-                "a": self.plot_values[beta]["a"],
-                "a_err": self.plot_values[b]["a_err"],
+                "aL": self.plot_values[bn]["a"]*self.lattice_sizes[bn][0],
+                "aLerr": (self.plot_values[bn]["a_err"]
+                          * self.lattice_sizes[bn][0]),
+                "L": self.lattice_sizes[bn][0],
+                "a": self.plot_values[bn]["a"],
+                "a_err": self.plot_values[bn]["a_err"],
             }
-            for i, b in enumerate(sorted(self.beta_values))
+            for i, bn in enumerate(self.sorted_batch_names)
         }
 
         # Populates dictionary with continuum w0 value
@@ -434,19 +450,19 @@ class EnergyPostAnalysis(PostCore):
             "w0cont": self.w0_cont,
             "w0cont_err": self.w0_cont_error,
         }
-        w0_dict.update(_tmp_beta_dict)
+        w0_dict.update(_tmp_batch_dict)
 
         if self.verbose:
             print "w0 reference values table: "
             print "w0 = %.16f +/- %.16f" % (self.w0_cont, self.w0_cont_error)
-            for b in sorted(self.beta_values):
-                msg = "beta = %.2f" % b
+            for bn in self.sorted_batch_names:
+                msg = "beta = %.2f" % self.beta_values[bn]
                 msg += " || w0 = %10f +/- %-10f" % (
-                    w0_dict[b]["w0"], w0_dict[b]["w0err"])
+                    w0_dict[bn]["w0"], w0_dict[bn]["w0err"])
                 msg += " || w0/a = %10f +/- %-10f" % (
-                    w0_dict[b]["w0a"], w0_dict[b]["w0aerr"])
+                    w0_dict[bn]["w0a"], w0_dict[bn]["w0aerr"])
                 msg += " || w0/r0 = %10f +/- %-10f" % (
-                    w0_dict[b]["w0r0"], w0_dict[b]["w0r0err"])
+                    w0_dict[bn]["w0r0"], w0_dict[bn]["w0r0err"])
                 print msg
 
         if self.print_latex:
@@ -457,23 +473,23 @@ class EnergyPostAnalysis(PostCore):
                       r"$a^2[\mathrm{GeV}^{-2}]$", r"$L/a$", r"$L[\fm]$",
                       r"$a[\fm]$"]
 
-            bvals = self.beta_values
+            bvals = self.batch_names
             tab = [
-                [r"{0:.2f}".format(b) for b in bvals],
+                [r"{0:.2f}".format(self.beta_values[bn]) for bn in bvals],
                 [r"{0:s}".format(sciprint.sciprint(
-                    w0_dict[b]["w0"], w0_dict[b]["w0err"])) for b in bvals],
+                    w0_dict[bn]["w0"], w0_dict[bn]["w0err"])) for bn in bvals],
                 [r"{0:s}".format(sciprint.sciprint(
-                    self.plot_values[b]["a"]**2,
-                    self.plot_values[b]["a_err"]*2*self.plot_values[b]["a"]))
-                 for b in bvals],
-                [r"{0:d}".format(self.lattice_sizes[b][0]) for b in bvals],
+                    self.plot_values[bn]["a"]**2,
+                    self.plot_values[bn]["a_err"]*2*self.plot_values[bn]["a"]))
+                 for bn in bvals],
+                [r"{0:d}".format(self.lattice_sizes[bn][0]) for bn in bvals],
                 [r"{0:s}".format(sciprint.sciprint(
-                    self.lattice_sizes[b][0]*self.plot_values[b]["a"],
-                    self.lattice_sizes[b][0]*self.plot_values[b]["a_err"]))
-                 for b in bvals],
+                    self.lattice_sizes[bn][0]*self.plot_values[bn]["a"],
+                    self.lattice_sizes[bn][0]*self.plot_values[bn]["a_err"]))
+                 for bn in bvals],
                 [r"{0:s}".format(sciprint.sciprint(
-                    self.plot_values[b]["a"],
-                    self.plot_values[b]["a_err"])) for b in bvals],
+                    self.plot_values[bn]["a"],
+                    self.plot_values[bn]["a_err"])) for bn in bvals],
             ]
 
             ptab = TablePrinter(header, tab)
@@ -533,11 +549,11 @@ class EnergyPostAnalysis(PostCore):
 
     def plot_w(self, *args, **kwargs):
         """Plots the W(t)."""
-        w_plot_values = copy.deepcopy(self.plot_values)
-        for beta in sorted(self.beta_values):
-            w_plot_values[beta]["x"] = self.plot_values[beta]["x"][1:-1]
-            w_plot_values[beta]["y"] = self.plot_values[beta]["W"]
-            w_plot_values[beta]["y_err"] = self.plot_values[beta]["W_err"]
+        w_plot_values = cp.deepcopy(self.plot_values)
+        for bn in self.sorted_batch_names:
+            w_plot_values[bn]["x"] = self.plot_values[bn]["x"][1:-1]
+            w_plot_values[bn]["y"] = self.plot_values[bn]["W"]
+            w_plot_values[bn]["y_err"] = self.plot_values[bn]["W_err"]
 
         kwargs["observable_name_compact"] = "energyW"
         kwargs["x_label"] = r"$t_f/r_0^2$"

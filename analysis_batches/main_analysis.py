@@ -27,7 +27,7 @@ def main_analysis(run_pre_analysis=True, run_post_analysis=True):
     # observables = ["energy"]
     # observables = ["w_t_energy"]
     observables = ["plaq", "energy", "topc", "topsus", "topc2", "topc4", "qtq0eff"]
-    observables = ["topc"]
+    observables = ["topsus"]
 
     default_params["observables"] = observables
 
@@ -68,7 +68,8 @@ def main_analysis(run_pre_analysis=True, run_post_analysis=True):
 
     # Data types to be looked at in the post-analysis.
     post_analysis_data_type = [
-        "bootstrap", "jackknife", "unanalyzed", "blocked", "blocked_bs"]
+        "bootstrap", "jackknife", "unanalyzed", "blocked", "blocked_bootstrap"]
+    post_analysis_data_type = ["bootstrap", "blocked", "blocked_bootstrap"]
     post_analysis_data_type = ["bootstrap"]
 
     # Blocking

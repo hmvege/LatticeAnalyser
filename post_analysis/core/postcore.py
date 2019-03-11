@@ -95,8 +95,6 @@ class PostCore(object):
         # bugs.
         if self.sub_obs:
             self.observable_intervals = {b: {} for b in self.batch_names}
-            # for beta in self.beta_values:
-            #   self.observable_intervals[beta] = {}
 
         # Checks that the observable is among the available data
         assert_msg = ("%s is not among current data(%s). Have the pre analysis"
@@ -235,7 +233,7 @@ class PostCore(object):
             values["y_uraw"] = \
                 self.data_raw["unanalyzed"][bn][self.observable_name_compact]
 
-            if self.with_autocorr:
+            if self.with_autocorr and not "blocked" in self.analysis_data_type:
                 values["tau_int"] = data[bn]["ac"]["tau_int"]
                 values["tau_int_err"] = data[bn]["ac"]["tau_int_err"]
                 values["tau_raw"] = self.ac_raw["ac_raw"][bn]
@@ -259,14 +257,14 @@ class PostCore(object):
             target_flow: float, some fraction between 0.0-0.6 usually
         """
 
-        for beta_ in self.plot_values:
-            assert target_flow < self.plot_values[beta_]["x"][-1], (
-                "Flow time exceeding bounds for %f which has max flow "
-                "time value of %f" % (beta_, self.plot_values[beta_]["x"][-1]))
+        for bn in self.plot_values:
+            assert target_flow < self.plot_values[bn]["x"][-1], (
+                "Flow time exceeding bounds for %s which has max flow "
+                "time value of %f" % (bn, self.plot_values[bn]["x"][-1]))
 
         # Selects and returns fit target index
-        return [np.argmin(np.abs(self.plot_values[beta_]["x"] - target_flow))
-                for beta_ in sorted(self.plot_values)]
+        return [np.argmin(np.abs(self.plot_values[bn]["x"] - target_flow))
+                for bn in self.sorted_batch_names]
 
     def plot(self, x_limits=False, y_limits=False, plot_with_formula=False,
              error_shape="band", figure_folder=None, plot_vline_at=None,
@@ -321,20 +319,25 @@ class PostCore(object):
                 self.observable_name_compact,
                 ", ".join([str(b) for b in self.plot_values]))
 
+        if "blocked" in self.analysis_data_type:
+            print("No autocorrelation analysis for %s --> "
+                  "skipping." % self.analysis_data_type)
+            return
+
         fig = plt.figure(dpi=self.dpi)
         ax = fig.add_subplot(111)
 
         self._check_plot_values()
 
         # Retrieves values to plot
-        for beta in sorted(self.plot_values):
-            value = self.plot_values[beta]
+        for bn in self.sorted_batch_names:
+            value = self.plot_values[bn]
             x = value["sqrt8t"]
             y = value["tau_int"]
             y_err = value["tau_int_err"]
-            ax.plot(x, y, "-", label=value["label"], color=self.colors[beta])
+            ax.plot(x, y, "-", label=value["label"], color=self.colors[bn])
             ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, edgecolor="",
-                            facecolor=self.colors[beta])
+                            facecolor=self.colors[bn])
 
         # Basic plotting commands
         ax.grid(True)
@@ -350,11 +353,13 @@ class PostCore(object):
 
         # Plots a vertical line at position "plot_vline_at"
         if not isinstance(plot_vline_at, types.NoneType):
-            ax.axvline(plot_vline_at, linestyle="--", color="0", alpha=0.3)
+            ax.axvline(plot_vline_at, linestyle="--",
+                       color=self.cont_axvline_color, alpha=0.3)
 
         # Plots a horizontal line at position "plot_hline_at"
         if not isinstance(plot_hline_at, types.NoneType):
-            ax.axhline(plot_hline_at, linestyle="--", color="0", alpha=0.3)
+            ax.axhline(plot_hline_at, linestyle="--",
+                       color=self.cont_axvline_color, alpha=0.3)
 
         # Saves and closes figure
         fname = self._get_plot_figure_name(output_folder=figure_folder,
@@ -381,6 +386,11 @@ class PostCore(object):
                   "subobs.".format(self.observable_name))
             return
 
+        if "blocked" in self.analysis_data_type:
+            print("No autocorrelation analysis for %s --> "
+                  "skipping." % self.analysis_data_type)
+            return
+
         self._check_plot_values()
 
         # Selects fit target
@@ -388,10 +398,10 @@ class PostCore(object):
 
         if self.verbose:
             print("Plotting %s autocorrelation at %.2f (indexes at %s) for "
-                  "betas %s together" % (
+                  "batches %s together" % (
                       self.observable_name_compact, target_flow, str(
                           flow_indices),
-                      ", ".join([str(b) for b in self.plot_values])))
+                      ", ".join([str(bn) for bn in self.plot_values])))
 
         fig, axes = plt.subplots(
             nrows=len(self.plot_values), ncols=1, dpi=self.dpi, sharey=True)
@@ -403,17 +413,17 @@ class PostCore(object):
 
         # Retrieves values to plot
         for _ax_val in zip(range(len(flow_indices)), axes,
-                           sorted(self.plot_values), flow_indices):
-            i, ax, beta, flow_index = _ax_val
+                           self.sorted_batch_names, flow_indices):
+            i, ax, bn, flow_index = _ax_val
 
             # Sets up values to plot
-            y = self.plot_values[beta]["tau_raw"][self.observable_name_compact][flow_index]
-            y_err = self.plot_values[beta]["tau_raw_err"][self.observable_name_compact][flow_index]
+            y = self.plot_values[bn]["tau_raw"][self.observable_name_compact][flow_index]
+            y_err = self.plot_values[bn]["tau_raw_err"][self.observable_name_compact][flow_index]
             x = np.arange(*y.shape)
-            ax.plot(x, y, "-", label=self.plot_values[beta]["label"],
-                    color=self.colors[beta])
+            ax.plot(x, y, "-", label=self.plot_values[bn]["label"],
+                    color=self.colors[bn])
             ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, edgecolor="",
-                            facecolor=self.colors[beta])
+                            facecolor=self.colors[bn])
 
             ax.grid(True)
             ax.legend(prop={"size": 8})
@@ -433,11 +443,13 @@ class PostCore(object):
 
         # Plots a vertical line at position "plot_vline_at"
         if not isinstance(plot_vline_at, types.NoneType):
-            ax.axvline(plot_vline_at, linestyle="--", color="0", alpha=0.3)
+            ax.axvline(plot_vline_at, linestyle="--",
+                       color=self.cont_axvline_color, alpha=0.3)
 
         # Plots a horizontal line at position "plot_hline_at"
         if not isinstance(plot_hline_at, types.NoneType):
-            ax.axhline(plot_hline_at, linestyle="--", color="0", alpha=0.3)
+            ax.axhline(plot_hline_at, linestyle="--",
+                       color=self.cont_axvline_color, alpha=0.3)
 
         # Saves and closes figure
         fname = self._get_plot_figure_name(
@@ -465,6 +477,10 @@ class PostCore(object):
                   "subobs.".format(self.observable_name))
             return
 
+        if "blocked_bootstrap" == self.analysis_data_type:
+            print "Skipping %s" % self.analysis_data_type
+            return
+
         self._check_plot_values()
 
         # Selects fit target
@@ -472,7 +488,7 @@ class PostCore(object):
 
         if self.verbose:
             print("Plotting %s MC-history at %.2f (indexes at %s) for "
-                  "betas %s together" % (
+                  "batches %s together" % (
                       self.observable_name_compact, target_flow, str(
                           flow_indices),
                       ", ".join([str(b) for b in self.plot_values])))
@@ -487,17 +503,20 @@ class PostCore(object):
 
         # Retrieves values to plot
         for _ax_val in zip(range(len(flow_indices)), axes,
-                           sorted(self.plot_values), flow_indices):
-            i, ax, beta, flow_index = _ax_val
+                           self.sorted_batch_names, flow_indices):
+            i, ax, bn, flow_index = _ax_val
 
             # Sets up values to plot
-            y = self.plot_values[beta]["y_uraw"][flow_index]
+            if "blocked" == self.analysis_data_type:
+                y = self.plot_values[bn]["y_raw"][flow_index]
+            else:
+                y = self.plot_values[bn]["y_uraw"][flow_index]
             x = np.arange(*y.shape)
-            ax.plot(x, y, "-", label=self.plot_values[beta]["label"],
-                    color=self.colors[beta])
+            ax.plot(x, y, "-", label=self.plot_values[bn]["label"],
+                    color=self.colors[bn])
 
             ax.grid(True)
-            ax.legend(prop={"size": 8})
+            ax.legend(prop={"size": 8}, loc="upper right")
 
             if i != len(flow_indices) - 1:
                 ax.tick_params(labelbottom=False)
@@ -514,11 +533,13 @@ class PostCore(object):
 
         # Plots a vertical line at position "plot_vline_at"
         if not isinstance(plot_vline_at, types.NoneType):
-            ax.axvline(plot_vline_at, linestyle="--", color="0", alpha=0.3)
+            ax.axvline(plot_vline_at, linestyle="--",
+                       color=self.cont_axvline_color, alpha=0.3)
 
         # Plots a horizontal line at position "plot_hline_at"
         if not isinstance(plot_hline_at, types.NoneType):
-            ax.axhline(plot_hline_at, linestyle="--", color="0", alpha=0.3)
+            ax.axhline(plot_hline_at, linestyle="--",
+                       color=self.cont_axvline_color, alpha=0.3)
 
         # Saves and closes figure
         fname = self._get_plot_figure_name(
@@ -559,8 +580,11 @@ class PostCore(object):
                         None, will use method which is present.
 
         Returns:
-                {beta: {t0, y0, y0_error}
+                {batch_name: {t0, y0, y0_error}
         """
+
+        raise UserWarning("Woah! get_values() function was used!")
+        # TODO: remove get_values
 
         # Checks that the extrapolation method exists
         if isinstance(extrap_method, types.NoneType):
@@ -569,25 +593,25 @@ class PostCore(object):
             if hasattr(self, "extrapolation_method"):
                 extrap_method = self.extrapolation_method
 
-        values = {beta: {} for beta in self.beta_values}
-        self.t0 = {beta: {} for beta in self.beta_values}
+        values = {bn: {} for bn in self.beta_values}
+        self.t0 = {bn: {} for bn in self.beta_values}
 
         self._get_tf_value(tf, atype, extrap_method)
 
-        for beta in self.beta_values:
-            a = self.plot_values[beta]["a"]
+        for bn in self.sorted_batch_names:
+            a = self.plot_values[bn]["a"]
 
             # Selects index closest to q0_flow_time
             tf_index = np.argmin(
-                np.abs(self.plot_values[beta]["x"] - self.t0[beta]))
+                np.abs(self.plot_values[bn]["x"] - self.t0[bn]))
 
-            values[beta]["t0"] = self.t0[beta]
-            values[beta]["y0"] = self.plot_values[beta]["y"][tf_index]
-            values[beta]["y_err0"] = self.plot_values[beta]["y_err"][tf_index]
-            values[beta]["tau_int0"] = \
-                self.plot_values[beta]["tau_int"][tf_index]
-            values[beta]["tau_int_err0"] = \
-                self.plot_values[beta]["tau_int_err"][tf_index]
+            values[bn]["t0"] = self.t0[bn]
+            values[bn]["y0"] = self.plot_values[bn]["y"][tf_index]
+            values[bn]["y_err0"] = self.plot_values[bn]["y_err"][tf_index]
+            values[bn]["tau_int0"] = \
+                self.plot_values[bn]["tau_int"][tf_index]
+            values[bn]["tau_int_err0"] = \
+                self.plot_values[bn]["tau_int_err"][tf_index]
 
         return_dict = {"obs": self.observable_name_compact, "data": values}
         return return_dict
@@ -598,7 +622,7 @@ class PostCore(object):
                    figure_folder=None, plot_vline_at=None, plot_hline_at=None,
                    figure_name_appendix="", show_plot=False, zoom_box=None):
         """
-        Function for making a basic plot of all the different beta values
+        Function for making a basic plot of all the different batches
         together.
 
         Args:
@@ -626,9 +650,9 @@ class PostCore(object):
             observable_name_compact = self.observable_name_compact
 
         if self.verbose:
-            print "Plotting %s for betas %s together" % (
+            print "Plotting %s for batches %s together" % (
                 observable_name_compact,
-                ", ".join([str(b) for b in plot_values]))
+                ", ".join([str(bn) for bn in plot_values]))
 
         fig = plt.figure(dpi=self.dpi)
         ax = fig.add_subplot(111)
@@ -640,35 +664,35 @@ class PostCore(object):
             axins = zoomed_inset_axes(ax, zoom_box["zoom_factor"], loc=2)
 
         # Retrieves values to plot
-        for beta in sorted(plot_values):
-            value = plot_values[beta]
+        for bn in self.sorted_batch_names:
+            value = plot_values[bn]
             x = value["x"]
             y = value["y"]
             y_err = value["y_err"]
             if error_shape == "band":
                 ax.plot(
-                    x, y, "-", label=value["label"], color=self.colors[beta])
+                    x, y, "-", label=value["label"], color=self.colors[bn])
                 ax.fill_between(x, y - y_err, y + y_err, alpha=0.5,
-                                edgecolor="", facecolor=self.colors[beta])
+                                edgecolor="", facecolor=self.colors[bn])
             elif error_shape == "bars":
                 ax.errorbar(x, y, yerr=y_err, capsize=5, fmt="_", ls=":",
-                            label=value["label"], color=self.colors[beta],
-                            ecolor=self.colors[beta])
+                            label=value["label"], color=self.colors[bn],
+                            ecolor=self.colors[bn])
             else:
                 raise KeyError("%s not a recognized plot type" % error_shape)
 
             if not isinstance(zoom_box, type(None)):
                 if error_shape == "band":
                     axins.plot(x, y, "-", label=value["label"],
-                               color=self.colors[beta])
+                               color=self.colors[bn])
                     axins.fill_between(x, y - y_err, y + y_err, alpha=0.5,
                                        edgecolor="",
-                                       facecolor=self.colors[beta])
+                                       facecolor=self.colors[bn])
                 elif error_shape == "bars":
                     axins.errorbar(x, y, yerr=y_err, capsize=5, fmt="_",
                                    ls=":", label=value["label"],
-                                   color=self.colors[beta],
-                                   ecolor=self.colors[beta])
+                                   color=self.colors[bn],
+                                   ecolor=self.colors[bn])
 
         if not isinstance(zoom_box, type(None)):
             axins.set_xlim(zoom_box["xlim"])
@@ -680,12 +704,12 @@ class PostCore(object):
             # Plots a vertical line at position "plot_vline_at"
             if not isinstance(plot_vline_at, types.NoneType):
                 axins.axvline(plot_vline_at, linestyle="--",
-                              color="0", alpha=0.3)
+                              color=self.cont_axvline_color, alpha=0.3)
 
             # Plots a horizontal line at position "plot_hline_at"
             if not isinstance(plot_hline_at, types.NoneType):
                 axins.axhline(plot_hline_at, linestyle="--",
-                              color="0", alpha=0.3)
+                              color=self.cont_axvline_color, alpha=0.3)
 
             mark_inset(ax, axins, loc1=1, loc2=4, fc="none", ec="0.5")
 
@@ -712,11 +736,13 @@ class PostCore(object):
 
         # Plots a vertical line at position "plot_vline_at"
         if not isinstance(plot_vline_at, types.NoneType):
-            ax.axvline(plot_vline_at, linestyle="--", color="0", alpha=0.3)
+            ax.axvline(plot_vline_at, linestyle="--",
+                       color=self.cont_axvline_color, alpha=0.3)
 
         # Plots a horizontal line at position "plot_hline_at"
         if not isinstance(plot_hline_at, types.NoneType):
-            ax.axhline(plot_hline_at, linestyle="--", color="0", alpha=0.3)
+            ax.axhline(plot_hline_at, linestyle="--",
+                       color=self.cont_axvline_color, alpha=0.3)
 
         # Saves and closes figure
         fname = self._get_plot_figure_name(

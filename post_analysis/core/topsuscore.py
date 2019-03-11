@@ -54,44 +54,68 @@ class TopsusCore(PostCore):
         super(TopsusCore, self).set_analysis_data_type(*args, **kwargs)
 
     def _initialize_topsus_func_const(self):
-        """Sets the constant in the topsus function for found beta values."""
-        for beta in self.beta_values:
-            a, a_err = get_lattice_spacing(beta)
-            V = self.lattice_sizes[beta][0]**3 * self.lattice_sizes[beta][1]
+        """Sets the constant in the topsus function for found batches."""
+        for bn in self.batch_names:
+            a, a_err = get_lattice_spacing(self.beta_values[bn])
+            V = self.lattice_sizes[bn][0]**3 * self.lattice_sizes[bn][1]
             V = float(V)
-            self.chi_const[beta] = self.hbarc/a/V**0.25
-            self.chi_const_err[beta] = self.hbarc*a_err/a**2/V**0.25
+            self.chi_const[bn] = self.hbarc/a/V**0.25
+            self.chi_const_err[bn] = self.hbarc*a_err/a**2/V**0.25
 
     def _initialize_topsus_func(self):
-        """Sets the topsus function for all found beta values."""
+        """Sets the topsus function for all found batches."""
 
         self._initialize_topsus_func_const()
 
+        # self.chi = {
+        #     bn: lambda qq: self.chi_const[bn]*qq**(0.25)
+        #     for bn in self.batch_names
+        # }
+
+        # self.chi_der = {
+        #     bn: lambda qq, qqerr: \
+        #         np.sqrt((self.chi_const_err[bn]*qq**0.25)**2 +
+        #                 (0.25*self.chi_const[bn]*qqerr/qq**(0.75))**2)
+        #     for bn in self.batch_names
+        # }
+
+
+        # return
+
+        # exit(1)
+
+        # for bn in self.batch_names:
+        #     self.chi[bn] = 
+
         # Bad hardcoding due to functions stored in a dictionary in a loop is
         # not possible.
-        if 6.0 in self.beta_values:
-            self.chi[6.0] = lambda qq: self.chi_const[6.0]*qq**(0.25)
-            self.chi_der[6.0] = lambda qq, qqerr: \
-                np.sqrt((self.chi_const_err[6.0]*qq**0.25)**2 +
-                        (0.25*self.chi_const[6.0]*qqerr/qq**(0.75))**2)
+        bn = "beta60"
+        if bn in self.batch_names:
+            self.chi[bn] = lambda qq: self.chi_const[bn]*qq**(0.25)
+            self.chi_der[bn] = lambda qq, qqerr: \
+                np.sqrt((self.chi_const_err[bn]*qq**0.25)**2 +
+                        (0.25*self.chi_const[bn]*qqerr/qq**(0.75))**2)
 
-        if 6.1 in self.beta_values:
-            self.chi[6.1] = lambda qq: self.chi_const[6.1]*qq**(0.25)
-            self.chi_der[6.1] = lambda qq, qqerr: \
-                np.sqrt((self.chi_const_err[6.1]*qq**0.25)**2 +
-                        (0.25*self.chi_const[6.1]*qqerr/qq**(0.75))**2)
+        bn = "beta61"
+        if bn in self.batch_names:
+            self.chi[bn] = lambda qq: self.chi_const[bn]*qq**(0.25)
+            self.chi_der[bn] = lambda qq, qqerr: \
+                np.sqrt((self.chi_const_err[bn]*qq**0.25)**2 +
+                        (0.25*self.chi_const[bn]*qqerr/qq**(0.75))**2)
+        
+        bn = "beta62"
+        if bn in self.batch_names:
+            self.chi[bn] = lambda qq: self.chi_const[bn]*qq**(0.25)
+            self.chi_der[bn] = lambda qq, qqerr: \
+                np.sqrt((self.chi_const_err[bn]*qq**0.25)**2 +
+                        (0.25*self.chi_const[bn]*qqerr/qq**(0.75))**2)
 
-        if 6.2 in self.beta_values:
-            self.chi[6.2] = lambda qq: self.chi_const[6.2]*qq**(0.25)
-            self.chi_der[6.2] = lambda qq, qqerr: \
-                np.sqrt((self.chi_const_err[6.2]*qq**0.25)**2 +
-                        (0.25*self.chi_const[6.2]*qqerr/qq**(0.75))**2)
-
-        if 6.45 in self.beta_values:
-            self.chi[6.45] = lambda qq: self.chi_const[6.45]*qq**(0.25)
-            self.chi_der[6.45] = lambda qq, qqerr: \
-                np.sqrt((self.chi_const_err[6.45]*qq**0.25)**2 +
-                        (0.25*self.chi_const[6.45]*qqerr/qq**(0.75))**2)
+        bn = "beta645"
+        if bn in self.batch_names:
+            self.chi[bn] = lambda qq: self.chi_const[bn]*qq**(0.25)
+            self.chi_der[bn] = lambda qq, qqerr: \
+                np.sqrt((self.chi_const_err[bn]*qq**0.25)**2 +
+                        (0.25*self.chi_const[bn]*qqerr/qq**(0.75))**2)
 
     def get_fit_targets(self, fit_target):
         """Sets up the fit targets."""
@@ -99,20 +123,21 @@ class TopsusCore(PostCore):
         if isinstance(fit_target, str):
             tmp_ref = (self.reference_values[self.extrapolation_method]
                        [self.analysis_data_type])
+
             # Either t0 or w0
             if fit_target == "t0":
 
                 # Sets up sqrt(8*t0)
-                fit_targets = [np.sqrt(8*tmp_ref[_b]["t0"])
-                               for _b in self.beta_values]
+                fit_targets = [np.sqrt(8*tmp_ref[bn]["t0"])
+                               for bn in self.batch_names]
                 self.fit_target = r"\sqrt{8t_0}=[%s]" % (
                     str(", ".join(["{0:.4f}".format(_t) for _t in fit_targets])))
 
             elif fit_target == "w0":
 
                 # Sets up sqrt(8*w0^2)
-                fit_targets = [np.sqrt(8*tmp_ref[_b]["w0"]**2)
-                               for _b in self.beta_values]
+                fit_targets = [np.sqrt(8*tmp_ref[bn]["w0"]**2)
+                               for bn in self.batch_names]
                 self.fit_target = r"\sqrt{8w_0^2}=[%s]" % (
                     ", ".join(["{0:.4f}".format(_t) for _t in fit_targets]))
 
@@ -120,7 +145,7 @@ class TopsusCore(PostCore):
 
                 # Continuum fit of t0
                 fit_targets = [np.sqrt(8*tmp_ref["t0cont"])
-                               for _b in self.beta_values]
+                               for bn in self.batch_names]
                 self.fit_target = (
                     r"\sqrt{8 t_{0,\mathrm{cont}}}=%.4f"
                     % np.sqrt(8*tmp_ref["t0cont"]*self.r0**2))
@@ -129,7 +154,7 @@ class TopsusCore(PostCore):
 
                 # Continuum fit of w0
                 fit_targets = [np.sqrt(8*tmp_ref["w0cont"]**2)
-                               for _b in self.beta_values]
+                               for bn in self.batch_names]
                 self.fit_target = (r"\sqrt{w_{0,\mathrm{cont}}^2} = %.4f"
                                    % np.sqrt(8*(tmp_ref["w0cont"])**2))
 
@@ -139,7 +164,7 @@ class TopsusCore(PostCore):
                                "reecognized.".format(fit_target))
 
         elif isinstance(fit_target, float):
-            fit_targets = [fit_target for _b in self.beta_values]
+            fit_targets = [fit_target for bn in self.batch_names]
             self.fit_target = (r"\sqrt{8 t_{f,0,\mathrm{extrap}}} = %.2f" %
                                fit_target)
         else:
@@ -159,7 +184,7 @@ class TopsusCore(PostCore):
             fit_target: float or str. If float, will choose corresponding
                 float time t_f value of where we extrapolate from. If string,
                 one can choose either 't0', 't0cont', 'w0' and 'w0cont'. 't0' 
-                and 'w0' will use values for given beta value. For 't0cont' 
+                and 'w0' will use values for given batch. For 't0cont' 
                 and 'w0cont' will use extrapolated values to select topsus 
                 values from.
             title_addendum: str, optional, default is an empty string, ''.
@@ -216,25 +241,25 @@ class TopsusCore(PostCore):
         a, a_err, a_norm_factor, a_norm_factor_err, obs, obs_raw, obs_err, \
             tau_int_corr = [], [], [], [], [], [], [], []
 
-        for i, beta in enumerate(sorted(self.plot_values)):
-            if self.with_autocorr:
-                tau_int = self.plot_values[beta]["tau_int"]
-                tau_int_err = self.plot_values[beta]["tau_int_err"]
+        for i, bn in enumerate(self.sorted_batch_names):
+            if self.with_autocorr and not "blocked" in self.analysis_data_type:
+                tau_int = self.plot_values[bn]["tau_int"]
+                tau_int_err = self.plot_values[bn]["tau_int_err"]
             else:
                 tau_int = None
                 tau_int_err = None
 
             # Extrapolation of point to use in continuum extrapolation
             res = extract_fit_target(
-                fit_targets[i],  self.plot_values[beta]["x"],
-                self.plot_values[beta]["y"],
-                self.plot_values[beta]["y_err"],
-                y_raw=self.plot_values[beta]["y_raw"],
+                fit_targets[i],  self.plot_values[bn]["x"],
+                self.plot_values[bn]["y"],
+                self.plot_values[bn]["y_err"],
+                y_raw=self.plot_values[bn]["y_raw"],
                 tau_int=tau_int, tau_int_err=tau_int_err,
                 extrapolation_method=extrapolation_method,
                 plateau_size=plateau_fit_size, interpolation_rank=3,
-                plot_fit=plot_continuum_fit, raw_func=self.chi[beta],
-                raw_func_err=self.chi_der[beta], plot_samples=False,
+                plot_fit=plot_continuum_fit, raw_func=self.chi[bn],
+                raw_func_err=self.chi_der[bn], plot_samples=False,
                 verbose=False)
 
             _x0, _y0, _y0_error, _y0_raw, _tau_int0 = res
@@ -242,14 +267,15 @@ class TopsusCore(PostCore):
             # In case something is wrong -> skip
             if np.isnan([_y0, _y0_error]).any():
                 print "NaN type detected: skipping calculation"
+                # print _y0, _y0_error, fit_targets[i],  self.plot_values[bn]["x"], self.plot_values[bn]["y"], self.plot_values[bn]["y_err"],
                 return
 
             if self.verbose:
                 msg = "Beta = %4.2f Topsus = %14.12f +/- %14.12f" % (
-                    beta, _y0, _y0_error)
+                    self.beta_values[bn], _y0, _y0_error)
 
-            a.append(self.plot_values[beta]["a"])
-            a_err.append(self.plot_values[beta]["a_err"])
+            a.append(self.plot_values[bn]["a"])
+            a_err.append(self.plot_values[bn]["a_err"])
 
             if isinstance(t0_values, types.NoneType):
                 a_norm_factor.append(_x0)
@@ -259,7 +285,7 @@ class TopsusCore(PostCore):
                 a_norm_factor_err.append(t0_values["t0cont_err"])
 
                 if self.verbose:
-                    _tmp = t0_values["t0cont"]/(self.plot_values[beta]["a"]**2)
+                    _tmp = t0_values["t0cont"]/(self.plot_values[bn]["a"]**2)
                     _tmp *= self.r0**2
                     msg += " t0 = %14.12f" % (_tmp)
 

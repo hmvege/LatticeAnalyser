@@ -241,7 +241,6 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
             data, figures_folder=figures_folder, verbose=verbose)
         for analysis_type in post_analysis_data_type:
             topc_analysis.set_analysis_data_type(analysis_type)
-            exit("Success!!")
             print topc_analysis
             topc_analysis.plot(y_limits=[-5, 5])
             topc_analysis.plot_autocorrelation()
