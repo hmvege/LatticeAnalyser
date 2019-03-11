@@ -200,15 +200,6 @@ class FlowAnalyser(object):
         self.integrated_autocorrelation_time_error = np.zeros(self.NFlows)
         self.autocorrelation_error_correction = np.ones(self.NFlows)
 
-        # Blocking analysis content
-        self.blocking_performed = False
-        self.blocking_sizes = []
-        self.blocked_variances = []
-        self.blocked_data = []
-        # self.blocked_bootstrap_raw = np.zeros((self.NFlows, self.N_bs))
-        self.blocked_bootstrap = np.empty(self.NFlows)
-        self.blocked_bootstrap_std = np.empty(self.NFlows)
-
     def _set_q0_time_and_index(self, q0_flow_time):
         """
         Internal method for setting q0_flow_time and finding the correct q0
@@ -391,6 +382,8 @@ class FlowAnalyser(object):
         # Runs bs and unanalyzed data through the F and F_error
         self.bs_y_std = F_error(self.bs_y, self.bs_y_std)
         self.bs_y = F(self.bs_y)
+
+        print self.bs_y[-10:]
 
         self.unanalyzed_y_std = F_error(
             self.unanalyzed_y, self.unanalyzed_y_std)
@@ -780,10 +773,6 @@ class FlowAnalyser(object):
                     self.beta).replace('.', '_'),
                 self.fname_addon))
 
-        # Adds noErrorCorrection if we are not blocking
-        if not plot_blocked:
-            fname_path = self.__check_ac(fname_path)
-
         # Plots the jackknifed data
         self.__plot_error_core(x, correction_function(y),
                                error_correction_function(y, y_std),
@@ -844,7 +833,7 @@ class FlowAnalyser(object):
             else:
                 y = self.unanalyzed_y
                 y_std = self.unanalyzed_y_std
-                y_std *=self.autocorrelation_error_correction
+                y_std *= self.autocorrelation_error_correction
 
         # Sets up the title and filename strings
         if _plot_bs:

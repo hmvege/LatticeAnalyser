@@ -45,8 +45,9 @@ class Bootstrap:
 
         # Performing basic bootstrap statistics
         self.bs_avg = np.average(self.bs_data, axis=axis)
-        # self.bs_var = np.var(self.bs_data, axis=axis) 
-        self.bs_std = np.std(self.bs_data, axis=axis)
+        self.bs_var = np.var(self.bs_data, axis=axis) 
+        self.bs_std = np.sqrt(self.bs_var)
+        # self.bs_std = np.std(self.bs_data, axis=axis)
 
         # Performing basic statistics on original data
         self.data_original = data

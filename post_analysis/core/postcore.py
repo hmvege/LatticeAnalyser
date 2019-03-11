@@ -663,11 +663,13 @@ class PostCore(object):
             # 2.5: zoom factor, loc=2: upper left
             axins = zoomed_inset_axes(ax, zoom_box["zoom_factor"], loc=2)
 
+
         # Retrieves values to plot
         for bn in self.sorted_batch_names:
             value = plot_values[bn]
             x = value["x"]
             y = value["y"]
+            print "Final beta %s values:" %bn, y[-10:]
             y_err = value["y_err"]
             if error_shape == "band":
                 ax.plot(

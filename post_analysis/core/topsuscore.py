@@ -217,6 +217,7 @@ class TopsusCore(PostCore):
                 bootstrapped line fitted data, raw_func_err(y, yerr).
                 Calculated by regular error propagation.
         """
+
         self.extrapolation_method = extrapolation_method
         if not isinstance(self.reference_values, types.NoneType):
             if extrapolation_method in self.reference_values.keys():

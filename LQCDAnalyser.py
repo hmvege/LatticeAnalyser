@@ -24,11 +24,14 @@ def main():
     run_post_analysis = True
 
     # Overriding params for what to run
-    run_pre_analysis = False
+    # run_pre_analysis = False
     # run_post_analysis = False
 
+    only_generate_data = True
+
     main_analysis(run_pre_analysis=run_pre_analysis,
-                  run_post_analysis=run_post_analysis)
+                  run_post_analysis=run_post_analysis,
+                  only_generate_data=only_generate_data)
 
     # beta645_L32_analysis(run_pre_analysis=run_pre_analysis,
     #                      run_post_analysis=run_post_analysis)

@@ -1,7 +1,8 @@
 #!/usr/bin/env python2
 
 
-def main_analysis(run_pre_analysis=True, run_post_analysis=True):
+def main_analysis(run_pre_analysis=True, run_post_analysis=True,
+                  only_generate_data=False):
     from pre_analysis.pre_analyser import pre_analysis
     from post_analysis.post_analyser import post_analysis
     from default_analysis_params import get_default_parameters
@@ -26,7 +27,8 @@ def main_analysis(run_pre_analysis=True, run_post_analysis=True):
     observables = ["topsus"]
     # observables = ["energy"]
     # observables = ["w_t_energy"]
-    observables = ["plaq", "energy", "topc", "topsus", "topc2", "topc4", "qtq0eff"]
+    observables = ["plaq", "energy", "topc",
+                   "topsus", "topc2", "topc4", "qtq0eff"]
     observables = ["topsus"]
 
     default_params["observables"] = observables
@@ -76,7 +78,7 @@ def main_analysis(run_pre_analysis=True, run_post_analysis=True):
     default_params["blocking_analysis"] = True
 
     # Check to only generate data for post-analysis
-    default_params["only_generate_data"] = True
+    default_params["only_generate_data"] = only_generate_data
 
     ########## Main analysis ##########
     databeta60 = copy.deepcopy(default_params)

@@ -14,6 +14,9 @@ def analyse_default(analysis_object, N_bs, perform_blocking_analysis=False,
     """Default analysis method for pre-analysis."""
     print(analysis_object)
 
+    analysis_object.boot(N_bs, index_lists=bs_index_lists)
+    analysis_object.jackknife()
+
     if perform_blocking_analysis:
         analysis_object.block(block_size=block_size)
         if isinstance(block_size, type(None)):
@@ -24,8 +27,6 @@ def analyse_default(analysis_object, N_bs, perform_blocking_analysis=False,
             analysis_object.plot_bootstrap(plot_blocked=True)
             analysis_object.plot_original(plot_blocked=True)
 
-    analysis_object.boot(N_bs, index_lists=bs_index_lists)
-    analysis_object.jackknife()
     analysis_object.save_post_analysis_data()  # Save non-autocorrelation data
 
     if not only_generate_data:

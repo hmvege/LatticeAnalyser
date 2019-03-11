@@ -12,7 +12,8 @@ except ImportError:
     from tools.folderreadingtools import get_num_observables, check_folder
 
 
-def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True):
+def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True,
+                         only_generate_data=False):
     from pre_analysis.pre_analyser import pre_analysis
     from post_analysis.post_analyser import post_analysis
     from default_analysis_params import get_default_parameters
@@ -20,17 +21,12 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True):
     import copy
     import os
 
-    # TODO: merge data folders data9, data10 into data11
-    # TODO: load b645 32^4 data
-    # TODO: pre-analyse b645 32^4 data
-    # TODO: compare b645 32^4 and b645 48^3*96 data in post analysis
-
     # Different batches
     data_batch_folder = "../data/data11"
 
     obs_exlusions = ["w_t_energy", "energy", "topcMC", "topsusMC", "qtq0effMC"]
     default_params = get_default_parameters(
-        data_batch_folder=data_batch_folder, 
+        data_batch_folder=data_batch_folder,
         obs_exlusions=obs_exlusions)
 
     # Post analysis figures folder
@@ -86,13 +82,13 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True):
     default_params["blocking_analysis"] = True
 
     # Check to only generate data for post-analysis
-    default_params["only_generate_data"] = True
+    default_params["only_generate_data"] = only_generate_data
 
     ########## Main analysis ##########
     databeta60 = copy.deepcopy(default_params)
     databeta60["batch_name"] = "beta60"
     databeta60["beta"] = 6.0
-    databeta60["block_size"] = 10 # None
+    databeta60["block_size"] = 10  # None
     databeta60["topc_y_limits"] = [-9, 9]
     databeta60["topc2_y_limits"] = [-81, 81]
     databeta60["NCfgs"] = get_num_observables(
@@ -107,7 +103,7 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True):
     databeta61 = copy.deepcopy(default_params)
     databeta61["batch_name"] = "beta61"
     databeta61["beta"] = 6.1
-    databeta61["block_size"] = 10 # None
+    databeta61["block_size"] = 10  # None
     databeta61["topc_y_limits"] = [-12, 12]
     databeta61["topc2_y_limits"] = [-144, 144]
     databeta61["NCfgs"] = get_num_observables(
@@ -122,11 +118,11 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True):
     databeta62 = copy.deepcopy(default_params)
     databeta62["batch_name"] = "beta62"
     databeta62["beta"] = 6.2
-    databeta62["block_size"] = 10 # None
+    databeta62["block_size"] = 10  # None
     databeta62["topc_y_limits"] = [-12, 12]
     databeta62["topc2_y_limits"] = [-196, 196]
     databeta62["NCfgs"] = get_num_observables(
-        databeta62["batch_folder"], 
+        databeta62["batch_folder"],
         databeta62["batch_name"])
     databeta62["obs_file"] = "32_6.20"
     databeta62["MCInt"] = MC_intervals[2]
@@ -138,7 +134,7 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True):
     databeta645["flow_epsilon"] = 0.02
     databeta645["batch_name"] = "beta645"
     databeta645["beta"] = 6.45
-    databeta645["block_size"] = 25 # None
+    databeta645["block_size"] = 25  # None
     databeta645["topc_y_limits"] = [-15, 15]
     databeta645["topc2_y_limits"] = [-300, 300]
     databeta645["NCfgs"] = get_num_observables(
@@ -154,7 +150,7 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True):
     databeta645_32xx4["flow_epsilon"] = 0.02
     databeta645_32xx4["batch_name"] = "beta645-32xx4"
     databeta645_32xx4["beta"] = 6.45
-    databeta645_32xx4["block_size"] = 40 # None
+    databeta645_32xx4["block_size"] = 40  # None
     databeta645_32xx4["topc_y_limits"] = [-15, 15]
     databeta645_32xx4["topc2_y_limits"] = [-300, 300]
     databeta645_32xx4["NCfgs"] = get_num_observables(
