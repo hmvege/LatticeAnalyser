@@ -188,15 +188,13 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 
 		self.x_label = x_label_old
 
-	def plot_series(self, euclidean_percent, indexes, beta="all", x_limits=False, 
+	def plot_series(self, euclidean_percent, indexes, x_limits=False, 
 		y_limits=False, plot_with_formula=False):
 		"""
 		Method for plotting 4 axes together.
 
 		Args:
 			indexes: list containing integers of which intervals to plot together.
-			beta: beta values to plot. Default is "all". Otherwise, 
-				a list of numbers or a single beta value is provided.
 			x_limits: limits of the x-axis. Default is False.
 			y_limits: limits of the y-axis. Default is False.
 			plot_with_formula: bool, default is false, is True will look for 
@@ -212,7 +210,7 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 			self.observable_name_compact,
 			self.analysis_data_type, euclidean_percent)
 
-		self._series_plot_core(indexes, beta="all", x_limits=False, 
+		self._series_plot_core(indexes, x_limits=False, 
 		y_limits=False, plot_with_formula=False, fname=fname)
 
 def main():

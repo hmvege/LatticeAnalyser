@@ -70,22 +70,31 @@ class PostCore(object):
         self.verbose = verbose
         self.dryrun = dryrun
 
-        self.beta_values = sorted(data.beta_values)
+        self.beta_values = data.beta_values
+        self.batch_names = data.batch_names
         self.colors = data.colors
         self.lattice_sizes = data.lattice_sizes
+        self.lattice_volumes = data.lattice_volumes
         self.size_labels = data.labels
         self._setup_analysis_types(data.analysis_types)
         self.print_latex = data.print_latex
 
-        self.data = {atype: {beta: {} for beta in self.beta_values}
+        self.data = {atype: {b: {} for b in self.batch_names}
                      for atype in self.analysis_types}
 
-        self.flow_epsilon = {b: data.flow_epsilon[b] for b in self.beta_values}
+        self.data_map = {bn: {"lattice_volume": self.lattice_volumes[bn],
+                              "beta": self.beta_values[bn]}
+                         for bn in self.batch_names}
+
+        self.flow_epsilon = {b: data.flow_epsilon[b] for b in self.batch_names}
+
+        self.sorted_batch_names = sorted(self.batch_names, key=lambda _k: (
+            self.data_map[_k]["beta"], self.data_map[_k]["lattice_volume"]))
 
         # Only sets this variable if we have sub-intervals in order to avoid
         # bugs.
         if self.sub_obs:
-            self.observable_intervals = {b: {} for b in self.beta_values}
+            self.observable_intervals = {b: {} for b in self.batch_names}
             # for beta in self.beta_values:
             #   self.observable_intervals[beta] = {}
 
@@ -96,47 +105,47 @@ class PostCore(object):
         assert observable in data.observable_list, assert_msg
 
         for atype in self.analysis_types:
-            for beta in self.beta_values:
-                _tmp = data.data_observables[observable][beta]
+            for bn in self.batch_names:
+                _tmp = data.data_observables[observable][bn]
                 if self.sub_obs:
                     if self.sub_sub_obs:
                         for subobs in _tmp:
                             # Sets sub-sub intervals
-                            self.observable_intervals[beta][subobs] = \
+                            self.observable_intervals[bn][subobs] = \
                                 _tmp[subobs].keys(
                             )
 
                             # Sets up additional subsub-dictionaries
-                            self.data[atype][beta][subobs] = {}
+                            self.data[atype][bn][subobs] = {}
 
                             for subsubobs in _tmp[subobs]:
 
-                                self.data[atype][beta][subobs][subsubobs] = \
+                                self.data[atype][bn][subobs][subsubobs] = \
                                     _tmp[subobs][subsubobs][self.ac][atype]
 
                                 if self.with_autocorr:
-                                    self.data[atype][beta][subobs][subsubobs]["ac"] = \
+                                    self.data[atype][bn][subobs][subsubobs]["ac"] = \
                                         _tmp[subobs][subsubobs]["with_autocorr"]["autocorr"]
 
                     else:
                         # Fills up observable intervals
-                        self.observable_intervals[beta] = \
+                        self.observable_intervals[bn] = \
                             _tmp.keys()
 
                         for subobs in _tmp:
 
-                            self.data[atype][beta][subobs] = \
+                            self.data[atype][bn][subobs] = \
                                 _tmp[subobs][self.ac][atype]
 
                             if self.with_autocorr:
-                                self.data[atype][beta][subobs]["ac"] = \
+                                self.data[atype][bn][subobs]["ac"] = \
                                     _tmp[subobs]["with_autocorr"]["autocorr"]
 
                 else:
-                    self.data[atype][beta] = _tmp[self.ac][atype]
+                    self.data[atype][bn] = _tmp[self.ac][atype]
 
                     if self.with_autocorr:
-                        self.data[atype][beta]["ac"] = \
+                        self.data[atype][bn]["ac"] = \
                             _tmp["with_autocorr"]["autocorr"]
 
         self.data_raw = {}
@@ -153,7 +162,7 @@ class PostCore(object):
                 self.data_raw[atype] = data.raw_analysis[atype]
 
         # Small test to ensure that the number of bootstraps and number of
-        # different beta batches match
+        # different batches names match
         err_msg = ("Number of bootstraps do not match number "
                    "of different beta values")
         assertion_bool = \
@@ -212,41 +221,35 @@ class PostCore(object):
         self._initiate_plot_values(self.data[analysis_data_type],
                                    self.data_raw[analysis_data_type])
 
-    def print_estimates(self, flow_times=[]):
-        """
-        Prints the topsus values given the flow time.
-        """
-        for bval, tf0 in zip(self.beta_values, flow_times):
-            print self.beta_values[bval]["y"][tf0]
-
     def _initiate_plot_values(self, data, data_raw):
         """Sorts data into a format specific for the plotting method."""
-        for beta in sorted(data):
+        for bn in self.sorted_batch_names:
             values = {}
-            values["a"], values["a_err"] = get_lattice_spacing(beta)
-            values["sqrt8t"] = values["a"]*np.sqrt(8*data[beta]["x"])
-            values["x"] = values["a"] * np.sqrt(8*data[beta]["x"])
-            values["y"] = data[beta]["y"]
-            values["y_err"] = data[beta]["y_error"]
-            values["y_raw"] = data_raw[beta][self.observable_name_compact]
+            values["beta"] = self.beta_values[bn]
+            values["a"], values["a_err"] = get_lattice_spacing(values["beta"])
+            values["sqrt8t"] = values["a"]*np.sqrt(8*data[bn]["x"])
+            values["x"] = values["a"] * np.sqrt(8*data[bn]["x"])
+            values["y"] = data[bn]["y"]
+            values["y_err"] = data[bn]["y_error"]
+            values["y_raw"] = data_raw[bn][self.observable_name_compact]
             values["y_uraw"] = \
-                self.data_raw["unanalyzed"][beta][self.observable_name_compact]
+                self.data_raw["unanalyzed"][bn][self.observable_name_compact]
 
             if self.with_autocorr:
-                values["tau_int"] = data[beta]["ac"]["tau_int"]
-                values["tau_int_err"] = data[beta]["ac"]["tau_int_err"]
-                values["tau_raw"] = self.ac_raw["ac_raw"][beta]
-                values["tau_raw_err"] = self.ac_raw["ac_raw_error"][beta]
+                values["tau_int"] = data[bn]["ac"]["tau_int"]
+                values["tau_int_err"] = data[bn]["ac"]["tau_int_err"]
+                values["tau_raw"] = self.ac_raw["ac_raw"][bn]
+                values["tau_raw_err"] = self.ac_raw["ac_raw_error"][bn]
             else:
                 values["tau_int"] = None
                 values["tau_int_err"] = None
                 values["tau_raw"] = None
                 values["tau_raw_err"] = None
             values["label"] = r"%s $\beta=%2.2f$" % (
-                self.size_labels[beta], beta)
-            values["color"] = self.colors[beta]
+                self.size_labels[bn], values["beta"])
+            values["color"] = self.colors[bn]
 
-            self.plot_values[beta] = values
+            self.plot_values[bn] = values
 
     def _extract_flow_time_index(self, target_flow):
         """
@@ -398,7 +401,6 @@ class PostCore(object):
         ax0.tick_params(labelcolor='none', top=False, bottom=False,
                         left=False, right=False)
 
-
         # Retrieves values to plot
         for _ax_val in zip(range(len(flow_indices)), axes,
                            sorted(self.plot_values), flow_indices):
@@ -452,9 +454,9 @@ class PostCore(object):
         plt.close(fig)
 
     def plot_mc_history_at(self, target_flow=0, x_limits=False,
-                                y_limits=False, figure_folder=None,
-                                plot_vline_at=None, plot_hline_at=None,
-                                show_plot=False):
+                           y_limits=False, figure_folder=None,
+                           plot_vline_at=None, plot_hline_at=None,
+                           show_plot=False):
         """
         Plots the Monte-Carlo history at a given flow time target_flow.
         """
@@ -531,7 +533,6 @@ class PostCore(object):
             plt.show()
 
         plt.close(fig)
-
 
     def _get_plot_figure_name(self, output_folder=None,
                               figure_name_appendix=""):

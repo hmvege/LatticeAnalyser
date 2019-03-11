@@ -46,17 +46,14 @@ class PostAnalysisDataReader:
         # Observables to load, enables fast load times when only analysing few
         self.observables_to_load = [o.lower() for o in observables_to_load]
 
-        # Number of betas variable
-        self.beta_values = []
-
         # Reference Scale, must be set after initial loading if it to be used
         self.reference_values = None
 
         # Iterates over the different beta value folders, i.e. different
         # datasets.
-        for beta_folder in self.data_run_folders:
+        for batch_name, batch_folder in zip(self.batch_names, self.data_batch_folders):
             # Construct beta post analysis folder path
-            beta_dir_path = os.path.join(beta_folder, "post_analysis_data")
+            batch_dir_path = os.path.join(batch_folder, "post_analysis_data")
 
             observables_data = {}
             obs_data_raw = {}
@@ -65,15 +62,15 @@ class PostAnalysisDataReader:
 
             # Tries to load the parameter file
             try:
-                param_file = os.path.join(beta_folder, "post_analysis_data",
+                param_file = os.path.join(batch_folder, "post_analysis_data",
                                           "params.json")
                 self.param_beta = self._get_parameter_data(param_file)["beta"]
                 _beta_values.append(self.param_beta)
             except IOError:
                 print "No parameter file found."
 
-            for obs in self._get_dir_content(beta_dir_path):
-                obs_dir_path = os.path.join(beta_dir_path, obs)
+            for obs in self._get_dir_content(batch_dir_path):
+                obs_dir_path = os.path.join(batch_dir_path, obs)
 
                 if os.path.splitext(obs_dir_path)[-1] == ".json":
                     continue
@@ -147,13 +144,12 @@ class PostAnalysisDataReader:
 
             assert np.asarray(_beta_values).all(), "betas not equal."
             beta = _beta_values[0]
-            self.beta_values.append(beta)
 
             # Stores batch data
-            self.data_batches[beta] = cp.deepcopy(observables_data)
+            self.data_batches[batch_name] = cp.deepcopy(observables_data)
 
             # Stores the binary data
-            self.data_raw[beta] = obs_data_raw
+            self.data_raw[batch_name] = obs_data_raw
 
             # Frees memory
             del observables_data
@@ -192,7 +188,7 @@ class PostAnalysisDataReader:
 
     def _set_batch_name(self, batch_parameters):
         """Sets batch name and batch folder."""
-        self.data_run_folders = [os.path.join(b["batch_folder"],
+        self.data_batch_folders = [os.path.join(b["batch_folder"],
                                               b["batch_name"])
                                  for b in batch_parameters]
 
@@ -213,24 +209,28 @@ class PostAnalysisDataReader:
         self.batch_name = list(_bnames)[0]
         self.batch_folder = list(_bfolders)[0]
 
+        self.batch_names = [b["batch_name"] for b in batch_parameters]
+
     def _set_lattice_parameters(self, batch_parameters):
         """Sets the correct labels, colors and lattice sizes."""
         self.lattice_sizes = {}
         self.lattice_volumes = {}
         self.N = {}
         self.NT = {}
+        self.beta_values = {}
         self.flow_epsilon = {}
         self.colors = {}
         self.labels = {}
         _print_latex_list = []
         for b in batch_parameters:
-            self.N[b["beta"]] = b["N"]
-            self.NT[b["beta"]] = b["NT"]
-            self.lattice_sizes[b["beta"]] = [b["N"], b["NT"]]
-            self.lattice_volumes[b["beta"]] = b["N"]**3*b["NT"]
-            self.flow_epsilon[b["beta"]] = b["flow_epsilon"]
-            self.colors[b["beta"]] = b["color"]
-            self.labels[b["beta"]] = r"$%d^3 \times %d$" % (b["N"], b["NT"])
+            self.N[b["batch_name"]] = b["N"]
+            self.NT[b["batch_name"]] = b["NT"]
+            self.beta_values[b["batch_name"]] = b["beta"]
+            self.lattice_sizes[b["batch_name"]] = [b["N"], b["NT"]]
+            self.lattice_volumes[b["batch_name"]] = b["N"]**3*b["NT"]
+            self.flow_epsilon[b["batch_name"]] = b["flow_epsilon"]
+            self.colors[b["batch_name"]] = b["color"]
+            self.labels[b["batch_name"]] = r"$%d^3 \times %d$" % (b["N"], b["NT"])
             _print_latex_list.append(b["print_latex"])
 
         assert len(set(_print_latex_list)), (
@@ -469,113 +469,95 @@ class PostAnalysisDataReader:
         self.data_observables = {}
 
         # Sets up new dictionaries by looping over batch names
-        for beta in self.data_batches:
+        for batch_name in self.data_batches:
             # Loops over observable names
-            for observable_name in self.data_batches[beta]:
+            for observable_name in self.data_batches[batch_name]:
                 # Creates new sub-dictionary ordered by the observable name
                 self.data_observables[observable_name] = {}
 
         # Places data into dictionaries
-        for beta in self.data_batches:
+        for batch_name in self.data_batches:
             # Loops over the batch observable
-            for observable_name in self.data_batches[beta]:
+            for observable_name in self.data_batches[batch_name]:
                 # Stores the batch data in a sub-dictionary
-                self.data_observables[observable_name][beta] = \
-                    self.data_batches[beta][observable_name]
+                self.data_observables[observable_name][batch_name] = \
+                    self.data_batches[batch_name][observable_name]
+
 
     def _reorganize_raw_data(self):
-        """Reorganizes the data into beta-values and observables sorting."""
+        """Reorganizes the data into batch names and observables sorting."""
         self.raw_analysis = \
             {analysis_type: {} for analysis_type in self.analysis_types}
 
-        # Sets up new beta value dictionaries
-        for beta in self.data_raw:
-            # self.raw_analysis[beta] = {}
+        # Sets up new batch_name value dictionaries
+        for batch_name in self.data_raw:
 
             # Loops over observable names and sets up dicts
-            for observable_name in self.data_raw[beta]:
-                # self.raw_analysis[beta][observable_name] = {}
+            for observable_name in self.data_raw[batch_name]:
+                # self.raw_analysis[batch_name][observable_name] = {}
 
-                for sub_elem in self.data_raw[beta][observable_name]:
+                for sub_elem in self.data_raw[batch_name][observable_name]:
 
                     if not sub_elem in self.analysis_types:
                         for analysis_type in self.analysis_types:
                             self._check_raw_bin_dict_keys(
-                                analysis_type, beta, observable_name, sub_elem)
+                                analysis_type, batch_name, observable_name, sub_elem)
                     else:
                         self._check_raw_bin_dict_keys(
-                            sub_elem, beta, observable_name)
+                            sub_elem, batch_name, observable_name)
 
         # Populates dictionaries
-        for beta in self.data_raw:
+        for batch_name in self.data_raw:
             # Loops over observable names
-            for observable_name in self.data_raw[beta]:
+            for observable_name in self.data_raw[batch_name]:
                 # Loops over analysis types contained in observable name,
                 # unless it is a split observable
-                for sub_elem in self.data_raw[beta][observable_name]:
+                for sub_elem in self.data_raw[batch_name][observable_name]:
                     if sub_elem in self.analysis_types:
                         atype = sub_elem
-                        self.raw_analysis[atype][beta][observable_name] = \
-                            self.data_raw[beta][observable_name][atype]
+                        self.raw_analysis[atype][batch_name][observable_name] = \
+                            self.data_raw[batch_name][observable_name][atype]
 
                     else:
-                        self._reorganize_raw_sub_sub(beta,
+                        self._reorganize_raw_sub_sub(batch_name,
                                                      sub_elem, observable_name)
 
-    def _reorganize_raw_sub_sub(self, beta, sub_elem, obs_name):
+
+    def _reorganize_raw_sub_sub(self, batch_name, sub_elem, obs_name):
         """Internal method for re-organizing the raw data."""
 
         # Loops over sub-sub element
-        for ss in self.data_raw[beta][obs_name][sub_elem]:
+        for ss in self.data_raw[batch_name][obs_name][sub_elem]:
 
             # Checks if we have an raw analysis dictionary
             if ss in self.analysis_types:
                 atype = ss
-                self.raw_analysis[atype][beta][obs_name][sub_elem] = \
-                    self.data_raw[beta][obs_name][sub_elem][atype]
+                self.raw_analysis[atype][batch_name][obs_name][sub_elem] = \
+                    self.data_raw[batch_name][obs_name][sub_elem][atype]
 
             else:
-                for atype in self.data_raw[beta][obs_name][sub_elem][ss]:
-                    self.raw_analysis[atype][beta][obs_name][sub_elem][ss] = \
-                        self.data_raw[beta][obs_name][sub_elem][ss][atype]
+                for atype in self.data_raw[batch_name][obs_name][sub_elem][ss]:
+                    self.raw_analysis[atype][batch_name][obs_name][sub_elem][ss] = \
+                        self.data_raw[batch_name][obs_name][sub_elem][ss][atype]
 
-    def _check_raw_bin_dict_keys(self, analysis_type, beta, observable_name,
+    def _check_raw_bin_dict_keys(self, analysis_type, batch_name, observable_name,
                                  sub_obs=None):
         """
         Internal method for setting up dictionaries in case they do not exist.
         """
 
-        if beta not in self.raw_analysis[analysis_type]:
-            self.raw_analysis[analysis_type][beta] = {}
+        if batch_name not in self.raw_analysis[analysis_type]:
+            self.raw_analysis[analysis_type][batch_name] = {}
 
-        if observable_name not in self.raw_analysis[analysis_type][beta]:
-            self.raw_analysis[analysis_type][beta][observable_name] = {}
+        if observable_name not in self.raw_analysis[analysis_type][batch_name]:
+            self.raw_analysis[analysis_type][batch_name][observable_name] = {}
 
         if sub_obs != None:
             if sub_obs not in \
-                    self.raw_analysis[analysis_type][beta][observable_name]:
+                    self.raw_analysis[analysis_type][batch_name][observable_name]:
 
                 self.raw_analysis[analysis_type][
-                    beta][observable_name][sub_obs] = {}
-
-    def _retrieve_sub_sub(self, obs_dir_path):
-        """
-        Internal method for retrieving observable qtq0e, as that it contains 
-        nested folders.
-        """
-
-        print "subsub is used!"
-
-        # print obs_dir_path
-        for flow_folder in self._get_dir_content(obs_dir_path):
-            flow_folder_path = os.path.join(obs_dir_path, flow_folder)
-
-            for eucl_folder in self._get_dir_content(flow_folder_path):
-                eucl_folder_path = os.path.join(flow_folder_path,
-                                                eucl_folder)
-
-            exit(1)
-        raise NotImplementedError("qtq0e not completely implemented")
+                    batch_name][observable_name][sub_obs] = {}
 
     @staticmethod
     def _get_dir_content(folder):

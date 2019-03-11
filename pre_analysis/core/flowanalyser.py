@@ -731,7 +731,7 @@ class FlowAnalyser(object):
             self.save_raw_analysis_data(self.blocked_bootstrap_raw,
                                         "blocked_bootstrap")
             self.save_raw_analysis_data(self.blocked_raw,
-                                        "blocked_bootstrap")
+                                        "blocked")
 
         self.N_block_bs = N_bs
         self.blocking_performed = True

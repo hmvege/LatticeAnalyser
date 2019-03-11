@@ -154,7 +154,7 @@ class MultiPlotCore(PostCore):
 
         return intervals
 
-    def plot_series(self, indexes, beta="all", x_limits=False,
+    def plot_series(self, indexes, x_limits=False,
                     y_limits=False, plot_with_formula=False, error_shape="band"):
         """
         Method for plotting 4 axes together.
@@ -162,8 +162,6 @@ class MultiPlotCore(PostCore):
         Args:
                 indexes: list containing integers of which intervals to plot
                         together.
-                beta: beta values to plot. Default is "all". Otherwise,
-                        a list of numbers or a single beta value is provided.
                 x_limits: limits of the x-axis. Default is False.
                 y_limits: limits of the y-axis. Default is False.
                 plot_with_formula: bool, default is false, is True will look for
@@ -175,11 +173,11 @@ class MultiPlotCore(PostCore):
         self._initiate_plot_values(self.data[self.analysis_data_type],
                                    self.data_raw[self.analysis_data_type])
 
-        self._series_plot_core(indexes, beta=beta, x_limits=x_limits,
+        self._series_plot_core(indexes, x_limits=x_limits,
                                y_limits=y_limits, plot_with_formula=plot_with_formula,
                                error_shape=error_shape)
 
-    def _series_plot_core(self, indexes, beta="all", x_limits=False,
+    def _series_plot_core(self, indexes, x_limits=False,
                           y_limits=False, plot_with_formula=False, error_shape="band",
                           fname=None):
         """
@@ -209,15 +207,7 @@ class MultiPlotCore(PostCore):
         # Starts plotting
         fig, axes = plt.subplots(2, 2, sharey=True, sharex=True)
 
-        # Ensures beta is a list
-        if not isinstance(beta, list):
-            beta = [beta]
-
-        # Sets the beta values to plot
-        if beta[0] == "all" and len(beta) == 1:
-            beta_values = self.plot_values
-        else:
-            beta_values = beta
+        beta_values = self.plot_values
 
         # Checks that we actually have enough different data points to plot
         def comparer(b, ind): return len(self.plot_values[b]) > max(ind)
@@ -278,10 +268,7 @@ class MultiPlotCore(PostCore):
         # plt.tight_layout(pad=1.7)
 
         # Saves and closes figure
-        if beta == "all":
-            folder_name = "beta%s" % beta
-        else:
-            folder_name = "beta%s" % "-".join([str(i) for i in beta])
+        folder_name = "beta%s" % "-".join([str(i) for i in self.beta_values])
         folder_name += "_N%s" % "".join([str(i) for i in indexes])
         folder_path = os.path.join(self.output_folder_path, folder_name)
         check_folder(folder_path, False, True)

@@ -170,10 +170,10 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True):
     analysis_parameter_list = [databeta60, databeta61, databeta62,
                                databeta645, databeta645_32xx4]
 
-    analysis_parameter_list = [databeta60, databeta61, databeta62,
-                               databeta645_32xx4]
+    # analysis_parameter_list = [databeta60, databeta61, databeta62,
+    #                            databeta645_32xx4]
 
-    analysis_parameter_list = [databeta645_32xx4]
+    # analysis_parameter_list = [databeta645_32xx4]
 
     section_seperator = "="*160
     print section_seperator

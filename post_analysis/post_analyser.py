@@ -34,19 +34,18 @@ def energy_post_analysis(*args, **kwargs):
     default_post_analysis(PlaqPostAnalysis, *args, **kwargs)
 
 
-def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
+def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
                   line_fit_interval_points, energy_fit_target, q0_flow_times,
                   euclidean_time_percents, extrapolation_methods="nearest",
                   plot_continuum_fit=False, figures_folder="figures",
                   post_analysis_data_type=[
                       "bootstrap", "jackknife", "unanalyzed"],
-                  bval_to_plot="all", topcr_tf="t0beta", gif_params=None,
-                  verbose=False):
+                  topcr_tf="t0beta", gif_params=None, verbose=False):
     """
     Post analysis of the flow observables.
 
     Args: 
-            beta_parameter_list: list of dicts, beta batch parameters.
+            batch_parameter_list: list of dicts, batch parameters.
             observables: list of str, which observables to plot for
             topsus_fit_targets: list of x-axis points to line fit at.
             line_fit_interval_points: int, number of points which we will use in 
@@ -62,8 +61,6 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
                     is "figures".
             post_analysis_data_type: list of str, what type of data to use in the 
                     post analysis. Default is ["bootstrap", "jackknife", "unanalyzed"].
-            bval_to_plot: str or list of beta floats. Which beta values to plot
-                    together. Default is "all".
             gif_params: dict, parameters to use in gif creation. Default is None.
                     dict = { 
                             "gif_observables": [list_of_observables],
@@ -79,7 +76,7 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
     print section_seperator
     print "Post-analysis: retrieving data from folders: %s" % (
         ", ".join([os.path.join(b["batch_folder"], b["batch_name"])
-                   for b in beta_parameter_list]))
+                   for b in batch_parameter_list]))
 
     # Topcr requires a few more observables to be fully utilized.
     old_obs = observables
@@ -88,7 +85,7 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
     if "topcrMC" in observables:
         observables += ["topc2MC", "topc4MC"]
 
-    data = PostAnalysisDataReader(beta_parameter_list,
+    data = PostAnalysisDataReader(batch_parameter_list,
                                   observables_to_load=observables)
 
     # Resets to the old observables, as not to analyze topc2 and topc4.
@@ -244,6 +241,7 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
             data, figures_folder=figures_folder, verbose=verbose)
         for analysis_type in post_analysis_data_type:
             topc_analysis.set_analysis_data_type(analysis_type)
+            exit("Success!!")
             print topc_analysis
             topc_analysis.plot(y_limits=[-5, 5])
             topc_analysis.plot_autocorrelation()
@@ -289,10 +287,10 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
         topcrmc_analysis = TopcRMCIntervalPostAnalysis(
             data, figures_folder=figures_folder, verbose=verbose)
 
-        print interval_setup(beta_parameter_list, "MC")
+        print interval_setup(batch_parameter_list, "MC")
 
         interval_dict_list = topcrmc_analysis.setup_intervals(
-            intervals=interval_setup(beta_parameter_list, "MC"))
+            intervals=interval_setup(batch_parameter_list, "MC"))
 
         for analysis_type in post_analysis_data_type:
             topcrmc_analysis.set_analysis_data_type(analysis_type)
@@ -304,7 +302,7 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
                 topcrmc_analysis.plot_interval(int_keys)
                 topcrmc_analysis.compare_lattice_values(int_keys, tf=topcr_tf)
 
-            topcrmc_analysis.plot_series([0, 1, 2, 3], beta=bval_to_plot)
+            topcrmc_analysis.plot_series([0, 1, 2, 3])
 
     if "topct" in observables:
         topct_analysis = TopctPostAnalysis(
@@ -318,7 +316,7 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
             for int_keys in interval_dict_list:
                 topct_analysis.plot_interval(int_keys)
 
-            topct_analysis.plot_series([0, 1, 2, 3], beta=bval_to_plot)
+            topct_analysis.plot_series([0, 1, 2, 3])
             topct_analysis.plot_autocorrelation()
 
     if "topcte" in observables:
@@ -326,7 +324,7 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
             data, figures_folder=figures_folder, verbose=verbose)
 
         interval_dict_list = topcte_analysis.setup_intervals(
-            intervals=interval_setup(beta_parameter_list, "Eucl"))
+            intervals=interval_setup(batch_parameter_list, "Eucl"))
 
         for analysis_type in post_analysis_data_type:
             topcte_analysis.set_analysis_data_type(analysis_type)
@@ -334,7 +332,7 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
             for int_keys in interval_dict_list:
                 topcte_analysis.plot_interval(int_keys)
 
-            topcte_analysis.plot_series([0, 1, 2, 3], beta=bval_to_plot)
+            topcte_analysis.plot_series([0, 1, 2, 3])
             topcte_analysis.plot_autocorrelation()
 
     if "topcMC" in observables:
@@ -342,7 +340,7 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
             data, figures_folder=figures_folder, verbose=verbose)
 
         interval_dict_list = topcmc_analysis.setup_intervals(
-            intervals=interval_setup(beta_parameter_list, "MC"))
+            intervals=interval_setup(batch_parameter_list, "MC"))
 
         for analysis_type in post_analysis_data_type:
             topcmc_analysis.set_analysis_data_type(analysis_type)
@@ -351,7 +349,7 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
             for int_keys in interval_dict_list:
                 topcmc_analysis.plot_interval(int_keys)
 
-            topcmc_analysis.plot_series([0, 1, 2, 3], beta=bval_to_plot)
+            topcmc_analysis.plot_series([0, 1, 2, 3])
             topcmc_analysis.plot_autocorrelation()
 
     # Loops over different extrapolation methods
@@ -411,8 +409,8 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
                             analysis_type,
                             topsusqtq0_analysis.get_linefit_parameters())
 
-            topsusqtq0_analysis.plot_series([0, 1, 2, 3], beta=bval_to_plot)
-            topsusqtq0_analysis.plot_series([3, 4, 5, 6], beta=bval_to_plot)
+            topsusqtq0_analysis.plot_series([0, 1, 2, 3])
+            topsusqtq0_analysis.plot_series([3, 4, 5, 6])
             topsusqtq0_analysis.plot_autocorrelation()
 
     if "topsust" in observables:
@@ -439,7 +437,7 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
                             analysis_type,
                             topsust_analysis.get_linefit_parameters())
 
-            topsust_analysis.plot_series([0, 1, 2, 3], beta=bval_to_plot)
+            topsust_analysis.plot_series([0, 1, 2, 3])
             topsust_analysis.plot_autocorrelation()
 
     if "topsuste" in observables:
@@ -447,7 +445,7 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
             data, figures_folder=figures_folder, verbose=verbose)
 
         interval_dict_list = topsuste_analysis.setup_intervals(
-            intervals=interval_setup(beta_parameter_list, "Eucl"))
+            intervals=interval_setup(batch_parameter_list, "Eucl"))
 
         for analysis_type in post_analysis_data_type:
             topsuste_analysis.set_analysis_data_type(analysis_type)
@@ -466,7 +464,7 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
                             analysis_type,
                             topsuste_analysis.get_linefit_parameters())
 
-            topsuste_analysis.plot_series([0, 1, 2, 3], beta=bval_to_plot)
+            topsuste_analysis.plot_series([0, 1, 2, 3])
             topsuste_analysis.plot_autocorrelation()
 
     if "topsusMC" in observables:
@@ -474,7 +472,7 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
             data, figures_folder=figures_folder, verbose=verbose)
 
         interval_dict_list = topsusmc_analysis.setup_intervals(
-            intervals=interval_setup(beta_parameter_list, "MC"))
+            intervals=interval_setup(batch_parameter_list, "MC"))
 
         for analysis_type in post_analysis_data_type:
             topsusmc_analysis.set_analysis_data_type(analysis_type)
@@ -494,7 +492,7 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
                             analysis_type,
                             topsusmc_analysis.get_linefit_parameters())
 
-            topsusmc_analysis.plot_series([0, 1, 2, 3], beta=bval_to_plot)
+            topsusmc_analysis.plot_series([0, 1, 2, 3])
             topsusmc_analysis.plot_autocorrelation()
 
     if "qtq0e" in observables:
@@ -518,8 +516,8 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
                     print "Plotting te: %g and tf: %g" % (te, tf)
                     qtq0e_analysis.plot_interval(tf, te)
 
-                qtq0e_analysis.plot_series(te, [0, 1, 2, 3], beta=bval_to_plot)
-                qtq0e_analysis.plot_series(te, [0, 2, 3, 4], beta=bval_to_plot)
+                qtq0e_analysis.plot_series(te, [0, 1, 2, 3])
+                qtq0e_analysis.plot_series(te, [0, 2, 3, 4])
 
     if "qtq0eff" in observables:
         # if analysis_type != "unanalyzed": continue
@@ -536,10 +534,10 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
 
             y_limits = [-1, 1]
             error_shape = "bars"
-            qtq0e_analysis.plot_series([0, 1, 2, 3], beta=bval_to_plot,
+            qtq0e_analysis.plot_series([0, 1, 2, 3],
                                        error_shape=error_shape,
                                        y_limits=y_limits)
-            qtq0e_analysis.plot_series([0, 2, 3, 4], beta=bval_to_plot,
+            qtq0e_analysis.plot_series([0, 2, 3, 4],
                                        error_shape=error_shape,
                                        y_limits=y_limits)
 
@@ -549,7 +547,7 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
             data, figures_folder=figures_folder, verbose=verbose)
 
         mc_interval_dict_list = effmass_mc_analysis.setup_intervals(
-            intervals=interval_setup(beta_parameter_list, "MC"))
+            intervals=interval_setup(batch_parameter_list, "MC"))
 
         for analysis_type in post_analysis_data_type:
             for tf0 in q0_flow_times:  # Flow times
@@ -564,11 +562,9 @@ def post_analysis(beta_parameter_list, observables, topsus_fit_targets,
                 y_limits = [-1, 1]
                 error_shape = "bars"
                 effmass_mc_analysis.plot_series([0, 1, 2, 3], tf0,
-                                                beta=bval_to_plot,
                                                 error_shape=error_shape,
                                                 y_limits=y_limits)
                 effmass_mc_analysis.plot_series([0, 2, 3, 4], tf0,
-                                                beta=bval_to_plot,
                                                 error_shape=error_shape,
                                                 y_limits=y_limits)
 

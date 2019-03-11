@@ -35,7 +35,8 @@ class QtQ0EffectiveMassMCIntervalsPostAnalysis(MultiPlotCore):
 		# Ensures we load correct data
 		self.observable_name_compact_old = self.observable_name_compact
 
-		super(QtQ0EffectiveMassMCIntervalsPostAnalysis, self).__init__(*args, **kwargs)
+		super(QtQ0EffectiveMassMCIntervalsPostAnalysis, self).__init__(
+			*args, **kwargs)
 		
 		# Resets the observable name after data has been loaded.
 		self.observable_name_compact = self.observable_name_compact_old
@@ -51,7 +52,8 @@ class QtQ0EffectiveMassMCIntervalsPostAnalysis(MultiPlotCore):
 		fold_range = arr.shape[-1]/2
 		folded_array = arr[:fold_range+1]
 		last_part = arr[fold_range+1:] * (-1)
-		folded_array[1:-1] = (folded_array[1:-1] + np.flip(last_part, axis=0))*0.5
+		folded_array[1:-1] = (folded_array[1:-1] \
+							  + np.flip(last_part, axis=0))*0.5
 		# folded_array[1:-1] *= 0.5 
 		return folded_array
 
@@ -65,8 +67,11 @@ class QtQ0EffectiveMassMCIntervalsPostAnalysis(MultiPlotCore):
 		fold_range = arr.shape[-1]/2
 		folded_array = arr[:fold_range+1]
 		last_part = arr[fold_range+1:] * (-1)
-		folded_array[1:-1] = (folded_array[1:-1] + np.flip(last_part, axis=0))*0.5
-		folded_array[1:-1] = np.sqrt((0.5*folded_array[1:-1])**2 + (0.5*np.flip(last_part, axis=0))**2)
+		folded_array[1:-1] = \
+			(folded_array[1:-1] + np.flip(last_part, axis=0))*0.5
+		folded_array[1:-1] = \
+			np.sqrt((0.5*folded_array[1:-1])**2 \
+				+ (0.5*np.flip(last_part, axis=0))**2)
 		return folded_array
 
 	def _convert_label(self, lab):
@@ -125,7 +130,8 @@ class QtQ0EffectiveMassMCIntervalsPostAnalysis(MultiPlotCore):
 				# mc time.
 				for sub_obs in self.observable_intervals[beta]:
 					sub_values = {}
-					sub_values["a"], sub_values["a_err"] = get_lattice_spacing(beta)
+					sub_values["a"], sub_values["a_err"] = \
+						get_lattice_spacing(beta)
 					sub_values["x"] = np.linspace(0, 
 						self.lattice_sizes[beta][1] * sub_values["a"], 
 						self.lattice_sizes[beta][1])
@@ -246,7 +252,7 @@ class QtQ0EffectiveMassMCIntervalsPostAnalysis(MultiPlotCore):
 		self.x_label = x_label_old
 
 
-	def plot_series(self, indexes, tf0, beta="all", x_limits=False, 
+	def plot_series(self, indexes, tf0, x_limits=False, 
 		y_limits=False, plot_with_formula=False, error_shape="band"):
 		"""
 		Method for plotting 4 axes together.
@@ -256,8 +262,9 @@ class QtQ0EffectiveMassMCIntervalsPostAnalysis(MultiPlotCore):
 			self.data_raw[self.analysis_data_type], tf0)
 
 		self._series_plot_core(indexes, beta=beta, x_limits=[-0.1, 1], 
-		y_limits=[-10, 10], plot_with_formula=plot_with_formula, 
-		error_shape=error_shape)
+							   y_limits=[-10, 10], 
+							   plot_with_formula=plot_with_formula, 
+							   error_shape=error_shape)
 
 
 	def plot(self, *args, **kwargs):
@@ -270,7 +277,8 @@ class QtQ0EffectiveMassMCIntervalsPostAnalysis(MultiPlotCore):
 		# else:
 		# 	kwargs["x_limits"] = [-0.1,4.7]
 		kwargs["x_limits"] = [-0.1,1]
-		super(QtQ0EffectiveMassMCIntervalsPostAnalysis, self).plot(*args, **kwargs)
+		super(QtQ0EffectiveMassMCIntervalsPostAnalysis, self).plot(*args, 
+																   **kwargs)
 
 def main():
 	exit(("Exit: QtQ0EffectiveMassMCIntervalsPostAnalysis not intended to be a "

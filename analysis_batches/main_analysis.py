@@ -27,6 +27,7 @@ def main_analysis(run_pre_analysis=True, run_post_analysis=True):
     # observables = ["energy"]
     # observables = ["w_t_energy"]
     observables = ["plaq", "energy", "topc", "topsus", "topc2", "topc4", "qtq0eff"]
+    observables = ["topc"]
 
     default_params["observables"] = observables
 
