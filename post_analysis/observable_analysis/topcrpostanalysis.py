@@ -155,14 +155,15 @@ class TopcRPostAnalysis(PostCore):
         self.a_vals = {}
         self.a_vals_err = {}
         for bn in self.batch_names:
-            self.a_vals[bn], self.a_vals_err = \
+            self.a_vals[bn], self.a_vals_err[bn] = \
                 get_lattice_spacing(self.beta_values[bn])
 
         # Sets up the volumes
-        def vol(bn_): return self.lattice_sizes[bn_]*self.a_vals[bn_]**4
+        def vol(bn_):
+            return self.lattice_volumes[bn_]*self.a_vals[bn_]**4
 
-        def vol_err(bn_): return \
-            4*self.lattice_sizes[bn_]*self.a_vals[bn_]**3*self.a_vals_err[bn_]
+        def vol_err(bn_):
+            return 4*self.lattice_volumes[bn_]*self.a_vals[bn_]**3*self.a_vals_err[bn_]
         self.V = {bn: vol(bn) for bn in self.batch_names}
         self.V_err = {bn: vol_err(bn) for bn in self.batch_names}
 
@@ -472,7 +473,7 @@ class TopcRPostAnalysis(PostCore):
                                      self.article_flattened[flat_key]["Q4_norm"],
                                      self.article_flattened[flat_key]["Q4Err_norm"])
 
-                [self.data_ratios[flat_key][b]["Q4C"],
+                [self.data_ratios[flat_key][bn]["Q4C"],
                  self.data_ratios[flat_key][bn]["Q4CErr"]] = \
                     self.ratio_error(self.data_values[bn]["Q4C"],
                                      self.data_values[bn]["Q4CErr"],
@@ -887,7 +888,7 @@ class TopcRPostAnalysis(PostCore):
                         "R": 0.21,
                         "RErr": 0.05,
                     },
-                    },
+                },
 
             "E": {
                     1: {
@@ -909,7 +910,7 @@ class TopcRPostAnalysis(PostCore):
                         "R": 0.202,
                         "RErr": 0.023,
                     },
-                    },
+                },
 
             "F": {
                     1: {
@@ -931,7 +932,7 @@ class TopcRPostAnalysis(PostCore):
                         "R": 0.157,
                         "RErr": 0.022,
                     },
-                    },
+                },
         }
 
         self.article_size_name = {}

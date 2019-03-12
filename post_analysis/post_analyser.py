@@ -254,6 +254,10 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
         for analysis_type in post_analysis_data_type:
             topc2_analysis.set_analysis_data_type(analysis_type)
             print topc2_analysis
+
+            if "topcr" in observables:
+                continue
+
             topc2_analysis.plot()
             topc2_analysis.plot_autocorrelation()
             for t_flow in q0_flow_times:
@@ -266,6 +270,10 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
         for analysis_type in post_analysis_data_type:
             topc4_analysis.set_analysis_data_type(analysis_type)
             print topc4_analysis
+
+            if "topcr" in observables:
+                continue
+
             topc4_analysis.plot()
             topc4_analysis.plot_autocorrelation()
             for t_flow in q0_flow_times:
