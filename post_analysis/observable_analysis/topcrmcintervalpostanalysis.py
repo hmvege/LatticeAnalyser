@@ -1,5 +1,7 @@
 from post_analysis.core.postcore import PostCore
 from post_analysis.core.multiplotcore import MultiPlotCore
+from post_analysis.observable_analysis.topcrpostanalysis import \
+    TopcRPostAnalysis
 from tools.folderreadingtools import check_folder
 from tools.latticefunctions import get_lattice_spacing
 from tools.sciprint import sciprint
@@ -10,7 +12,7 @@ import os
 import types
 
 
-class TopcRMCIntervalPostAnalysis(MultiPlotCore, PostCore):
+class TopcRMCIntervalPostAnalysis(TopcRPostAnalysis, MultiPlotCore, PostCore):
     """
     Post-analysis of the topc ratio with Q^4_C/Q^2. Requires that Q4 and Q2 
     has been imported.
@@ -45,35 +47,50 @@ class TopcRMCIntervalPostAnalysis(MultiPlotCore, PostCore):
 
         self.verbose = verbose
         self.dryrun = dryrun
-
-        self.beta_values = sorted(data.beta_values)
+        
+        self.beta_values = data.beta_values
+        self.batch_names = data.batch_names
         self.colors = data.colors
-        self.lattice_sizes = data.lattice_volumes
+        self.lattice_sizes = data.lattice_sizes
+        self.lattice_volumes = data.lattice_volumes
         self.size_labels = data.labels
         self.reference_values = data.reference_values
-        self.print_latex = data.print_latex
         self._setup_analysis_types(data.analysis_types)
+        self.print_latex = data.print_latex
 
-        self.observable_intervals = {b: {} for b in self.beta_values}
+        self.data = {atype: {b: {} for b in self.batch_names}
+                     for atype in self.analysis_types}
+
+        self.data_map = {bn: {"lattice_volume": self.lattice_volumes[bn],
+                              "beta": self.beta_values[bn]}
+                         for bn in self.batch_names}
+
+        self.flow_epsilon = {bn: data.flow_epsilon[bn]
+                             for bn in self.batch_names}
+
+        self.sorted_batch_names = sorted(self.batch_names, key=lambda _k: (
+            self.data_map[_k]["beta"], self.data_map[_k]["lattice_volume"]))
+
+        self.observable_intervals = {bn: {} for bn in self.batch_names_sorted}
 
         # Q^2
-        self.topc2 = {atype: {beta: {} for beta in self.beta_values}
+        self.topc2 = {atype: {bn: {} for bn in self.batch_names}
                       for atype in self.analysis_types}
 
         # Q^4
-        self.topc4 = {atype: {beta: {} for beta in self.beta_values}
+        self.topc4 = {atype: {bn: {} for bn in self.batch_names}
                       for atype in self.analysis_types}
 
         # Q^4_C
-        self.topc4C = {atype: {beta: {} for beta in self.beta_values}
+        self.topc4C = {atype: {bn: {} for bn in self.batch_names}
                        for atype in self.analysis_types}
 
         # R = Q^4_C / Q^2
-        self.topcR = {atype: {beta: {} for beta in self.beta_values}
+        self.topcR = {atype: {bn: {} for bn in self.batch_names}
                       for atype in self.analysis_types}
 
         # Data will be copied from R
-        self.data = {atype: {beta: {} for beta in self.beta_values}
+        self.data = {atype: {bn: {} for bn in self.batch_names}
                      for atype in self.analysis_types}
 
         # Q^2 and Q^4 raw bs values
@@ -96,26 +113,26 @@ class TopcRMCIntervalPostAnalysis(MultiPlotCore, PostCore):
 
         # First, gets the topc2, then topc4
         for atype in self.analysis_types:
-            for beta in self.beta_values:
-                self.observable_intervals[beta] = \
-                    data.data_observables["topc2MC"][beta].keys()
+            for bn in self.batch_names_sorted:
+                self.observable_intervals[bn] = \
+                    data.data_observables["topc2MC"][bn].keys()
 
-                for subobs in data.data_observables["topc2MC"][beta]:
+                for subobs in data.data_observables["topc2MC"][bn]:
 
                     # Q^2
-                    self.topc2[atype][beta][subobs] = \
-                        data.data_observables["topc2MC"][beta][subobs][self.ac][atype]
+                    self.topc2[atype][bn][subobs] = \
+                        data.data_observables["topc2MC"][bn][subobs][self.ac][atype]
 
                     # Q^4
-                    self.topc4[atype][beta][subobs] = \
-                        data.data_observables["topc4MC"][beta][subobs][self.ac][atype]
+                    self.topc4[atype][bn][subobs] = \
+                        data.data_observables["topc4MC"][bn][subobs][self.ac][atype]
 
                     if self.with_autocorr:
-                        self.topc2[atype][beta][subobs]["ac"] = \
-                            data.data_observables["topc2MC"][beta][subobs]["with_autocorr"]["autocorr"]
+                        self.topc2[atype][bn][subobs]["ac"] = \
+                            data.data_observables["topc2MC"][bn][subobs]["with_autocorr"]["autocorr"]
 
-                        self.topc4[atype][beta][subobs]["ac"] = \
-                            data.data_observables["topc4MC"][beta][subobs]["with_autocorr"]["autocorr"]
+                        self.topc4[atype][bn][subobs]["ac"] = \
+                            data.data_observables["topc4MC"][bn][subobs]["with_autocorr"]["autocorr"]
 
         # Creates base output folder for post analysis figures
         self.figures_folder = figures_folder
@@ -144,45 +161,26 @@ class TopcRMCIntervalPostAnalysis(MultiPlotCore, PostCore):
         self._calculate_Q4C()
         self._calculate_R()
 
-    def _setup_volumes(self):
-        """Sets up lattice volumes."""
-
-        # Sets up the lattice spacing values with errors
-        self.a_vals, self.a_vals_err = \
-            zip(*[get_lattice_spacing(b) for b in self.beta_values])
-        self.a_vals = {b: self.a_vals[i]
-                       for i, b in enumerate(self.beta_values)}
-        self.a_vals_err = {b: self.a_vals_err[i]
-                           for i, b in enumerate(self.beta_values)}
-
-        # Sets up the volumes
-        def vol(b): return self.lattice_sizes[b]*self.a_vals[b]**4
-
-        def vol_err(b): return \
-            4*self.lattice_sizes[b]*self.a_vals[b]**3*self.a_vals_err[b]
-        self.V = {b: vol(b) for b in self.beta_values}
-        self.V_err = {b: vol_err(b) for b in self.beta_values}
-
     def _normalize_Q(self):
         """Normalizes Q4 and Q2"""
         for atype in self.analysis_types:
-            for beta in self.beta_values:
-                for subobs in self.observable_intervals[beta]:
-                    # self.topc2[atype][beta][subobs]["y"] /= self.V[beta]
-                    # self.topc2[atype][beta][subobs]["y_error"] /= self.V[beta]
-                    # self.topc4[atype][beta][subobs]["y"] /= self.V[beta]**2
-                    # self.topc4[atype][beta][subobs]["y_error"] /= \
-                    #     self.V[beta]**2
+            for bn in self.batch_names_sorted:
+                for subobs in self.observable_intervals[bn]:
+                    # self.topc2[atype][bn][subobs]["y"] /= self.V[bn]
+                    # self.topc2[atype][bn][subobs]["y_error"] /= self.V[bn]
+                    # self.topc4[atype][bn][subobs]["y"] /= self.V[bn]**2
+                    # self.topc4[atype][bn][subobs]["y_error"] /= \
+                    #     self.V[bn]**2
 
-                    self.topc2[atype][beta][subobs]["y_error"] = np.sqrt(
-                        (self.topc2[atype][beta][subobs]["y_error"]/self.V[beta])**2 +
-                        (self.V_err[beta]*self.topc2[atype][beta][subobs]["y"]/self.V[beta]**2)**2)
-                    self.topc2[atype][beta][subobs]["y"] /= self.V[beta]
+                    self.topc2[atype][bn][subobs]["y_error"] = np.sqrt(
+                        (self.topc2[atype][bn][subobs]["y_error"]/self.V[bn])**2 +
+                        (self.V_err[bn]*self.topc2[atype][bn][subobs]["y"]/self.V[bn]**2)**2)
+                    self.topc2[atype][bn][subobs]["y"] /= self.V[bn]
 
-                    self.topc4[atype][beta][subobs]["y_error"] = np.sqrt(
-                        (self.topc4[atype][beta][subobs]["y_error"]/self.V[beta]**2)**2 +
-                        (2*self.V_err[beta]*self.topc4[atype][beta][subobs]["y"]/self.V[beta]**3)**2)
-                    self.topc4[atype][beta][subobs]["y"] /= self.V[beta]**2
+                    self.topc4[atype][bn][subobs]["y_error"] = np.sqrt(
+                        (self.topc4[atype][bn][subobs]["y_error"]/self.V[bn]**2)**2 +
+                        (2*self.V_err[bn]*self.topc4[atype][bn][subobs]["y"]/self.V[bn]**3)**2)
+                    self.topc4[atype][bn][subobs]["y"] /= self.V[bn]**2
 
     def _calculate_Q4C(self):
         """Caluclates the 4th cumulant for my data."""
@@ -190,22 +188,22 @@ class TopcRMCIntervalPostAnalysis(MultiPlotCore, PostCore):
         # Gets Q4C and R
         for atype in self.analysis_types:
 
-            for beta in self.beta_values:
+            for bn in self.batch_names_sorted:
 
-                for subobs in self.observable_intervals[beta]:
-                    self.topc4C[atype][beta][subobs] = {
+                for subobs in self.observable_intervals[bn]:
+                    self.topc4C[atype][bn][subobs] = {
 
-                        "x": self.topc2[atype][beta][subobs]["x"],
+                        "x": self.topc2[atype][bn][subobs]["x"],
 
                         "y": self.Q4C(
-                            self.topc4[atype][beta][subobs]["y"],
-                            self.topc2[atype][beta][subobs]["y"]),
+                            self.topc4[atype][bn][subobs]["y"],
+                            self.topc2[atype][bn][subobs]["y"]),
 
                         "y_error": self.Q4C_error(
-                            self.topc4[atype][beta][subobs]["y"],
-                            self.topc4[atype][beta][subobs]["y_error"],
-                            self.topc2[atype][beta][subobs]["y"],
-                            self.topc2[atype][beta][subobs]["y_error"]),
+                            self.topc4[atype][bn][subobs]["y"],
+                            self.topc4[atype][bn][subobs]["y_error"],
+                            self.topc2[atype][bn][subobs]["y"],
+                            self.topc2[atype][bn][subobs]["y_error"]),
                     }
 
     def _calculate_R(self):
@@ -214,26 +212,26 @@ class TopcRMCIntervalPostAnalysis(MultiPlotCore, PostCore):
         # Gets Q4C and R
         for atype in self.analysis_types:
 
-            for beta in self.beta_values:
+            for bn in self.batch_names_sorted:
 
-                for subobs in self.observable_intervals[beta]:
+                for subobs in self.observable_intervals[bn]:
 
-                    self.topcR[atype][beta][subobs] = {
+                    self.topcR[atype][bn][subobs] = {
 
-                        "x": self.topc2[atype][beta][subobs]["x"],
+                        "x": self.topc2[atype][bn][subobs]["x"],
 
                         "y": self.R(
-                            self.topc4C[atype][beta][subobs]["y"],
-                            self.topc2[atype][beta][subobs]["y"]),
+                            self.topc4C[atype][bn][subobs]["y"],
+                            self.topc2[atype][bn][subobs]["y"]),
 
                         "y_error": self.R_error(
-                            self.topc4C[atype][beta][subobs]["y"],
-                            self.topc4C[atype][beta][subobs]["y_error"],
-                            self.topc2[atype][beta][subobs]["y"],
-                            self.topc2[atype][beta][subobs]["y_error"])
+                            self.topc4C[atype][bn][subobs]["y"],
+                            self.topc4C[atype][bn][subobs]["y_error"],
+                            self.topc2[atype][bn][subobs]["y"],
+                            self.topc2[atype][bn][subobs]["y_error"])
                     }
-                    self.data[atype][beta][subobs] = \
-                        self.topcR[atype][beta][subobs]
+                    self.data[atype][bn][subobs] = \
+                        self.topcR[atype][bn][subobs]
 
     def _setup_analysis_types(self, atypes):
         """
@@ -265,39 +263,32 @@ class TopcRMCIntervalPostAnalysis(MultiPlotCore, PostCore):
 
     def _initiate_plot_values(self, data, data_raw, interval_keys=None):
         """Sorts data into a format specific for the plotting method."""
-        for ib, beta in enumerate(sorted(data.keys())):
+        for ib, bn in enumerate(self.sorted_batch_names):
             values = {}
             if isinstance(interval_keys, types.NoneType):
                 # Case where we have sub sections of observables, e.g. in
                 # euclidean time.
-                for sub_obs in self.observable_intervals[beta]:
+                for sub_obs in self.observable_intervals[bn]:
                     sub_values = {}
                     sub_values["a"], sub_values["a_err"] = \
-                        get_lattice_spacing(beta)
+                        get_lattice_spacing(self.beta_values[bn])
                     sub_values["x"] = sub_values["a"] * \
-                        np.sqrt(8*data[beta][sub_obs]["x"])
-                    sub_values["y"] = data[beta][sub_obs]["y"]
-                    sub_values["y_err"] = data[beta][sub_obs]["y_error"]
+                        np.sqrt(8*data[bn][sub_obs]["x"])
+                    sub_values["y"] = data[bn][sub_obs]["y"]
+                    sub_values["y_err"] = data[bn][sub_obs]["y_error"]
                     sub_values["label"] = r"%s, $\beta=%2.2f$, %s" % (
-                        self.size_labels[beta], beta,
+                        self.size_labels[bn], self.beta_values[bn],
                         self._convert_label(sub_obs))
                     values[sub_obs] = sub_values
             else:
-                # sorted_intervals = sorted(data[beta].keys())
-
-                # Modulo division in order to avoid going out of range in
-                # intervals.
                 int_key = interval_keys[ib]
-                # print data[beta].keys()
-                # print data[beta][int_key].keys()
-                # print data_raw[beta].keys()
-                # exit(1)
-                values["a"], values["a_err"] = get_lattice_spacing(beta)
-                values["x"] = values["a"] * np.sqrt(8*data[beta][int_key]["x"])
-                values["y"] = data[beta][int_key]["y"]
-                values["y_err"] = data[beta][int_key]["y_error"]
+                values["a"], values["a_err"] = \
+                    get_lattice_spacing(self.beta_values[bn])
+                values["x"] = values["a"] * np.sqrt(8*data[bn][int_key]["x"])
+                values["y"] = data[bn][int_key]["y"]
+                values["y_err"] = data[bn][int_key]["y_error"]
                 values["label"] = r"%s, $\beta=%2.2f$, %s" % (
-                    self.size_labels[beta], beta,
+                    self.size_labels[bn], self.beta_values[bn],
                     self._convert_label(int_key))
                 values["interval"] = int_key
             self.plot_values[beta] = values
@@ -401,29 +392,29 @@ class TopcRMCIntervalPostAnalysis(MultiPlotCore, PostCore):
         art_normed_table_printer.print_table(width=15,
                                              row_seperator_positions=[5, 7, 9])
 
-        beta_int_key_list = zip(self.beta_values, int_keys)
+        beta_int_key_list = zip(self.batch_names_sorted, int_keys)
 
         values_header = [r"$\beta$", r"$L/a$", r"$t_0/a^2$",
                          r"$\langle Q^2 \rangle$", r"$\langle Q^4 \rangle$",
                          r"$\langle Q^4 \rangle_C$", r"$R$"]
         values_table = [
-            [b for b in self.beta_values],
-            ["{:.2f}".format(self.data_values[b][k]["aL"])
-                for b, k in beta_int_key_list],
-            [sciprint(self.data_values[b][k]["Q2"],
-                      self.data_values[b][k]["Q2Err"])
-                for b, k in beta_int_key_list],
-            [sciprint(self.t0[b]["t0"], self.t0[b]["t0err"])
-                for b, k in beta_int_key_list],
-            [sciprint(self.data_values[b][k]["Q4"],
-                      self.data_values[b][k]["Q4Err"])
-                for b, k in beta_int_key_list],
-            [sciprint(self.data_values[b][k]["Q4C"],
-                      self.data_values[b][k]["Q4CErr"])
-                for b, k in beta_int_key_list],
-            [sciprint(self.data_values[b][k]["R"],
-                      self.data_values[b][k]["RErr"])
-                for b, k in beta_int_key_list],
+            [self.beta_values[bn] for bn in self.batch_names],
+            ["{:.2f}".format(self.data_values[bn][k]["aL"])
+                for bn, k in beta_int_key_list],
+            [sciprint(self.data_values[bn][k]["Q2"],
+                      self.data_values[bn][k]["Q2Err"])
+                for bn, k in beta_int_key_list],
+            [sciprint(self.t0[bn]["t0"], self.t0[bn]["t0err"])
+                for bn, k in beta_int_key_list],
+            [sciprint(self.data_values[bn][k]["Q4"],
+                      self.data_values[bn][k]["Q4Err"])
+                for bn, k in beta_int_key_list],
+            [sciprint(self.data_values[bn][k]["Q4C"],
+                      self.data_values[bn][k]["Q4CErr"])
+                for bn, k in beta_int_key_list],
+            [sciprint(self.data_values[bn][k]["R"],
+                      self.data_values[bn][k]["RErr"])
+                for bn, k in beta_int_key_list],
         ]
 
         values_table_printer = TablePrinter(values_header, values_table)
@@ -435,23 +426,23 @@ class TopcRMCIntervalPostAnalysis(MultiPlotCore, PostCore):
                         r"$\text{Ratio}(\langle Q^4 \rangle_C)$", r"$\text{Ratio}(R)$"]
         ratio_table = []
         for fk in self.article_flattened:
-            for b, k in beta_int_key_list:
+            for bn, k in beta_int_key_list:
                 sub_list = []
 
                 sub_list.append(fk)
-                sub_list.append(b)
+                sub_list.append(self.beta_values[bn])
                 sub_list.append(sciprint(
-                    self.data_ratios[fk][b][k]["Q2"],
-                    self.data_ratios[fk][b][k]["Q2Err"]))
+                    self.data_ratios[fk][bn][k]["Q2"],
+                    self.data_ratios[fk][bn][k]["Q2Err"]))
                 sub_list.append(sciprint(
-                    self.data_ratios[fk][b][k]["Q4"],
-                    self.data_ratios[fk][b][k]["Q4Err"]))
+                    self.data_ratios[fk][bn][k]["Q4"],
+                    self.data_ratios[fk][bn][k]["Q4Err"]))
                 sub_list.append(sciprint(
-                    self.data_ratios[fk][b][k]["Q4C"],
-                    self.data_ratios[fk][b][k]["Q4CErr"]))
+                    self.data_ratios[fk][bn][k]["Q4C"],
+                    self.data_ratios[fk][bn][k]["Q4CErr"]))
                 sub_list.append(sciprint(
-                    self.data_ratios[fk][b][k]["R"],
-                    self.data_ratios[fk][b][k]["RErr"]))
+                    self.data_ratios[fk][bn][k]["R"],
+                    self.data_ratios[fk][bn][k]["RErr"]))
 
                 ratio_table.append(sub_list)
 
@@ -469,8 +460,8 @@ class TopcRMCIntervalPostAnalysis(MultiPlotCore, PostCore):
         Sets up a new dictionary with my own values for comparing with the 
         article values.
         """
-        self.data_values = {b: {key: {} for key in int_keys}
-                            for b in self.beta_values}
+        self.data_values = {bn: {key: {} for key in int_keys}
+                            for bn in self.batch_names_sorted}
 
         # Sets up the reference values
         try:
@@ -483,72 +474,72 @@ class TopcRMCIntervalPostAnalysis(MultiPlotCore, PostCore):
             print("Bootstrap line extrapolation not found."
                   " Falling back to %s" % fallback_key)
             ref_vals = self.reference_values[atype][fallback_key]
-        self.t0 = {b: {
-            "t0": ref_vals[b]["t0a2"],
-            "t0err": ref_vals[b]["t0a2err"]
-        } for b in self.beta_values}
+        self.t0 = {bn: {
+            "t0": ref_vals[bn]["t0a2"],
+            "t0err": ref_vals[bn]["t0a2err"]
+        } for bn in self.batch_names_sorted}
 
         t0_indexes = [
             np.argmin(np.abs(
-                self.topc2[atype][b][int_keys[i]]["x"] - self.t0[b]["t0"]))
-            for i, b in enumerate(self.beta_values)]
+                self.topc2[atype][bn][int_keys[i]]["x"] - self.t0[bn]["t0"]))
+            for i, bn in enumerate(self.sorted_batch_names)]
 
-        t0_b_int_loop_list = zip(t0_indexes, self.beta_values, int_keys)
-        for t0_index, b, int_key in t0_b_int_loop_list:
-            self.data_values[b][int_key]["aL"] = ref_vals[b]["aL"]
+        t0_b_int_loop_list = zip(t0_indexes, self.batch_names_sorted, int_keys)
+        for t0_index, bn, int_key in t0_b_int_loop_list:
+            self.data_values[bn][int_key]["aL"] = ref_vals[b]["aL"]
 
-            self.data_values[b][int_key]["Q2"] = \
-                self.topc2[atype][b][int_key]["y"][t0_index]
-            self.data_values[b][int_key]["Q2Err"] = \
-                self.topc2[atype][b][int_key]["y_error"][t0_index]
+            self.data_values[bn][int_key]["Q2"] = \
+                self.topc2[atype][bn][int_key]["y"][t0_index]
+            self.data_values[bn][int_key]["Q2Err"] = \
+                self.topc2[atype][bn][int_key]["y_error"][t0_index]
 
-            self.data_values[b][int_key]["Q4"] = \
-                self.topc4[atype][b][int_key]["y"][t0_index]
-            self.data_values[b][int_key]["Q4Err"] = \
-                self.topc4[atype][b][int_key]["y_error"][t0_index]
+            self.data_values[bn][int_key]["Q4"] = \
+                self.topc4[atype][bn][int_key]["y"][t0_index]
+            self.data_values[bn][int_key]["Q4Err"] = \
+                self.topc4[atype][bn][int_key]["y_error"][t0_index]
 
-            self.data_values[b][int_key]["Q4C"] = \
-                self.topc4C[atype][b][int_key]["y"][t0_index]
-            self.data_values[b][int_key]["Q4CErr"] = \
-                self.topc4C[atype][b][int_key]["y_error"][t0_index]
+            self.data_values[bn][int_key]["Q4C"] = \
+                self.topc4C[atype][bn][int_key]["y"][t0_index]
+            self.data_values[bn][int_key]["Q4CErr"] = \
+                self.topc4C[atype][bn][int_key]["y_error"][t0_index]
 
-            self.data_values[b][int_key]["R"] = \
-                self.topcR[atype][b][int_key]["y"][t0_index]
-            self.data_values[b][int_key]["RErr"] = \
-                self.topcR[atype][b][int_key]["y_error"][t0_index]
+            self.data_values[bn][int_key]["R"] = \
+                self.topcR[atype][bn][int_key]["y"][t0_index]
+            self.data_values[bn][int_key]["RErr"] = \
+                self.topcR[atype][bn][int_key]["y_error"][t0_index]
 
-        self.data_ratios = {k: {b: {key: {} for key in int_keys}
-                                for b in self.beta_values}
+        self.data_ratios = {k: {bn: {key: {} for key in int_keys}
+                                for bn in self.batch_names_sorted}
                             for k in self.article_flattened.keys()}
 
         for flat_key in self.article_flattened:
             beta_article = self.article_flattened[flat_key]["beta"]
-            for t0_index, b, int_key in t0_b_int_loop_list:
-                [self.data_ratios[flat_key][b][int_key]["Q2"],
-                    self.data_ratios[flat_key][b][int_key]["Q2Err"]] = \
-                    self.ratio_error(self.data_values[b][int_key]["Q2"],
-                                     self.data_values[b][int_key]["Q2Err"],
+            for t0_index, bn, int_key in t0_b_int_loop_list:
+                [self.data_ratios[flat_key][bn][int_key]["Q2"],
+                    self.data_ratios[flat_key][bn][int_key]["Q2Err"]] = \
+                    self.ratio_error(self.data_values[bn][int_key]["Q2"],
+                                     self.data_values[bn][int_key]["Q2Err"],
                                      self.article_flattened[flat_key]["Q2_norm"],
                                      self.article_flattened[flat_key]["Q2Err_norm"])
 
-                [self.data_ratios[flat_key][b][int_key]["Q4"],
-                    self.data_ratios[flat_key][b][int_key]["Q4Err"]] = \
-                    self.ratio_error(self.data_values[b][int_key]["Q4"],
-                                     self.data_values[b][int_key]["Q4Err"],
+                [self.data_ratios[flat_key][bn][int_key]["Q4"],
+                    self.data_ratios[flat_key][bn][int_key]["Q4Err"]] = \
+                    self.ratio_error(self.data_values[bn][int_key]["Q4"],
+                                     self.data_values[bn][int_key]["Q4Err"],
                                      self.article_flattened[flat_key]["Q4_norm"],
                                      self.article_flattened[flat_key]["Q4Err_norm"])
 
-                [self.data_ratios[flat_key][b][int_key]["Q4C"],
-                    self.data_ratios[flat_key][b][int_key]["Q4CErr"]] = \
-                    self.ratio_error(self.data_values[b][int_key]["Q4C"],
-                                     self.data_values[b][int_key]["Q4CErr"],
+                [self.data_ratios[flat_key][bn][int_key]["Q4C"],
+                    self.data_ratios[flat_key][bn][int_key]["Q4CErr"]] = \
+                    self.ratio_error(self.data_values[bn][int_key]["Q4C"],
+                                     self.data_values[bn][int_key]["Q4CErr"],
                                      self.article_flattened[flat_key]["Q4C_norm"],
                                      self.article_flattened[flat_key]["Q4CErr_norm"])
 
-                [self.data_ratios[flat_key][b][int_key]["R"],
-                    self.data_ratios[flat_key][b][int_key]["RErr"]] = \
-                    self.ratio_error(self.data_values[b][int_key]["R"],
-                                     self.data_values[b][int_key]["RErr"],
+                [self.data_ratios[flat_key][bn][int_key]["R"],
+                    self.data_ratios[flat_key][bn][int_key]["RErr"]] = \
+                    self.ratio_error(self.data_values[bn][int_key]["R"],
+                                     self.data_values[bn][int_key]["RErr"],
                                      self.article_flattened[flat_key]["R_norm"],
                                      self.article_flattened[flat_key]["RErr_norm"])
 
@@ -580,7 +571,7 @@ class TopcRMCIntervalPostAnalysis(MultiPlotCore, PostCore):
         #   # Sets the t0 value to extract at.
         #   if tf == "article":
         #       self.t0 = {b: self.article_name_size["B"][size]["t0cont"]
-        #           for b in self.beta_values}
+        #           for bn in self.batch_names_sorted}
         #   else:
         #       tf = "t0beta_a2"
         #       self._get_tf_value(tf, atype, None)
@@ -589,7 +580,7 @@ class TopcRMCIntervalPostAnalysis(MultiPlotCore, PostCore):
         #   print "Reference value type %s t0: %s" % (tf, self.t0)
 
         #   print "\nMy data:"
-        #   for beta in self.beta_values:
+        #   for bn in self.batch_names_sorted:
         #       # Gets the approximate same t0 ref. value
         #       t0_index = np.argmin(np.abs(self.topc2[atype][beta]["x"] - self.t0[beta]))
 
@@ -633,7 +624,7 @@ class TopcRMCIntervalPostAnalysis(MultiPlotCore, PostCore):
         #   print "\nRatios between me and article"
         #   for data_set in sorted(self.article_size_name[size]):
         #       # Compares values by dividing my values by article values
-        #       for beta in self.beta_values:
+        #       for bn in self.batch_names_sorted:
         #           beta_article = self.article_name_size[data_set][size]["beta"]
 
         #           # Gets the approximate same t0 ref. value

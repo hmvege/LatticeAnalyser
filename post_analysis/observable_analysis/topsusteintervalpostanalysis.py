@@ -46,13 +46,14 @@ class TopsusteIntervalPostAnalysis(MultiPlotCore, TopsusCore):
 	# 	self.output_folder_path = self.output_folder_path_old
 
 	def _initialize_topsus_func_const(self):
-		"""Sets the constant in the topsus function for found beta values."""
-		for beta in self.beta_values:
-			a, a_err = get_lattice_spacing(beta)
-			V = self.lattice_sizes[beta][0]**3
-			V *= float(self.lattice_sizes[beta][1])/self.N_intervals
-			self.chi_const[beta] = self.hbarc/a/V**0.25
-			self.chi_const_err[beta] = self.hbarc*a_err/a**2/V**0.25
+		"""Sets the constant in the topsus function for found batch beta
+		values."""
+		for bn in self.batch_names:
+			a, a_err = get_lattice_spacing(self.beta_values[bn])
+			V = self.lattice_sizes[bn][0]**3
+			V *= float(self.lattice_sizes[bn][1])/self.N_intervals
+			self.chi_const[bn] = self.hbarc/a/V**0.25
+			self.chi_const_err[bn] = self.hbarc*a_err/a**2/V**0.25
 
 def main():
 	exit(("Exit: TopsusteIntervalPostAnalysis not intended to be a "

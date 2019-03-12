@@ -29,32 +29,32 @@ class MultiPlotCore(PostCore):
 
     def _initiate_plot_values(self, data, data_raw, interval_keys=None):
         """Sorts data into a format specific for the plotting method."""
-        for ib, beta in enumerate(sorted(data.keys())):
+        for ib, bn in enumerate(self.sorted_batch_names):
             values = {}
             if isinstance(interval_keys, types.NoneType):
                 # Case where we have sub sections of observables, e.g. in
                 # euclidean time.
-                for sub_obs in self.observable_intervals[beta]:
+                for sub_obs in self.observable_intervals[bn]:
                     sub_values = {}
                     sub_values["a"], sub_values["a_err"] = \
-                        get_lattice_spacing(beta)
+                        get_lattice_spacing(self.beta_values[bn])
                     sub_values["x"] = sub_values["a"] * \
-                        np.sqrt(8*data[beta][sub_obs]["x"])
-                    sub_values["y"] = data[beta][sub_obs]["y"]
-                    sub_values["y_err"] = data[beta][sub_obs]["y_error"]
+                        np.sqrt(8*data[bn][sub_obs]["x"])
+                    sub_values["y"] = data[bn][sub_obs]["y"]
+                    sub_values["y_err"] = data[bn][sub_obs]["y_error"]
 
                     if self.with_autocorr:
                         sub_values["tau_int"] = \
-                            data[beta][sub_obs]["ac"]["tau_int"]
+                            data[bn][sub_obs]["ac"]["tau_int"]
                         sub_values["tau_int_err"] = \
-                            data[beta][sub_obs]["ac"]["tau_int_err"]
+                            data[bn][sub_obs]["ac"]["tau_int_err"]
 
                     # Retrieves raw data
                     sub_values["y_raw"] = \
-                        data_raw[beta][self.observable_name_compact][sub_obs]
+                        data_raw[bn][self.observable_name_compact][sub_obs]
 
                     sub_values["label"] = r"%s, $\beta=%2.2f$, %s" % (
-                        self.size_labels[beta], beta,
+                        self.size_labels[bn], self.beta_values[bn],
                         self._convert_label(sub_obs))
                     values[sub_obs] = sub_values
             else:
@@ -63,22 +63,23 @@ class MultiPlotCore(PostCore):
                 # Modulo division in order to avoid going out of range in
                 # intervals.
                 int_key = interval_keys[ib]
-                values["a"], values["a_err"] = get_lattice_spacing(beta)
-                values["x"] = values["a"] * np.sqrt(8*data[beta][int_key]["x"])
-                values["y"] = data[beta][int_key]["y"]
-                values["y_err"] = data[beta][int_key]["y_error"]
+                values["a"], values["a_err"] = \
+                    get_lattice_spacing(self.beta_values[bn])
+                values["x"] = values["a"] * np.sqrt(8*data[bn][int_key]["x"])
+                values["y"] = data[bn][int_key]["y"]
+                values["y_err"] = data[bn][int_key]["y_error"]
 
                 if self.with_autocorr:
-                    values["tau_int"] = data[beta][int_key]["ac"]["tau_int"]
-                    values["tau_int_err"] = data[beta][int_key]["ac"]["tau_int_err"]
+                    values["tau_int"] = data[bn][int_key]["ac"]["tau_int"]
+                    values["tau_int_err"] = data[bn][int_key]["ac"]["tau_int_err"]
 
                 values["y_raw"] = \
-                    data_raw[beta][self.observable_name_compact][int_key]
+                    data_raw[bn][self.observable_name_compact][int_key]
                 values["label"] = r"%s, $\beta=%2.2f$, %s" % (
-                    self.size_labels[beta], beta,
+                    self.size_labels[bn], self.beta_values[bn],
                     self._convert_label(int_key))
                 values["interval"] = int_key
-            self.plot_values[beta] = values
+            self.plot_values[bn] = values
 
     def _convert_label(self, label):
         """Short method for formatting time in labels."""
@@ -137,16 +138,16 @@ class MultiPlotCore(PostCore):
         if isinstance(intervals, types.NoneType):
             # For cases with no intervals provided, or we have sliced into
             # specific interval values.
-            sorted_intervals = [self.observable_intervals[b]
-                                for b in self.beta_values]
+            sorted_intervals = [self.observable_intervals[bn]
+                                for bn in self.sorted_batch_names]
             intervals = np.asarray([sorted(i) for i in sorted_intervals]).T
         else:
             # When a specific interval has been provided.
             for b_intervals in intervals:
-                for l, beta in zip(b_intervals, self.beta_values):
-                    assert l in self.observable_intervals[beta], \
+                for l, bn in zip(b_intervals, self.batch_names):
+                    assert l in self.observable_intervals[bn], \
                         "%s has not been computed. Available intervals: %s" % (
-                        l, self.observable_intervals[beta])
+                        l, self.observable_intervals[bn])
 
             intervals = np.asarray(intervals)
 
@@ -187,8 +188,6 @@ class MultiPlotCore(PostCore):
         Args:
                 indexes: list containing integers of which intervals to plot
                         together.
-                beta: beta values to plot. Default is "all". Otherwise,
-                        a list of numbers or a single beta value is provided.
                 x_limits: limits of the x-axis. Default is False.
                 y_limits: limits of the y-axis. Default is False.
                 plot_with_formula: bool, default is false, is True will look for
@@ -207,23 +206,21 @@ class MultiPlotCore(PostCore):
         # Starts plotting
         fig, axes = plt.subplots(2, 2, sharey=True, sharex=True)
 
-        beta_values = self.plot_values
-
         # Checks that we actually have enough different data points to plot
         def comparer(b, ind): return len(self.plot_values[b]) > max(ind)
         asrt_msg = "Need at least %d different values. Currently have %d: %s" \
             % (max(indexes), len(self.plot_values.values()[0]),
                ", ".join(self.plot_values.values()[0].keys()))
-        if not np.all([comparer(b, indexes) for b in beta_values]):
+        if not np.all([comparer(b, indexes) for b in self.batch_names]):
             print "WARNING:", asrt_msg
             return
 
         for ax, i in zip(list(itertools.chain(*axes)), indexes):
-            for ibeta in sorted(beta_values):
+            for bn in self.sorted_batch_names:
                 # Retrieves the values deepending on the indexes provided and
                 # beta values.
-                value = self.plot_values[ibeta][sorted(
-                    self.observable_intervals[ibeta])[i]]
+                value = self.plot_values[bn][sorted(
+                    self.observable_intervals[bn])[i]]
 
                 # Retrieves values to plot
                 x = value["x"]
@@ -232,13 +229,13 @@ class MultiPlotCore(PostCore):
 
                 if error_shape == "band":
                     ax.plot(x, y, "-", label=value["label"],
-                            color=self.colors[ibeta])
+                            color=self.colors[bn])
                     ax.fill_between(x, y - y_err, y + y_err, alpha=0.5,
-                                    edgecolor='', facecolor=self.colors[ibeta])
+                                    edgecolor='', facecolor=self.colors[bn])
                 elif error_shape == "bars":
                     ax.errorbar(x, y, yerr=y_err, capsize=5, fmt="_", ls=":",
-                                label=value["label"], color=self.colors[ibeta],
-                                ecolor=self.colors[ibeta])
+                                label=value["label"], color=self.colors[bn],
+                                ecolor=self.colors[bn])
                 else:
                     raise KeyError("%s is not a valid error bar shape." %
                                    error_shape)
@@ -268,7 +265,7 @@ class MultiPlotCore(PostCore):
         # plt.tight_layout(pad=1.7)
 
         # Saves and closes figure
-        folder_name = "beta%s" % "-".join([str(i) for i in self.beta_values])
+        folder_name = "beta%s" % "-".join([str(bn) for bn in self.beta_values.values()])
         folder_name += "_N%s" % "".join([str(i) for i in indexes])
         folder_path = os.path.join(self.output_folder_path, folder_name)
         check_folder(folder_path, False, True)

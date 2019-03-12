@@ -122,27 +122,27 @@ class QtQ0EffectiveMassMCIntervalsPostAnalysis(MultiPlotCore):
 		tf0_key = "tflow%.4f" % tf0
 
 		# Sorts data into a format specific for the plotting method
-		for beta in self.beta_values:
+		for bn in self.batch_names:
 			values = {}
 
 			if isinstance(mc_int, types.NoneType):
 				# Case where we have sub sections of observables, e.g. in 
 				# mc time.
-				for sub_obs in self.observable_intervals[beta]:
+				for sub_obs in self.observable_intervals[bn]:
 					sub_values = {}
 					sub_values["a"], sub_values["a_err"] = \
-						get_lattice_spacing(beta)
+						get_lattice_spacing(self.beta_values[bn])
 					sub_values["x"] = np.linspace(0, 
-						self.lattice_sizes[beta][1] * sub_values["a"], 
-						self.lattice_sizes[beta][1])
+						self.lattice_sizes[bn][1] * sub_values["a"], 
+						self.lattice_sizes[bn][1])
 					sub_values["y"], sub_values["y_err"] = self.analyse_raw(
-						data[beta][sub_obs][tf0_key],
-						data_raw[beta][self.observable_name_compact][sub_obs][tf0_key])
+						data[bn][sub_obs][tf0_key],
+						data_raw[bn][self.observable_name_compact][sub_obs][tf0_key])
 
 					sub_values["label"] = r"%s, $\beta=%2.2f$, $t_f=%.2f$, $MC:%s$" % (
-						self.size_labels[beta], beta, tf0, sub_obs)
+						self.size_labels[bn], self.beta_values[bn], tf0, sub_obs)
 
-					sub_values["raw"] = data_raw[beta] \
+					sub_values["raw"] = data_raw[bn] \
 						[self.observable_name_compact][sub_obs][tf0_key]
 
 					if self.fold:
@@ -165,33 +165,34 @@ class QtQ0EffectiveMassMCIntervalsPostAnalysis(MultiPlotCore):
 
 					if self.with_autocorr:
 						sub_values["tau_int"] = \
-							data[beta][sub_obs][tf0_key]["ac"]["tau_int"]
+							data[bn][sub_obs][tf0_key]["ac"]["tau_int"]
 						sub_values["tau_int_err"] = \
-							data[beta][sub_obs][tf0_key]["ac"]["tau_int_err"]
+							data[bn][sub_obs][tf0_key]["ac"]["tau_int_err"]
 
 					values[sub_obs] = sub_values
-				self.plot_values[beta] = values
+				self.plot_values[bn] = values
 
 			else:
-				mc_dict = {b: mc_int[ib] for ib, b in enumerate(self.beta_values)}
+				mc_dict = {b: mc_int[ib] for ib, b in enumerate(self.batch_names)}
 				# raise NotImplementedError("This section is not complete")
-				values["a"], values["a_err"] = get_lattice_spacing(beta)
+				values["a"], values["a_err"] = \
+					get_lattice_spacing(self.beta_values[bn])
 				
 				# For exact box sizes
 				values["x"] = np.linspace(0,
-					self.lattice_sizes[beta][1] * values["a"],
-					self.lattice_sizes[beta][1])
+					self.lattice_sizes[bn][1] * values["a"],
+					self.lattice_sizes[bn][1])
 
-				values["y_raw"] = data_raw[beta] \
-					[self.observable_name_compact][mc_dict[beta]][tf0_key]
+				values["y_raw"] = data_raw[bn] \
+					[self.observable_name_compact][mc_dict[bn]][tf0_key]
 
 				if self.with_autocorr:
-					values["tau_int"] = data[beta][mc_dict[beta]][tf0_key]["ac"]["tau_int"]
+					values["tau_int"] = data[bn][mc_dict[bn]][tf0_key]["ac"]["tau_int"]
 					values["tau_int_err"] = \
-						data[beta][mc_dict[beta]][tf0_key]["ac"]["tau_int_err"]
+						data[bn][mc_dict[bn]][tf0_key]["ac"]["tau_int_err"]
 
 				values["y"], values["y_err"] = \
-					self.analyse_data(data[beta][mc_dict[beta]][tf0_key])
+					self.analyse_data(data[bn][mc_dict[bn]][tf0_key])
 
 				if self.fold:
 					values["x"] = np.linspace(0, 
@@ -209,10 +210,10 @@ class QtQ0EffectiveMassMCIntervalsPostAnalysis(MultiPlotCore):
 					self.fold_position = values["x"][self.fold_range]
 
 				values["label"] = r"%s $\beta=%2.2f$, $t_f=%.2f$, $MC=%s$" % (
-					self.size_labels[beta], beta, tf0,
+					self.size_labels[bn], self.beta_values[bn], tf0,
 					", ".join(["[%s)" % i for i in mc_int]))
 
-				self.plot_values[beta] = values
+				self.plot_values[bn] = values
 
 	def set_analysis_data_type(self, tf0, analysis_data_type="bootstrap"):
 		"""Sets the analysis type and retrieves correct analysis data."""
@@ -261,7 +262,7 @@ class QtQ0EffectiveMassMCIntervalsPostAnalysis(MultiPlotCore):
 		self._initiate_plot_values(self.data[self.analysis_data_type],
 			self.data_raw[self.analysis_data_type], tf0)
 
-		self._series_plot_core(indexes, beta=beta, x_limits=[-0.1, 1], 
+		self._series_plot_core(indexes, x_limits=[-0.1, 1], 
 							   y_limits=[-10, 10], 
 							   plot_with_formula=plot_with_formula, 
 							   error_shape=error_shape)

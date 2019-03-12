@@ -49,6 +49,36 @@ class TopsusCore(PostCore):
     def __init__(self, *args, **kwargs):
         super(TopsusCore, self).__init__(*args, **kwargs)
 
+        self._initialize_topsus_func()
+        # print self.data["bootstrap"]["beta60"]["y"].keys()
+        # print self.data_raw["bootstrap"]["beta60"]["topsus"].keys()
+        # print "beta60:", self.beta_values["beta60"], self.chi_const["beta60"], get_lattice_spacing(self.beta_values["beta60"])
+        # print "beta645:", self.beta_values["beta645"], self.chi_const["beta645"], get_lattice_spacing(self.beta_values["beta645"])
+        
+        # print "Error is in the chi function, apparently"
+
+        # [0.1881187  0.18812003 0.18812136 0.18812268 0.188124   0.1881253
+        # 0.1881266  0.18812789 0.18812917 0.18813043]
+
+        # self.data_raw["bootstrap"]["beta60"]["topsus"] = np.load("../data/data11/beta60/post_analysis_data/topsus/bootstrap/topsus.npy")
+
+        # print self.chi["beta60"](np.mean(self.data_raw["bootstrap"]["beta60"]["topsus"],axis=1)[-10:])
+        # print (self.chi_const["beta60"]*np.mean(self.data_raw["bootstrap"]["beta60"]["topsus"],axis=1)**(0.25))[-10:]
+
+        # plt.plot(self.data["bootstrap"]["beta60"]["x"],
+        #          self.data["bootstrap"]["beta60"]["y"], 
+        #          "--o", color="blue", label="mean")
+        # plt.plot(
+        #     self.data["bootstrap"]["beta60"]["x"],
+        #     self.chi_const["beta60"]*(np.mean(
+        #         self.data_raw["bootstrap"]["beta60"]["topsus"],
+        #         axis=1))**(0.25),
+        #     "--x", color="red", label="raw")
+
+        # plt.legend()
+        # plt.show()
+        # exit("Exits @ 53 in topsuscore")
+
     def set_analysis_data_type(self, *args, **kwargs):
         self._initialize_topsus_func()
         super(TopsusCore, self).set_analysis_data_type(*args, **kwargs)
@@ -57,65 +87,22 @@ class TopsusCore(PostCore):
         """Sets the constant in the topsus function for found batches."""
         for bn in self.batch_names:
             a, a_err = get_lattice_spacing(self.beta_values[bn])
-            V = self.lattice_sizes[bn][0]**3 * self.lattice_sizes[bn][1]
-            V = float(V)
+            V = float(self.lattice_sizes[bn][0]**3 * self.lattice_sizes[bn][1])
             self.chi_const[bn] = self.hbarc/a/V**0.25
             self.chi_const_err[bn] = self.hbarc*a_err/a**2/V**0.25
+
+        print "_initialize_topsus_func_const:", bn, self.chi_const
 
     def _initialize_topsus_func(self):
         """Sets the topsus function for all found batches."""
 
         self._initialize_topsus_func_const()
 
-        # self.chi = {
-        #     bn: lambda qq: self.chi_const[bn]*qq**(0.25)
-        #     for bn in self.batch_names
-        # }
+        for bn in self.batch_names:
+            self.chi[bn] = Chi(self.chi_const[bn])
+            self.chi_der[bn] = ChiDer(self.chi_const[bn], self.chi_const_err[bn])
 
-        # self.chi_der = {
-        #     bn: lambda qq, qqerr: \
-        #         np.sqrt((self.chi_const_err[bn]*qq**0.25)**2 +
-        #                 (0.25*self.chi_const[bn]*qqerr/qq**(0.75))**2)
-        #     for bn in self.batch_names
-        # }
-
-
-        # return
-
-        # exit(1)
-
-        # for bn in self.batch_names:
-        #     self.chi[bn] = 
-
-        # Bad hardcoding due to functions stored in a dictionary in a loop is
-        # not possible.
-        bn = "beta60"
-        if bn in self.batch_names:
-            self.chi[bn] = lambda qq: self.chi_const[bn]*qq**(0.25)
-            self.chi_der[bn] = lambda qq, qqerr: \
-                np.sqrt((self.chi_const_err[bn]*qq**0.25)**2 +
-                        (0.25*self.chi_const[bn]*qqerr/qq**(0.75))**2)
-
-        bn = "beta61"
-        if bn in self.batch_names:
-            self.chi[bn] = lambda qq: self.chi_const[bn]*qq**(0.25)
-            self.chi_der[bn] = lambda qq, qqerr: \
-                np.sqrt((self.chi_const_err[bn]*qq**0.25)**2 +
-                        (0.25*self.chi_const[bn]*qqerr/qq**(0.75))**2)
-        
-        bn = "beta62"
-        if bn in self.batch_names:
-            self.chi[bn] = lambda qq: self.chi_const[bn]*qq**(0.25)
-            self.chi_der[bn] = lambda qq, qqerr: \
-                np.sqrt((self.chi_const_err[bn]*qq**0.25)**2 +
-                        (0.25*self.chi_const[bn]*qqerr/qq**(0.75))**2)
-
-        bn = "beta645"
-        if bn in self.batch_names:
-            self.chi[bn] = lambda qq: self.chi_const[bn]*qq**(0.25)
-            self.chi_der[bn] = lambda qq, qqerr: \
-                np.sqrt((self.chi_const_err[bn]*qq**0.25)**2 +
-                        (0.25*self.chi_const[bn]*qqerr/qq**(0.75))**2)
+        return
 
     def get_fit_targets(self, fit_target):
         """Sets up the fit targets."""
@@ -131,7 +118,8 @@ class TopsusCore(PostCore):
                 fit_targets = [np.sqrt(8*tmp_ref[bn]["t0"])
                                for bn in self.batch_names]
                 self.fit_target = r"\sqrt{8t_0}=[%s]" % (
-                    str(", ".join(["{0:.4f}".format(_t) for _t in fit_targets])))
+                    str(", ".join(["{0:.4f}".format(_t)
+                                   for _t in fit_targets])))
 
             elif fit_target == "w0":
 
@@ -250,6 +238,13 @@ class TopsusCore(PostCore):
                 tau_int = None
                 tau_int_err = None
 
+            # plt.plot(self.plot_values[bn]["x"], self.chi[bn](
+            #     np.mean(self.plot_values[bn]["y_raw"], axis=1)))
+            # plt.plot(self.plot_values[bn]["x"],
+            #          self.plot_values[bn]["y"], color="red")
+            # plt.show()
+            # exit("Good @ 255")
+
             # Extrapolation of point to use in continuum extrapolation
             res = extract_fit_target(
                 fit_targets[i],  self.plot_values[bn]["x"],
@@ -268,7 +263,6 @@ class TopsusCore(PostCore):
             # In case something is wrong -> skip
             if np.isnan([_y0, _y0_error]).any():
                 print "NaN type detected: skipping calculation"
-                # print _y0, _y0_error, fit_targets[i],  self.plot_values[bn]["x"], self.plot_values[bn]["y"], self.plot_values[bn]["y_err"],
                 return
 
             if self.verbose:
@@ -426,6 +420,21 @@ class TopsusCore(PostCore):
         msg += self.extra_continuum_msg
         msg += "\n"
         print msg
+
+
+class Chi:
+    def __init__(self, const):
+        self.const = const
+    def __call__(self, qq):
+        return self.const*qq**(0.25)
+
+class ChiDer:
+    def __init__(self, const, const_err):
+        self.const = const
+        self.const_err = const_err
+    def __call__(self, qq, qq_err):
+        return np.sqrt((self.const_err*qq**0.25)**2 +
+                        (0.25*self.const_err*qq_err/qq**(0.75))**2)
 
 
 def main():

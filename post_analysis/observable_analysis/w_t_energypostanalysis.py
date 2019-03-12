@@ -9,7 +9,7 @@ with warnings.catch_warnings():
     import matplotlib.pyplot as plt
 import numpy as np
 import os
-import copy
+import copy as cp
 
 class WtPostAnalysis(PostCore):
     """Post analysis of the energy, <E>."""
@@ -93,39 +93,39 @@ class WtPostAnalysis(PostCore):
 
     def _initiate_plot_values(self, data, data_raw):
         # Sorts data into a format specific for the plotting method
-        for beta in sorted(data.keys()):
+        for bn in self.sorted_batch_names:
             values = {}
-            values["beta"] = beta
-            values["a"], values["a_err"] = get_lattice_spacing(beta)
-            values["xraw"] = data[beta]["x"] # t_f/a^2
+            values["beta"] = self.beta_values[bn]
+            values["a"], values["a_err"] = get_lattice_spacing(values["beta"])
+            values["xraw"] = data[bn]["x"] # t_f/a^2
             values["t"] = values["xraw"]*values["a"]**2
-            values["sqrt8t"] = values["a"]*np.sqrt(8*data[beta]["x"])
+            values["sqrt8t"] = values["a"]*np.sqrt(8*data[bn]["x"])
             values["x"] = values["t"]/self.r0**2
-            values["y"] = data[beta]["y"]
-            values["y_err"] = data[beta]["y_error"]
-            values["flow_epsilon"] = self.flow_epsilon[beta]
+            values["y"] = data[bn]["y"]
+            values["y_err"] = data[bn]["y_error"]
+            values["flow_epsilon"] = self.flow_epsilon[bn]
             # values["tder"], values["W"], values["W_err"], values["W_raw"] = \
-            #     self.calculateW(values["x"], data[beta]["y"], 
-            #         data[beta]["y_error"], 
-            #         data_raw[beta][self.observable_name_compact], 
-            #         values["flow_epsilon"], data[beta]["x"])
+            #     self.calculateW(values["x"], data[bn]["y"], 
+            #         data[bn]["y_error"], 
+            #         data_raw[bn][self.observable_name_compact], 
+            #         values["flow_epsilon"], data[bn]["x"])
             # exit("Exits in plot values initiations.")
 
             if self.with_autocorr:
-                values["tau_int"] = data[beta]["ac"]["tau_int"]
-                values["tau_int_err"] = data[beta]["ac"]["tau_int_err"]
+                values["tau_int"] = data[bn]["ac"]["tau_int"]
+                values["tau_int_err"] = data[bm]["ac"]["tau_int_err"]
             else:
                 values["tau_int"] = None
                 values["tau_int_err"] = None
 
             values[self.analysis_data_type] = \
-                (data_raw[beta][self.observable_name_compact].T \
-                    *(data[beta]["x"]**2)).T
+                (data_raw[bn][self.observable_name_compact].T \
+                    *(data[bn]["x"]**2)).T
 
             values["label"] = (r"%s $\beta=%2.2f$" %
-                (self.size_labels[beta], beta))
+                (self.size_labels[bn], values["beta"]))
 
-            self.plot_values[beta] = values
+            self.plot_values[bn] = values
 
     def get_w0_scale(self, extrapolation_method="plateau_mean", W0=0.3, 
         **kwargs):
@@ -143,9 +143,8 @@ class WtPostAnalysis(PostCore):
         w0_values = []
         w0err_values = []
 
-        for beta, bval in sorted(self.plot_values.items(), key=lambda i: i[0]):
-            # print bval["xraw"]
-            # exit("WT")
+        for bn in self.sorted_batch_names:
+            bval = self.plot_values[bn]
             y0, w0, w0_err, _, _ = extract_fit_target(W0, bval["xraw"], 
                 bval["y"], y_err=bval["y_err"], 
                 y_raw=bval[self.analysis_data_type], 
@@ -228,10 +227,10 @@ class WtPostAnalysis(PostCore):
                 "aLerr": (self.plot_values[b]["a_err"] \
                     * self.lattice_sizes[b][0]),
                 "L": self.lattice_sizes[b][0],
-                "a": self.plot_values[beta]["a"],
+                "a": self.plot_values[bn]["a"],
                 "a_err": self.plot_values[b]["a_err"],
             }
-            for i, b in enumerate(self.beta_values)
+            for i, b in enumerate(self.batch_names)
         }
 
         w0_dict = {"w0cont": self.w0_cont, "w0cont_err": self.w0_cont_error}
@@ -240,8 +239,9 @@ class WtPostAnalysis(PostCore):
         if self.verbose:
             print "w0 reference values table: "
             print "w0 = %.16f +/- %.16f" % (self.w0_cont, self.w0_cont_error)
-            for b in self.beta_values:
-                msg = "beta = %.2f || w0 = %10f +/- %-10f" % (b, 
+            for b in self.batch_names:
+                msg = "beta = %.2f || w0 = %10f +/- %-10f" % (
+                    self.beta_values[b], 
                     w0_dict[b]["w0"], w0_dict[b]["w0err"])
                 print msg
 
@@ -253,9 +253,9 @@ class WtPostAnalysis(PostCore):
                 r"$a^2[\mathrm{GeV}^{-2}]$", r"$L/a$", r"$L[\fm]$", 
                 r"$a[\fm]$"]
 
-            bvals = self.beta_values
+            bvals = self.sorted_batch_names
             tab = [
-                [r"{0:.2f}".format(b) for b in bvals],
+                [r"{0:.2f}".format(self.beta_values[b]) for b in bvals],
                 [r"{0:s}".format(sciprint.sciprint(w0_dict[b]["w0"], 
                     w0_dict[b]["w0err"])) for b in bvals],
                 [r"{0:s}".format(sciprint.sciprint(self.plot_values[b]["a"]**2,
@@ -277,19 +277,10 @@ class WtPostAnalysis(PostCore):
 
     def plot(self, *args, **kwargs):
         """Plots the W(t)."""
-        w_plot_values = copy.deepcopy(self.plot_values)
-        # for beta in sorted(self.beta_values):
-        #     w_plot_values[beta]["x"] = self.plot_values[beta]["tder"]
-        #     w_plot_values[beta]["y"] = self.plot_values[beta]["W"]
-        #     w_plot_values[beta]["y_err"] = self.plot_values[beta]["W_err"]
-
-        # kwargs["observable_name_compact"] = "energyW"
-        # kwargs["x_label"] = r"$t_f$"
-        # kwargs["y_label"] = r"$W(t)$"
+        w_plot_values = cp.deepcopy(self.plot_values)
         kwargs["x_label"] = self.x_label
         kwargs["y_label"] = self.y_label
         kwargs["plot_hline_at"] = 0.3
-        # kwargs["show_plot"] = True
 
         self._plot_core(w_plot_values, *args, **kwargs)
 

@@ -19,12 +19,13 @@ class TopsustPostAnalysis(MultiPlotCore, TopsusCore):
 	y_label_continuum = r"$\chi^{1/4}(\langle Q_t Q_{t_{euclidean}} \rangle)[GeV]$"
 
 	def _initialize_topsus_func_const(self):
-		"""Sets the constant in the topsus function for found beta values."""
-		for beta in self.beta_values:
-			a, a_err = get_lattice_spacing(beta)
-			V = float(self.lattice_sizes[beta][0]**3)
-			self.chi_const[beta] = self.hbarc/a/V**0.25
-			self.chi_const_err[beta] = self.hbarc*a_err/a**2/V**0.25
+		"""Sets the constant in the topsus function for found batch beta
+	 	values."""
+		for bn in self.batch_names:
+			a, a_err = get_lattice_spacing(self.beta_values[bn])
+			V = float(self.lattice_sizes[bn][0]**3)
+			self.chi_const[bn] = self.hbarc/a/V**0.25
+			self.chi_const_err[bn] = self.hbarc*a_err/a**2/V**0.25
 
 	def _convert_label(self, label):
 		"""Short method for formatting time in labels."""

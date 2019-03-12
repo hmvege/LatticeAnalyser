@@ -508,9 +508,13 @@ def extract_fit_target(fit_target, x, y, y_err, y_raw=None, tau_int=None,
     else:
         fit_index = np.argmin(np.abs(x - fit_target))
 
+
     # Fit range limits
     ilow = fit_index - plateau_size
     ihigh = fit_index + plateau_size
+
+    # print "Linefit:", fit_index, y[ilow:ihigh], raw_func(np.mean(y_raw[ilow:ihigh],axis=1))
+    # print "\nTHE ERROR IS SOMEWHERE IN THE LINE FIT! LOOK AT THE RETURNED VALUE! IT IS BEING UNDERESTIMATED!!\n"
 
     # In case we do not have tau int
     if not isinstance(tau_int, types.NoneType):

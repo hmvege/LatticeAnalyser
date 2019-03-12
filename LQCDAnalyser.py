@@ -24,7 +24,7 @@ def main():
     run_post_analysis = True
 
     # Overriding params for what to run
-    # run_pre_analysis = False
+    run_pre_analysis = False
     # run_post_analysis = False
 
     only_generate_data = True

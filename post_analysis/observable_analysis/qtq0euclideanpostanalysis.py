@@ -25,9 +25,9 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 	def __init__(self, *args, **kwargs):
 		super(QtQ0EuclideanPostAnalysis, self).__init__(*args, **kwargs)
 
-	def _get_euclidean_index(self, euclidean_percent, beta):
+	def _get_euclidean_index(self, euclidean_percent, batch_name):
 		"""Internal method for getting the euclidean index."""
-		euclidean_index = int(self.lattice_sizes[beta][1] * euclidean_percent)
+		euclidean_index = int(self.lattice_sizes[batch_name][1] * euclidean_percent)
 		if euclidean_index != 0:
 		 	euclidean_index -= 1
 		return euclidean_index
@@ -80,62 +80,64 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 		"""interval_index: int, should be in euclidean time."""
 
 		# Sorts data into a format specific for the plotting method
-		for beta in sorted(data.keys()):
-			euclidean_index = self._get_euclidean_index(euclidean_percent, beta)
+		for bn in self.sorted_batch_names:
+			euclidean_index = self._get_euclidean_index(euclidean_percent, bn)
 			te_index = "te%04d" % euclidean_index
 			values = {}
 			if q0_flow_time == None:
 				# Case where we have sub sections of observables, 
 				# e.g. in euclidean time.
-				for sub_obs in self.observable_intervals[beta]:
+				for sub_obs in self.observable_intervals[bn]:
 					sub_values = {}
-					sub_values["a"], sub_values["a_err"] = get_lattice_spacing(beta)
+					sub_values["a"], sub_values["a_err"] = \
+						get_lattice_spacing(self.beta_values[bn])
 					sub_values["x"] = np.linspace(0, 
-						self.lattice_sizes[beta][1] * sub_values["a"], 
-						self.lattice_sizes[beta][1])
+						self.lattice_sizes[bn][1] * sub_values["a"], 
+						self.lattice_sizes[bn][1])
 
-					sub_values["y"] = data[beta][sub_obs][te_index]["y"]
-					sub_values["y_err"] = data[beta][sub_obs][te_index]["y_error"]
+					sub_values["y"] = data[bn][sub_obs][te_index]["y"]
+					sub_values["y_err"] = data[bn][sub_obs][te_index]["y_error"]
 
-					sub_values["y_raw"] = data_raw[beta] \
+					sub_values["y_raw"] = data_raw[bn] \
 						[self.observable_name_compact][sub_obs]
 
 					if self.with_autocorr:
 						sub_values["tau_int"] = \
-							data[beta][sub_obs][te_index]["ac"]["tau_int"]
+							data[bn][sub_obs][te_index]["ac"]["tau_int"]
 						sub_values["tau_int_err"] = \
-							data[beta][sub_obs][te_index]["ac"]["tau_int_err"]
+							data[bn][sub_obs][te_index]["ac"]["tau_int_err"]
 
 					sub_values["label"] = r"%s, $\beta=%2.2f$, $t_{f,0}=%.2f$" \
-						% (self.size_labels[beta], beta, self._convert_label(sub_obs))
+						% (self.size_labels[bn], self.beta_values[bn], self._convert_label(sub_obs))
 
 					values[sub_obs] = sub_values
-				self.plot_values[beta] = values
+				self.plot_values[bn] = values
 
 			else:
 				tf_index = "tflow%04.4f" % q0_flow_time
 				values = {}
-				values["a"], values["a_err"] = get_lattice_spacing(beta)
+				values["a"], values["a_err"] = \
+					get_lattice_spacing(self.beta_values[bn])
 				
 				# FOR EXACT BOX SIZE:
 				values["x"] = np.linspace(0,
-					self.lattice_sizes[beta][1] * values["a"],
-					self.lattice_sizes[beta][1])
+					self.lattice_sizes[bn][1] * values["a"],
+					self.lattice_sizes[bn][1])
 
-				values["y"] = data[beta][tf_index][te_index]["y"]
-				values["y_err"] = data[beta][tf_index][te_index]["y_error"]
+				values["y"] = data[bn][tf_index][te_index]["y"]
+				values["y_err"] = data[bn][tf_index][te_index]["y_error"]
 
-				values["y_raw"] = data_raw[beta] \
+				values["y_raw"] = data_raw[bn] \
 					[self.observable_name_compact][tf_index]
 
 				if self.with_autocorr:
-					values["tau_int"] = data[beta][tf_index][te_index]["ac"]["tau_int"]
-					values["tau_int_err"] = data[beta][tf_index][te_index]["ac"]["tau_int_err"]
+					values["tau_int"] = data[bn][tf_index][te_index]["ac"]["tau_int"]
+					values["tau_int_err"] = data[bn][tf_index][te_index]["ac"]["tau_int_err"]
 
 				values["label"] = r"%s $\beta=%2.2f$, $t_f=%.2f$, $t_e=%d$" % (
-					self.size_labels[beta], beta, q0_flow_time, euclidean_index)
+					self.size_labels[bn], self.beta_values[bn], q0_flow_time, euclidean_index)
 
-				self.plot_values[beta] = values
+				self.plot_values[bn] = values
 
 	def set_analysis_data_type(self, euclidean_percent, analysis_data_type="bootstrap"):
 		self.plot_values = {}

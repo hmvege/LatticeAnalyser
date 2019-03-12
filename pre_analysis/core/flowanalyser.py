@@ -383,8 +383,6 @@ class FlowAnalyser(object):
         self.bs_y_std = F_error(self.bs_y, self.bs_y_std)
         self.bs_y = F(self.bs_y)
 
-        print self.bs_y[-10:]
-
         self.unanalyzed_y_std = F_error(
             self.unanalyzed_y, self.unanalyzed_y_std)
         self.unanalyzed_y = F(self.unanalyzed_y)
@@ -401,6 +399,15 @@ class FlowAnalyser(object):
         if store_raw_bs_values:
             self.save_raw_analysis_data(self.bs_y_data, "bootstrap")
             self.save_raw_analysis_data(self.unanalyzed_y_data, "unanalyzed")
+
+        # print self.const
+        # bs_data_ = np.load("../data/data11/beta60/post_analysis_data/topsus/bootstrap/topsus.npy")
+        # print F(np.mean(bs_data_, axis=1)[-10:])
+        # bs_data_ = self.bs_y_data
+        # plt.plot(self.a * np.sqrt(8*self.x), F(np.mean(bs_data_,axis=1)), "-x", color="blue")
+        # plt.plot(self.a * np.sqrt(8*self.x), self.bs_y, "-o", color="red")
+        # plt.grid(True)
+        # plt.show()
 
         # Sets performed flag to true
         self.bootstrap_performed = True

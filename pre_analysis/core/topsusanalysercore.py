@@ -49,6 +49,7 @@ class TopsusAnalyserCore(FlowAnalyser):
         self.const_err = self.hbarc*self.a_err/self.a**2/self.V**(0.25)
         self.function_derivative_parameters = \
             [{"const": self.const} for i in xrange(self.NFlows)]
+        # print self.beta, self.const, self.a, self.a_err
 
     def block(self, block_size=None, N_bs=500, F=None, F_error=None):
         """Overriding blocking method in order to pass on correction 
