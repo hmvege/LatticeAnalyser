@@ -393,34 +393,40 @@ class PostAnalysisDataReader:
         bs_y_error = retrieved_data[:, 4]
         jk_y = retrieved_data[:, 5]
         jk_y_error = retrieved_data[:, 6]
-        block_mean = retrieved_data[:, 7]
-        block_std = retrieved_data[:, 8]
-        block_bootstrap_mean = retrieved_data[:, 9]
-        block_bootstrap_std = retrieved_data[:, 10]
 
         # Stores data into dictionaries
         unanalyzed_data = {"y": y, "y_error": y_error, "x": t}
         bs_data = {"y": bs_y, "y_error": bs_y_error, "x": t}
         jk_data = {"y": jk_y, "y_error": jk_y_error, "x": t}
-        block_data = {"y": block_mean, "y_error": block_std, "x": t}
-        block_bs_data = {"y": block_bootstrap_mean,
-                         "y_error": block_bootstrap_std, "x": t}
-
-        # Stores flow time
 
         # Stores observable data
         obs_data["beta"] = cp.deepcopy(meta_data["beta"])
         obs_data["unanalyzed"] = cp.deepcopy(unanalyzed_data)
         obs_data["bootstrap"] = cp.deepcopy(bs_data)
         obs_data["jackknife"] = cp.deepcopy(jk_data)
-        obs_data["blocked"] = cp.deepcopy(block_data)
-        obs_data["blocked_bootstrap"] = cp.deepcopy(block_bs_data)
-        # obs_data["flow_time"]     = cp.deepcopy(t)
 
+        # Only retrieves blocked data if it is present
+        if retrieved_data.shape[1] == 11 or retrieved_data.shape[1] == 14:
+            block_mean = retrieved_data[:, 7]
+            block_std = retrieved_data[:, 8]
+            block_bootstrap_mean = retrieved_data[:, 9]
+            block_bootstrap_std = retrieved_data[:, 10]
+            block_data = {"y": block_mean, "y_error": block_std, "x": t}
+            block_bs_data = {"y": block_bootstrap_mean,
+                             "y_error": block_bootstrap_std, "x": t}
+            obs_data["blocked"] = cp.deepcopy(block_data)
+            obs_data["blocked_bootstrap"] = cp.deepcopy(block_bs_data)
+
+        # If autocorrelation data is provided, stores it
         if autocorr:
-            tau_int = retrieved_data[:, 11]
-            tau_int_err = retrieved_data[:, 12]
-            sqrt2tau_int = retrieved_data[:, 13]
+
+            ac_index = 7
+            if retrieved_data.shape[1] != 10:
+                ac_index += 3
+
+            tau_int = retrieved_data[:, ac_index]
+            tau_int_err = retrieved_data[:, ac_index+1]
+            sqrt2tau_int = retrieved_data[:, ac_index+2]
 
             # Populates autocorr dictionary
             ac_data = {

@@ -11,6 +11,7 @@ from tools.folderreadingtools import write_raw_analysis_to_file
 from tools.latticefunctions import get_lattice_spacing
 from statistics.jackknife import Jackknife
 from statistics.bootstrap import Bootstrap
+from statistics.bootstrap_time_series import BootstrapTimeSeries
 from statistics.autocorrelation import Autocorrelation, FullAutocorrelation, \
     PropagatedAutocorrelation
 from statistics.blocking import block, Blocking
@@ -199,6 +200,9 @@ class FlowAnalyser(object):
         self.integrated_autocorrelation_time = np.ones(self.NFlows)
         self.integrated_autocorrelation_time_error = np.zeros(self.NFlows)
         self.autocorrelation_error_correction = np.ones(self.NFlows)
+
+        self.blocking_performed = False
+        self.bootstrap_time_series_performed = False
 
     def _set_q0_time_and_index(self, q0_flow_time):
         """
@@ -400,17 +404,58 @@ class FlowAnalyser(object):
             self.save_raw_analysis_data(self.bs_y_data, "bootstrap")
             self.save_raw_analysis_data(self.unanalyzed_y_data, "unanalyzed")
 
-        # print self.const
-        # bs_data_ = np.load("../data/data11/beta60/post_analysis_data/topsus/bootstrap/topsus.npy")
-        # print F(np.mean(bs_data_, axis=1)[-10:])
-        # bs_data_ = self.bs_y_data
-        # plt.plot(self.a * np.sqrt(8*self.x), F(np.mean(bs_data_,axis=1)), "-x", color="blue")
-        # plt.plot(self.a * np.sqrt(8*self.x), self.bs_y, "-o", color="red")
-        # plt.grid(True)
-        # plt.show()
-
         # Sets performed flag to true
         self.bootstrap_performed = True
+
+    def boot_timeseries(self, N_bs, F=None, F_error=None,
+                        store_raw_bs_values=True, index_lists=None):
+        """
+        Method for bootstrapping a time series.
+        """
+
+        assert self.autocorrelation_performed, (
+            "Autocorrelation has not been performed.")
+
+        # Sets default parameters
+        if F == None:
+            F = ptools._default_return
+        if F_error == None:
+            F_error = ptools._default_error_return
+
+        # Stores number of bootstraps
+        self.N_bs_time_series = N_bs
+
+        # Sets up raw bootstrap and unanalyzed data array
+        self.bs_ts_y_data = np.zeros((self.NFlows, N_bs))
+        self.bs_ts_y = np.zeros((self.NFlows, N_bs))
+        self.bs_ts_y_std = np.zeros((self.NFlows, N_bs))
+
+        # Picks out the autocorrelation where we first get a negative value.
+        first_negative_index = np.where(self.autocorrelations <= 0.0)[0][0]
+
+        # Generates random lists to use in resampling
+        if isinstance(index_lists, types.NoneType):
+            index_lists = np.random.randint(self.N_configurations,
+                                            size=(N_bs, self.N_configurations))
+
+        for i in xrange(self.NFlows):
+            bs = BootstrapTimeSeries(self.y[:, i], N_bs, first_negative_index, 
+                index_lists=index_lists)
+            self.bs_ts_y[i] = bs.bs_avg
+            self.bs_ts_y_std[i] = bs.bs_std
+
+            # Stores last data for plotting in histogram later
+            self.bs_ts_y_data[i] = bs.bs_data
+
+        # Runs bs and unanalyzed data through the F and F_error
+        self.bs_ts_y_std = F_error(self.bs_ts_y, self.bs_ts_y_std)
+        self.bs_ts_y = F(self.bs_ts_y)
+
+        if store_raw_bs_values:
+            self.save_raw_analysis_data(self.bs_ts_y_data, "bootstrap_time_series")
+
+        self.bootstrap_time_series_performed = True
+
 
     def jackknife(self, F=None, F_error=None, store_raw_jk_values=True):
         """
@@ -665,33 +710,6 @@ class FlowAnalyser(object):
                 self.blocked_bootstrap_mean[i] = _bs_blocked.bs_avg
 
                 self.blocked_mean[i] = _bs_blocked.avg_original
-
-            # _tmp.plot()
-            # print _tmp.block_sizes
-            # print len(_tmp.blocked_values)
-
-            # print "Unanalyzed: ", np.mean(self.y[:,i]), np.std(self.y[:,i]), np.std(self.y[:,i]) / np.sqrt(len(self.y[:,i])), "\n"
-
-            # print "Blocked: ", [np.mean(_i) for _i in _tmp.blocked_values], np.sqrt(_tmp.blocked_variances)
-
-            # blocked_var = block(self.y[:,i])
-
-            # optimal_block_index = np.argmin(np.abs(_tmp.block_sizes - blocked_var[1]))
-            # print blocked_var[1], _tmp.block_sizes[optimal_block_index], len(blocked_var[2])
-            # exit(1)
-            # print "Autoblocking: ", np.sqrt(blocked_var[0]), np.sqrt(blocked_var[1]), blocked_var[2], np.sqrt(blocked_var[3])
-            # print blocked_var[4].mean(), blocked_var[4].std()#/np.sqrt(len(blocked_var[4]))
-
-            # print _tmp.blocked_values[optimal_block_index]
-            # bs = Bootstrap(_tmp.blocked_values[optimal_block_index], 500)
-            # print "Unanalyzed:", np.mean(self.y[:,i]), np.std(self.y[:,i])
-            # print "Blocked:", bs.avg_original, bs.std_original
-            # print "Bootstrapped:", bs.bs_avg, bs.bs_std
-            # print self.bs_y[i], self.bs_y_std[i]*self.autocorrelation_error_correction[i]
-            # exit("Ok @ 622 flowanalyser.py")
-
-            # self.blocked_variances[i] = _tmp.blocked_variances[i]
-            # self.blocked_data[i] = _tmp.blocked_values[i]
 
             if isinstance(block_size, type(None)) and i % 10 == 0:
                 ax.plot(_block.block_sizes[::-1],

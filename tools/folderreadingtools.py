@@ -934,7 +934,7 @@ class SlurmDataReader:
 
                 if len(_val.split(",")) > 1:
                     # For observables list
-                    _cln_str = lambda _k: _k.lstrip(" ").rstrip(" ")
+                    def _cln_str(_k): return _k.lstrip(" ").rstrip(" ")
 
                     self.data[_key] = \
                         list(map(str, _val.split(",")))
@@ -952,7 +952,6 @@ class SlurmDataReader:
         self.data["totsize"] = self.data["lattice_dimensions"][0]**3
         self.data["totsize"] *= self.data["lattice_dimensions"][1]
         self.data["subdimsize"] = np.prod(self.data["sub_lattice_dimensions"])
-
 
     def _read_config_generation(self):
         """
@@ -993,7 +992,7 @@ class SlurmDataReader:
                 return
 
             if _lsplit[0] == "i":
-                _str_cln = lambda _k: _k.lstrip(" ").rstrip(" ").lower()
+                def _str_cln(_k): return _k.lstrip(" ").rstrip(" ").lower()
                 self.data["printed_obs_header"] = list(map(_str_cln,
                                                            _lsplit[1:-3]))
                 break
@@ -1031,7 +1030,6 @@ class SlurmDataReader:
         """
         Reads final slurm output.
         """
-
 
         for i in range(self.max_small_iter):
 
@@ -1248,34 +1246,30 @@ def write_data_to_file(analysis_object, save_as_txt=False):
         analysis_object.jk_y_std *
         analysis_object.autocorrelation_error_correction)
 
-    if not analysis_object.blocking_performed:
-        raise RuntimeError("Blocking data is missing.")
-
     # Stacks data to be written to file together
-    if not analysis_object.autocorrelation_performed:
+    data = np.stack((x, y_org, y_err_org, y_bs, y_err_bs, y_jk, y_err_jk),
+                    axis=1)
 
-        data = np.stack(
-            (x, y_org, y_err_org, y_bs, y_err_bs, y_jk, y_err_jk, 
-             cp.deepcopy(analysis_object.blocked_mean),
+    # Adds blocking data
+    if analysis_object.blocking_performed:
+        blocking_data = np.stack(
+            (cp.deepcopy(analysis_object.blocked_mean),
              cp.deepcopy(analysis_object.blocked_std),
              cp.deepcopy(analysis_object.blocked_bootstrap_mean),
-             cp.deepcopy(analysis_object.blocked_bootstrap_std)), axis=1)
+             cp.deepcopy(analysis_object.blocked_bootstrap_std)),
+            axis=1)
+        data = np.concatenate((data, blocking_data), axis=1)
 
-    else:
-        tau_int = cp.deepcopy(
-            analysis_object.integrated_autocorrelation_time)
-        tau_int_err = cp.deepcopy(
-            analysis_object.integrated_autocorrelation_time_error)
-        sqrt2tau_int = cp.deepcopy(
-            analysis_object.autocorrelation_error_correction)
+    # Adds autocorrelation data
+    if analysis_object.autocorrelation_performed:
+        ac_data = np.stack(
+            (cp.deepcopy(analysis_object.integrated_autocorrelation_time),
+             cp.deepcopy(
+                analysis_object.integrated_autocorrelation_time_error),
+             cp.deepcopy(analysis_object.autocorrelation_error_correction)),
+            axis=1)
 
-        data = np.stack(
-            (x, y_org, y_err_org, y_bs, y_err_bs, y_jk, y_err_jk, 
-             cp.deepcopy(analysis_object.blocked_mean),
-             cp.deepcopy(analysis_object.blocked_std),
-             cp.deepcopy(analysis_object.blocked_bootstrap_mean),
-             cp.deepcopy(analysis_object.blocked_bootstrap_std),
-             tau_int, tau_int_err, sqrt2tau_int), axis=1)
+        data = np.concatenate((data, ac_data), axis=1)
 
     # Retrieves compact analysis name
     observable = analysis_object.observable_name_compact

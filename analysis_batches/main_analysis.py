@@ -27,10 +27,13 @@ def main_analysis(run_pre_analysis=True, run_post_analysis=True,
     observables = ["topsus"]
     # observables = ["energy"]
     # observables = ["w_t_energy"]
-    observables = ["plaq", "energy", "topc",
-                   "topsus", "topc2", "topc4", "qtq0eff"]
-    observables = ["topcr"]
+    observables = ["plaq", "topc", "topc2", "topc4", "topcr", "topsus",
+                   "qtq0", "qtq0e", "qtq0eff", "topsust"]
+    # observables = ["topcr"]
+    # observables = ["qtq0eff"]
+    observables = ["topsus"]
 
+    # observables += ["energy"]
     default_params["observables"] = observables
 
     # Post analysis parameters

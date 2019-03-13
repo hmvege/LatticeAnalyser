@@ -296,6 +296,11 @@ class MultiPlotCore(PostCore):
                 **kwargs: passed to plot_continuum().
         """
 
+        if len(list(set(self.beta_values.values()))) != len(self.batch_names):
+            print("Multiple values for a beta value: {} --> Skipping"
+                  " continuum extrapolation".format(self.beta_values.values()))
+            return
+
         # Backs up old variables
         self.plot_values_old = self.plot_values
         self.output_folder_path_old = self.output_folder_path

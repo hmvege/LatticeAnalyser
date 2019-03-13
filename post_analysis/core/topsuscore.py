@@ -48,36 +48,7 @@ class TopsusCore(PostCore):
 
     def __init__(self, *args, **kwargs):
         super(TopsusCore, self).__init__(*args, **kwargs)
-
         self._initialize_topsus_func()
-        # print self.data["bootstrap"]["beta60"]["y"].keys()
-        # print self.data_raw["bootstrap"]["beta60"]["topsus"].keys()
-        # print "beta60:", self.beta_values["beta60"], self.chi_const["beta60"], get_lattice_spacing(self.beta_values["beta60"])
-        # print "beta645:", self.beta_values["beta645"], self.chi_const["beta645"], get_lattice_spacing(self.beta_values["beta645"])
-        
-        # print "Error is in the chi function, apparently"
-
-        # [0.1881187  0.18812003 0.18812136 0.18812268 0.188124   0.1881253
-        # 0.1881266  0.18812789 0.18812917 0.18813043]
-
-        # self.data_raw["bootstrap"]["beta60"]["topsus"] = np.load("../data/data11/beta60/post_analysis_data/topsus/bootstrap/topsus.npy")
-
-        # print self.chi["beta60"](np.mean(self.data_raw["bootstrap"]["beta60"]["topsus"],axis=1)[-10:])
-        # print (self.chi_const["beta60"]*np.mean(self.data_raw["bootstrap"]["beta60"]["topsus"],axis=1)**(0.25))[-10:]
-
-        # plt.plot(self.data["bootstrap"]["beta60"]["x"],
-        #          self.data["bootstrap"]["beta60"]["y"], 
-        #          "--o", color="blue", label="mean")
-        # plt.plot(
-        #     self.data["bootstrap"]["beta60"]["x"],
-        #     self.chi_const["beta60"]*(np.mean(
-        #         self.data_raw["bootstrap"]["beta60"]["topsus"],
-        #         axis=1))**(0.25),
-        #     "--x", color="red", label="raw")
-
-        # plt.legend()
-        # plt.show()
-        # exit("Exits @ 53 in topsuscore")
 
     def set_analysis_data_type(self, *args, **kwargs):
         self._initialize_topsus_func()
@@ -91,8 +62,6 @@ class TopsusCore(PostCore):
             self.chi_const[bn] = self.hbarc/a/V**0.25
             self.chi_const_err[bn] = self.hbarc*a_err/a**2/V**0.25
 
-        print "_initialize_topsus_func_const:", bn, self.chi_const
-
     def _initialize_topsus_func(self):
         """Sets the topsus function for all found batches."""
 
@@ -100,7 +69,8 @@ class TopsusCore(PostCore):
 
         for bn in self.batch_names:
             self.chi[bn] = Chi(self.chi_const[bn])
-            self.chi_der[bn] = ChiDer(self.chi_const[bn], self.chi_const_err[bn])
+            self.chi_der[bn] = ChiDer(
+                self.chi_const[bn], self.chi_const_err[bn])
 
         return
 
@@ -161,6 +131,19 @@ class TopsusCore(PostCore):
 
         return fit_targets
 
+    def check_continuum_extrapolation(self):
+        """
+        Small method for checking if on can do a continuum extrapolation. If
+        we have several beta values for a lattice spacing, this will not be 
+        possible.
+        """
+        if len(list(set(self.beta_values.values()))) != len(self.batch_names):
+            print("Multiple values for a beta value: {} --> Skipping"
+                  " continuum extrapolation".format(self.beta_values.values()))
+            return False
+        else:
+            return True
+
     def plot_continuum(self, fit_target, title_addendum="",
                        extrapolation_method="bootstrap",
                        plateau_fit_size=20, interpolation_rank=3,
@@ -205,6 +188,8 @@ class TopsusCore(PostCore):
                 bootstrapped line fitted data, raw_func_err(y, yerr).
                 Calculated by regular error propagation.
         """
+
+        if not self.check_continuum_extrapolation(): return
 
         self.extrapolation_method = extrapolation_method
         if not isinstance(self.reference_values, types.NoneType):
@@ -425,16 +410,19 @@ class TopsusCore(PostCore):
 class Chi:
     def __init__(self, const):
         self.const = const
+
     def __call__(self, qq):
         return self.const*qq**(0.25)
+
 
 class ChiDer:
     def __init__(self, const, const_err):
         self.const = const
         self.const_err = const_err
+
     def __call__(self, qq, qq_err):
         return np.sqrt((self.const_err*qq**0.25)**2 +
-                        (0.25*self.const_err*qq_err/qq**(0.75))**2)
+                       (0.25*self.const_err*qq_err/qq**(0.75))**2)
 
 
 def main():

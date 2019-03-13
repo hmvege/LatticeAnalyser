@@ -505,6 +505,11 @@ class EnergyPostAnalysis(PostCore):
         Creates continuum extrapolation plot.
         """
 
+        if len(list(set(self.beta_values.values()))) != len(self.batch_names):
+            print("Multiple values for a beta value: {} --> Skipping"
+                  " continuum extrapolation".format(self.beta_values.values()))
+            return
+
         fig = plt.figure()
         ax = fig.add_subplot(111)
 

@@ -497,6 +497,11 @@ class TopcRPostAnalysis(PostCore):
         Compares values at flow times given by the data we are comparing against
         """
 
+        if len(list(set(self.beta_values.values()))) != len(self.batch_names):
+            print("Multiple values for a beta value: {} --> Skipping"
+                  " continuum extrapolation".format(self.beta_values.values()))
+            return
+
         x_pvals_article = []
         y_pvals_article = []
 

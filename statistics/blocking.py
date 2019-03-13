@@ -15,7 +15,7 @@ def _block_core(data, block_size):
     """
 
     # Gets the size of each block
-    num_blocks = len(data) / block_size
+    num_blocks = int(len(data) / float(block_size))
 
     blocked_values = np.empty(num_blocks)
     for j in range(0, num_blocks):

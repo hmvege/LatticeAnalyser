@@ -13,7 +13,7 @@ except ImportError:
 
 
 def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True,
-                         only_generate_data=False):
+                         only_generate_data=False, include_b645x48xx3x96=True):
     from pre_analysis.pre_analyser import pre_analysis
     from post_analysis.post_analyser import post_analysis
     from default_analysis_params import get_default_parameters
@@ -32,19 +32,23 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True,
     # Post analysis figures folder
     figures_folder = "figures_b645_32xx4"
 
-    # observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
-    observables = ["plaq", "topc", "topc2",
-                   "topc4", "topcr", "topsus"]
-    observables = ["topsus"]
+    if include_b645x48xx3x96:
+        figures_folder = "figures_b645_32xx4_full"
 
-    # observables += ["energy"]
+    # observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
+    observables = ["plaq", "topc", "topc2", "topc4", "topcr", "topsus",
+                   "qtq0", "qtq0e", "qtq0eff", "topsust"]
+    # observables = ["topcr"]
+    # observables = ["qtq0eff"]
+
+    observables += ["energy"]
     default_params["observables"] = observables
 
     # Post analysis parameters
     line_fit_interval_points = 20
     # topsus_fit_targets = [0.3,0.4,0.5,0.58]
     # topsus_fit_targets = [0.3, 0.4, 0.5, 0.6] # tf = sqrt(8*t0)
-    topsus_fit_targets = [0.6]
+    topsus_fit_targets = [0.5, 0.6]
     energy_fit_target = 0.3
 
     # Method of continuum extrapolation.
@@ -163,11 +167,12 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True,
     databeta645_32xx4["color"] = "#98A519"  # Remember
 
     # Adding relevant batches to args
-    analysis_parameter_list = [databeta60, databeta61, databeta62,
-                               databeta645, databeta645_32xx4]
-
-    # analysis_parameter_list = [databeta60, databeta61, databeta62,
-    #                            databeta645_32xx4]
+    if include_b645x48xx3x96:
+        analysis_parameter_list = [databeta60, databeta61, databeta62,
+                                   databeta645, databeta645_32xx4]
+    else:
+        analysis_parameter_list = [databeta60, databeta61, databeta62,
+                                   databeta645_32xx4]
 
     # analysis_parameter_list = [databeta645_32xx4]
 

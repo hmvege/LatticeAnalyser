@@ -375,11 +375,12 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
                         cont_target, extrapolation_method=extrapolation_method,
                         plot_continuum_fit=plot_continuum_fit)
 
-                    fit_parameters = append_fit_params(
-                        fit_parameters,
-                        topsus_analysis.observable_name_compact,
-                        analysis_type,
-                        topsus_analysis.get_linefit_parameters())
+                    if topsus_analysis.check_continuum_extrapolation():
+                        fit_parameters = append_fit_params(
+                            fit_parameters,
+                            topsus_analysis.observable_name_compact,
+                            analysis_type,
+                            topsus_analysis.get_linefit_parameters())
 
             for t_flow in q0_flow_times:
                 topsus_analysis.plot_autocorrelation_at(target_flow=t_flow)
@@ -410,11 +411,12 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
                             cont_target, int_keys,
                             extrapolation_method=extrapolation_method)
 
-                        fit_parameters = append_fit_params(
-                            fit_parameters,
-                            topsusqtq0_analysis.observable_name_compact,
-                            analysis_type,
-                            topsusqtq0_analysis.get_linefit_parameters())
+                        if topsusqtq0_analysis.check_continuum_extrapolation():
+                            fit_parameters = append_fit_params(
+                                fit_parameters,
+                                topsusqtq0_analysis.observable_name_compact,
+                                analysis_type,
+                                topsusqtq0_analysis.get_linefit_parameters())
 
             topsusqtq0_analysis.plot_series([0, 1, 2, 3])
             topsusqtq0_analysis.plot_series([3, 4, 5, 6])
@@ -438,11 +440,12 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
                             cont_target, int_keys,
                             extrapolation_method=extrapolation_method)
 
-                        fit_parameters = append_fit_params(
-                            fit_parameters,
-                            topsust_analysis.observable_name_compact,
-                            analysis_type,
-                            topsust_analysis.get_linefit_parameters())
+                        if topsust_analysis.check_continuum_extrapolation():
+                            fit_parameters = append_fit_params(
+                                fit_parameters,
+                                topsust_analysis.observable_name_compact,
+                                analysis_type,
+                                topsust_analysis.get_linefit_parameters())
 
             topsust_analysis.plot_series([0, 1, 2, 3])
             topsust_analysis.plot_autocorrelation()
@@ -465,11 +468,12 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
                             cont_target, int_keys,
                             extrapolation_method=extrapolation_method)
 
-                        fit_parameters = append_fit_params(
-                            fit_parameters,
-                            topsuste_analysis.observable_name_compact,
-                            analysis_type,
-                            topsuste_analysis.get_linefit_parameters())
+                        if topsuste_analysis.check_continuum_extrapolation():
+                            fit_parameters = append_fit_params(
+                                fit_parameters,
+                                topsuste_analysis.observable_name_compact,
+                                analysis_type,
+                                topsuste_analysis.get_linefit_parameters())
 
             topsuste_analysis.plot_series([0, 1, 2, 3])
             topsuste_analysis.plot_autocorrelation()
@@ -493,11 +497,12 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
                             cont_target, int_keys,
                             extrapolation_method=extrapolation_method)
 
-                        fit_parameters = append_fit_params(
-                            fit_parameters,
-                            topsusmc_analysis.observable_name_compact,
-                            analysis_type,
-                            topsusmc_analysis.get_linefit_parameters())
+                        if topsusmc_analysis.check_continuum_extrapolation():
+                            fit_parameters = append_fit_params(
+                                fit_parameters,
+                                topsusmc_analysis.observable_name_compact,
+                                analysis_type,
+                                topsusmc_analysis.get_linefit_parameters())
 
             topsusmc_analysis.plot_series([0, 1, 2, 3])
             topsusmc_analysis.plot_autocorrelation()

@@ -35,6 +35,7 @@ def analyse_default(analysis_object, N_bs, perform_blocking_analysis=False,
         analysis_object.plot_jackknife()
 
     analysis_object.autocorrelation()
+    # analysis_object.boot_timeseries(N_bs)
 
     if not only_generate_data:
         analysis_object.plot_autocorrelation(0)
