@@ -158,6 +158,8 @@ class PostAnalysisDataReader:
         self._reorganize_data()
         self._reorganize_raw_data()
 
+        exit("Exits @ 161 in post_analysis_data_reader")
+
     def __call__(self, observable):
         """Returns observable with all relevant data."""
         return self.data_observables[observable]
@@ -420,9 +422,10 @@ class PostAnalysisDataReader:
         # If autocorrelation data is provided, stores it
         if autocorr:
 
-            ac_index = 7
-            if retrieved_data.shape[1] != 10:
-                ac_index += 3
+            if retrieved_data.shape[1] == 14:
+                ac_index = 11
+            else:
+                ac_index = 7
 
             tau_int = retrieved_data[:, ac_index]
             tau_int_err = retrieved_data[:, ac_index+1]

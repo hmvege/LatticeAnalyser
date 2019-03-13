@@ -37,11 +37,12 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True,
 
     # observables = ["topsus", "topsust", "topsuste", "topsusMC", "topsusqtq0"]
     observables = ["plaq", "topc", "topc2", "topc4", "topcr", "topsus",
-                   "qtq0", "qtq0e", "qtq0eff", "topsust"]
+                   "topsusqtq0", "qtq0e", "qtq0eff", "topsust"]
     # observables = ["topcr"]
     # observables = ["qtq0eff"]
+    observables = ["topsusqtq0", "qtq0eff"]
 
-    observables += ["energy"]
+    # observables += ["energy"]
     default_params["observables"] = observables
 
     # Post analysis parameters

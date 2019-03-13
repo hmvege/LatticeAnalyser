@@ -25,23 +25,23 @@ def main():
     only_generate_data = False
 
     # Overriding params for what to run
-    # run_pre_analysis = False
+    run_pre_analysis = False
     # run_post_analysis = False
-    # only_generate_data = True
+    only_generate_data = True
 
-    main_analysis(run_pre_analysis=run_pre_analysis,
-                  run_post_analysis=run_post_analysis,
-                  only_generate_data=only_generate_data)
+    # main_analysis(run_pre_analysis=run_pre_analysis,
+    #               run_post_analysis=run_post_analysis,
+    #               only_generate_data=only_generate_data)
 
-    # beta645_L32_analysis(run_pre_analysis=run_pre_analysis,
-    #                      run_post_analysis=run_post_analysis,
-    #                      only_generate_data=only_generate_data,
-    #                      include_b645x48xx3x96=True)
+    beta645_L32_analysis(run_pre_analysis=run_pre_analysis,
+                         run_post_analysis=run_post_analysis,
+                         only_generate_data=only_generate_data,
+                         include_b645x48xx3x96=True)
 
-    # beta645_L32_analysis(run_pre_analysis=run_pre_analysis,
-    #                      run_post_analysis=run_post_analysis,
-    #                      only_generate_data=only_generate_data,
-    #                      include_b645x48xx3x96=False)
+    beta645_L32_analysis(run_pre_analysis=run_pre_analysis,
+                         run_post_analysis=run_post_analysis,
+                         only_generate_data=only_generate_data,
+                         include_b645x48xx3x96=False)
 
     # distribution_analysis()
     # topc_modes_analysis()

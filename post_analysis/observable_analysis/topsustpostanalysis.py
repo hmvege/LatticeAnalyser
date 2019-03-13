@@ -10,13 +10,13 @@ class TopsustPostAnalysis(MultiPlotCore, TopsusCore):
 	observable_name_compact = "topsust"
 	obs_name_latex = r"\chi^{1/4}(\expect{Q^2_{t_f}})"
 	x_label = r"$\sqrt{8t_{f}}$ [fm]"
-	y_label = r"$\chi_{t_f}^{1/4}(\langle Q_t Q_{t_{euclidean}} \rangle)$ [GeV]"
+	y_label = r"$\chi_{t_f}^{1/4}(\langle Q_t Q_{t_\mathrm{euclidean}} \rangle)$ [GeV]"
 	sub_obs = True
 	descr = "One Q at fixed euclidean time"
 	subfolder_type = "te"
 
 	# Continuum plot variables
-	y_label_continuum = r"$\chi^{1/4}(\langle Q_t Q_{t_{euclidean}} \rangle)[GeV]$"
+	y_label_continuum = r"$\chi^{1/4}(\langle Q_t Q_{t_\mathrm{euclidean}} \rangle)[GeV]$"
 
 	def _initialize_topsus_func_const(self):
 		"""Sets the constant in the topsus function for found batch beta

@@ -131,7 +131,6 @@ class PostCore(object):
                             _tmp.keys()
 
                         for subobs in _tmp:
-
                             self.data[atype][bn][subobs] = \
                                 _tmp[subobs][self.ac][atype]
 
