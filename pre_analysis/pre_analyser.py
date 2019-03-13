@@ -263,6 +263,8 @@ def analyse_topsus_qtq0(params):
         topsus_qtq0_analysis.setQ0(q0_flow_time)
         analyse_default(topsus_qtq0_analysis, params["N_bs"],
                         skip_histogram=True,
+                        perform_blocking_analysis=params["blocking_analysis"],
+                        block_size=params["block_size"],
                         only_generate_data=params["only_generate_data"])
 
 
@@ -281,6 +283,8 @@ def analyse_qtq0e(params):
         for euclidean_percent in params["euclidean_time_percents"]:
             qtq0_analysis.set_time(q0_flow_time, euclidean_percent)
             analyse_default(qtq0_analysis, params["N_bs"],
+                            perform_blocking_analysis=params["blocking_analysis"],
+                            block_size=params["block_size"],
                             only_generate_data=params["only_generate_data"])
 
 
@@ -384,6 +388,8 @@ def analyse_topsust(params):
     for ie in indexes:
         topct_analysis.setEQ0(ie)
         analyse_default(topct_analysis, params["N_bs"], skip_histogram=True,
+                        perform_blocking_analysis=params["blocking_analysis"],
+                        block_size=params["block_size"],
                         only_generate_data=params["only_generate_data"])
 
 

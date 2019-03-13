@@ -158,8 +158,6 @@ class PostAnalysisDataReader:
         self._reorganize_data()
         self._reorganize_raw_data()
 
-        exit("Exits @ 161 in post_analysis_data_reader")
-
     def __call__(self, observable):
         """Returns observable with all relevant data."""
         return self.data_observables[observable]

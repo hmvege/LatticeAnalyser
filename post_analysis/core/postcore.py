@@ -4,6 +4,7 @@ from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
 import types
 import os
 import numpy as np
+import copy as cp
 from tools.postanalysisdatareader import PostAnalysisDataReader
 from tools.latticefunctions import get_lattice_spacing
 from tools.folderreadingtools import check_folder, get_NBoots
@@ -104,7 +105,7 @@ class PostCore(object):
 
         for atype in self.analysis_types:
             for bn in self.batch_names:
-                _tmp = data.data_observables[observable][bn]
+                _tmp = cp.deepcopy(data.data_observables[observable][bn])
                 if self.sub_obs:
                     if self.sub_sub_obs:
                         for subobs in _tmp:
@@ -150,13 +151,13 @@ class PostCore(object):
 
         for atype in data.raw_analysis:
             if atype == "autocorrelation":
-                self.ac_raw["tau"] = data.raw_analysis[atype]
+                self.ac_raw["tau"] = cp.deepcopy(data.raw_analysis[atype])
             elif atype == "autocorrelation_raw":
-                self.ac_raw["ac_raw"] = data.raw_analysis[atype]
+                self.ac_raw["ac_raw"] = cp.deepcopy(data.raw_analysis[atype])
             elif atype == "autocorrelation_raw_error":
-                self.ac_raw["ac_raw_error"] = data.raw_analysis[atype]
+                self.ac_raw["ac_raw_error"] = cp.deepcopy(data.raw_analysis[atype])
             else:
-                self.data_raw[atype] = data.raw_analysis[atype]
+                self.data_raw[atype] = cp.deepcopy(data.raw_analysis[atype])
 
         # Small test to ensure that the number of bootstraps and number of
         # different batches names match

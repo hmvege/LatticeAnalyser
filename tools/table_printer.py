@@ -49,16 +49,16 @@ class TablePrinter:
         elif isinstance(elem, str):
             pass
         else:
-            raise TypeError(("Table element type "
-                "%s not recognized in element: " % type(elem) + elem))
+            raise TypeError(("Table element type %s not recognized in"
+                             " element: " % type(elem) + elem))
 
-        if latex and len(elem)>0:
+        if latex and len(elem) > 0:
             return "${0:<s}$".format(elem)
         else:
             return elem
 
-    def _generate_table(self, latex=True, width=10, row_seperator=r"\hline", 
-        row_seperator_positions=[], ignore_latex_cols=[]):
+    def _generate_table(self, latex=True, width=10, row_seperator=r"\hline",
+                        row_seperator_positions=[], ignore_latex_cols=[]):
         """
         Internal table generator.
 
@@ -77,13 +77,14 @@ class TablePrinter:
         """
 
         if isinstance(width, list):
-            assert len(width) == self.N_cols, ("number of spacings for "
-                "columns in 'width' is not equal to the number of columns")
+            assert len(width) == self.N_cols, (
+                "number of spacings for columns in 'width' is not equal to"
+                " the number of columns")
         elif isinstance(width, int):
             width = [width for icol in range(self.N_cols)]
         else:
             raise ValueError("%s is not allowed for 'width'. Type should be "
-                "either 'int' or 'list'" % type(width))
+                             "either 'int' or 'list'" % type(width))
 
         tab = "\n"
 
@@ -123,8 +124,9 @@ class TablePrinter:
 
         return tab
 
-    def print_table(self, latex=True, width=10, row_seperator=r"\hline", 
-        row_seperator_positions=[], ignore_latex_cols=[]):
+    def print_table(self, latex=True, width=10, row_seperator=r"\hline",
+                    row_seperator_positions=[], ignore_latex_cols=[],
+                    filename=None):
         """
         Prints a table in either LaTeX format or in regular ascii format.
 
@@ -141,17 +143,26 @@ class TablePrinter:
                 row_seperator after each position in list.
             ignore_latex_cols: list of bools, optional, rows specified will 
                 not be in LaTeX format if prompted.
+            filename: str, if provided, will save table to txt file with 
+            provided filename. Default is None.
         """
 
-        print self._generate_table(latex=latex, width=width, 
-            row_seperator=row_seperator, 
-            row_seperator_positions=row_seperator_positions, 
+        tb = self._generate_table(
+            latex=latex, width=width, row_seperator=row_seperator,
+            row_seperator_positions=row_seperator_positions,
             ignore_latex_cols=ignore_latex_cols)
 
+        if not isinstance(filename, type(None)):
+            print "Table saved to ", filename
+            with open(filename, "w") as f:
+                f.write(tb)
+
+        print tb
+
     def __call__(self, latex=True, width=10, row_seperator=r"\hline",
-        row_seperator_positions=[]):
-        return self._generate_table(latex=latex, width=width, 
-            row_seperator=row_seperator, 
+                 row_seperator_positions=[]):
+        return self._generate_table(
+            latex=latex, width=width, row_seperator=row_seperator,
             row_seperator_positions=row_seperator_positions)
 
     def __str__(self):
@@ -162,7 +173,7 @@ def main():
     # Testing printing function
     header = ["a", "b", "c", "d"]
     table = [
-        [0.1, 2.3, 3.4], # Columns
+        [0.1, 2.3, 3.4],  # Columns
         [0.3, 4.1, 4.5],
         [1.1, 1.3, 6.3],
         [1.3, 2.0, 4.3]
@@ -172,6 +183,7 @@ def main():
     print ptab
     print "\nLATEX PRINTOUT:"
     ptab.print_table()
+
 
 if __name__ == '__main__':
     main()

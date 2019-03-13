@@ -29,25 +29,34 @@ def main():
     # run_post_analysis = False
     only_generate_data = True
 
-    # main_analysis(run_pre_analysis=run_pre_analysis,
-    #               run_post_analysis=run_post_analysis,
-    #               only_generate_data=only_generate_data)
+    # Observables selection
+    observables = ["plaq", "topc", "topc2", "topc4", "topcr", "topsus",
+                   "topsusqtq0", "qtq0e", "qtq0eff"]
+    # observables += ["energy"]
+    # observables = ["qtq0e"]
+
+    main_analysis(run_pre_analysis=run_pre_analysis,
+                  run_post_analysis=run_post_analysis,
+                  only_generate_data=only_generate_data,
+                  observables=observables)
 
     beta645_L32_analysis(run_pre_analysis=run_pre_analysis,
                          run_post_analysis=run_post_analysis,
                          only_generate_data=only_generate_data,
+                         observables=observables,
                          include_b645x48xx3x96=True)
 
     beta645_L32_analysis(run_pre_analysis=run_pre_analysis,
                          run_post_analysis=run_post_analysis,
                          only_generate_data=only_generate_data,
+                         observables=observables,
                          include_b645x48xx3x96=False)
 
-    # distribution_analysis()
-    # topc_modes_analysis()
-    # lattice_updates_analysis()
-    # thermalization_analysis()
-    # scaling_analysis()
+# distribution_analysis()
+# topc_modes_analysis()
+# lattice_updates_analysis()
+# thermalization_analysis()
+# scaling_analysis()
 
 if __name__ == '__main__':
     main()

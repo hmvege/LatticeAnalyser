@@ -390,37 +390,37 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
         topsusqtq0_analysis = TopsusQtQ0PostAnalysis(
             data, figures_folder=figures_folder, verbose=verbose)
 
-        interval_dict_list = topsusqtq0_analysis.setup_intervals()
+        # interval_dict_list = topsusqtq0_analysis.setup_intervals()
 
-        for analysis_type in post_analysis_data_type:
-            topsusqtq0_analysis.set_analysis_data_type(analysis_type)
-            print topsusqtq0_analysis
+        # for analysis_type in post_analysis_data_type:
+        #     topsusqtq0_analysis.set_analysis_data_type(analysis_type)
+        #     print topsusqtq0_analysis
 
-            for extrapolation_method in extrapolation_methods:
-                for int_keys in interval_dict_list:
+        #     for extrapolation_method in extrapolation_methods:
+        #         for int_keys in interval_dict_list:
 
-                    if (list(set(int_keys))[0] == "0.00" and
-                            extrapolation_method == "bootstrap"):
-                        print("Skipping intervals 0.00, as they may contain "
-                              "negative numbers from bootstrapped data.")
-                        continue
+        #             if (list(set(int_keys))[0] == "0.00" and
+        #                     extrapolation_method == "bootstrap"):
+        #                 print("Skipping intervals 0.00, as they may contain "
+        #                       "negative numbers from bootstrapped data.")
+        #                 continue
 
-                    topsusqtq0_analysis.plot_interval(int_keys)
-                    for cont_target in topsus_fit_targets:
-                        topsusqtq0_analysis.plot_continuum(
-                            cont_target, int_keys,
-                            extrapolation_method=extrapolation_method)
+        #             topsusqtq0_analysis.plot_interval(int_keys)
+        #             for cont_target in topsus_fit_targets:
+        #                 topsusqtq0_analysis.plot_continuum(
+        #                     cont_target, int_keys,
+        #                     extrapolation_method=extrapolation_method)
 
-                        if topsusqtq0_analysis.check_continuum_extrapolation():
-                            fit_parameters = append_fit_params(
-                                fit_parameters,
-                                topsusqtq0_analysis.observable_name_compact,
-                                analysis_type,
-                                topsusqtq0_analysis.get_linefit_parameters())
+        #                 if topsusqtq0_analysis.check_continuum_extrapolation():
+        #                     fit_parameters = append_fit_params(
+        #                         fit_parameters,
+        #                         topsusqtq0_analysis.observable_name_compact,
+        #                         analysis_type,
+        #                         topsusqtq0_analysis.get_linefit_parameters())
 
-            topsusqtq0_analysis.plot_series([0, 1, 2, 3])
-            topsusqtq0_analysis.plot_series([3, 4, 5, 6])
-            topsusqtq0_analysis.plot_autocorrelation()
+        #     topsusqtq0_analysis.plot_series([0, 1, 2, 3])
+        #     topsusqtq0_analysis.plot_series([3, 4, 5, 6])
+        #     topsusqtq0_analysis.plot_autocorrelation()
 
     if "topsust" in observables:
         topsust_analysis = TopsustPostAnalysis(
@@ -584,10 +584,15 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
     for obs in observables:
         if "topsus" in obs:
             skip_values = ["a", "a_err", "b", "b_err"]
+
+            tab_filename = "topsus_extrap_values_" 
+            tab_filename += "-".join(data.batch_names) + ".txt"
+
             write_fit_parameters_to_file(fit_parameters,
                                          os.path.join("param_file.txt"),
                                          skip_values=skip_values,
-                                         verbose=verbose)
+                                         verbose=verbose,
+                                         filename=tab_filename)
             break
 
     if len(gif_params["gif_observables"]) != 0:
