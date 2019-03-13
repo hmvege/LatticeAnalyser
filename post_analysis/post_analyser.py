@@ -592,7 +592,7 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
                                          os.path.join("param_file.txt"),
                                          skip_values=skip_values,
                                          verbose=verbose,
-                                         filename=tab_filename)
+                                         tab_filename=tab_filename)
             break
 
     if len(gif_params["gif_observables"]) != 0:

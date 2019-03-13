@@ -5,11 +5,12 @@ import numpy as np
 import types
 import pickle
 
+
 def _check_splits(N, numsplits):
     """Checks if the temporal dimension has been split into good .intervals"""
     if N % numsplits != 0:
-        print ("Number of splits not even: N %% "
-            "numsplits = %d %% %d = %d." % (N, numsplits, N % numsplits))
+        print("Number of splits not even: N %% "
+              "numsplits = %d %% %d = %d." % (N, numsplits, N % numsplits))
 
 
 def _check_intervals(intervals, numsplits):
@@ -19,7 +20,7 @@ def _check_intervals(intervals, numsplits):
     if (intervals == numsplits == None):
 
         raise ValueError(("Either provide MC intervals to plot for or the "
-            "number of MC intervals to split into."))
+                          "number of MC intervals to split into."))
 
 
 def interval_setup(beta_param_list, int_type):
@@ -36,7 +37,7 @@ def interval_setup(beta_param_list, int_type):
             of interval tuples.
     """
 
-    _create_int = lambda l: "-".join(["%03d" % i for i in l])
+    def _create_int(l): return "-".join(["%03d" % i for i in l])
     N_betas = len(beta_param_list)
 
     if int_type == "Eucl":
@@ -51,15 +52,15 @@ def interval_setup(beta_param_list, int_type):
     # If we have provided exact intervals, will create a dictionary
     if not isinstance(beta_param_list[0][intervals_arg], types.NoneType):
         interval_list = [_create_int(beta_param_list[ib][intervals_arg])
-            for ib in range(N_betas)]
+                         for ib in range(N_betas)]
         interval_list = [interval_list]
     else:
         _temp = []
         for plist in beta_param_list:
             _temp.append([_create_int(i) for i in get_intervals(
-                            plist[NTot_arg], 
-                            numsplits=plist[numsplits_arg], 
-                            intervals=plist[intervals_arg])[0]])
+                plist[NTot_arg],
+                numsplits=plist[numsplits_arg],
+                intervals=plist[intervals_arg])[0]])
 
         _num_splits = beta_param_list[0][numsplits_arg]
         interval_list = np.asarray(_temp).T
@@ -89,7 +90,7 @@ def get_intervals(N, numsplits=None, intervals=None):
     if isinstance(intervals, types.NoneType):
         split_interval = N/numsplits
         intervals = zip(
-            range(0, N+1, split_interval), 
+            range(0, N+1, split_interval),
             range(split_interval, N+1, split_interval)
         )
         _check_splits(N, numsplits)
@@ -126,12 +127,13 @@ def append_fit_params(fplist, obs_name, analysis_name, fparams):
     return fplist
 
 
-def write_fit_parameters_to_file(fparams, fname, skip_values=None, 
-    verbose=False, verbose_latex=False):
+def write_fit_parameters_to_file(fparams, fname, skip_values=None,
+                                 verbose=False, verbose_latex=False,
+                                 tab_filename=None):
     """Function for writing fit parameters to file."""
     with open(fname, "w") as f:
-        sorted_parameter_list = sorted(fparams, key=lambda d: \
-            (d["fit_target"], d["analysis_type"]))
+        sorted_parameter_list = sorted(fparams, key=lambda d:
+                                       (d["fit_target"], d["analysis_type"]))
 
         # Default float width
         fw = 14
@@ -139,7 +141,8 @@ def write_fit_parameters_to_file(fparams, fname, skip_values=None,
             ("observable_type", {"name": "obs", "w": 14, "type": "s"}),
             ("descr", {"name": "description", "w": 40, "type": "s"}),
             ("fit_target", {"name": "sqrt(8t_0)", "w": 45, "type": "s"}),
-            ("extrap_method", {"name": "extrap.-method", "w": 15, "type": "s"}),
+            ("extrap_method", {
+             "name": "extrap.-method", "w": 15, "type": "s"}),
             ("interval", {"name": "interval/slice", "w": 60, "type": "s"}),
             ("analysis_type", {"name": "atype", "w": 12, "type": "s"}),
             ("chi_squared", {"name": "Chi^2", "w": 25, "type": ".8f"}),
@@ -155,12 +158,13 @@ def write_fit_parameters_to_file(fparams, fname, skip_values=None,
 
         # Sets header in text file
         header_string = ""
-        create_str = lambda _val, _width, _fcode: "{0:<{w}{t}}".format(
+
+        def create_str(_val, _width, _fcode): return "{0:<{w}{t}}".format(
             _val, w=_width, t=_fcode)
         for k in dict_keys.items():
             if not k[0] in skip_values:
                 header_string += create_str(k[-1]["name"], k[-1]["w"], "s")
-        if verbose: 
+        if verbose:
             print header_string
         f.write(header_string + "\n")
 
@@ -170,25 +174,25 @@ def write_fit_parameters_to_file(fparams, fname, skip_values=None,
             for k in dict_keys.items():
                 if not k[0] in skip_values:
                     line_values += create_str(fp[k[0]], k[-1]["w"],
-                        k[-1]["type"])
+                                              k[-1]["type"])
             if verbose:
                 print line_values
             f.write(line_values + "\n")
 
         # Obs  sqrt(8t)  extrap.method  int/slice  chi^2  topsus  Nf
-        table_header = [r"$\mathcal{O}$", r"$\sqrt{8t_{f,0,\text{extrap}}}$", 
-            "Extrap. method", "Interval/slice", r"$\chi^2$", 
-            r"$\chi_{t_f}^{\frac{1}{4}}$", r"$N_F$"]
+        table_header = [r"$\mathcal{O}$", r"$\sqrt{8t_{f,0,\text{extrap}}}$",
+                        "Extrap. method", "Interval/slice", r"$\chi^2$",
+                        r"$\chi_{t_f}^{\frac{1}{4}}$", r"$N_F$"]
         table_body = [
             [fp["obs_name_latex"] for fp in sorted_parameter_list],
             [fp["fit_target"] for fp in sorted_parameter_list],
             [fp["extrap_method"] for fp in sorted_parameter_list],
             [r"{:s}".format(fp["interval"]) for fp in sorted_parameter_list],
-            [r"{:.2g}".format(fp["chi_squared"]) 
+            [r"{:.2g}".format(fp["chi_squared"])
                 for fp in sorted_parameter_list],
-            [sciprint.sciprint(fp["topsus"], fp["topsus_err"], prec=4) 
+            [sciprint.sciprint(fp["topsus"], fp["topsus_err"], prec=4)
                 for fp in sorted_parameter_list],
-            [sciprint.sciprint(fp["N_F"], fp["N_F_err"], prec=4) 
+            [sciprint.sciprint(fp["N_F"], fp["N_F_err"], prec=4)
                 for fp in sorted_parameter_list],
         ]
 
@@ -197,7 +201,8 @@ def write_fit_parameters_to_file(fparams, fname, skip_values=None,
         width_list[1] = 45
         width_list[3] = 30
         topsus_table = TablePrinter(table_header, table_body)
-        topsus_table.print_table(width=width_list, ignore_latex_cols=[2])
+        topsus_table.print_table(width=width_list, ignore_latex_cols=[
+                                 2], filename=tab_filename)
 
 
 def load_pickle(pickle_file_name):
@@ -213,7 +218,6 @@ def save_pickle(pickle_file_name, data):
     with open(pickle_file_name, "wb") as f:
         pickle.dump(data, f)
         print("Data pickled and dumped to: {:s}".format(pickle_file_name))
-
 
 
 def main():

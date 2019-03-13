@@ -154,8 +154,8 @@ class TablePrinter:
 
         if not isinstance(filename, type(None)):
             print "Table saved to ", filename
-            with open(filename, "w") as f:
-                f.write(tb)
+            with open(filename, "w") as f_:
+                f_.write(tb)
 
         print tb
 
