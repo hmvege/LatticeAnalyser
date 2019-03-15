@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 import numpy as np
 import warnings
 with warnings.catch_warnings():
@@ -6,15 +7,15 @@ with warnings.catch_warnings():
 import sys
 import os
 import numba as nb
+from timing_function import timing_function
 
 __all__ = ["Bootstrap"]
-
 
 class Bootstrap:
     """
     Class for creating a bootstrap sample.
     """
-
+    @timing_function
     def __init__(self, data, N_bs, index_lists=[], seed=None, axis=None):
         """
         Bootstrapping class. Creates N bootstrap samples for a given dataset.

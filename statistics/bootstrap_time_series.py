@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 import time
 import os
 import sys
@@ -16,7 +17,7 @@ class BootstrapTimeSeries:
     """
     Class for creating a bootstrap sample.
     """
-    # @timing_function
+    @timing_function
     def __init__(self, data, N_bs, tau, index_lists=[], seed=None, axis=None):
         """
         Bootstrapping class. Creates N bootstrap samples for a given dataset.
@@ -42,7 +43,7 @@ class BootstrapTimeSeries:
             np.random.seed(seed=seed)
             self.seed = seed
 
-        k = int(np.ceil(N / float(tau)))  # Number of blocks
+        k = int(np.ceil(float(N)/tau))  # Number of blocks
 
         # Allows user to send in a predefined list if needed
         if len(index_lists) == 0:
@@ -98,7 +99,7 @@ class BootstrapTimeSeries:
         return msg
 
 
-# @timing_function
+@timing_function
 def tsboot(data, R, l):
     t = np.empty(R)
     n = int(len(data))
@@ -113,6 +114,43 @@ def tsboot(data, R, l):
 
     return t
 
+def __bs_ts(input_values):
+    data, N_bs, b = input_values
+    return BootstrapTimeSeries(data, N_bs, b).bs_std
+
+def _test_bs_block_size(data, optimal_h, N_bs=100000):
+    """Tests the standard error for different bootstrap block sizes."""
+    print("Creating and plotting optimal block size for N_bs=%d and "
+          "predicted lag at %d" % (N_bs, optimal_h))
+    blocks = np.arange(1, len(data), 1)
+    block_variances = np.zeros(len(blocks))
+
+    # for i, b in enumerate(blocks):
+    import multiprocessing as mp
+    input_values = zip([data for i in range(len(data))],
+                       [N_bs for i in range(len(data))],
+                       blocks.tolist())
+
+    pool = mp.Pool(processes=8)
+    # Runs parallel processes. Can this be done more efficiently?
+    results = pool.map(__bs_ts, input_values)
+    pool.close()
+
+    for i, res in enumerate(results):
+        block_variances[i] = res
+
+    # for i, b in enumerate(blocks):
+    #     block_variances[i] = BootstrapTimeSeries(data, N_bs, b).bs_std
+
+    plt.plot(blocks, block_variances, color="#225ea8")
+    plt.grid(True)
+    plt.ylabel(r"Estimated $\sigma$")
+    plt.xlabel(r"Block size")
+    plt.axvline(optimal_h, color="#000000", alpha=0.5, linestyle="--")
+    figname = "tests/bootstrap_block_size_vs_std.pdf"
+    plt.savefig(figname)
+    print figname, "saved."
+
 
 def main():
     # Data to load and analyse
@@ -121,42 +159,48 @@ def main():
 
     from autocorrelation import PropagatedAutocorrelation
     from bootstrap import Bootstrap
+    import copy as cp
 
     # Bootstrapping
     N_bootstraps = int(10000)
 
-    ac1 = PropagatedAutocorrelation(data)
+    ac1 = PropagatedAutocorrelation(cp.deepcopy(data))
     test_data_figurename = os.path.join(
         test_data_filename.split(".")[0]
         + "_autocorrelation_before_bootstrap.png")
 
     # ac1.plot_autocorrelation(r"$Q$ autocorrelation before bootstrap",
-    #                         test_data_figurename,
-    #                         verbose=True, dryrun=False)
+    #                          test_data_figurename,
+    #                          verbose=True, dryrun=False)
 
-    h = np.where(ac1.R <= 0.0)[0][0]
-    h = 90
+    h = 80# np.where(ac1.R <= 0.0)[0][0]
 
     print "TIMING:"
-    bs = BootstrapTimeSeries(data, N_bootstraps, h)#, timefunc=True)
-    # data_tsboot = tsboot(data, N_bootstraps, h, timefunc=True)
+    bs = BootstrapTimeSeries(cp.deepcopy(data), N_bootstraps, h, timefunc=True)
+    data_tsboot = tsboot(cp.deepcopy(data), N_bootstraps, h, timefunc=True)
 
     print "STATISTICS:"
-    print "Autocorrelatioin: tau_int:", ac1.tau_int_optimal
+    print "Autocorrelation tau_int: %.4f" % ac1.tau_int_optimal
     print "Chunk size: ", h
     print ""
     print "Original standard deviation(with ac-correction):   ", \
           np.std(data)/np.sqrt(len(data))*np.sqrt(2*ac1.tau_int_optimal)
-    # print "Time series bootstrap(tsboot):                     ", np.std(data_tsboot)
+    print "Time series bootstrap(tsboot):                     ", \
+        np.std(data_tsboot)
     print "Time series bootstrap(BootstrapTimeSeries):        ", bs.bs_std
 
-    bs_orig = Bootstrap(data, N_bootstraps)#, timefunc=True)
+    bs_orig = Bootstrap(cp.deepcopy(data), N_bootstraps)  # , timefunc=True)
     print "Bootstrap (with ac-correction):                    ", \
           bs_orig.bs_std*np.sqrt(2*ac1.tau_int_optimal)
     print "Original bootstrap:"
     print bs_orig
     print "Timeseries bootstrap"
     print bs
+
+    # print bs.bs_avg
+    # print np.mean(data), np.std(data)/np.sqrt(len(data))*np.sqrt(2*ac1.tau_int_optimal)
+
+    # _test_bs_block_size(data, h)
 
 
 if __name__ == '__main__':

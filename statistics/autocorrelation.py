@@ -23,7 +23,6 @@ class _AutocorrelationCore(object):
     """
     Core autocorrelation method object.
     """
-
     def __init__(self, data, function_derivative=lambda x: 1.0,
                  function_parameters={}, method="correlate"):
         """
@@ -81,7 +80,6 @@ class _AutocorrelationCore(object):
         """
         return len(self.R)
 
-    @timing_function
     def _autocorrelation(self, data_x, data_y):
         """
         Gets the autocorrelation from a dataset.
@@ -101,7 +99,6 @@ class _AutocorrelationCore(object):
         self.G = self.R * 2
         self.R /= self.C0
 
-    @timing_function
     def _numpy_autocorrelation(self, data_x, data_y):
         """
         Numpy method for finding autocorrelation in a dataset. t is the lag.
@@ -115,7 +112,6 @@ class _AutocorrelationCore(object):
                                               data_y[t:self.N]]))[0, 1]
         self.G = self.R * self.C0 * 2
 
-    @timing_function
     def _numpy2_autocorrelation(self, x, y):
         """
         http://stackoverflow.com/q/14297012/190597
@@ -205,7 +201,7 @@ class Autocorrelation(_AutocorrelationCore):
     """
     Class for performing an autocorrelation analysis based on Luscher
     """
-    # @timing_function
+    @timing_function
     def __init__(self, *args, **kwargs):
         """
         Base method for the auto correlation modules.
@@ -322,7 +318,7 @@ class PropagatedAutocorrelation(_AutocorrelationCore):
     - only have 1 alpha, that is only one observable. This simplifies quite alot.
     """
 
-    # @timing_function
+    @timing_function
     def __init__(self, *args, **kwargs):
         # Calls parent
         super(PropagatedAutocorrelation, self).__init__(*args, **kwargs)
@@ -434,7 +430,7 @@ class FullAutocorrelation(_AutocorrelationCore):
     indices, as well as propagated errors.
     """
 
-    # @timing_function
+    @timing_function
     def __init__(self, data, function_derivative=[lambda x: 1.0],
                  function_parameters={}, numerical_derivative=False):
         """
@@ -505,7 +501,6 @@ class FullAutocorrelation(_AutocorrelationCore):
         # Gets the autocorrelation errors
         self._autocorrelation_error()
 
-    @timing_function
     def _autocorrelation_with_replicums(self, x, y):
         """Eq. 31. Autocorrelation function with replicums."""
         self.G = np.zeros(self.N)
@@ -772,8 +767,8 @@ def _testFullAC(data, N_bins, store_plots, time_ac_functions):
         const = 0.0763234462734
         return 0.25*const / Q_squared**(0.75)
 
-    ac1 = Autocorrelation(data, method="corrcoef",
-                          timefunc=True)
+    print "Autocorrelation:"
+    ac1 = Autocorrelation(data, method="corrcoef", timefunc=True)
     ac1.plot_autocorrelation((r"Autocorrelation for Topological "
                               r"Suscpetibility $\beta = 6.2$"),
                              "beta6_2_topc", dryrun=(not store_plots))
@@ -781,10 +776,10 @@ def _testFullAC(data, N_bins, store_plots, time_ac_functions):
     print(ac1.integrated_autocorrelation_time_error())
     print(ac1.W)
 
+    print "PropagatedAutocorrelation:"
     ac2 = PropagatedAutocorrelation(data,
                                     function_derivative=chi_beta6_2_derivative,
-                                    method="corrcoef",
-                                    timefunc=True)
+                                    method="corrcoef", timefunc=True)
     ac2.plot_autocorrelation((r"Autocorrelation for Topological Suscpetibility"
                               r" $\beta = 6.2$"), "beta6_2_topc",
                              dryrun=(not store_plots))
@@ -792,8 +787,9 @@ def _testFullAC(data, N_bins, store_plots, time_ac_functions):
     print(ac2.integrated_autocorrelation_time_error())
     print(ac2.W)
 
+    print "FullAutocorrelation:"
     ac3 = FullAutocorrelation([data],
-                              function_derivative=[chi_beta6_2_derivative],
+                              function_derivative=[chi_beta6_2_derivative], 
                               timefunc=True)
     ac3.plot_autocorrelation((r"Autocorrelation for Topological Suscpetibility"
                               r" $\beta = 6.2$"), "beta6_2_topc",
