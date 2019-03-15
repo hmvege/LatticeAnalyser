@@ -1266,7 +1266,9 @@ def write_data_to_file(analysis_object, save_as_txt=False):
             (cp.deepcopy(analysis_object.integrated_autocorrelation_time),
              cp.deepcopy(
                 analysis_object.integrated_autocorrelation_time_error),
-             cp.deepcopy(analysis_object.autocorrelation_error_correction)),
+             cp.deepcopy(analysis_object.autocorrelation_error_correction),
+             cp.deepcopy(analysis_object.bs_ts_y),
+             cp.deepcopy(analysis_object.bs_ts_y_std)),
             axis=1)
 
         data = np.concatenate((data, ac_data), axis=1)

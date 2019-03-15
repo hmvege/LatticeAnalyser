@@ -6,57 +6,26 @@ import types
 import time
 import os
 import numpy as np
+from timing_function import timing_function
+
 import warnings
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     import matplotlib.pyplot as plt
 
 rc("text", usetex=True)
-# rc("font", **{"family": "sans-serif", "serif": ["Computer Modern"]})
 rcParams["font.family"] += ["serif"]
 
 __all__ = ["Autocorrelation", "PropagatedAutocorrelation"]
 
 
-# TODO: implement method for plotting W cutoff as a function of S.
-
-"""
-Books:
-Quantum Chromo Dynamics on the Lattice, Gattringer
-Papers:
-Schwarz-preconditioned HMC algorithm for two-flavour lattice QCD, M. Luscher 2004
-Monte Carlo errors with less errors, U. Wolff 2006
-"""
-
-
-def timing_function(func):
-    """
-    Time function.
-    """
-    def wrapper(*args):
-        if args[0].time_autocorrelation:
-            t1 = time.clock()
-
-        val = func(*args)
-
-        if args[0].time_autocorrelation:
-            t2 = time.clock()
-
-            time_used = t2 - t1
-            args[0].time_used = time_used
-
-            print("Autocorrelation: time used with function %s: %.10f secs/"
-                  " %.10f minutes" % (func.__name__, time_used, time_used/60.))
-
-        return val
-
-    return wrapper
-
-
 class _AutocorrelationCore(object):
+    """
+    Core autocorrelation method object.
+    """
+
     def __init__(self, data, function_derivative=lambda x: 1.0,
-                 function_parameters={}, method="correlate",
-                 time_autocorrelation=False):
+                 function_parameters={}, method="correlate"):
         """
         Base method for the auto correlation modules.
 
@@ -69,7 +38,6 @@ class _AutocorrelationCore(object):
                         parameters.
                 method: optional, string method of performing autocorrelation:
                         "corroeff", "correlate", "manual".
-                time_autocorrealtion: bool, times the autocorrelation function.
 
         Returns:
                 Object containing the autocorrelation values
@@ -78,10 +46,6 @@ class _AutocorrelationCore(object):
         # Retrieves relevant functions for later
         self.function_derivative = function_derivative
         self.function_parameters = function_parameters
-
-        # Timer variables
-        self.time_autocorrelation = time_autocorrelation
-        self.time_used = 0.0
 
         # Autocorrelation variables
         self.data = data
@@ -202,7 +166,8 @@ class _AutocorrelationCore(object):
             # plt.show()
             plt.close(fig)
 
-    def plot_autocorrelation(self, title, filename, lims=1, dryrun=False):
+    def plot_autocorrelation(self, title, filename, lims=1, dryrun=False,
+                             verbose=False):
         """
         Plots the autocorrelation.
         """
@@ -224,15 +189,23 @@ class _AutocorrelationCore(object):
         ax.yaxis.set_ticks(np.arange(start, end, 0.2))
         ax.grid(True)
         ax.legend()
-        if dryrun:
-            fig.savefig("tests/autocorrelation_%s.pdf" % filename)
+        if not dryrun:
+            if filename.startswith("tests"):
+                fig.savefig(filename)
+            else:
+                filename = "tests/autocorrelation_%s.pdf" % filename
+                fig.savefig(filename)
+
+            if verbose:
+                print "Test data saved at: %s" % filename
+        plt.close(fig)
 
 
 class Autocorrelation(_AutocorrelationCore):
     """
     Class for performing an autocorrelation analysis based on Luscher
     """
-
+    # @timing_function
     def __init__(self, *args, **kwargs):
         """
         Base method for the auto correlation modules.
@@ -246,7 +219,6 @@ class Autocorrelation(_AutocorrelationCore):
                         parameters.
                 method: optional, string method of performing autocorrelation: 
                         "corroeff", "correlate", "manual".
-                time_autocorrealtion: bool, times the autocorrelation function.
 
         Returns:
                 Object containing the autocorrelation values
@@ -336,7 +308,7 @@ class Autocorrelation(_AutocorrelationCore):
         self.tau_int_error = np.sqrt(
             (4*self.W + 2)/float(self.N) * self.tau_int**2)
         # self.tau_int_error = np.sqrt(
-        # 	4/float(self.N) * (self.W + 0.5 - self.tau_int) * self.tau_int**2)
+        #   4/float(self.N) * (self.W + 0.5 - self.tau_int) * self.tau_int**2)
         self.tau_int_optimal_error = self.tau_int_error[self.W]
         return self.tau_int_optimal_error
 
@@ -350,6 +322,7 @@ class PropagatedAutocorrelation(_AutocorrelationCore):
     - only have 1 alpha, that is only one observable. This simplifies quite alot.
     """
 
+    # @timing_function
     def __init__(self, *args, **kwargs):
         # Calls parent
         super(PropagatedAutocorrelation, self).__init__(*args, **kwargs)
@@ -444,7 +417,8 @@ class PropagatedAutocorrelation(_AutocorrelationCore):
     #     tau_int_error = np.asarray(
     #         [np.sqrt(4/float(N)*(float(iW) + 0.5 - itau)*itau**2)
     #          for iW, itau in enumerate(tau_int)])
-    #     # self.tau_int_error = np.sqrt((4*self.W + 2)/float(self.N) * self.tau_int**2)
+    #     # self.tau_int_error = \
+    #     #     np.sqrt((4*self.W + 2)/float(self.N) * self.tau_int**2)
     #     return tau_int_error, tau_int_error[W]
 
     def integrated_autocorrelation_time(self):
@@ -460,9 +434,9 @@ class FullAutocorrelation(_AutocorrelationCore):
     indices, as well as propagated errors.
     """
 
+    # @timing_function
     def __init__(self, data, function_derivative=[lambda x: 1.0],
-                 function_parameters={}, numerical_derivative=False,
-                 time_autocorrelation=False):
+                 function_parameters={}, numerical_derivative=False):
         """
         Base method for the auto correlation modules.
 
@@ -475,7 +449,6 @@ class FullAutocorrelation(_AutocorrelationCore):
                         parameters.
                 method: optional, string method of performing autocorrelation: 
                         "corroeff", "correlate", "manual".
-                time_autocorrealtion: bool, times the autocorrelation function.
 
         Returns:
                 Object containing the autocorrelation values
@@ -512,10 +485,6 @@ class FullAutocorrelation(_AutocorrelationCore):
         # Retrieves relevant functions for later
         self.function_derivative = function_derivative
         self.function_parameters = function_parameters
-
-        # Timer variables
-        self.time_autocorrelation = time_autocorrelation
-        self.time_used = 0.0
 
         # Autocorrelation variables
         self.data = np.asarray(data)
@@ -580,7 +549,8 @@ class FullAutocorrelation(_AutocorrelationCore):
         # Eq. 7: gets the total average
         self.avg_data = np.empty(self.N_obs)
         for ia in range(self.N_obs):
-            self.avg_data[ia] = np.mean(np.dot(self.NR, self.avg_replicums[:,ia]))
+            self.avg_data[ia] = np.mean(
+                np.dot(self.NR, self.avg_replicums[:, ia]))
 
         # Eq. 33, computing derivatives
         derfun = np.zeros(self.N_obs)
@@ -700,7 +670,7 @@ def _testRegularAC(data, N_bins, store_plots, time_ac_functions):
 
     # Autocorrelation
     ac = Autocorrelation(data, method="manual",
-                         time_autocorrelation=time_ac_functions)
+                         timefunc=True)
     ac.plot_autocorrelation((r"Autocorrelation for Plaquette "
                              r"$\beta = 6.2, \tau=10.0$"), "beta6_2",
                             dryrun=(not store_plots))
@@ -766,7 +736,7 @@ Time used by numpy corrcoef:                    {1:<.8f}
 Time used by numpy correlate:                   {2:<.8f}
 Time used by semi-full propagated correlate:    {3:<.8f}
 Time used by propagated correlate:              {4:<.8f}
-Improvement(default/corrcoef): 	                {5:<.3f}
+Improvement(default/corrcoef):                  {5:<.3f}
 Improvement(default/correlate):                 {6:<.3f}
 Improvement(corrcoef/correlate):                {7:<.3f}
 Improvement(semi-propagated/corrcoef):          {8:<.3f}
@@ -803,7 +773,7 @@ def _testFullAC(data, N_bins, store_plots, time_ac_functions):
         return 0.25*const / Q_squared**(0.75)
 
     ac1 = Autocorrelation(data, method="corrcoef",
-                          time_autocorrelation=time_ac_functions)
+                          timefunc=True)
     ac1.plot_autocorrelation((r"Autocorrelation for Topological "
                               r"Suscpetibility $\beta = 6.2$"),
                              "beta6_2_topc", dryrun=(not store_plots))
@@ -814,7 +784,7 @@ def _testFullAC(data, N_bins, store_plots, time_ac_functions):
     ac2 = PropagatedAutocorrelation(data,
                                     function_derivative=chi_beta6_2_derivative,
                                     method="corrcoef",
-                                    time_autocorrelation=time_ac_functions)
+                                    timefunc=True)
     ac2.plot_autocorrelation((r"Autocorrelation for Topological Suscpetibility"
                               r" $\beta = 6.2$"), "beta6_2_topc",
                              dryrun=(not store_plots))
@@ -824,7 +794,7 @@ def _testFullAC(data, N_bins, store_plots, time_ac_functions):
 
     ac3 = FullAutocorrelation([data],
                               function_derivative=[chi_beta6_2_derivative],
-                              time_autocorrelation=time_ac_functions)
+                              timefunc=True)
     ac3.plot_autocorrelation((r"Autocorrelation for Topological Suscpetibility"
                               r" $\beta = 6.2$"), "beta6_2_topc",
                              dryrun=(not store_plots))

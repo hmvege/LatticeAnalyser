@@ -70,6 +70,13 @@ class TopsusAnalyserCore(FlowAnalyser):
         	N_bs, F=self.chi, F_error=self.chi_std, 
         	store_raw_bs_values=store_raw_bs_values, index_lists=index_lists)
 
+    def boot_timeseries(self, N_bs, F=None, F_error=None, store_raw_bs_values=True,
+             index_lists=None):
+        """Overriding the bootstrap class by adding the chi-function"""
+        super(TopsusAnalyserCore, self).boot_timeseries(
+            N_bs, F=self.chi, F_error=self.chi_std, 
+            store_raw_bs_values=store_raw_bs_values, index_lists=index_lists)
+
     def plot_histogram(self, flow_time_index, x_label=None, NBins=None,
                        x_limits="equal", F=None):
         super(TopsusAnalyserCore, self).plot_histogram(

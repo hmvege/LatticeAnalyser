@@ -406,7 +406,7 @@ class PostAnalysisDataReader:
         obs_data["jackknife"] = cp.deepcopy(jk_data)
 
         # Only retrieves blocked data if it is present
-        if retrieved_data.shape[1] == 11 or retrieved_data.shape[1] == 14:
+        if retrieved_data.shape[1] == 13 or retrieved_data.shape[1] == 16:
             block_mean = retrieved_data[:, 7]
             block_std = retrieved_data[:, 8]
             block_bootstrap_mean = retrieved_data[:, 9]
@@ -420,7 +420,7 @@ class PostAnalysisDataReader:
         # If autocorrelation data is provided, stores it
         if autocorr:
 
-            if retrieved_data.shape[1] == 14:
+            if retrieved_data.shape[1] == 16:
                 ac_index = 11
             else:
                 ac_index = 7
@@ -428,6 +428,8 @@ class PostAnalysisDataReader:
             tau_int = retrieved_data[:, ac_index]
             tau_int_err = retrieved_data[:, ac_index+1]
             sqrt2tau_int = retrieved_data[:, ac_index+2]
+            y_bs_ts = retrieved_data[:, ac_index+3]
+            y_err_bs_ts = retrieved_data[:, ac_index+4]
 
             # Populates autocorr dictionary
             ac_data = {
@@ -436,6 +438,9 @@ class PostAnalysisDataReader:
                 "sqrt2tau_int": sqrt2tau_int,
             }
             obs_data["autocorr"] = cp.deepcopy(ac_data)
+
+            bs_ts_data = {"y": y_bs_ts, "y_error": y_err_bs_ts, "x": t}
+            obs_data["bootstrap_time_series"] = bs_ts_data
 
         if self.verbose:
             print "Data retrieved from %s" % observable_file

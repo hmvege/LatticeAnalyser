@@ -217,7 +217,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
                         # Error propagation with lattice spacing error
                         sub_values["y_err"] = np.sqrt(
                             (self.fold_error_array(sub_values["y_err"])*self.r0/sub_values["a"])**2 +
-                            (sub_values["y"]/sub_values["a"]*sub_values["a_err"])**2)
+                            (self.r0*sub_values["y"]/sub_values["a"]*sub_values["a_err"])**2)
 
                         # sub_values["raw"] = self.fold_array(sub_values["raw"],
                         # 	axis=0)
@@ -259,20 +259,23 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
                                                   values["y"].shape[0]/2))*values["a"],
                                               int(values["y"].shape[0]/2)+1)
 
-                    values["y"] = self.fold_array(
-                        values["y"])*self.r0/values["a"]
-                    # values["y_err"] = \
-                    # 	self.fold_error_array(values["y_err"]) * self.r0 / values["a"]
+                    values["y"] = \
+                        self.fold_array(values["y"])*self.r0/values["a"]
+
+                    # values["y"] = self.fold_array(values["y"])/values["a"]
+                    # values["y_err"] = np.sqrt(
+                    #     (self.fold_error_array(values["y_err"])/values["a"])**2 +
+                    #     (values["y"]/values["a"]**2*values["a_err"])**2)
 
                     # Error propagation with lattice spacing error
                     values["y_err"] = np.sqrt(
                         (self.fold_error_array(values["y_err"])*self.r0/values["a"])**2 +
-                        (values["y"]/values["a"]*values["a_err"])**2)
+                        (self.r0*values["y"]/values["a"]**2*values["a_err"])**2)
 
                     # values["y_raw"] = self.fold_array(values["y_raw"], axis=0)
                     self.fold_position = values["x"][self.fold_range]
 
-                values["label"] = r"%s $\beta=%2.2f$, $t_f=%.2f$" % (
+                values["label"] = r"%s $\beta=%2.2f$, $\sqrt{8t_f}=%.2f$" % (
                     self.size_labels[bn], self.beta_values[bn], flow_index)
 
                 self.plot_values[bn] = values
@@ -288,7 +291,8 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
         self.plot_values = {}
         self.interval_index = flow_index
         self._initiate_plot_values(self.data[self.analysis_data_type],
-                                   self.data_raw[self.analysis_data_type], flow_index=flow_index)
+                                   self.data_raw[self.analysis_data_type], 
+                                   flow_index=flow_index)
 
         # Sets the x-label to proper units
         x_label_old = self.x_label

@@ -5,6 +5,7 @@ with warnings.catch_warnings():
     import matplotlib.pyplot as plt
 import sys
 import os
+import numba as nb
 
 __all__ = ["Bootstrap"]
 
@@ -14,13 +15,13 @@ class Bootstrap:
     Class for creating a bootstrap sample.
     """
 
-    def __init__(self, data, N_BS, index_lists=[], seed=None, axis=None):
+    def __init__(self, data, N_bs, index_lists=[], seed=None, axis=None):
         """
         Bootstrapping class. Creates N bootstrap samples for a given dataset.
 
         Args:
                 data: numpy array, datasets.
-                N_BS: int, number of bootstrap-samples.
+                N_bs: int, number of bootstrap-samples.
                 bootstrap_statistics: optional, function of statistics to run on 
                         bootstrap samples, default is numpy.mean().
                 index_lists: optional, numpy array, randomly generated lists
@@ -38,10 +39,11 @@ class Bootstrap:
 
         # Allows user to send in a predefined list if needed
         if len(index_lists) == 0:
-            index_lists = np.random.randint(N, size=(N_BS, N))
+            index_lists = np.random.randint(N, size=(N_bs, N))
 
-        self.bs_data_raw = data[index_lists]
-        self.bs_data = np.mean(self.bs_data_raw, axis=1)
+        # self.bs_data_raw = data[index_lists]
+        # self.bs_data = np.mean(self.bs_data_raw, axis=1)
+        self.bs_data = self._boot(data, index_lists, N_bs)
 
         # Performing basic bootstrap statistics
         self.bs_avg = np.average(self.bs_data, axis=axis)
@@ -57,7 +59,15 @@ class Bootstrap:
 
         # Sets some global class variables
         self.shape = self.bs_avg.shape
-        self.N_BS = N_BS
+        self.N_bs = N_bs
+
+    @staticmethod
+    @nb.njit(cache=True)
+    def _boot(data, index_lists, N_bs):
+        bs_data = np.empty(N_bs)
+        for i_bs in xrange(N_bs):
+            bs_data[i_bs] = np.mean(data[index_lists[i_bs]])
+        return bs_data
 
     def __add__(self, other):
         """
@@ -84,13 +94,11 @@ class Bootstrap:
         """
         When object is printed, prints information about the bootstrap performed.
         """
-        msg = "BOOTSTRAP:"
-
-        msg += "\n" + "="*61
+        msg = "\n" + "="*61
 
         msg += "\nNon-bootstrap: "
         msg += "%10.10f " % self.avg_original
-        msg += "%10.10E " % self.var_original
+        # msg += "%10.10E " % self.var_original
         msg += "%10.10E" % self.std_original
 
         msg += "\nBootstrap:     "
@@ -98,7 +106,9 @@ class Bootstrap:
         msg += "%10.10E " % self.bs_var
         msg += "%10.10E " % self.bs_std
 
-        msg += "\nN bootstraps   %d" % self.N_BS
+        msg += "\nN bootstraps   %d" % self.N_bs
+
+        msg += "\n" + "="*61 + "\n"
 
         return msg
 

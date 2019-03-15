@@ -331,6 +331,7 @@ class FlowAnalyser(object):
         # Stores number of bootstraps
         self.N_bs = N_bs
 
+
         # Sets up raw bootstrap and unanalyzed data array
         self.bs_y_data = np.zeros((self.NFlows, self.N_bs))
         self.unanalyzed_y_data = np.zeros((self.NFlows, self.N_configurations))
@@ -412,7 +413,7 @@ class FlowAnalyser(object):
         """
         Method for bootstrapping a time series.
         """
-
+        N_bs = 1000
         assert self.autocorrelation_performed, (
             "Autocorrelation has not been performed.")
 
@@ -427,35 +428,62 @@ class FlowAnalyser(object):
 
         # Sets up raw bootstrap and unanalyzed data array
         self.bs_ts_y_data = np.zeros((self.NFlows, N_bs))
-        self.bs_ts_y = np.zeros((self.NFlows, N_bs))
-        self.bs_ts_y_std = np.zeros((self.NFlows, N_bs))
+        self.bs_ts_y = np.zeros(self.NFlows)
+        self.bs_ts_y_std = np.zeros(self.NFlows)
 
         # Picks out the autocorrelation where we first get a negative value.
-        first_negative_index = np.where(self.autocorrelations <= 0.0)[0][0]
+        tau = np.empty(self.NFlows, dtype=int)
+        for i_flow in range(self.NFlows):
+            tau[i_flow] = int(
+                np.where(self.autocorrelations[i_flow] <= 0.0)[0][0])
+
+        # Gets the number of intervals to use
+        k = map(lambda _tau: int(np.ceil(float(self.N_configurations)/_tau)), tau)
+        k = np.array(k)
 
         # Generates random lists to use in resampling
         if isinstance(index_lists, types.NoneType):
-            index_lists = np.random.randint(self.N_configurations,
-                                            size=(N_bs, self.N_configurations))
 
-        for i in xrange(self.NFlows):
-            bs = BootstrapTimeSeries(self.y[:, i], N_bs, first_negative_index, 
-                index_lists=index_lists)
-            self.bs_ts_y[i] = bs.bs_avg
-            self.bs_ts_y_std[i] = bs.bs_std
+            # index_lists = []
+            # for i_flow in xrange(self.NFlows):
+            #     np.random.seed(123)
+            #     index_lists.append(np.random.randint(
+            #         0, self.N_configurations-tau[i_flow],
+            #         size=(N_bs, k[i_flow])))
+
+            index_lists = \
+                np.random.randint(0, self.N_configurations-np.max(tau),
+                                  size=(N_bs, np.min(k)))
+
+        for i_flow in xrange(self.NFlows):
+
+            # bs = BootstrapTimeSeries(self.y[:, i_flow], N_bs, tau[i_flow],
+            #                          index_lists=index_lists[i_flow])
+
+            bs = BootstrapTimeSeries(self.y[:, i_flow], N_bs, np.max(tau),
+                                     index_lists=index_lists)
+
+            self.bs_ts_y[i_flow] = bs.bs_avg
+            self.bs_ts_y_std[i_flow] = bs.bs_std
 
             # Stores last data for plotting in histogram later
-            self.bs_ts_y_data[i] = bs.bs_data
+            self.bs_ts_y_data[i_flow] = bs.bs_data
 
         # Runs bs and unanalyzed data through the F and F_error
         self.bs_ts_y_std = F_error(self.bs_ts_y, self.bs_ts_y_std)
         self.bs_ts_y = F(self.bs_ts_y)
 
-        if store_raw_bs_values:
-            self.save_raw_analysis_data(self.bs_ts_y_data, "bootstrap_time_series")
+        # # Plots the error bar
+        # plt.errorbar(self.a*np.sqrt(8*self.x), self.bs_ts_y, yerr=self.bs_ts_y_std, fmt=".", color="0", ecolor="r",
+        #             markevery=self.mark_interval,
+        #             errorevery=self.error_mark_interval)
+        # plt.show()
+
+
+        self.save_raw_analysis_data(
+            self.bs_ts_y_data, "bootstrap_time_series")
 
         self.bootstrap_time_series_performed = True
-
 
     def jackknife(self, F=None, F_error=None, store_raw_jk_values=True):
         """
@@ -909,6 +937,44 @@ class FlowAnalyser(object):
         self.__plot_error_core(x, correction_function(y),
                                error_correction_function(y, y_std),
                                title_string, fname_path)
+
+    def plot_bootstrap_time_series(self, x=None,
+                                   correction_function=lambda x: x,
+                                   error_correction_function=None):
+        """
+        Plots the bootstrap time series.
+        """
+
+        # Checks that the bootstrap has been performed.
+        if not self.bootstrap_time_series_performed:
+            if not plot_blocked:
+                raise ValueError(
+                    "Time series bootstraps not been performed yet.")
+
+        # Retrieves relevant data and sets up the arrays to be plotted
+        if isinstance(x, types.NoneType):
+            # Default x axis points is the flow time
+            x = self.a * np.sqrt(8*self.x)
+
+        if isinstance(error_correction_function, types.NoneType):
+            def error_correction_function(q, qerr): 
+                return correction_function(qerr)
+
+        plot_type = "bootstrap-timeseries"
+        fname_addon = ""
+
+        title_string = r"%s" % self.observable_name
+        fname_path = os.path.join(
+            self.observable_output_folder_path,
+            "{0:<s}_{3:s}_beta{1:<s}{2:<s}.pdf".format(
+                self.observable_name_compact,
+                str(self.beta).replace('.', '_'), fname_addon,
+                plot_type))
+
+        self.__plot_error_core(
+            x, correction_function(self.bs_ts_y),
+            error_correction_function(self.bs_ts_y, self.bs_ts_y_std),
+            title_string, fname_path)
 
     def plot_original(self, x=None, correction_function=lambda x: x,
                       error_correction_function=None, plot_blocked=False):

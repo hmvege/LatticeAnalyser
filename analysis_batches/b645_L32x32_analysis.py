@@ -14,7 +14,8 @@ except ImportError:
 
 def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True,
                          only_generate_data=False, observables=None,
-                         include_b645x48xx3x96=True):
+                         include_b645x48xx3x96=True, 
+                         post_analysis_data_type=["bootstrap"]):
     from pre_analysis.pre_analyser import pre_analysis
     from post_analysis.post_analyser import post_analysis
     from default_analysis_params import get_default_parameters
@@ -72,10 +73,6 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True,
     # Flow time indexes in percent to plot qtq0 in euclidean time at
     euclidean_time_percents = [0, 0.25, 0.50, 0.75, 1.00]
     # euclidean_time_percents = [0]
-
-    # Data types to be looked at in the post-analysis.
-    post_analysis_data_type = ["bootstrap", "jackknife", "unanalyzed"]
-    post_analysis_data_type = ["bootstrap"]
 
     # Blocking
     default_params["blocking_analysis"] = True
