@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 from autocorrelation import Autocorrelation, PropagatedAutocorrelation, \
 	FullAutocorrelation
 from jackknife import Jackknife

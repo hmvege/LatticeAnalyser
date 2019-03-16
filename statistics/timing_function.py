@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 def timing_function(func):
     """
     Time function.

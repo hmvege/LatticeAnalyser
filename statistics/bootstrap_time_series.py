@@ -118,7 +118,7 @@ def __bs_ts(input_values):
     data, N_bs, b = input_values
     return BootstrapTimeSeries(data, N_bs, b).bs_std
 
-def _test_bs_block_size(data, optimal_h, N_bs=100000):
+def _test_bs_block_size(data, optimal_h, N_bs=1000000):
     """Tests the standard error for different bootstrap block sizes."""
     print("Creating and plotting optimal block size for N_bs=%d and "
           "predicted lag at %d" % (N_bs, optimal_h))
@@ -127,12 +127,14 @@ def _test_bs_block_size(data, optimal_h, N_bs=100000):
 
     # for i, b in enumerate(blocks):
     import multiprocessing as mp
+
+    # The input values should be a generator, not a list.
     input_values = zip([data for i in range(len(data))],
                        [N_bs for i in range(len(data))],
                        blocks.tolist())
 
     pool = mp.Pool(processes=8)
-    # Runs parallel processes. Can this be done more efficiently?
+    # Runs parallel processes. Should be an imap instead to save memory.
     results = pool.map(__bs_ts, input_values)
     pool.close()
 
@@ -169,11 +171,11 @@ def main():
         test_data_filename.split(".")[0]
         + "_autocorrelation_before_bootstrap.png")
 
-    # ac1.plot_autocorrelation(r"$Q$ autocorrelation before bootstrap",
-    #                          test_data_figurename,
-    #                          verbose=True, dryrun=False)
+    ac1.plot_autocorrelation(r"$Q$ autocorrelation before bootstrap",
+                             test_data_figurename,
+                             verbose=True, dryrun=False)
 
-    h = 80# np.where(ac1.R <= 0.0)[0][0]
+    h = np.where(ac1.R <= 0.0)[0][0]
 
     print "TIMING:"
     bs = BootstrapTimeSeries(cp.deepcopy(data), N_bootstraps, h, timefunc=True)
@@ -197,10 +199,7 @@ def main():
     print "Timeseries bootstrap"
     print bs
 
-    # print bs.bs_avg
-    # print np.mean(data), np.std(data)/np.sqrt(len(data))*np.sqrt(2*ac1.tau_int_optimal)
-
-    # _test_bs_block_size(data, h)
+    _test_bs_block_size(data, h)
 
 
 if __name__ == '__main__':

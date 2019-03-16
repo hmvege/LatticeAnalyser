@@ -180,19 +180,20 @@ def write_fit_parameters_to_file(fparams, fname, skip_values=None,
             f.write(line_values + "\n")
 
         # Obs  sqrt(8t)  extrap.method  int/slice  chi^2  topsus  Nf
-        table_header = [r"$\mathcal{O}$", r"$\sqrt{8t_{f,0,\text{extrap}}}$",
-                        "Extrap. method", "Interval/slice", r"$\chi^2$",
+        table_header = [r"$\mathcal{O}$", r"$\sqrt{8t_{f,0,\mathrm{extrap}}}$",
+                        "Analysis method","Extrap. method", "Interval/slice", r"$\chi^2/\mathrm{d.o.f.}$",
                         r"$\chi_{t_f}^{\frac{1}{4}}$", r"$N_F$"]
         table_body = [
             [fp["obs_name_latex"] for fp in sorted_parameter_list],
             [fp["fit_target"] for fp in sorted_parameter_list],
+            [fp["analysis_type"] for fp in sorted_parameter_list],
             [fp["extrap_method"] for fp in sorted_parameter_list],
             [r"{:s}".format(fp["interval"]) for fp in sorted_parameter_list],
-            [r"{:.2g}".format(fp["chi_squared"])
+            [r"{:.2f}".format(fp["chi_squared"])
                 for fp in sorted_parameter_list],
-            [sciprint.sciprint(fp["topsus"], fp["topsus_err"], prec=4)
+            [sciprint.sciprint(fp["topsus"], fp["topsus_err"], prec=3)
                 for fp in sorted_parameter_list],
-            [sciprint.sciprint(fp["N_F"], fp["N_F_err"], prec=4)
+            [sciprint.sciprint(fp["N_F"], fp["N_F_err"], prec=2)
                 for fp in sorted_parameter_list],
         ]
 
@@ -200,9 +201,10 @@ def write_fit_parameters_to_file(fparams, fname, skip_values=None,
         width_list[0] = 45
         width_list[1] = 45
         width_list[3] = 30
+        width_list[4] = 30
         topsus_table = TablePrinter(table_header, table_body)
         topsus_table.print_table(width=width_list, ignore_latex_cols=[
-                                 2], filename=tab_filename)
+                                 3], filename=tab_filename)
 
 
 def load_pickle(pickle_file_name):

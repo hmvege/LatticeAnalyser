@@ -322,8 +322,11 @@ class EnergyPostAnalysis(PostCore):
                     self.plot_values[bn]["a_err"])) for bn in bvals],
             ]
 
+            table_filename = "energy_t0_" + self.analysis_data_type
+            table_filename += "-".join(self.batch_names) + ".txt"
             ptab = TablePrinter(header, tab)
-            ptab.print_table(latex=True, width=15)
+            ptab.print_table(latex=True, width=15, filename=table_filename)
+
 
         return t0_dict
 
@@ -492,8 +495,10 @@ class EnergyPostAnalysis(PostCore):
                     self.plot_values[bn]["a_err"])) for bn in bvals],
             ]
 
+            table_filename = "energy_w0_" + self.analysis_data_type
+            table_filename += "-".join(self.batch_names) + ".txt"
             ptab = TablePrinter(header, tab)
-            ptab.print_table(latex=True, width=15)
+            ptab.print_table(latex=True, width=15, filename=table_filename)
 
         return w0_dict
 

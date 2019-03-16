@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 import numpy as np
 import warnings
 with warnings.catch_warnings():
