@@ -95,7 +95,7 @@ def analyse_plaq(params):
     """Analysis of the plaquette."""
     # obs_data, dryrun, parallel, numprocs, verbose, N_bs = params
     plaq_analysis = PlaquetteAnalyser(
-        params["data"]("plaq"),
+        params["data"]("plaq"), plot_color=params["color"],
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
     analyse_default(plaq_analysis, params["N_bs"],
@@ -107,7 +107,7 @@ def analyse_plaq(params):
 def analyse_energy(params):
     """Analysis of the energy."""
     energy_analysis = EnergyAnalyser(
-        params["data"]("energy"),
+        params["data"]("energy"), plot_color=params["color"],
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
     analyse_default(energy_analysis, params["N_bs"],
@@ -118,7 +118,7 @@ def analyse_energy(params):
 
 def analyse_w_t_energy(params):
     w_t_energy_analysis = WtEnergyAnalyser(
-        params["data"]("energy"),
+        params["data"]("energy"), plot_color=params["color"],
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
     analyse_default(w_t_energy_analysis, params["N_bs"],
@@ -128,7 +128,7 @@ def analyse_w_t_energy(params):
 def analyse_topsus(params):
     """Analysis of topsus."""
     topsus_analysis = TopsusAnalyser(
-        params["data"]("topc"),
+        params["data"]("topc"), plot_color=params["color"],
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
     analyse_default(topsus_analysis, params["N_bs"],
@@ -140,7 +140,7 @@ def analyse_topsus(params):
 def analyse_topc(params):
     """Analysis of Q."""
     topc_analysis = TopcAnalyser(
-        params["data"]("topc"),
+        params["data"]("topc"), plot_color=params["color"],
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
     topc_analysis.y_limits = params["topc_y_limits"]
@@ -157,7 +157,7 @@ def analyse_topc(params):
 def analyse_topc2(params):
     """Analysis of Q^2."""
     topc2_analysis = Topc2Analyser(
-        params["data"]("topc"),
+        params["data"]("topc"), plot_color=params["color"],
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
     topc2_analysis.y_limits = params["topc2_y_limits"]
@@ -170,7 +170,7 @@ def analyse_topc2(params):
 def analyse_topc4(params):
     """Analysis the topological chage with q^4."""
     topc4_analysis = Topc4Analyser(
-        params["data"]("topc"),
+        params["data"]("topc"), plot_color=params["color"],
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
     analyse_default(topc4_analysis, params["N_bs"],
@@ -186,11 +186,11 @@ def analyse_topcr(params):
     analysis can be performed on these explisitly.
     """
     topc2_analysis = Topc2Analyser(
-        params["data"]("topc"),
+        params["data"]("topc"), plot_color=params["color"],
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
     topc4_analysis = Topc4Analyser(
-        params["data"]("topc"),
+        params["data"]("topc"), plot_color=params["color"],
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
 
@@ -229,12 +229,12 @@ def analyse_topcrMC(params):
 
     for MC_int in MC_interval:
         topc2_analysis = Topc2MCIntervalAnalyser(
-            params["data"]("topc"),
+            params["data"]("topc"), plot_color=params["color"],
             mc_interval=MC_int, dryrun=params["dryrun"],
             parallel=params["parallel"], numprocs=params["numprocs"],
             verbose=params["verbose"])
         topc4_analysis = Topc4MCIntervalAnalyser(
-            params["data"]("topc"),
+            params["data"]("topc"), plot_color=params["color"],
             mc_interval=MC_int, dryrun=params["dryrun"],
             parallel=params["parallel"], numprocs=params["numprocs"],
             verbose=params["verbose"])
@@ -256,7 +256,7 @@ def analyse_topsus_qtq0(params):
     flow time.
     """
     topsus_qtq0_analysis = TopsusQtQ0Analyser(
-        params["data"]("topc"),
+        params["data"]("topc"), plot_color=params["color"],
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
 
@@ -276,7 +276,7 @@ def analyse_qtq0e(params):
         return
 
     qtq0_analysis = QtQ0EuclideanAnalyser(
-        obs_data("topct"),
+        obs_data("topct"), plot_color=params["color"],
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
 
@@ -299,7 +299,7 @@ def analyse_qtq0_effective_mass(params):
         return
 
     qtq0eff_analysis = QtQ0EffectiveMassAnalyser(
-        obs_data("topct"),
+        obs_data("topct"), plot_color=params["color"],
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
 
@@ -333,7 +333,8 @@ def analyse_qtq0_effective_mass_mc(params):
 
     for MC_int in MC_interval:
         analyse_eff_mass_MC = QtQ0EffectiveMassMCAnalyser(
-            obs_data("topct"), mc_interval=MC_int, dryrun=params["dryrun"],
+            obs_data("topct"), mc_interval=MC_int, 
+            plot_color=params["color"], dryrun=params["dryrun"],
             parallel=params["parallel"], numprocs=params["numprocs"],
             verbose=params["verbose"])
 
@@ -355,7 +356,7 @@ def analyse_topct(params):
         return
 
     topct_analysis = TopctAnalyser(
-        obs_data("topct"),
+        obs_data("topct"), plot_color=params["color"],
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
 
@@ -378,7 +379,7 @@ def analyse_topsust(params):
         return
 
     topct_analysis = TopsustAnalyser(
-        obs_data("topct"),
+        obs_data("topct"), plot_color=params["color"],
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
 
@@ -415,7 +416,7 @@ def analyse_topcte_intervals(params):
                                   intervals=params["intervals_eucl"])
 
     analyse_topcte = TopcteIntervalAnalyser(
-        obs_data("topct"),
+        obs_data("topct"), plot_color=params["color"],
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
 
@@ -446,7 +447,7 @@ def analyse_topsuste_intervals(params):
                                   intervals=params["intervals_eucl"])
 
     analyse_topsuste = TopsusteIntervalAnalyser(
-        obs_data("topct"),
+        obs_data("topct"), plot_color=params["color"],
         dryrun=params["dryrun"], parallel=params["parallel"],
         numprocs=params["numprocs"], verbose=params["verbose"])
 
@@ -468,7 +469,8 @@ def analyse_topcMCTime(params):
 
     for MC_int in MC_interval:
         analyse_topcMC = TopcMCIntervalAnalyser(
-            obs_data("topc"), mc_interval=MC_int, dryrun=params["dryrun"],
+            obs_data("topc"), mc_interval=MC_int, 
+            plot_color=params["color"], dryrun=params["dryrun"],
             parallel=params["parallel"], numprocs=params["numprocs"],
             verbose=params["verbose"])
 
@@ -490,7 +492,8 @@ def analyse_topsusMCTime(params):
 
     for MC_int in MC_interval:
         analyse_topcMC = TopsusMCIntervalAnalyser(
-            obs_data("topc"), mc_interval=MC_int, dryrun=params["dryrun"],
+            obs_data("topc"), mc_interval=MC_int, 
+            plot_color=params["color"], dryrun=params["dryrun"],
             parallel=params["parallel"], numprocs=params["numprocs"],
             verbose=params["verbose"])
 
@@ -618,14 +621,16 @@ def pre_analysis(parameters):
 
         if "qtq0e" in gif_observables:
             qtq0e_gif_analysis = QtQ0EGif(
-                obs_data("topct"), dryrun=dryrun, parallel=parallel,
+                obs_data("topct"), plot_color=params["color"],
+                dryrun=dryrun, parallel=parallel,
                 numprocs=numprocs, verbose=False)
             gif_analysis(qtq0e_gif_analysis, gif_flow_range, N_bs,
                          gif_euclidean_time=gif_euclidean_time)
 
         if "qtq0eff" in gif_observables:
             qtq0eff_gif_analysis = QtQ0EffGif(
-                obs_data("topct"), dryrun=dryrun, parallel=parallel,
+                obs_data("topct"), plot_color=params["color"],
+                dryrun=dryrun, parallel=parallel,
                 numprocs=numprocs, verbose=False)
             gif_analysis(qtq0eff_gif_analysis, gif_flow_range, N_bs,
                          gif_euclidean_time=None)

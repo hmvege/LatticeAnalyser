@@ -58,8 +58,15 @@ class FlowAnalyser(object):
     plot_hline_at = None
     plot_vline_at = None
 
+    # Color setup for continuum plots
+    plot_color = "r" # Mostly for errors
+    points_color = "#000000"
+    axline_color = "#000000"
+    hist_color = "#225ea8"
+
     def __init__(self, data, mc_interval=None, figures_folder=False,
-                 parallel=False, numprocs=4, dryrun=False, verbose=False):
+                 plot_color="r", parallel=False, numprocs=4,
+                 dryrun=False, verbose=False):
         """
         Parent class for analyzing flowed observables.
 
@@ -72,6 +79,8 @@ class FlowAnalyser(object):
                         Monte Carlo of the Monte Carlo history available.
                 figures_folder: optional argument for where to place the
                         figures created. Default is "../figures".
+                plot_color: str, optional. Hex color for plotting. Error bars 
+                        is plotted with an alpha of 0.5.
                 parallel: optinal argument if we are to run analysis in
                         parallel. Default is False.
                 numprocs: optional argument for the number of processors to
@@ -106,6 +115,9 @@ class FlowAnalyser(object):
         self.verbose = verbose
         if figures_folder != False:  # Default is just figures
             self.figures_folder = figures_folder
+
+        # Sets the plot colors
+        self.plot_color = plot_color
 
         # Parallel variables
         self.parallel = parallel
@@ -331,7 +343,6 @@ class FlowAnalyser(object):
         # Stores number of bootstraps
         self.N_bs = N_bs
 
-
         # Sets up raw bootstrap and unanalyzed data array
         self.bs_y_data = np.zeros((self.NFlows, self.N_bs))
         self.unanalyzed_y_data = np.zeros((self.NFlows, self.N_configurations))
@@ -438,27 +449,18 @@ class FlowAnalyser(object):
                 np.where(self.autocorrelations[i_flow] <= 0.0)[0][0])
 
         # Gets the number of intervals to use
-        k = map(lambda _tau: int(np.ceil(float(self.N_configurations)/_tau)), tau)
+        k = map(lambda _tau: int(np.ceil(float(self.N_configurations)/_tau)),
+                tau)
         k = np.array(k)
 
         # Generates random lists to use in resampling
         if isinstance(index_lists, types.NoneType):
-
-            # index_lists = []
-            # for i_flow in xrange(self.NFlows):
-            #     np.random.seed(123)
-            #     index_lists.append(np.random.randint(
-            #         0, self.N_configurations-tau[i_flow],
-            #         size=(N_bs, k[i_flow])))
 
             index_lists = \
                 np.random.randint(0, self.N_configurations-np.max(tau),
                                   size=(N_bs, np.min(k)))
 
         for i_flow in xrange(self.NFlows):
-
-            # bs = BootstrapTimeSeries(self.y[:, i_flow], N_bs, tau[i_flow],
-            #                          index_lists=index_lists[i_flow])
 
             bs = BootstrapTimeSeries(self.y[:, i_flow], N_bs, np.max(tau),
                                      index_lists=index_lists)
@@ -472,13 +474,6 @@ class FlowAnalyser(object):
         # Runs bs and unanalyzed data through the F and F_error
         self.bs_ts_y_std = F_error(self.bs_ts_y, self.bs_ts_y_std)
         self.bs_ts_y = F(self.bs_ts_y)
-
-        # # Plots the error bar
-        # plt.errorbar(self.a*np.sqrt(8*self.x), self.bs_ts_y, yerr=self.bs_ts_y_std, fmt=".", color="0", ecolor="r",
-        #             markevery=self.mark_interval,
-        #             errorevery=self.error_mark_interval)
-        # plt.show()
-
 
         self.save_raw_analysis_data(
             self.bs_ts_y_data, "bootstrap_time_series")
@@ -742,7 +737,7 @@ class FlowAnalyser(object):
             if isinstance(block_size, type(None)) and i % 10 == 0:
                 ax.plot(_block.block_sizes[::-1],
                         _block.blocked_variances[::-1],
-                        alpha=0.25, color="#225ea8")
+                        alpha=0.25, color=self.hist_color)
 
         # Sets default parameters
         if F == None:
@@ -957,7 +952,7 @@ class FlowAnalyser(object):
             x = self.a * np.sqrt(8*self.x)
 
         if isinstance(error_correction_function, types.NoneType):
-            def error_correction_function(q, qerr): 
+            def error_correction_function(q, qerr):
                 return correction_function(qerr)
 
         plot_type = "bootstrap-timeseries"
@@ -1011,7 +1006,8 @@ class FlowAnalyser(object):
         ax = fig.add_subplot(111)
 
         # Plots the error bar
-        ax.errorbar(x, y, yerr=y_std, fmt=".", color="0", ecolor="r",
+        ax.errorbar(x, y, yerr=y_std, fmt=".", color=self.points_color,
+                    ecolor=self.plot_color, capsize=5, capthick=1,
                     markevery=self.mark_interval,
                     errorevery=self.error_mark_interval)
 
@@ -1019,10 +1015,10 @@ class FlowAnalyser(object):
         # Needed for plotting at e.g. t0.
         if not (self.plot_hline_at, types.NoneType):
             ax.axhline(self.plot_hline_at, linestyle="--",
-                       color="0", alpha=0.3)
+                       color=self.axline_color, alpha=0.3)
         if not isinstance(self.plot_vline_at, types.NoneType):
             ax.axvline(self.plot_vline_at, linestyle="--",
-                       color="0", alpha=0.3)
+                       color=self.axline_color, alpha=0.3)
 
         ax.set_xlabel(self.x_label)
         ax.set_ylabel(self.y_label)
@@ -1084,8 +1080,8 @@ class FlowAnalyser(object):
         # Plots the autocorrelations
         fig = plt.figure()
         ax = fig.add_subplot(111)
-        # ax.plot(x,y,color="0",label=self.observable_name)
-        ax.errorbar(x, y, yerr=y_std, color="0", ecolor="r")
+        ax.errorbar(x, y, yerr=y_std, color=self.points_color,
+                    ecolor=self.plot_color)
         ax.set_ylim(-self.autocorrelations_limits,
                     self.autocorrelations_limits)
         ax.set_xlim(0, N_autocorr)
@@ -1128,7 +1124,9 @@ class FlowAnalyser(object):
         # Plot with error
         ax.plot(x, y, color="0")
         ax.fill_between(x, y - y_std, y + y_std,
-                        alpha=0.5, edgecolor='', facecolor='#6699ff')
+                        color=self.plot_color,
+                        alpha=0.5, edgecolor='',
+                        facecolor=self.plot_color)
         ax.set_xlabel(r"$\sqrt{8t_f}$")
         ax.set_ylabel(r"$\tau_\mathrm{int}$")
         if self.include_title:
@@ -1200,6 +1198,7 @@ class FlowAnalyser(object):
         # Adds unanalyzed data
         ax1 = fig.add_subplot(311)
         x1, y1, _ = ax1.hist(F(self.unanalyzed_y_data[flow_time_index]),
+                             color=self.hist_color,
                              bins=NBins, label="Unanalyzed", density=True)
         ax1.legend(loc="upper right")
         ax1.grid(True)
@@ -1208,6 +1207,7 @@ class FlowAnalyser(object):
         # Adds bootstrapped data
         ax2 = fig.add_subplot(312)
         x2, y2, _ = ax2.hist(F(self.bs_y_data[flow_time_index]),
+                             color=self.hist_color,
                              bins=NBins, label="Bootstrap", density=True)
         ax2.grid(True)
         ax2.legend(loc="upper right")
@@ -1216,6 +1216,7 @@ class FlowAnalyser(object):
         # Adds jackknifed histogram
         ax3 = fig.add_subplot(313)
         x3, y3, _ = ax3.hist(F(self.jk_y_data[flow_time_index]),
+                             color=self.hist_color,
                              bins=NBins, label="Jackknife", density=True)
         ax3.legend(loc="upper right")
         ax3.grid(True)
@@ -1302,6 +1303,7 @@ class FlowAnalyser(object):
         for iHist, ax in zip(histogram_slices, axes):
             t_f = iHist * self.flow_epsilon
             ax.hist(self.unanalyzed_y_data[iHist],
+                    color=self.hist_color,
                     bins=NBins, label=r"$t_f=%.2f$" % t_f, density=True)
             ax.grid(True)
             ax.legend(loc="upper right")
@@ -1354,7 +1356,7 @@ class FlowAnalyser(object):
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ax.plot(correction_function(self.unanalyzed_y_data[flow_time_index]),
-                color="0")
+                color=self.plot_color)
         ax.set_xlabel(r"Monte Carlo time")
         ax.set_ylabel(self.y_label)
         if self.include_title:

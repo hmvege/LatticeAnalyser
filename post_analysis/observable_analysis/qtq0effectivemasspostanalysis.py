@@ -172,9 +172,10 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
         if isinstance(output_folder, types.NoneType):
             output_folder = os.path.join(self.output_folder_path, "slices")
         check_folder(output_folder, False, True)
-        fname = "post_analysis_%s_%s_tf%f%s.pdf" % (
+        fname = "post_analysis_%s_%s_tf%s%s.pdf" % (
                 self.observable_name_compact, self.analysis_data_type,
-                self.interval_index, figure_name_appendix)
+                str(self.interval_index).replace("_","."), 
+                figure_name_appendix)
         return os.path.join(output_folder, fname)
 
     def _initiate_plot_values(self, data, data_raw, flow_index=None):
