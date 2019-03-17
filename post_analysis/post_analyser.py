@@ -288,6 +288,7 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
             topcr_analysis.set_analysis_data_type(analysis_type)
             print topcr_analysis
             topcr_analysis.plot()
+            topcr_analysis.print_batch_values()
 
         topcr_analysis.compare_lattice_values(tf=topcr_tf)
 
@@ -309,6 +310,7 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
                 print "Interval: %s" % int_keys
                 topcrmc_analysis.plot_interval(int_keys)
                 topcrmc_analysis.compare_lattice_values(int_keys, tf=topcr_tf)
+                topcrmc_analysis.print_batch_values(int_keys)
 
             topcrmc_analysis.plot_series([0, 1, 2, 3])
 
@@ -515,22 +517,23 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
         # Retrieves flow times
         flow_times = qtq0e_analysis.setup_intervals()
 
+        y_limits = [-0.05,0.5]
+
         # Checks that we have similar flow times.
         # +1 in order to ensure the zeroth flow time does not count as false.
         def clean_string(s): return float(s[-4:])
         assert np.all([np.all([clean_string(i)+1 for i in ft])
                        for ft in flow_times]), "q0 times differ."
 
-        for te in euclidean_time_percents[:1]:
+        for te in euclidean_time_percents:
             for analysis_type in post_analysis_data_type:
                 qtq0e_analysis.set_analysis_data_type(te, analysis_type)
                 print qtq0e_analysis
                 for tf in q0_flow_times:  # Flow times
-                    print "Plotting te: %g and tf: %g" % (te, tf)
+                    print "Plotting te: %f and tf: %f" % (te, tf)
                     qtq0e_analysis.plot_interval(tf, te)
 
-                qtq0e_analysis.plot_series(te, [0, 1, 2, 3])
-                qtq0e_analysis.plot_series(te, [0, 2, 3, 4])
+                qtq0e_analysis.plot_series(te, [0, 1, 3, 6], y_limits=y_limits)
 
     if "qtq0eff" in observables:
         # if analysis_type != "unanalyzed": continue
@@ -550,7 +553,7 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
             qtq0e_analysis.plot_series([0, 1, 2, 3],
                                        error_shape=error_shape,
                                        y_limits=y_limits)
-            qtq0e_analysis.plot_series([0, 2, 3, 4],
+            qtq0e_analysis.plot_series([0, 2, 3, 5],
                                        error_shape=error_shape,
                                        y_limits=y_limits)
 

@@ -159,7 +159,7 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 	
 			# Sets up euclidean time folder
 			output_folder = os.path.join(output_folder,
-				"te%04d" % self.interval_index[1])
+				"te%04d" % (int(100*self.interval_index[1])))
 
 		check_folder(output_folder, False, True)
 
@@ -172,8 +172,8 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 		Sets and plots only one interval.
 
 		Args:
-			q0_flow_time: float, flow time
-			euclidean_index: integer for euclidean time
+			q0_flow_time: float, flow time.
+			euclidean_percent: float, percentage of the euclidean time.
 		"""
 		self.interval_index = [q0_flow_time, euclidean_percent]
 		self.plot_values = {}
@@ -181,14 +181,45 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 			self.data_raw[self.analysis_data_type],
 			euclidean_percent=euclidean_percent, q0_flow_time=q0_flow_time)
 
+		self._center_values(euclidean_percent)
+
+
 		# Sets the x-label to proper units
 		x_label_old = self.x_label
 		self.x_label = r"$t_f[fm]$"
+
+		kwargs["legend_position"] = "best"
 
 		# Makes it a global constant so it can be added in plot figure name
 		self.plot(**kwargs)
 
 		self.x_label = x_label_old
+
+	def _center_values(self, euclidean_percent, indexes=None):
+		"""Offsets the x axis to be centered around the correlator."""
+		flow_times = sorted(self.observable_intervals.values()[0])
+		max_val = []
+
+		if isinstance(indexes, type(None)):
+			# In case no indexes has been provided, we are not plotting a 
+			# series.
+			for bn in self.sorted_batch_names:
+				max_val.append(self.plot_values[bn] \
+					["x"][self._get_euclidean_index(euclidean_percent, bn)])
+			for j, bn in enumerate(self.sorted_batch_names[:-1]):
+				offset = max_val[-1] - max_val[j]
+				self.plot_values[bn]["x"] += offset
+		else:
+			# If indexes are provided we are plotting a series.
+			for i in indexes:
+				for bn in self.sorted_batch_names:
+					max_val.append(self.plot_values[bn][flow_times[i]] \
+						["x"][self._get_euclidean_index(euclidean_percent, bn)])
+
+			for j, bn in enumerate(self.sorted_batch_names[:-1]):
+				offset = max_val[-1] - max_val[j]
+				for ftime in flow_times:
+					self.plot_values[bn][ftime]["x"] += offset
 
 	def plot_series(self, euclidean_percent, indexes, x_limits=False, 
 		y_limits=False, plot_with_formula=False):
@@ -208,12 +239,14 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 			self.data_raw[self.analysis_data_type],
 			euclidean_percent=euclidean_percent)
 
+		self._center_values(euclidean_percent, indexes=indexes)
+
 		fname = "post_analysis_%s_%s_te%04d.pdf" % (
 			self.observable_name_compact,
-			self.analysis_data_type, euclidean_percent)
+			self.analysis_data_type, int(euclidean_percent*100))
 
-		self._series_plot_core(indexes, x_limits=False, 
-		y_limits=False, plot_with_formula=False, fname=fname)
+		self._series_plot_core(indexes, x_limits=x_limits, 
+		y_limits=y_limits, plot_with_formula=False, fname=fname)
 
 def main():
 	exit("%s not intendd for standalone usage." % __name__)

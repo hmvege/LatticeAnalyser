@@ -20,7 +20,7 @@ class TopsusQtQ0PostAnalysis(MultiPlotCore, TopsusCore):
 	def _convert_label(self, label):
 		"""Short method for formatting time in labels."""
 		try:
-			return r"$t_{f}=%.2f$" % (float(label)/100)
+			return r"$\sqrt{8t_{f,0}}=%.2f$" % (float(label))
 		except ValueError:
 			return r"$%s$" % label
 

@@ -242,7 +242,7 @@ class MultiPlotCore(PostCore):
 
                 # Basic plotting commands
                 ax.grid(True)
-                ax.legend(loc="best", prop={"size": 5})
+                ax.legend(loc="best", prop={"size": 4})
 
                 # Sets axes limits if provided
                 if x_limits != False:

@@ -347,6 +347,8 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 
         kwargs["figure_name_appendix"] = "_" + self.meff_plot_type
 
+        kwargs["legend_position"] = "best"
+
         # if self.fold:
         #   kwargs["plot_vline_at"] = self.fold_position
         # else:

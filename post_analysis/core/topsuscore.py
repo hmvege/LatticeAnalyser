@@ -113,7 +113,7 @@ class TopsusCore(PostCore):
                 # Continuum fit of w0
                 fit_targets = [np.sqrt(8*tmp_ref["w0cont"]**2)
                                for bn in self.batch_names]
-                self.fit_target = (r"\sqrt{w_{0,\mathrm{cont}}^2} = %.4f"
+                self.fit_target = (r"\sqrt{8 w_{0,\mathrm{cont}}^2} = %.4f"
                                    % np.sqrt(8*(tmp_ref["w0cont"])**2))
 
             else:

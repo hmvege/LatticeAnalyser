@@ -269,7 +269,7 @@ class PostCore(object):
     def plot(self, x_limits=False, y_limits=False, plot_with_formula=False,
              error_shape="band", figure_folder=None, plot_vline_at=None,
              plot_hline_at=None, figure_name_appendix="", show_plot=False,
-             zoom_box=None):
+             zoom_box=None, legend_position="lower right"):
         """
         Function for making a basic plot of all the different beta values
         together.
@@ -301,7 +301,8 @@ class PostCore(object):
                         plot_vline_at=plot_vline_at,
                         plot_hline_at=plot_hline_at,
                         figure_name_appendix=figure_name_appendix,
-                        show_plot=show_plot, zoom_box=zoom_box)
+                        show_plot=show_plot, zoom_box=zoom_box,
+                        legend_position=legend_position)
 
     def plot_autocorrelation(self, x_limits=False, y_limits=False,
                              figure_folder=None, plot_vline_at=None,
@@ -620,7 +621,8 @@ class PostCore(object):
                    x_label="x", y_label="y", x_limits=False, y_limits=False,
                    plot_with_formula=False, error_shape="band",
                    figure_folder=None, plot_vline_at=None, plot_hline_at=None,
-                   figure_name_appendix="", show_plot=False, zoom_box=None):
+                   figure_name_appendix="", show_plot=False, zoom_box=None,
+                   legend_position="lower right"):
         """
         Function for making a basic plot of all the different batches
         together.
@@ -644,6 +646,7 @@ class PostCore(object):
                 show_plot: optional, bool, will show plot figure.
                 zoom_box, optional, nested list of floats, will create a zoomed 
                         in subplot in figure at location [[xmin, xmax], [ymin, ymax]].
+                legend_position: str, optional. Default is 'lower right'.
         """
 
         if type(observable_name_compact) == type(None):
@@ -719,7 +722,7 @@ class PostCore(object):
         # ax.set_title(r"%s" % title_string)
         ax.set_xlabel(r"%s" % x_label)
         ax.set_ylabel(r"%s" % y_label)
-        ax.legend(loc="lower right", prop={"size": 8})
+        ax.legend(loc=legend_position, prop={"size": 8})
 
         # # Sets the title string
         # title_string = r"%s" % self.observable_name

@@ -183,6 +183,7 @@ class TopcRPostAnalysis(PostCore):
                     (2*self.V_err[bn]*self.topc4[atype][bn]["y"]/self.V[bn]**3)**2)
                 self.topc4[atype][bn]["y"] /= self.V[bn]**2
 
+
     def _calculate_Q4C(self):
         """Caluclates the 4th cumulant for my data."""
 
@@ -237,6 +238,7 @@ class TopcRPostAnalysis(PostCore):
         self.plot_values = {}
         self._initiate_plot_values(self.data[self.analysis_data_type],
                                    None)
+        self._setup_data_values(atype=analysis_data_type)
 
     def _initiate_plot_values(self, data, data_raw):
         """Sorts data into a format specific for the plotting method."""
@@ -352,26 +354,6 @@ class TopcRPostAnalysis(PostCore):
         art_normed_table_printer.print_table(width=15,
                                              row_seperator_positions=[5, 7, 9])
 
-        values_header = [r"$\beta$", r"$L/a$", r"$t_0/a^2$", r"$\langle Q^2 \rangle$",
-                         r"$\langle Q^4 \rangle$", r"$\langle Q^4 \rangle_C$", r"$R$"]
-        values_table = [
-            [self.beta_values[bn] for bn in self.batch_names],
-            ["{:.2f}".format(self.data_values[bn]["aL"])
-             for bn in self.batch_names],
-            [sciprint(self.data_values[bn]["Q2"], self.data_values[bn]["Q2Err"])
-             for bn in self.batch_names],
-            [sciprint(self.t0[bn]["t0"], self.t0[bn]["t0err"])
-             for bn in self.batch_names],
-            [sciprint(self.data_values[bn]["Q4"], self.data_values[bn]["Q4Err"])
-             for bn in self.batch_names],
-            [sciprint(self.data_values[bn]["Q4C"], self.data_values[bn]["Q4CErr"])
-             for bn in self.batch_names],
-            [sciprint(self.data_values[bn]["R"], self.data_values[bn]["RErr"])
-             for bn in self.batch_names],
-        ]
-
-        values_table_printer = TablePrinter(values_header, values_table)
-        values_table_printer.print_table(width=15)
 
         ratio_header = [r"Lattice", r"$\beta$",
                         r"$\text{Ratio}(\langle Q^2 \rangle)$",
@@ -412,53 +394,13 @@ class TopcRPostAnalysis(PostCore):
         Sets up a new dictionary with my own values for comparing with the 
         article values.
         """
-        self.data_values = {bn: {} for bn in self.batch_names}
-
-        # Sets up the reference values
-        try:
-            ref_vals = self.reference_values[atype]["bootstrap"]
-        except KeyError:
-            fallback_key = self.reference_values[atype].keys()[0]
-            print("Bootstrap line extrapolation not found."
-                  " Falling back to %s" % fallback_key)
-            ref_vals = self.reference_values[atype][fallback_key]
-
-        self.t0 = {bn: {"t0": ref_vals[bn]["t0a2"], "t0err": ref_vals[bn]["t0a2err"]}
-                   for bn in self.batch_names}
-
-        t0_indexes = [
-            np.argmin(np.abs(self.topc2[atype][bn]["x"] - self.t0[bn]["t0"]))
-            for bn in self.batch_names]
-
-        for t0_index, bn in zip(t0_indexes, self.sorted_batch_names):
-            self.data_values[bn]["aL"] = ref_vals[bn]["aL"]
-
-            self.data_values[bn]["Q2"] = \
-                self.topc2[atype][bn]["y"][t0_index]
-            self.data_values[bn]["Q2Err"] = \
-                self.topc2[atype][bn]["y_error"][t0_index]
-
-            self.data_values[bn]["Q4"] = \
-                self.topc4[atype][bn]["y"][t0_index]
-            self.data_values[bn]["Q4Err"] = \
-                self.topc4[atype][bn]["y_error"][t0_index]
-
-            self.data_values[bn]["Q4C"] = \
-                self.topc4C[atype][bn]["y"][t0_index]
-            self.data_values[bn]["Q4CErr"] = \
-                self.topc4C[atype][bn]["y_error"][t0_index]
-
-            self.data_values[bn]["R"] = \
-                self.topcR[atype][bn]["y"][t0_index]
-            self.data_values[bn]["RErr"] = \
-                self.topcR[atype][bn]["y_error"][t0_index]
 
         self.data_ratios = {k: {bn: {} for bn in self.batch_names}
                             for k in self.article_flattened.keys()}
 
         for flat_key in self.article_flattened:
             beta_article = self.article_flattened[flat_key]["beta"]
-            for t0_index, bn in zip(t0_indexes, self.sorted_batch_names):
+            for t0_index, bn in zip(self.t0_indexes, self.sorted_batch_names):
                 [self.data_ratios[flat_key][bn]["Q2"],
                  self.data_ratios[flat_key][bn]["Q2Err"]] = \
                     self.ratio_error(self.data_values[bn]["Q2"],
@@ -487,10 +429,79 @@ class TopcRPostAnalysis(PostCore):
                                      self.article_flattened[flat_key]["R_norm"],
                                      self.article_flattened[flat_key]["RErr_norm"])
 
-        # arr = np.asarray(self.data_ratios)
-        # print arr
-        # print arr.shape
-        # print arr.reshape(arr.shape[0]*arr.shape[1])
+    def _get_reference_value(self, atype):
+        """Sets up the reference values."""
+        try:
+            ref_vals = self.reference_values["bootstrap"][atype]
+        except TypeError as type_error:
+            print "Missing 'reference_values'. Have 'energy' been run?"
+            raise type_error
+        except KeyError:
+            fallback_key = self.reference_values.keys()[0]
+            print("Bootstrap line extrapolation not found."
+                  " Falling back to %s" % fallback_key)
+            ref_vals = self.reference_values[fallback_key][atype]
+        return ref_vals
+
+    def _setup_data_values(self, atype):
+        """Sets up the data_values."""
+        self.data_values = {bn: {} for bn in self.batch_names}
+        ref_vals = self._get_reference_value(atype)
+
+        self.t0 = {bn: {"t0": ref_vals[bn]["t0a2"], "t0err": ref_vals[bn]["t0a2err"]}
+                   for bn in self.batch_names}
+
+        self.t0_indexes = [
+            np.argmin(np.abs(self.topc2[atype][bn]["x"] - self.t0[bn]["t0"]))
+            for bn in self.batch_names]
+
+        for t0_index, bn in zip(self.t0_indexes, self.sorted_batch_names):
+            self.data_values[bn]["aL"] = ref_vals[bn]["aL"]
+
+            self.data_values[bn]["Q2"] = \
+                self.topc2[atype][bn]["y"][t0_index]
+            self.data_values[bn]["Q2Err"] = \
+                self.topc2[atype][bn]["y_error"][t0_index]
+
+            self.data_values[bn]["Q4"] = \
+                self.topc4[atype][bn]["y"][t0_index]
+            self.data_values[bn]["Q4Err"] = \
+                self.topc4[atype][bn]["y_error"][t0_index]
+
+            self.data_values[bn]["Q4C"] = \
+                self.topc4C[atype][bn]["y"][t0_index]
+            self.data_values[bn]["Q4CErr"] = \
+                self.topc4C[atype][bn]["y_error"][t0_index]
+
+            self.data_values[bn]["R"] = \
+                self.topcR[atype][bn]["y"][t0_index]
+            self.data_values[bn]["RErr"] = \
+                self.topcR[atype][bn]["y_error"][t0_index]
+
+
+    def print_batch_values(self):
+        """Prints all of the batch/ensemble values."""
+        values_header = [r"$\beta$", r"$L/a$", r"$t_0/a^2$", r"$\langle Q^2 \rangle$",
+                         r"$\langle Q^4 \rangle$", r"$\langle Q^4 \rangle_C$", r"$R$"]
+        values_table = [
+            [self.beta_values[bn] for bn in self.batch_names],
+            ["{:.2f}".format(self.data_values[bn]["aL"])
+             for bn in self.batch_names],
+            [sciprint(self.t0[bn]["t0"], self.t0[bn]["t0err"])
+             for bn in self.batch_names],
+            [sciprint(self.data_values[bn]["Q2"], self.data_values[bn]["Q2Err"])
+             for bn in self.batch_names],
+            [sciprint(self.data_values[bn]["Q4"], self.data_values[bn]["Q4Err"])
+             for bn in self.batch_names],
+            [sciprint(self.data_values[bn]["Q4C"], self.data_values[bn]["Q4CErr"])
+             for bn in self.batch_names],
+            [sciprint(self.data_values[bn]["R"], self.data_values[bn]["RErr"])
+             for bn in self.batch_names],
+        ]
+        values_table_printer = TablePrinter(values_header, values_table)
+        values_table_printer.print_table(width=15)
+        print "Reference scale: "
+
 
     def compare_lattice_values(self, tf=None, atype="bootstrap"):
         """
@@ -511,6 +522,7 @@ class TopcRPostAnalysis(PostCore):
         def ratio_error(x, xerr, y, yerr):
             return x/y, np.sqrt((xerr/y)**2 + (x*yerr/y**2)**2)
 
+        self._setup_data_values(atype=atype)
         self._setup_comparison_values(tf=tf, atype=atype)
         self._print_data(atype=atype)
 

@@ -6,7 +6,6 @@ import types
 import time
 import os
 import numpy as np
-from timing_function import timing_function
 
 import warnings
 with warnings.catch_warnings():
@@ -201,7 +200,6 @@ class Autocorrelation(_AutocorrelationCore):
     """
     Class for performing an autocorrelation analysis based on Luscher
     """
-    # @timing_function
     def __init__(self, *args, **kwargs):
         """
         Base method for the auto correlation modules.
@@ -318,7 +316,6 @@ class PropagatedAutocorrelation(_AutocorrelationCore):
     - only have 1 alpha, that is only one observable. This simplifies quite alot.
     """
 
-    # @timing_function
     def __init__(self, *args, **kwargs):
         # Calls parent
         super(PropagatedAutocorrelation, self).__init__(*args, **kwargs)
@@ -430,7 +427,6 @@ class FullAutocorrelation(_AutocorrelationCore):
     indices, as well as propagated errors.
     """
 
-    # @timing_function
     def __init__(self, data, function_derivative=[lambda x: 1.0],
                  function_parameters={}, numerical_derivative=False):
         """

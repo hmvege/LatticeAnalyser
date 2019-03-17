@@ -180,14 +180,18 @@ def write_fit_parameters_to_file(fparams, fname, skip_values=None,
             f.write(line_values + "\n")
 
         # Obs  sqrt(8t)  extrap.method  int/slice  chi^2  topsus  Nf
-        table_header = [r"$\mathcal{O}$", r"$\sqrt{8t_{f,0,\mathrm{extrap}}}$",
-                        "Analysis method","Extrap. method", "Interval/slice", r"$\chi^2/\mathrm{d.o.f.}$",
+        table_header = [r"$\mathcal{O}$",
+                        r"$\sqrt{8t_{f,0,\mathrm{extrap}}}$",
+                        "Analysis method",
+                        # "Extrap. method",
+                        "Interval/slice",
+                        r"$\chi^2/\mathrm{d.o.f.}$",
                         r"$\chi_{t_f}^{\frac{1}{4}}$", r"$N_F$"]
         table_body = [
             [fp["obs_name_latex"] for fp in sorted_parameter_list],
             [fp["fit_target"] for fp in sorted_parameter_list],
             [fp["analysis_type"] for fp in sorted_parameter_list],
-            [fp["extrap_method"] for fp in sorted_parameter_list],
+            # [fp["extrap_method"] for fp in sorted_parameter_list],
             [r"{:s}".format(fp["interval"]) for fp in sorted_parameter_list],
             [r"{:.2f}".format(fp["chi_squared"])
                 for fp in sorted_parameter_list],
@@ -200,7 +204,8 @@ def write_fit_parameters_to_file(fparams, fname, skip_values=None,
         width_list = [len(tab)+2 for tab in table_header]
         width_list[0] = 45
         width_list[1] = 45
-        width_list[3] = 30
+        width_list[2] = 30
+        # width_list[3] = 30
         width_list[4] = 30
         topsus_table = TablePrinter(table_header, table_body)
         topsus_table.print_table(width=width_list, ignore_latex_cols=[

@@ -392,34 +392,6 @@ class TopcRMCIntervalPostAnalysis(TopcRPostAnalysis, MultiPlotCore, PostCore):
         art_normed_table_printer.print_table(width=15,
                                              row_seperator_positions=[5, 7, 9])
 
-        beta_int_key_list = zip(self.batch_names_sorted, int_keys)
-
-        values_header = [r"$\beta$", r"$L/a$", r"$t_0/a^2$",
-                         r"$\langle Q^2 \rangle$", r"$\langle Q^4 \rangle$",
-                         r"$\langle Q^4 \rangle_C$", r"$R$"]
-        values_table = [
-            [self.beta_values[bn] for bn in self.batch_names],
-            ["{:.2f}".format(self.data_values[bn][k]["aL"])
-                for bn, k in beta_int_key_list],
-            [sciprint(self.data_values[bn][k]["Q2"],
-                      self.data_values[bn][k]["Q2Err"])
-                for bn, k in beta_int_key_list],
-            [sciprint(self.t0[bn]["t0"], self.t0[bn]["t0err"])
-                for bn, k in beta_int_key_list],
-            [sciprint(self.data_values[bn][k]["Q4"],
-                      self.data_values[bn][k]["Q4Err"])
-                for bn, k in beta_int_key_list],
-            [sciprint(self.data_values[bn][k]["Q4C"],
-                      self.data_values[bn][k]["Q4CErr"])
-                for bn, k in beta_int_key_list],
-            [sciprint(self.data_values[bn][k]["R"],
-                      self.data_values[bn][k]["RErr"])
-                for bn, k in beta_int_key_list],
-        ]
-
-        values_table_printer = TablePrinter(values_header, values_table)
-        values_table_printer.print_table(width=15)
-
         ratio_header = [r"Lattice", r"$\beta$",
                         r"$\text{Ratio}(\langle Q^2 \rangle)$",
                         r"$\text{Ratio}(\langle Q^4 \rangle)$",
@@ -463,21 +435,12 @@ class TopcRMCIntervalPostAnalysis(TopcRPostAnalysis, MultiPlotCore, PostCore):
         self.data_values = {bn: {key: {} for key in int_keys}
                             for bn in self.batch_names_sorted}
 
-        # Sets up the reference values
-        try:
-            ref_vals = self.reference_values[atype]["bootstrap"]
-        except TypeError as type_error:
-            print "Have missing 'reference_values'. Have 'energy' been run?"
-            raise type_error
-        except KeyError:
-            fallback_key = self.reference_values[atype].keys()[0]
-            print("Bootstrap line extrapolation not found."
-                  " Falling back to %s" % fallback_key)
-            ref_vals = self.reference_values[atype][fallback_key]
+        ref_vals = self._get_reference_value(atype)
+
         self.t0 = {bn: {
-            "t0": ref_vals[bn]["t0a2"],
-            "t0err": ref_vals[bn]["t0a2err"]
-        } for bn in self.batch_names_sorted}
+                "t0": ref_vals[bn]["t0a2"],
+                "t0err": ref_vals[bn]["t0a2err"]
+            } for bn in self.batch_names_sorted}
 
         t0_indexes = [
             np.argmin(np.abs(
@@ -729,295 +692,42 @@ class TopcRMCIntervalPostAnalysis(TopcRPostAnalysis, MultiPlotCore, PostCore):
         #           self.article_name_size[data_set][size]["R_norm"],
         #           self.article_name_size[data_set][size]["RErr_norm"])
 
+    def print_batch_values(self, int_keys):
+        """Prints all of the batch/ensemble values."""
+        beta_int_key_list = zip(self.batch_names_sorted, int_keys)
+
+        values_header = [r"$\beta$", r"$L/a$", r"$t_0/a^2$",
+                         r"$\langle Q^2 \rangle$", r"$\langle Q^4 \rangle$",
+                         r"$\langle Q^4 \rangle_C$", r"$R$"]
+        values_table = [
+            [self.beta_values[bn] for bn in self.batch_names],
+            ["{:.2f}".format(self.data_values[bn][k]["aL"])
+                for bn, k in beta_int_key_list],
+            [sciprint(self.data_values[bn][k]["Q2"],
+                      self.data_values[bn][k]["Q2Err"])
+                for bn, k in beta_int_key_list],
+            [sciprint(self.t0[bn]["t0"], self.t0[bn]["t0err"])
+                for bn, k in beta_int_key_list],
+            [sciprint(self.data_values[bn][k]["Q4"],
+                      self.data_values[bn][k]["Q4Err"])
+                for bn, k in beta_int_key_list],
+            [sciprint(self.data_values[bn][k]["Q4C"],
+                      self.data_values[bn][k]["Q4CErr"])
+                for bn, k in beta_int_key_list],
+            [sciprint(self.data_values[bn][k]["R"],
+                      self.data_values[bn][k]["RErr"])
+                for bn, k in beta_int_key_list],
+        ]
+
+        values_table_printer = TablePrinter(values_header, values_table)
+        values_table_printer.print_table(width=15)
+
     def _add_article_dict_item(self, name, size, key, value):
         """Small method for adding item to article data dictionaries."""
         self.article_size_name[size][name][key] = value
         self.article_name_size[name][size][key] = value
         flat_key = "{0:s}_{1:d}".format(name, size)
         self.article_flattened[flat_key][key] = value
-
-    def _setup_article_values(self):
-        """
-        Sets up the article values from https://arxiv.org/abs/1506.06052
-
-        Format:
-            {Lattice type}/{Beta value}/{all other stuff}
-        """
-
-        self.article_name_size = {
-            "A":
-            {
-                1: {
-                    "beta": 5.96,
-                    "t0cont": 2.79,  # t0/a^2
-                    "t0": 2.995,  # t0/a^2
-                    "t0err": 0.004,  # t0/a^2
-                    "t0r02": 0.1195,
-                    "t0r02err": 0.0009,
-                    "L": 10,
-                    # "aL": 1.0, # [fm]
-                    "a": 0.102,  # [fm]
-                    "Q2": 0.701,
-                    "Q2Err": 0.006,
-                    "Q4": 1.75,
-                    "Q4Err": 0.04,
-                    "Q4C": 0.273,
-                    "Q4CErr": 0.020,
-                    "R": 0.39,
-                    "RErr": 0.03,
-                },
-            },
-
-            "B":
-            {
-                1: {
-                    "beta": 5.96,
-                    "t0cont": 2.79,  # t0/a^2
-                    "t0": 2.7984,
-                    "t0err": 0.0009,
-                    "t0r02": 0.1117,
-                    "t0r02err": 0.0009,
-                    "L": 12,
-                    # "aL": 1.2, # [fm]
-                    "a": 0.102,  # [fm]
-                    "Q2": 1.617,
-                    "Q2Err": 0.006,
-                    "Q4": 8.15,
-                    "Q4Err": 0.07,
-                    "Q4C": 0.30,
-                    "Q4CErr": 0.04,
-                    "R": 0.187,
-                    "RErr": 0.024,
-                },
-                2: {
-                    "beta": 6.05,
-                    "t0cont": 3.78,  # t0/a^2
-                    "t0": 3.7960,
-                    "t0err": 0.0012,
-                    "t0r02": 0.1114,
-                    "t0r02err": 0.0009,
-                    "L": 14,
-                    # "aL": 1.2, # [fm]
-                    "a": 0.087,  # [fm]
-                    "Q2": 1.699,
-                    "Q2Err": 0.007,
-                    "Q4": 9.07,
-                    "Q4Err": 0.09,
-                    "Q4C": 0.41,
-                    "Q4CErr": 0.05,
-                    "R": 0.24,
-                    "RErr": 0.03,
-                },
-                3: {
-                    "beta": 6.13,
-                    "t0cont": 4.87,  # t0/a^2
-                    "t0": 4.8855,
-                    "t0err": 0.0015,
-                    "t0r02": 0.1113,
-                    "t0r02err": 0.0010,
-                    "L": 16,
-                    # "aL": 1.2, # [fm]
-                    "a": 0.077,  # [fm]
-                    "Q2": 1.750,
-                    "Q2Err": 0.007,
-                    "Q4": 9.58,
-                    "Q4Err": 0.09,
-                    "Q4C": 0.39,
-                    "Q4CErr": 0.05,
-                    "R": 0.22,
-                    "RErr": 0.03,
-                },
-                4: {
-                    "beta": 6.21,
-                    "t0cont": 6.20,  # t0/a^2
-                    "t0": 6.2191,
-                    "t0err": 0.0020,
-                    "t0r02": 0.1115,
-                    "t0r02err": 0.0011,
-                    "L": 18,
-                    # "aL": 1.2, # [fm]
-                    "a": 0.068,  # [fm]
-                    "Q2": 1.741,
-                    "Q2Err": 0.007,
-                    "Q4": 9.44,
-                    "Q4Err": 0.09,
-                    "Q4C": 0.35,
-                    "Q4CErr": 0.05,
-                    "R": 0.20,
-                    "RErr": 0.03,
-                },
-            },
-
-            "C":
-            {
-                1: {
-                    "beta": 5.96,
-                    "t0cont": 2.79,  # t0/a^2
-                    "t0": 2.7908,
-                    "t0err": 0.0005,
-                    "t0r02": 0.1114,
-                    "t0r02err": 0.0009,
-                    "L": 13,
-                    # "aL": 1.3, # [fm]
-                    "a": 0.102,  # [fm]
-                    "Q2": 2.244,
-                    "Q2Err": 0.006,
-                    "Q4": 15.50,
-                    "Q4Err": 0.10,
-                    "Q4C": 0.40,
-                    "Q4CErr": 0.05,
-                    "R": 0.177,
-                    "RErr": 0.023,
-                },
-            },
-
-            "D": {
-                1: {
-                    "beta": 5.96,
-                    "t0cont": 2.79,  # t0/a^2
-                    "t0": 2.7889,
-                    "t0err": 0.0003,
-                    "t0r02": 0.1113,
-                    "t0r02err": 0.0009,
-                    "L": 14,
-                    # "aL": 1.4, # [fm]
-                    "a": 0.102,  # [fm]
-                    "Q2": 3.028,
-                    "Q2Err": 0.006,
-                    "Q4": 28.14,
-                    "Q4Err": 0.14,
-                    "Q4C": 0.63,
-                    "Q4CErr": 0.07,
-                    "R": 0.209,
-                    "RErr": 0.023,
-                },
-                2: {
-                    "beta": 6.05,
-                    "t0cont": 3.78,  # t0/a^2
-                    "t0": 3.7825,
-                    "t0err": 0.0008,
-                    "t0r02": 0.1110,
-                    "t0r02err": 0.0009,
-                    "L": 17,
-                    # "aL": 1.5, # [fm]
-                    "a": 0.087,  # [fm]
-                    "Q2": 3.686,
-                    "Q2Err": 0.014,
-                    "Q4": 41.6,
-                    "Q4Err": 0.4,
-                    "Q4C": 0.83,
-                    "Q4CErr": 0.19,
-                    "R": 0.22,
-                    "RErr": 0.05,
-                },
-                3: {
-                    "beta": 6.13,
-                    "t0cont": 4.87,  # t0/a^2
-                    "t0": 4.8722,
-                    "t0err": 0.0011,
-                    "t0r02": 0.1110,
-                    "t0r02err": 0.0010,
-                    "L": 19,
-                    # "aL": 1.5, # [fm]
-                    "a": 0.077,  # [fm]
-                    "Q2": 3.523,
-                    "Q2Err": 0.013,
-                    "Q4": 37.8,
-                    "Q4Err": 0.3,
-                    "Q4C": 0.56,
-                    "Q4CErr": 0.17,
-                    "R": 0.16,
-                    "RErr": 0.05,
-                },
-                4: {
-                    "beta": 6.21,
-                    "t0cont": 6.20,  # t0/a^2
-                    "t0": 6.1957,
-                    "t0err": 0.0014,
-                    "t0r02": 0.1111,
-                    "t0r02err": 0.0011,
-                    "L": 21,
-                    # "aL": 1.4, # [fm]
-                    "a": 0.068,  # [fm]
-                    "Q2": 3.266,
-                    "Q2Err": 0.012,
-                    "Q4": 32.7,
-                    "Q4Err": 0.3,
-                    "Q4C": 0.68,
-                    "Q4CErr": 0.15,
-                    "R": 0.21,
-                    "RErr": 0.05,
-                },
-            },
-
-            "E": {
-                1: {
-                    "beta": 5.96,
-                    "t0cont": 2.79,  # t0/a^2
-                    "t0": 2.78892,
-                    "t0err": 0.00023,
-                    "t0r02": 0.1113,
-                    "t0r02err": 0.0009,
-                    "L": 15,
-                    # "aL": 1.5, # [fm]
-                    "a": 0.102,  # [fm]
-                    "Q2": 3.982,
-                    "Q2Err": 0.006,
-                    "Q4": 48.38,
-                    "Q4Err": 0.18,
-                    "Q4C": 0.81,
-                    "Q4CErr": 0.09,
-                    "R": 0.202,
-                    "RErr": 0.023,
-                },
-            },
-
-            "F": {
-                1: {
-                    "beta": 5.96,
-                    "t0cont": 2.79,  # t0/a^2
-                    "t0": 2.78867,
-                    "t0err": 0.00016,
-                    "t0r02": 0.1113,
-                    "t0r02err": 0.0009,
-                    "L": 16,
-                    # "aL": 1.6, # [fm]
-                    "a": 0.102,  # [fm]
-                    "Q2": 5.167,
-                    "Q2Err": 0.006,
-                    "Q4": 80.90,
-                    "Q4Err": 0.22,
-                    "Q4C": 0.81,
-                    "Q4CErr": 0.11,
-                    "R": 0.157,
-                    "RErr": 0.022,
-                },
-            },
-        }
-
-        self.article_size_name = {}
-        for data_set in sorted(self.article_name_size):
-            for size in sorted(self.article_name_size[data_set]):
-                self.article_size_name[size] = {}
-
-        for data_set in sorted(self.article_name_size):
-            for size in sorted(self.article_name_size[data_set]):
-                self.article_size_name[size][data_set] = \
-                    self.article_name_size[data_set][size]
-
-        # Usefull when printing out values. The two first layers of
-        # dictionaries are merged.
-        self.article_flattened = {}
-        for data_set in sorted(self.article_name_size):
-            for size in sorted(self.article_name_size[data_set]):
-                name = "{0:s}_{1:d}".format(data_set, size)
-                self.article_flattened[name] = \
-                    self.article_name_size[data_set][size]
-
-        self.article_flattened = OrderedDict(sorted(
-            self.article_flattened.items(),
-            key=lambda k: [k[0].split("_")[1], k[0].split("_")[0]]))
-
 
 def main():
     exit("Exit: TopcRPostAnalysis not intended to be a standalone module.")

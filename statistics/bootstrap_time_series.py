@@ -171,15 +171,18 @@ def main():
         test_data_filename.split(".")[0]
         + "_autocorrelation_before_bootstrap.png")
 
-    ac1.plot_autocorrelation(r"$Q$ autocorrelation before bootstrap",
-                             test_data_figurename,
-                             verbose=True, dryrun=False)
+    # ac1.plot_autocorrelation(r"$Q$ autocorrelation before bootstrap",
+    #                          test_data_figurename,
+    #                          verbose=True, dryrun=False)
 
     h = np.where(ac1.R <= 0.0)[0][0]
+    # h = int(np.ceil(ac1.tau_int_optimal))
+    # h = 90
+    print h
 
     print "TIMING:"
     bs = BootstrapTimeSeries(cp.deepcopy(data), N_bootstraps, h, timefunc=True)
-    data_tsboot = tsboot(cp.deepcopy(data), N_bootstraps, h, timefunc=True)
+    # data_tsboot = tsboot(cp.deepcopy(data), N_bootstraps, h, timefunc=True)
 
     print "STATISTICS:"
     print "Autocorrelation tau_int: %.4f" % ac1.tau_int_optimal
@@ -187,8 +190,8 @@ def main():
     print ""
     print "Original standard deviation(with ac-correction):   ", \
           np.std(data)/np.sqrt(len(data))*np.sqrt(2*ac1.tau_int_optimal)
-    print "Time series bootstrap(tsboot):                     ", \
-        np.std(data_tsboot)
+    # print "Time series bootstrap(tsboot):                     ", \
+    #     np.std(data_tsboot)
     print "Time series bootstrap(BootstrapTimeSeries):        ", bs.bs_std
 
     bs_orig = Bootstrap(cp.deepcopy(data), N_bootstraps)  # , timefunc=True)
@@ -199,7 +202,28 @@ def main():
     print "Timeseries bootstrap"
     print bs
 
-    _test_bs_block_size(data, h)
+    # Sets up plot
+    fig, axes = plt.subplots(nrows=3, ncols=1, sharex=True)
+
+    NBins = 100
+    # Adds unanalyzed data
+    axes[0].hist(data, label="Unanalyzed", bins=NBins, density=True)
+    axes[0].legend(loc="upper right")
+    axes[0].grid(True)
+
+    # Adds bootstrapped data
+    axes[1].hist(bs_orig.bs_data, label="Bootstrap", bins=NBins, density=True)
+    axes[1].grid(True)
+    axes[1].legend(loc="upper right")
+    axes[1].set_ylabel("Hits(normalized)")
+
+    # Adds jackknifed histogram
+    axes[2].hist(bs.bs_data, label="Time series bootstrap", bins=NBins, density=True)
+    axes[2].legend(loc="upper right")
+    axes[2].grid(True)
+    plt.show()
+
+    # _test_bs_block_size(data, h)
 
 
 if __name__ == '__main__':
