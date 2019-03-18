@@ -537,6 +537,7 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
 
     if "qtq0eff" in observables:
         # if analysis_type != "unanalyzed": continue
+        plateau_limits = [0.4, 0.6]
         qtq0e_analysis = QtQ0EffectiveMassPostAnalysis(
             data, figures_folder=figures_folder, verbose=verbose)
         for analysis_type in post_analysis_data_type:
@@ -547,15 +548,16 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
                 if tf != 0.6:
                     continue
                 qtq0e_analysis.plot_interval(tf)
+                # qtq0e_analysis.plot_plateau(tf, plateau_limits)
 
-            y_limits = [-1, 1]
-            error_shape = "bars"
-            qtq0e_analysis.plot_series([0, 1, 2, 3],
-                                       error_shape=error_shape,
-                                       y_limits=y_limits)
-            qtq0e_analysis.plot_series([0, 2, 3, 5],
-                                       error_shape=error_shape,
-                                       y_limits=y_limits)
+            # y_limits = [-1, 1]
+            # error_shape = "bars"
+            # qtq0e_analysis.plot_series([0, 1, 2, 3],
+            #                            error_shape=error_shape,
+            #                            y_limits=y_limits)
+            # qtq0e_analysis.plot_series([0, 2, 3, 5],
+            #                            error_shape=error_shape,
+            #                            y_limits=y_limits)
 
     if "qtq0effMC" in observables:
         # if analysis_type != "unanalyzed": continue

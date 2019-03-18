@@ -622,7 +622,7 @@ class PostCore(object):
                    plot_with_formula=False, error_shape="band",
                    figure_folder=None, plot_vline_at=None, plot_hline_at=None,
                    figure_name_appendix="", show_plot=False, zoom_box=None,
-                   legend_position="lower right"):
+                   legend_position="lower right", return_axes=False):
         """
         Function for making a basic plot of all the different batches
         together.
@@ -633,20 +633,24 @@ class PostCore(object):
                 x_label: str, y label.
                 x_limits: limits of the x-axis. Default is False.
                 y_limits: limits of the y-axis. Default is False.
-                plot_with_formula: bool, default is false, is True will look for 
-                        formula for the y-value to plot in title.
-                figure_folder: optional, default is None. If default, will place
-                        figures in figures/{batch_name}/post_analysis/{observable_name}
-                plot_vline_at: optional, float. If present, will plot a vline at 
-                        position given position.
-                plot_hline_at: optional, float. If present, will plot a hline at 
-                        position given position.
+                plot_with_formula: bool, default is false, is True will look
+                        for formula for the y-value to plot in title.
+                figure_folder: optional, default is None. If default, will
+                        place figures in 
+                        figures/{batch_name}/post_analysis/{observable_name}
+                plot_vline_at: optional, float. If present, will plot a vline 
+                        at position given position.
+                plot_hline_at: optional, float. If present, will plot a hline 
+                        at position given position.
                 figure_name_appendix: optional, str, adds provided string to 
                         filename. Default is adding nothing.
                 show_plot: optional, bool, will show plot figure.
-                zoom_box, optional, nested list of floats, will create a zoomed 
-                        in subplot in figure at location [[xmin, xmax], [ymin, ymax]].
+                zoom_box, optional, nested list of floats, will create a zoomed
+                        in subplot in figure at location 
+                        [[xmin, xmax], [ymin, ymax]].
                 legend_position: str, optional. Default is 'lower right'.
+                return_axes: bool, optional. If true, will return axes and 
+                        figure for further modifications. Default is False.
         """
 
         if type(observable_name_compact) == type(None):
@@ -747,6 +751,9 @@ class PostCore(object):
         if not isinstance(plot_hline_at, types.NoneType):
             ax.axhline(plot_hline_at, linestyle="--",
                        color=self.cont_axvline_color, alpha=0.3)
+
+        if return_axes:
+            return fig, ax
 
         # Saves and closes figure
         fname = self._get_plot_figure_name(

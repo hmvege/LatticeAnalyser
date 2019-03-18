@@ -519,8 +519,8 @@ class TopcRPostAnalysis(PostCore):
         x_pvals_me = []
         y_pvals_me = []
 
-        def ratio_error(x, xerr, y, yerr):
-            return x/y, np.sqrt((xerr/y)**2 + (x*yerr/y**2)**2)
+        # def ratio_error(x, xerr, y, yerr):
+        #     return x/y, np.sqrt((xerr/y)**2 + (x*yerr/y**2)**2)
 
         self._setup_data_values(atype=atype)
         self._setup_comparison_values(tf=tf, atype=atype)

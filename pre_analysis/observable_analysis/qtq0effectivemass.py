@@ -137,21 +137,21 @@ class QtQ0EffectiveMassAnalyser(FlowAnalyser):
 
 	def plot_jackknife(self, *args, **kwargs):
 		"""Making sure we are plotting with in euclidean time."""
-		kwargs["x"] = self.x
+		kwargs["x"] = self.x*self.a
 		kwargs["correction_function"] = self.C
 		kwargs["error_correction_function"] = self.C_err
 		super(QtQ0EffectiveMassAnalyser, self).plot_jackknife(*args, **kwargs)
 
 	def plot_bootstrap(self, *args, **kwargs):
 		"""Making sure we are plotting with in euclidean time."""
-		kwargs["x"] = self.x
+		kwargs["x"] = self.x*self.a
 		kwargs["correction_function"] = self.C
 		kwargs["error_correction_function"] = self.C_err
 		super(QtQ0EffectiveMassAnalyser, self).plot_bootstrap(*args, **kwargs)
 
 	def plot_bootstrap_time_series(self, *args, **kwargs):
 		"""Making sure we are plotting with in euclidean time."""
-		kwargs["x"] = self.x
+		kwargs["x"] = self.x*self.a
 		kwargs["correction_function"] = self.C
 		kwargs["error_correction_function"] = self.C_err
 		super(QtQ0EffectiveMassAnalyser, self).plot_bootstrap_time_series(

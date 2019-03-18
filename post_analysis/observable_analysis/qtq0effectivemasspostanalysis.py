@@ -26,12 +26,12 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
     y_label = r"$r_0 m_\textrm{eff}$"
     sub_obs = True
     hbarc = 0.19732697  # eV micro m
-    dpi = 400
+    dpi = None
     fold = True
     fold_range = 16
     subfolder_type = "tflow"
 
-    meff_plot_type = "ma" # Default
+    meff_plot_type = "ma"  # Default
     meff_plot_types = ["ma", "m", "r0ma"]
 
     def __init__(self, *args, **kwargs):
@@ -174,7 +174,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
         check_folder(output_folder, False, True)
         fname = "post_analysis_%s_%s_tf%s%s.pdf" % (
                 self.observable_name_compact, self.analysis_data_type,
-                str(self.interval_index).replace("_","."), 
+                str(self.interval_index).replace(".", "_"),
                 figure_name_appendix)
         return os.path.join(output_folder, fname)
 
@@ -253,8 +253,9 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 
                 if self.fold:
                     values["x"] = \
-                        np.linspace(0, (int(values["y"].shape[0]/2))*values["a"],
-                                    int(values["y"].shape[0]/2)+1)
+                        np.linspace(
+                            0, (int(values["y"].shape[0]/2))*values["a"],
+                            int(values["y"].shape[0]/2)+1)
 
                     values["y"], values["y_err"] = self._folder_and_propagate(
                         values)
@@ -293,7 +294,8 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 
         else:
             raise KeyError(("Effective mass plot type '%s' not recognized "
-                        "among %s" % (self.meff_plot_type, self.meff_plot_types)))
+                            "among %s" % (self.meff_plot_type,
+                                          self.meff_plot_types)))
 
         return y, y_err
 
@@ -305,8 +307,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
                 flow_index: flow time integer
                 euclidean_index: integer for euclidean time
         """
-        meff_plot_types = ["ma", "m", "r0ma"]
-        for meff_plot_type in meff_plot_types:
+        for meff_plot_type in self.meff_plot_types:
 
             self.meff_plot_type = meff_plot_type
 
@@ -322,47 +323,207 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 
             # Makes it a global constant so it can be added in plot figure name
             self.plot(**kwargs)
+            self.plot_with_article_masses(**kwargs)
 
             self.x_label = x_label_old
+
+    def _set_plot_labels(self):
+        """Sets the y-label and y-limits."""
+        if self.meff_plot_type == "ma":
+            # y / a
+            y_label = r"$m_\mathrm{eff}$[GeV]"
+            y_limits = [-0.5, 4]  # When plotting Y=M/a
+        elif self.meff_plot_type == "m":
+            # y
+            y_label = r"$am_\mathrm{eff}$"
+            y_limits = [-0.5, 2]  # When plotting Y=aM
+        elif self.meff_plot_type == "r0ma":
+            # y * r0 / a
+            y_label = r"$r_0 m_\mathrm{eff}$"
+            y_limits = [-1, 10]  # When plotting Y=M/a*r0
+        else:
+            raise KeyError(("Effective mass plot type %s not recognized"
+                            % self.meff_plot_type))
+        return y_label, y_limits
 
     def plot(self, *args, **kwargs):
         """Ensuring I am plotting with formule in title."""
         kwargs["plot_with_formula"] = True
         kwargs["error_shape"] = "bars"
         kwargs["x_label"] = self.x_label
-        if self.meff_plot_type == "ma":
-            # y / a
-            kwargs["y_label"] = r"$m_\mathrm{eff}$[GeV]"
-            kwargs["y_limits"] = [-10, 10]  # When plotting Y=M/a
-        elif self.meff_plot_type == "m":
-            # y
-            kwargs["y_label"] = r"$am_\mathrm{eff}$"
-            kwargs["y_limits"] = [-2, 2]  # When plotting Y=aM
-        elif self.meff_plot_type == "r0ma":
-            # y * r0 / a
-            kwargs["y_label"] = r"$r_0 m_\mathrm{eff}$"
-            kwargs["y_limits"] = [-10, 10]  # When plotting Y=M/a*r0
-        else:
-            raise KeyError(("Effective mass plot type %s not recognized"
-                            % self.meff_plot_type))
-
+        kwargs["y_label"], kwargs["y_limits"] = self._set_plot_labels()
         kwargs["figure_name_appendix"] = "_" + self.meff_plot_type
-
         kwargs["legend_position"] = "best"
-
-        # if self.fold:
-        #   kwargs["plot_vline_at"] = self.fold_position
-        # else:
-        #   kwargs["x_limits"] = [-0.1,4.7]
-
-        kwargs["x_limits"] = [-0.1, 1]
+        kwargs["x_limits"] = [-0.1, 0.8]
 
         super(QtQ0EffectiveMassPostAnalysis, self)._plot_core(
             self.plot_values, **kwargs)
 
-    def plot_plateau(self, plateau_limits):
+    def plot_plateau(self, flow_index, plateau_limits):
         """Method for extracting the glueball mass and plot plateau."""
-        pass
+        self.meff_plot_type = "ma"
+        self.plot_values = {}
+        self.interval_index = flow_index
+        self._initiate_plot_values(self.data[self.analysis_data_type],
+                                   self.data_raw[self.analysis_data_type],
+                                   flow_index=flow_index)
+
+        # Sets the x-label to proper units
+        x_label_old = self.x_label
+        self.x_label = r"$t_e[fm]$"
+
+        # print plateau_limits
+        plateau_limits = [0.3 , 0.6]
+
+        fit_results = {}
+        for bn in self.sorted_batch_names:
+            # print bn
+
+            lowest_index = \
+                np.where(plateau_limits[0] <= self.plot_values[bn]["x"])[0][0]
+            plateau_indexes = \
+                np.where(self.plot_values[bn]["x"][lowest_index:] <= plateau_limits[1])
+
+            # print "plateau_indexes:", plateau_indexes
+            # print "x range: ", self.plot_values[bn]["y"][lowest_index:][plateau_indexes]
+            # print "y range: ", self.plot_values[bn]["y"][lowest_index:][plateau_indexes]
+
+            fit_params = np.polyfit(
+                self.plot_values[bn]["x"][lowest_index:][plateau_indexes], 
+                self.plot_values[bn]["y"][lowest_index:][plateau_indexes], 0,
+                w=1/self.plot_values[bn]["y_err"][lowest_index:][plateau_indexes])
+
+            fit_results[bn] = fit_params[0]
+
+            # Select fit interval
+
+        print fit_results
+        exit("qtq0effectivemasspostanalysis.py @ 383")
+
+    def plot_with_article_masses(self, **kwargs):
+        """Plots the effective mass together with different masses from other 
+        papers.
+
+        The gluon mass goes through the A_1^{-+} channel
+        """
+
+        # https://arxiv.org/pdf/hep-lat/0510074.pdf
+        gb1_Mr0 = 6.25
+        gb1_Mr0_error = 0.06
+        gb1_Mr0_syserror = 0.06
+        gb1_M = 2.560
+        gb1_M_error = 0.035
+        gb1_M_syserror = 0.120
+        gb1_label = r"Chen et al."
+        gb1_color = "#ff7f00"
+        gb1_ls = "--"
+
+        # https://arxiv.org/pdf/1409.6459.pdf
+        gb2_M = 2.563
+        gb2_M_error = 0.034
+        gb2_label = r"Chowdhury et al."
+        gb2_color = "#ffff33"
+        gb2_ls = "-."
+
+        # https://arxiv.org/pdf/hep-lat/9901004.pdf
+        gb3_M = 2.590
+        gb3_M_error = 0.040
+        gb3_M_syserror = 0.130
+        gb3_Mr0 = 6.33
+        gb3_Mr0_error = 0.07
+        gb3_Mr0_syserror = 0.06
+        gb3_label = r"Morningstar et al."
+        gb3_color = "#a65628"
+        gb3_ls = ":"
+
+        xlimits = [-0.1, 0.8]
+
+        kwargs["plot_with_formula"] = True
+        kwargs["error_shape"] = "bars"
+        kwargs["x_label"] = self.x_label
+        kwargs["y_label"], kwargs["y_limits"] = self._set_plot_labels()
+        kwargs["figure_name_appendix"] = "_" + self.meff_plot_type
+        kwargs["legend_position"] = "best"
+        kwargs["x_limits"] = xlimits
+        kwargs["return_axes"] = True
+
+        fig, ax = super(QtQ0EffectiveMassPostAnalysis, self)._plot_core(
+            self.plot_values, **kwargs)
+
+        eff_masses = []
+        if self.meff_plot_type == "m":
+            print "No data for 'm'. Continuing."
+            return
+
+        elif self.meff_plot_type == "ma":
+            eff_masses.append({
+                "mass": gb1_M,
+                "mass_error": gb1_M_error,
+                "label": gb1_label,
+                "color": gb1_color,
+                "ls": gb1_ls,
+            })
+            eff_masses.append({
+                "mass": gb2_M,
+                "mass_error": gb2_M_error,
+                "label": gb2_label,
+                "color": gb2_color,
+                "ls": gb2_ls,
+            })
+            eff_masses.append({
+                "mass": gb3_M,
+                "mass_error": gb3_M_error,
+                "label": gb3_label,
+                "color": gb3_color,
+                "ls": gb3_ls,
+            })
+            ylimits = [-0.5, 4.0]
+
+        elif self.meff_plot_type == "r0ma":
+            eff_masses.append({
+                "mass": gb1_Mr0,
+                "mass_error": gb1_Mr0_error,
+                "label": gb1_label,
+                "color": gb1_color,
+                "ls": gb1_ls,
+            })
+            eff_masses.append({
+                "mass": gb3_Mr0,
+                "mass_error": gb3_Mr0_error,
+                "label": gb3_label,
+                "color": gb3_color,
+                "ls": gb3_ls,
+            })
+            ylimits = [-1, 10]
+
+        num_overlay_points = 10
+
+        # fig, ax = plt.subplots()
+        for mass_dict in eff_masses:
+            x = np.linspace(xlimits[0], xlimits[1], num_overlay_points)
+            y = np.ones(num_overlay_points)*mass_dict["mass"]
+            y_err = np.ones(num_overlay_points)*mass_dict["mass_error"]
+            ax.plot(x, y, mass_dict["ls"], label=mass_dict["label"],
+                    color=mass_dict["color"])
+            ax.fill_between(x, y - y_err, y + y_err, alpha=0.5,
+                            edgecolor="", facecolor=mass_dict["color"])
+
+        # Sets axes limits
+        ax.set_xlim(xlimits)
+        ax.set_ylim(ylimits)
+
+        plt.legend(loc="upper left", prop={"size": 7})
+
+        # Saves and closes figure
+        kwargs["figure_name_appendix"] += "_overlay"
+        fname = self._get_plot_figure_name(
+            output_folder=None,
+            figure_name_appendix=kwargs["figure_name_appendix"])
+        plt.savefig(fname)
+        if self.verbose:
+            print "Figure saved in %s" % fname
+
+        plt.close(fig)
 
 
 def main():
