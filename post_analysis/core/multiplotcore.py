@@ -62,9 +62,7 @@ class MultiPlotCore(PostCore):
 
                 # Modulo division in order to avoid going out of range in
                 # intervals.
-                print interval_keys
                 int_key = interval_keys[ib]
-                print int_key, data[bn].keys()
                 values["a"], values["a_err"] = \
                     get_lattice_spacing(self.beta_values[bn])
                 values["x"] = values["a"] * np.sqrt(8*data[bn][int_key]["x"])

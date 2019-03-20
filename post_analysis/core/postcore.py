@@ -311,7 +311,7 @@ class PostCore(object):
         Method for plotting the autocorrelations in a single window.
         """
         if self.sub_obs or self.sub_sub_obs:
-            print("Skipping AC-plot for %s due to containing "
+            print("Skipping AC-plot for {} due to containing "
                   "subobs.".format(self.observable_name))
             return
 

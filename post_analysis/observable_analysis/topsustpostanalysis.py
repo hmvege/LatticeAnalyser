@@ -30,7 +30,7 @@ class TopsustPostAnalysis(MultiPlotCore, TopsusCore):
 	def _convert_label(self, label):
 		"""Short method for formatting time in labels."""
 		try:
-			return r"$t_e=%d$" % int(label)
+			return r"$t_e/a=%d$" % int(label)
 		except ValueError:
 			return r"$%s$" % label
 

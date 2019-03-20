@@ -423,6 +423,7 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
 
             topsusqtq0_analysis.plot_series([0, 1, 2, 3])
             topsusqtq0_analysis.plot_series([3, 4, 5, 6])
+            topsusqtq0_analysis.plot_series([0, 2, 4, 6])
             topsusqtq0_analysis.plot_autocorrelation()
 
     if "topsust" in observables:

@@ -46,6 +46,8 @@ class TopsusCore(PostCore):
     # String for intervals
     intervals_str = ""
 
+    include_title = False
+
     def __init__(self, *args, **kwargs):
         super(TopsusCore, self).__init__(*args, **kwargs)
         self._initialize_topsus_func()
@@ -123,7 +125,7 @@ class TopsusCore(PostCore):
 
         elif isinstance(fit_target, float):
             fit_targets = [fit_target for bn in self.batch_names]
-            self.fit_target = (r"\sqrt{8 t_{f,0,\mathrm{extrap}}} = %.2f" %
+            self.fit_target = (r"\sqrt{8 t_{f}} = %.2f" %
                                fit_target)
         else:
             raise ValueError("Fit target not recognized: "
@@ -322,7 +324,7 @@ class TopsusCore(PostCore):
             title_string = r"$%s, \chi^2 = %.2f$" % (
                 self.fit_target, self.chi_squared)
         else:
-            title_string = r"$t_{f,0} = %.2f[fm], \chi^2 = %.2f$" % (
+            title_string = r"$\sqrt{8t_{f,\mathrm{extrap}}} = %.2f[fm], \chi^2 = %.2f$" % (
                 self.fit_target, self.chi_squared)
         title_string += title_addendum
 
@@ -354,7 +356,8 @@ class TopsusCore(PostCore):
 
         ax.set_ylabel(self.y_label_continuum)
         ax.set_xlabel(self.x_label_continuum)
-        ax.set_title(title_string)
+        if self.include_title:
+            ax.set_title(title_string)
         ax.set_xlim(a_squared_cont[0], a_squared_cont[-1])
         ax.legend()
         ax.grid(True)

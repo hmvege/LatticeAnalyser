@@ -155,12 +155,12 @@ class QtQ0EuclideanAnalyser(FlowAnalyser):
 
 	def plot_jackknife(self, *args, **kwargs):
 		"""Making sure we are plotting with in euclidean time."""
-		kwargs["x"] = self.x
+		kwargs["x"] = self.x*self.a
 		super(QtQ0EuclideanAnalyser, self).plot_jackknife(*args, **kwargs)
 
 	def plot_bootstrap(self, *args, **kwargs):
 		"""Making sure we are plotting with in euclidean time."""
-		kwargs["x"] = self.x
+		kwargs["x"] = self.x*self.a
 		super(QtQ0EuclideanAnalyser, self).plot_bootstrap(*args, **kwargs)
 
 	# def autocorrelation(self, store_raw_ac_error_correction=True, method="wolff"):

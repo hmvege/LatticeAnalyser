@@ -83,6 +83,7 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True,
     ########## Main analysis ##########
     databeta60 = copy.deepcopy(default_params)
     databeta60["batch_name"] = "beta60"
+    databeta60["ensemble_name"] = r"$A$"
     databeta60["beta"] = 6.0
     databeta60["block_size"] = 10  # None
     databeta60["topc_y_limits"] = [-9, 9]
@@ -98,6 +99,7 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True,
 
     databeta61 = copy.deepcopy(default_params)
     databeta61["batch_name"] = "beta61"
+    databeta61["ensemble_name"] = r"$B$"
     databeta61["beta"] = 6.1
     databeta61["block_size"] = 10  # None
     databeta61["topc_y_limits"] = [-12, 12]
@@ -113,6 +115,7 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True,
 
     databeta62 = copy.deepcopy(default_params)
     databeta62["batch_name"] = "beta62"
+    databeta62["ensemble_name"] = r"$C$"
     databeta62["beta"] = 6.2
     databeta62["block_size"] = 10  # None
     databeta62["topc_y_limits"] = [-12, 12]
@@ -129,6 +132,7 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True,
     databeta645 = copy.deepcopy(default_params)
     databeta645["flow_epsilon"] = 0.02
     databeta645["batch_name"] = "beta645"
+    databeta645["ensemble_name"] = r"$D_2$"
     databeta645["beta"] = 6.45
     databeta645["block_size"] = 25  # None
     databeta645["topc_y_limits"] = [-15, 15]
@@ -145,6 +149,7 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True,
     databeta645_32xx4 = copy.deepcopy(default_params)
     databeta645_32xx4["flow_epsilon"] = 0.02
     databeta645_32xx4["batch_name"] = "beta645-32xx4"
+    databeta645_32xx4["ensemble_name"] = r"$D_1$"
     databeta645_32xx4["beta"] = 6.45
     databeta645_32xx4["block_size"] = 40  # None
     databeta645_32xx4["topc_y_limits"] = [-15, 15]
