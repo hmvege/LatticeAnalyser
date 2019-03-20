@@ -62,7 +62,9 @@ class MultiPlotCore(PostCore):
 
                 # Modulo division in order to avoid going out of range in
                 # intervals.
+                print interval_keys
                 int_key = interval_keys[ib]
+                print int_key, data[bn].keys()
                 values["a"], values["a_err"] = \
                     get_lattice_spacing(self.beta_values[bn])
                 values["x"] = values["a"] * np.sqrt(8*data[bn][int_key]["x"])
@@ -128,6 +130,11 @@ class MultiPlotCore(PostCore):
         Args:
                 intervals: list of ordered beta values to check.
         """
+
+        num_intervals = list(set([len(val) for val in self.observable_intervals.values()]))
+        assert len(num_intervals) == 1, "Uneven number of intervals."
+        num_intervals = num_intervals[0]
+
         if self.verbose:
             print "Intervals N=%d, possible for %s: " % (
                 len(self.observable_intervals),
@@ -142,16 +149,26 @@ class MultiPlotCore(PostCore):
                                 for bn in self.sorted_batch_names]
             intervals = np.asarray([sorted(i) for i in sorted_intervals]).T
         else:
-            # When a specific interval has been provided.
-            for b_intervals in intervals:
-                for l, bn in zip(b_intervals, self.batch_names):
-                    assert l in self.observable_intervals[bn], \
-                        "%s has not been computed. Available intervals: %s" % (
-                        l, self.observable_intervals[bn])
+            # # When a specific interval has been provided.
+            # for b_intervals in intervals:
+            #     for l, bn in zip(b_intervals, self.sorted_batch_names):
+            #         assert l in self.observable_intervals[bn], \
+            #             "%s has not been computed. Available intervals: %s" % (
+            #             l, self.observable_intervals[bn])
+
+
+            intervals = []
+            for i in range(num_intervals):
+                _tmp_sorted_intervals = []
+                for bn in self.sorted_batch_names:
+                    _tmp_sorted_intervals.append(sorted(self.observable_intervals[bn])[i])
+                # _tmp = [sorted(val[i]) for bn, val in self.observable_intervals]
+
+                intervals.append(_tmp_sorted_intervals)
 
             intervals = np.asarray(intervals)
 
-        self.N_intervals = len(intervals)
+        self.N_intervals = num_intervals
 
         return intervals
 

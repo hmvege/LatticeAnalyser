@@ -338,7 +338,7 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
 
         for analysis_type in post_analysis_data_type:
             topcte_analysis.set_analysis_data_type(analysis_type)
-            print topcte_analysis
+
             for int_keys in interval_dict_list:
                 topcte_analysis.plot_interval(int_keys)
 
