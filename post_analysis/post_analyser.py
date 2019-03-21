@@ -548,8 +548,8 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
             for tf in q0_flow_times:  # Flow times
                 if tf != 0.6:
                     continue
-                qtq0e_analysis.plot_interval(tf)
-                # qtq0e_analysis.plot_plateau(tf, plateau_limits)
+                # qtq0e_analysis.plot_interval(tf)
+                qtq0e_analysis.plot_plateau(tf, plateau_limits)
 
             # y_limits = [-1, 1]
             # error_shape = "bars"

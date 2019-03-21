@@ -1,19 +1,20 @@
 import statistics.parallel_tools as ptools
-import multiprocessing
 from statistics.autocorrelation import Autocorrelation
+from statistics.linefit import LineFit
+from scipy.optimize import curve_fit
+from tools.sciprint import sciprint
+from tools.latticefunctions import get_lattice_spacing
+from tools.folderreadingtools import check_folder
+from post_analysis.core.multiplotcore import MultiPlotCore
+import multiprocessing
 import types
 import os
 import itertools
-from post_analysis.core.multiplotcore import MultiPlotCore
-from tools.folderreadingtools import check_folder
-from tools.latticefunctions import get_lattice_spacing
 import numpy as np
 import warnings
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     import matplotlib.pyplot as plt
-
-# Temporary needed for assessing the autocorrelation in the eff mass data.
 
 
 class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
@@ -30,6 +31,9 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
     fold = True
     fold_range = 16
     subfolder_type = "tflow"
+
+    y_label_continuum = r"$m_\mathrm{eff}$ [GeV]"
+    x_label_continuum = r"$a^2/t_0$"
 
     meff_plot_type = "ma"  # Default
     meff_plot_types = ["ma", "m", "r0ma"]
@@ -373,32 +377,142 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
         self.x_label = r"$t_e[fm]$"
 
         # print plateau_limits
-        plateau_limits = [0.3 , 0.6]
+        plateau_limits = [0.3, 0.6] 
 
-        fit_results = {}
+        # Systematic error retrieved by going through:
+        # [0.3, 0.6], [0.3, 0.5], [0.4, 0.6], [0.3, 0.4], [0.4, 0.5], [0.5, 0.6]
+
+        def _f(x, a):
+            """Model function for plateau fitting."""
+            return a
+
+        # Used bootstrap as the extrapolation method
+        refvals = self.reference_values["bootstrap"][self.analysis_data_type]
+
+        a, a_err, t0, t0_err, meff, meff_err = \
+            [[] for i in range(6)]
+
+        # fit_results = {}
         for bn in self.sorted_batch_names:
-            # print bn
 
-            lowest_index = \
-                np.where(plateau_limits[0] <= self.plot_values[bn]["x"])[0][0]
-            plateau_indexes = \
-                np.where(self.plot_values[bn]["x"][lowest_index:] <= plateau_limits[1])
+            # Retrieves values for ensemble
+            _x = self.plot_values[bn]["x"]
+            _y = self.plot_values[bn]["y"]
+            _yerr = self.plot_values[bn]["y_err"]
 
-            # print "plateau_indexes:", plateau_indexes
-            # print "x range: ", self.plot_values[bn]["y"][lowest_index:][plateau_indexes]
-            # print "y range: ", self.plot_values[bn]["y"][lowest_index:][plateau_indexes]
+            # Sets up the plateau indexes
+            # Lowest index
+            min_ind = np.where(plateau_limits[0] <= _x)[0][0]
+            # Plateau index range
+            pind = np.where(_x[min_ind:] <= plateau_limits[1])
 
-            fit_params = np.polyfit(
-                self.plot_values[bn]["x"][lowest_index:][plateau_indexes], 
-                self.plot_values[bn]["y"][lowest_index:][plateau_indexes], 0,
-                w=1/self.plot_values[bn]["y_err"][lowest_index:][plateau_indexes])
+            # print _y[min_ind:][pind]
 
-            fit_results[bn] = fit_params[0]
+            # Skips in case of nan -> bad statistics
+            if np.isnan(_y[min_ind:][pind]).any():
+                continue
 
-            # Select fit interval
+            # Performs a curve fit, which returns an actual estimate on the
+            _res = curve_fit(
+                _f, _x[min_ind:][pind], _y[min_ind:][pind],
+                sigma=_yerr[min_ind:][pind])
 
-        print fit_results
-        exit("qtq0effectivemasspostanalysis.py @ 383")
+            # Stores the results
+            a.append(self.plot_values[bn]["a"])
+            a_err.append(self.plot_values[bn]["a_err"])
+            meff.append(_res[0][0])
+            meff_err.append(np.sqrt(_res[1][0][0]))
+            t0.append(refvals[bn]["t0"])
+            t0_err.append(refvals[bn]["t0err"])
+
+        # Converts lists to arrays
+        a, a_err, meff, meff_err, t0, t0_err = \
+            map(lambda _k: np.array(_k)[::-1],
+                [a, a_err, meff, meff_err, t0, t0_err])
+
+        # Propagates error a
+        a_squared = a**2 / t0
+        a_squared_err = np.sqrt((2*a*a_err/t0)**2
+                                + (a**2*t0_err/t0**2)**2)
+
+        # exit("exits @ 434")
+
+        # Continuum limit arrays
+        N_cont = 1000
+        a_squared_cont = np.linspace(-0.025, a_squared[-1]*1.1, N_cont)
+
+        # Performs a continuum extrapolation of the effective mass
+        continuum_fit = LineFit(a_squared, meff, meff_err)
+        y_cont, y_cont_err, fit_params, chi_squared = \
+            continuum_fit.fit_weighted(a_squared_cont)
+        self.cont_chi_squared = chi_squared
+        self.cont_fit_params = fit_params
+
+        # Gets the continuum value and its error
+        y0_cont, y0_cont_err, _, _, = \
+            continuum_fit.fit_weighted(0.0)
+
+        # Matplotlib requires 2 point to plot error bars at
+        a0_squared = [0, 0]
+        y0 = [y0_cont[0], y0_cont[0]]
+        y0_err = [y0_cont_err[0][0], y0_cont_err[1][0]]
+
+        # Stores the chi continuum
+        self.meff_cont = y0[0]
+        self.meff_cont_err = (y0_err[1] - y0_err[0])/2.0
+
+        # Prepares plotting
+        y0_err = [self.meff_cont_err, self.meff_cont_err]
+
+        print "The effective mass is: {}".format(
+            sciprint(self.meff_cont, self.meff_cont_err, prec=3))
+        print "Chi^2: {}".format(self.cont_chi_squared)
+
+        # Creates figure and plot window
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+        # Plots an ax-line at 0
+        ax.axvline(0, linestyle="dashed",
+                   color=self.cont_axvline_color, linewidth=0.5)
+
+        # Plots the fit
+        ax.plot(a_squared_cont, y_cont, color=self.fit_color, alpha=0.5)
+        ax.fill_between(a_squared_cont, y_cont_err[0], y_cont_err[1],
+                        alpha=0.5, edgecolor='', facecolor=self.fit_fill_color)
+
+        # Plot lattice points
+        ax.errorbar(a_squared, meff, xerr=a_squared_err, yerr=meff_err,
+                    fmt="o", capsize=5, capthick=1,
+                    color=self.lattice_points_color,
+                    ecolor=self.lattice_points_color)
+
+        # plots continuum limit, 5 is a good value for cap size
+        ax.errorbar(a0_squared, y0,
+                    yerr=y0_err, fmt="o", capsize=5,
+                    capthick=1, color=self.cont_error_color,
+                    ecolor=self.cont_error_color,
+                    label=r"$m_\mathrm{eff}=%.3f\pm%.3f$" % (
+                        self.meff_cont, self.meff_cont_err))
+
+        ax.set_ylabel(self.y_label_continuum)
+        ax.set_xlabel(self.x_label_continuum)
+        ax.set_xlim(a_squared_cont[0], a_squared_cont[-1])
+        ax.set_ylim(0, 3)
+        ax.legend()
+        ax.grid(True)
+
+        # Saves figure
+        fname = os.path.join(
+            self.output_folder_path,
+            "post_analysis_%s_%s.pdf" % (
+                self.observable_name_compact, self.analysis_data_type))
+        fig.savefig(fname, dpi=self.dpi)
+        if self.verbose:
+            print "Continuum plot of %s created in %s" % (
+                self.observable_name_compact, fname)
+
+        # Plot an overlay?
 
     def plot_with_article_masses(self, **kwargs):
         """Plots the effective mass together with different masses from other 
