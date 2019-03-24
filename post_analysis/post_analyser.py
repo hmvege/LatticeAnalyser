@@ -127,7 +127,6 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
                     extrapolation_method=extrapolation_method,
                     E0=energy_fit_target, plot_fit=False)
 
-
                 # w_0 analysis
                 box_settings = {
                     "xlim": [0.111, 0.117],
@@ -150,16 +149,16 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
                     t0_dict
 
                 for k in w0_dict:
-                	if isinstance(w0_dict[k], dict):
-                		reference_scale[extrapolation_method][
-                			analysis_type][k].update(w0_dict[k])
-                	else:
-                		reference_scale[extrapolation_method][
-                			analysis_type][k] = w0_dict[k]
+                    if isinstance(w0_dict[k], dict):
+                        reference_scale[extrapolation_method][
+                            analysis_type][k].update(w0_dict[k])
+                    else:
+                        reference_scale[extrapolation_method][
+                            analysis_type][k] = w0_dict[k]
 
                 # # Retrofits the energy for continiuum limit
                 # energy_analysis.plot_continuum(0.3, 0.015,
-                # 	extrapolation_method=extrapolation_method)
+                #   extrapolation_method=extrapolation_method)
 
                 # # Plot running coupling
                 # energy_analysis.coupling_fit()
@@ -205,19 +204,18 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
                     W0=energy_fit_target, plot_fit=False)
 
                 # w0_reference_scale[extrapolation_method][analysis_type] = \
-                # 	w0_dict
+                #   w0_dict
 
         for t_flow in q0_flow_times:
             w_t_energy_analysis.plot_autocorrelation_at(target_flow=t_flow)
             w_t_energy_analysis.plot_mc_history_at(target_flow=t_flow)
 
-
     # Loads/saves pickle file if it exists
     reference_scale_file = (
         "reference_scale_%s.pkl" % "-".join(data.batch_names))
     if os.path.isfile(reference_scale_file) and \
-    	isinstance(reference_scale, type(None)) or \
-    	not "energy" in observables:
+            isinstance(reference_scale, type(None)) or \
+            not "energy" in observables:
 
         reference_scale = load_pickle(reference_scale_file)
     else:
@@ -518,7 +516,7 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
         # Retrieves flow times
         flow_times = qtq0e_analysis.setup_intervals()
 
-        y_limits = [-0.05,0.5]
+        y_limits = [-0.05, 0.5]
 
         # Checks that we have similar flow times.
         # +1 in order to ensure the zeroth flow time does not count as false.
@@ -549,7 +547,9 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
                 if tf != 0.6:
                     continue
                 # qtq0e_analysis.plot_interval(tf)
-                qtq0e_analysis.plot_plateau(tf, plateau_limits)
+                for mtype in ["ma", "m", "r0ma"]:
+                    qtq0e_analysis.plot_plateau(tf, plateau_limits,
+                                                meff_plot_type=mtype)
 
             # y_limits = [-1, 1]
             # error_shape = "bars"
@@ -592,7 +592,7 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
         if "topsus" in obs:
             skip_values = ["a", "a_err", "b", "b_err"]
 
-            tab_filename = "topsus_extrap_values_" 
+            tab_filename = "topsus_extrap_values_"
             tab_filename += "-".join(data.batch_names) + ".txt"
 
             write_fit_parameters_to_file(fit_parameters,

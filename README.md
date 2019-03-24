@@ -1,6 +1,6 @@
 # LatticeAnalyser
 
-This a program for analysis data created from GluonAction, a Lattice QCD program for generating and flowing quenched configurations.
+This a program for analysis data created from (GLAC)[https://github.com/hmvege/GLAC], a Lattice QCD program for generating and flowing quenched configurations.
 
 ---
 

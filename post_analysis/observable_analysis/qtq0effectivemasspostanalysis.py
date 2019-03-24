@@ -26,14 +26,14 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
     x_label = r"$t_e$ [fm]"
     y_label = r"$r_0 m_\textrm{eff}$"
     sub_obs = True
-    hbarc = 0.19732697  # eV micro m
+    hbarc = 0.19732697  # eV micro m or GeV fm
     dpi = None
     fold = True
     fold_range = 16
     subfolder_type = "tflow"
 
     y_label_continuum = r"$m_\mathrm{eff}$ [GeV]"
-    x_label_continuum = r"$a^2/t_0$"
+    x_label_continuum = r"$a^2/t_{0,\mathrm{cont}}$"
 
     meff_plot_type = "ma"  # Default
     meff_plot_types = ["ma", "m", "r0ma"]
@@ -275,13 +275,15 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
     def _folder_and_propagate(self, values):
         """Depending on what we are plotting, 'm/a', 'm', 'r0m/a',
         will set up the correct fold."""
+        # tmp = self.hbarc
+        # self.hbarc = 1
 
         if self.meff_plot_type == "ma":
             # y / a
             y = self.fold_array(values["y"])/values["a"] * self.hbarc
             y_err = np.sqrt(
-                (self.fold_error_array(values["y_err"])*self.hbarc/values["a"])**2 +
-                (y/values["a"]**2*values["a_err"]*self.hbarc)**2)
+                (self.fold_error_array(values["y_err"])/values["a"])**2 +
+                (y/values["a"]**2*values["a_err"])**2) * self.hbarc
 
         elif self.meff_plot_type == "m":
             # y
@@ -291,16 +293,17 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
         elif self.meff_plot_type == "r0ma":
             # y * r0 / a
             y = \
-                self.fold_array(values["y"])*self.r0/values["a"]
+                self.fold_array(values["y"])/values["a"]*self.r0
             y_err = np.sqrt(
-                (self.fold_error_array(values["y_err"])*self.r0/values["a"])**2 +
-                (self.r0*y/values["a"]**2*values["a_err"])**2)
+                (self.fold_error_array(values["y_err"])/values["a"])**2 +
+                (y/values["a"]**2*values["a_err"])**2)*self.r0
 
         else:
             raise KeyError(("Effective mass plot type '%s' not recognized "
                             "among %s" % (self.meff_plot_type,
                                           self.meff_plot_types)))
 
+        # self.hbarc = tmp
         return y, y_err
 
     def plot_interval(self, flow_index, **kwargs):
@@ -363,9 +366,9 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
         super(QtQ0EffectiveMassPostAnalysis, self)._plot_core(
             self.plot_values, **kwargs)
 
-    def plot_plateau(self, flow_index, plateau_limits):
+    def plot_plateau(self, flow_index, plateau_limits, meff_plot_type="ma"):
         """Method for extracting the glueball mass and plot plateau."""
-        self.meff_plot_type = "ma"
+        self.meff_plot_type = meff_plot_type
         self.plot_values = {}
         self.interval_index = flow_index
         self._initiate_plot_values(self.data[self.analysis_data_type],
@@ -467,6 +470,9 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
         print "The effective mass is: {}".format(
             sciprint(self.meff_cont, self.meff_cont_err, prec=3))
         print "Chi^2: {}".format(self.cont_chi_squared)
+
+        if self.meff_plot_type != "ma":
+            return
 
         # Creates figure and plot window
         fig = plt.figure()
