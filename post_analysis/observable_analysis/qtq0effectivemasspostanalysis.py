@@ -38,6 +38,30 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
     meff_plot_type = "ma"  # Default
     meff_plot_types = ["ma", "m", "r0ma"]
 
+    meff_labels = {
+        "ma": r"$m_\mathrm{eff}$",
+        "m": r"$am_\mathrm{eff}$",
+        "r0ma": r"$r_0 m_\mathrm{eff}$",
+    }
+
+    meff_hist_x_limits = {
+        "ma": [0.5, 2.0],
+        "m": [0, 1.0],
+        "r0ma": [1.5, 4],
+    }
+
+    meff_hist_y_limits = {
+        "ma": [0.0, 3],
+        "m": [0, 1.0],
+        "r0ma": [1.0, 5],
+    }
+
+    meff_y_limits = {
+        "ma": [-0.5, 4],
+        "m": [-0.5, 2],
+        "r0ma": [-1, 10],
+    }
+
     def __init__(self, *args, **kwargs):
         # Ensures we load correct data
         self.observable_name_compact_old = self.observable_name_compact
@@ -334,31 +358,13 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 
             self.x_label = x_label_old
 
-    def _set_plot_labels(self):
-        """Sets the y-label and y-limits."""
-        if self.meff_plot_type == "ma":
-            # y / a
-            y_label = r"$m_\mathrm{eff}$[GeV]"
-            y_limits = [-0.5, 4]  # When plotting Y=M/a
-        elif self.meff_plot_type == "m":
-            # y
-            y_label = r"$am_\mathrm{eff}$"
-            y_limits = [-0.5, 2]  # When plotting Y=aM
-        elif self.meff_plot_type == "r0ma":
-            # y * r0 / a
-            y_label = r"$r_0 m_\mathrm{eff}$"
-            y_limits = [-1, 10]  # When plotting Y=M/a*r0
-        else:
-            raise KeyError(("Effective mass plot type %s not recognized"
-                            % self.meff_plot_type))
-        return y_label, y_limits
-
     def plot(self, *args, **kwargs):
         """Ensuring I am plotting with formule in title."""
         kwargs["plot_with_formula"] = True
         kwargs["error_shape"] = "bars"
         kwargs["x_label"] = self.x_label
-        kwargs["y_label"], kwargs["y_limits"] = self._set_plot_labels()
+        kwargs["y_label"] = self.meff_labels[self.meff_plot_type]
+        kwargs["y_limits"] = self.meff_y_limits[self.meff_plot_type]
         kwargs["figure_name_appendix"] = "_" + self.meff_plot_type
         kwargs["legend_position"] = "best"
         kwargs["x_limits"] = [-0.1, 0.8]
@@ -366,25 +372,8 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
         super(QtQ0EffectiveMassPostAnalysis, self)._plot_core(
             self.plot_values, **kwargs)
 
-    def plot_plateau(self, flow_index, plateau_limits, meff_plot_type="ma"):
-        """Method for extracting the glueball mass and plot plateau."""
-        self.meff_plot_type = meff_plot_type
-        self.plot_values = {}
-        self.interval_index = flow_index
-        self._initiate_plot_values(self.data[self.analysis_data_type],
-                                   self.data_raw[self.analysis_data_type],
-                                   flow_index=flow_index)
-
-        # Sets the x-label to proper units
-        x_label_old = self.x_label
-        self.x_label = r"$t_e[fm]$"
-
-        # print plateau_limits
-        plateau_limits = [0.3, 0.6] 
-
-        # Systematic error retrieved by going through:
-        # [0.3, 0.6], [0.3, 0.5], [0.4, 0.6], [0.3, 0.4], [0.4, 0.5], [0.5, 0.6]
-
+    def _plateau_fit(self, plateau_range):
+        """Method that performs a plateau fit on plateau_range."""
         def _f(x, a):
             """Model function for plateau fitting."""
             return a
@@ -405,9 +394,9 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 
             # Sets up the plateau indexes
             # Lowest index
-            min_ind = np.where(plateau_limits[0] <= _x)[0][0]
+            min_ind = np.where(plateau_range[0] <= _x)[0][0]
             # Plateau index range
-            pind = np.where(_x[min_ind:] <= plateau_limits[1])
+            pind = np.where(_x[min_ind:] <= plateau_range[1])
 
             # print _y[min_ind:][pind]
 
@@ -433,12 +422,208 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
             map(lambda _k: np.array(_k)[::-1],
                 [a, a_err, meff, meff_err, t0, t0_err])
 
+        return a, a_err, meff, meff_err, t0, t0_err
+
+    def get_plateau_value(self, flow_index, plateau_ranges,
+                          meff_plot_type):
+        """Calculates the extrapolated plateau value with systematic error
+        estimates."""
+        self.meff_plot_type = meff_plot_type
+        self.plot_values = {}
+        self.interval_index = flow_index
+        self._initiate_plot_values(self.data[self.analysis_data_type],
+                                   self.data_raw[self.analysis_data_type],
+                                   flow_index=flow_index)
+
+        # Sets the x-label to proper units
+        x_label_old = self.x_label
+        self.x_label = r"$t_e[fm]$"
+
+        # Systematic error retrieved by going through:
+        plateau_ranges = []
+
+        range_start = 0.1
+        range_stop = 0.8
+        range_step_size = 0.1
+
+        # Range start
+        for _prange_start in np.arange(range_start, range_stop,
+                                       range_step_size):
+
+            # Range stop
+            for _prange_stop in np.arange(_prange_start + range_step_size,
+                                          range_stop + range_step_size,
+                                          range_step_size):
+                plateau_ranges.append([_prange_start, _prange_stop])
+
+        meff_values, meff_err_values, chi2_values = [], [], []
+
+        for i, _prange in enumerate(plateau_ranges):
+
+            # Performs a plateau fit
+            a, a_err, meff, meff_err, t0, t0_err = \
+                self._plateau_fit(_prange)
+
+            # Propagates error a
+            a_squared = a**2 / t0
+
+            # Continuum limit arrays
+            N_cont = 1000
+            a_squared_cont = np.linspace(-0.025, a_squared[-1]*1.1, N_cont)
+
+            # Performs a continuum extrapolation of the effective mass
+            continuum_fit = LineFit(a_squared, meff, meff_err)
+            y_cont, y_cont_err, fit_params, chi_squared = \
+                continuum_fit.fit_weighted(a_squared_cont)
+
+            cont_fit_params = fit_params
+
+            # Gets the continuum value and its error
+            y0_cont, y0_cont_err, _, _, = \
+                continuum_fit.fit_weighted(0.0)
+
+            # Matplotlib requires 2 point to plot error bars at
+            y0 = [y0_cont[0], y0_cont[0]]
+            y0_err = [y0_cont_err[0][0], y0_cont_err[1][0]]
+
+            # Stores the continuum mass
+            meff_cont = y0[0]
+            meff_cont_err = (y0_err[1] - y0_err[0])/2.0
+
+            _lowlim = self.meff_hist_y_limits[self.meff_plot_type][0]
+            _upplim = self.meff_hist_y_limits[self.meff_plot_type][1]
+            if (meff_cont < _lowlim or meff_cont > _upplim):
+                # print "Skipping bad interval for {}".format(_prange)
+                continue
+
+            # Store chi^2
+            chi2_values.append(chi_squared)
+
+            # Store mass + error
+            meff_values.append(meff_cont)
+            meff_err_values.append(meff_cont_err)
+
+            # print i, _prange, meff_values[i], meff_err_values[i], \
+            #     chi2_values[i]
+
+        meff_values, meff_err_values, chi2_values = map(
+            np.asarray,
+            [meff_values, meff_err_values, chi2_values])
+
+        systematic_error = np.std(meff_values)  # /len(meff_values)
+
+        # print "Systematic error for %s: %g" % (
+        #     self.meff_plot_type,
+        #     systematic_error)
+
+        assert hasattr(self, "meff_cont"), "Run plot_plateau."
+        assert hasattr(self, "meff_cont_err"), "Run plot_plateau."
+
+        # Gets the systematic error in correct str format
+        sys_error_str = sciprint(self.meff_cont, systematic_error, prec=3)
+        sys_error_str = "(" + sys_error_str.split("(")[-1]
+
+        # Sets up string for effective mass
+        eff_mass_str = "{}{}".format(
+            sciprint(self.meff_cont, self.meff_cont_err, prec=3),
+            sys_error_str)
+
+        msg = "Effective mass for {}: {}".format(
+            self.meff_plot_type, eff_mass_str)
+        print msg
+
+        meff_labels = {
+            "ma": r"$m_\mathrm{eff}$",
+            "m": r"$am_\mathrm{eff}$",
+            "r0ma": r"$r_0 m_\mathrm{eff}$",
+        }
+
+        meff_unit_labels = {
+            "ma": r"[GeV]",
+            "m": r"",
+            "r0ma": r"",
+        }
+
+
+        # Method 1
+        # Make histogram of mass
+        # Take std of histogram
+        fig1, ax1 = plt.subplots()
+        ax1.hist(meff_values,
+                 label=r"%s$=%s$%s" % (
+                     meff_labels[self.meff_plot_type], eff_mass_str,
+                     meff_unit_labels[self.meff_plot_type]),
+                 density=True)
+        ax1.grid(True)
+        ax1.set_xlabel("%s%s" % (
+            meff_labels[self.meff_plot_type],
+            meff_unit_labels[self.meff_plot_type]))
+        ax1.set_xlim(self.meff_hist_x_limits[self.meff_plot_type])
+        fig1.legend(loc="upper right")
+
+        # Saves and closes figure
+        fname = self._get_plot_figure_name(
+            output_folder=None,
+            figure_name_appendix="_{0:s}_syserror_unweighted".format(
+                self.meff_plot_type))
+        plt.savefig(fname)
+        if self.verbose:
+            print "Figure saved in %s" % fname
+        plt.close(fig1)
+
+        # # Method 2
+        # # Make histgram weighted by chi^2
+        # # Take std of weighted histogram
+        # fig2, ax2 = plt.subplots()
+        # ax2.hist(meff_values,
+        #          label=r"%s$=%s$%s" % (
+        #              meff_labels[self.meff_plot_type], eff_mass_str,
+        #              meff_unit_labels[self.meff_plot_type]),
+        #          density=True)
+        # ax2.grid(True)
+        # ax2.set_ylabel("%s%s"%(meff_labels[self.meff_plot_type]
+        #     meff_unit_labels[self.meff_plot_type]))
+        # ax2.set_xlim(self.meff_hist_x_limits[self.meff_plot_type])
+        # fig2.legend(loc="upper right")
+
+        # # Saves and closes figure
+        # fname = self._get_plot_figure_name(
+        #     output_folder=None,
+        #     figure_name_appendix="_{0:s}_syserror_weighted".format(
+        #         self.meff_plot_type))
+        # plt2.savefig(fname)
+        # if self.verbose:
+        #     print "Figure saved in %s" % fname
+        # plt.close(fig1)
+
+    def _get_continuum_mass_estimate(self):
+        """Method for getting single continuum estimate."""
+
+        pass
+
+    def plot_plateau(self, flow_index, plateau_limits, meff_plot_type="ma"):
+        """Method for extracting the glueball mass and plot plateau."""
+        self.meff_plot_type = meff_plot_type
+        self.plot_values = {}
+        self.interval_index = flow_index
+        self._initiate_plot_values(self.data[self.analysis_data_type],
+                                   self.data_raw[self.analysis_data_type],
+                                   flow_index=flow_index)
+
+        # Sets the x-label to proper units
+        x_label_old = self.x_label
+        self.x_label = r"$t_e[fm]$"
+
+        # print plateau_limits
+        plateau_limits = [0.3, 0.6]
+
+        a, a_err, meff, meff_err, t0, t0_err = \
+            self._plateau_fit(plateau_limits)
+
         # Propagates error a
         a_squared = a**2 / t0
         a_squared_err = np.sqrt((2*a*a_err/t0)**2
                                 + (a**2*t0_err/t0**2)**2)
-
-        # exit("exits @ 434")
 
         # Continuum limit arrays
         N_cont = 1000
@@ -467,7 +652,8 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
         # Prepares plotting
         y0_err = [self.meff_cont_err, self.meff_cont_err]
 
-        print "The effective mass is: {}".format(
+        print "The effective mass for {} is: {}".format(
+            self.meff_plot_type,
             sciprint(self.meff_cont, self.meff_cont_err, prec=3))
         print "Chi^2: {}".format(self.cont_chi_squared)
 
@@ -485,7 +671,8 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
         # Plots the fit
         ax.plot(a_squared_cont, y_cont, color=self.fit_color, alpha=0.5)
         ax.fill_between(a_squared_cont, y_cont_err[0], y_cont_err[1],
-                        alpha=0.5, edgecolor='', facecolor=self.fit_fill_color)
+                        alpha=0.5, edgecolor='',
+                        facecolor=self.fit_fill_color)
 
         # Plot lattice points
         ax.errorbar(a_squared, meff, xerr=a_squared_err, yerr=meff_err,
@@ -561,7 +748,10 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
         kwargs["plot_with_formula"] = True
         kwargs["error_shape"] = "bars"
         kwargs["x_label"] = self.x_label
-        kwargs["y_label"], kwargs["y_limits"] = self._set_plot_labels()
+
+        kwargs["y_label"] = self.meff_labels[self.meff_plot_type]
+        kwargs["y_limits"] = self.meff_y_limits[self.meff_plot_type]
+
         kwargs["figure_name_appendix"] = "_" + self.meff_plot_type
         kwargs["legend_position"] = "best"
         kwargs["x_limits"] = xlimits

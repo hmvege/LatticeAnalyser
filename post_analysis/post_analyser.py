@@ -550,6 +550,7 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
                 for mtype in ["ma", "m", "r0ma"]:
                     qtq0e_analysis.plot_plateau(tf, plateau_limits,
                                                 meff_plot_type=mtype)
+                    qtq0e_analysis.get_plateau_value(tf, plateau_limits, mtype)
 
             # y_limits = [-1, 1]
             # error_shape = "bars"
