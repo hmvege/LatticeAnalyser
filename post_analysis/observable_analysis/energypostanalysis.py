@@ -284,7 +284,7 @@ class EnergyPostAnalysis(PostCore):
             print "t0 reference values table: "
             print "sqrt(8t0)/r0 = %.16f +/- %.16f" % (
                 self.sqrt_8t0_cont, self.sqrt_8t0_cont_error)
-            print "t0 = %.16f +/- %.16f" % (self.t0_cont,
+            print "t0/r0^2 = %.16f +/- %.16f" % (self.t0_cont,
                                             self.t0_cont_error)
             for bn in self.batch_names:
                 msg = "beta = %.2f || t0 = %10f +/- %-10f" % (
@@ -300,12 +300,15 @@ class EnergyPostAnalysis(PostCore):
             # Header:
             # beta   t0a2   t0r02   L/a   L   a
 
-            header = [r"$\beta$", r"$t_0/a^2$", r"$t_0/{r_0^2}$", r"$L/a$",
+            header = [r"$\beta$", r"$t_0$[fm]", r"$t_0/a^2$", r"$t_0/r_0^2$", r"$L/a$",
                       r"$L[\fm]$", r"$a[\fm]$"]
 
             bvals = self.batch_names
             tab = [
                 [r"{0:.2f}".format(self.beta_values[bn]) for bn in bvals],
+                [r"{0:s}".format(sciprint.sciprint(
+                    t0_dict[bn]["t0"],
+                    t0_dict[bn]["t0err"])) for bn in bvals],
                 [r"{0:s}".format(sciprint.sciprint(
                     t0_dict[bn]["t0a2"],
                     t0_dict[bn]["t0a2err"])) for bn in bvals],
@@ -408,8 +411,8 @@ class EnergyPostAnalysis(PostCore):
         res = continuum_fit(0, weighted=True)
         self.w0_cont = res[0][0]
         self.w0_cont_error = (res[1][-1][0] - res[1][0][0])/2
-        self.sqrt8w0_cont = np.sqrt(8*self.w0_cont)
-        self.sqrt8w0_cont_error = 4*self.w0_cont_error/np.sqrt(8*self.w0_cont)
+        # self.sqrt8w0_cont = np.sqrt(8*self.w0_cont)
+        # self.sqrt8w0_cont_error = 4*self.w0_cont_error/np.sqrt(8*self.w0_cont)
 
         # Creates continuum extrapolation plot
         fname = os.path.join(
@@ -473,18 +476,22 @@ class EnergyPostAnalysis(PostCore):
             # beta  w0  a^2  L/a  L  a
 
             header = [r"$\beta$", r"$w_0[\fm]$",
-                      r"$a^2[\mathrm{GeV}^{-2}]$", r"$L/a$", r"$L[\fm]$",
+                      # r"$a^2[\mathrm{GeV}^{-2}]$", 
+                      r"$w_0/a$",
+                      r"$L/a$", r"$L[\fm]$",
                       r"$a[\fm]$"]
 
-            bvals = self.batch_names
+            bvals = self.sorted_batch_names
             tab = [
                 [r"{0:.2f}".format(self.beta_values[bn]) for bn in bvals],
                 [r"{0:s}".format(sciprint.sciprint(
                     w0_dict[bn]["w0"], w0_dict[bn]["w0err"])) for bn in bvals],
                 [r"{0:s}".format(sciprint.sciprint(
-                    self.plot_values[bn]["a"]**2,
-                    self.plot_values[bn]["a_err"]*2*self.plot_values[bn]["a"]))
-                 for bn in bvals],
+                    w0_dict[bn]["w0a"], w0_dict[bn]["w0aerr"])) for bn in bvals],
+                # [r"{0:s}".format(sciprint.sciprint(
+                #     self.plot_values[bn]["a"]**2,
+                #     self.plot_values[bn]["a_err"]*2*self.plot_values[bn]["a"]))
+                #  for bn in bvals],
                 [r"{0:d}".format(self.lattice_sizes[bn][0]) for bn in bvals],
                 [r"{0:s}".format(sciprint.sciprint(
                     self.lattice_sizes[bn][0]*self.plot_values[bn]["a"],

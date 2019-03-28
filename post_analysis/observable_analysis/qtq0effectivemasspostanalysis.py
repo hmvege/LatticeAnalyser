@@ -374,6 +374,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 
     def _plateau_fit(self, plateau_range):
         """Method that performs a plateau fit on plateau_range."""
+
         def _f(x, a):
             """Model function for plateau fitting."""
             return a
@@ -384,7 +385,6 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
         a, a_err, t0, t0_err, meff, meff_err = \
             [[] for i in range(6)]
 
-        # fit_results = {}
         for bn in self.sorted_batch_names:
 
             # Retrieves values for ensemble
@@ -397,8 +397,6 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
             min_ind = np.where(plateau_range[0] <= _x)[0][0]
             # Plateau index range
             pind = np.where(_x[min_ind:] <= plateau_range[1])
-
-            # print _y[min_ind:][pind]
 
             # Skips in case of nan -> bad statistics
             if np.isnan(_y[min_ind:][pind]).any():
@@ -496,15 +494,15 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
                 # print "Skipping bad interval for {}".format(_prange)
                 continue
 
+            if np.isnan(meff_cont_err) or np.isnan(meff_cont):
+                continue
+
             # Store chi^2
             chi2_values.append(chi_squared)
 
             # Store mass + error
             meff_values.append(meff_cont)
             meff_err_values.append(meff_cont_err)
-
-            # print i, _prange, meff_values[i], meff_err_values[i], \
-            #     chi2_values[i]
 
         meff_values, meff_err_values, chi2_values = map(
             np.asarray,
@@ -543,7 +541,6 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
             "m": r"",
             "r0ma": r"",
         }
-
 
         # Method 1
         # Make histogram of mass
@@ -652,10 +649,11 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
         # Prepares plotting
         y0_err = [self.meff_cont_err, self.meff_cont_err]
 
-        print "The effective mass for {} is: {}".format(
-            self.meff_plot_type,
-            sciprint(self.meff_cont, self.meff_cont_err, prec=3))
-        print "Chi^2: {}".format(self.cont_chi_squared)
+        # if self.verbose:
+        #     print "The effective mass for {} is: {}".format(
+        #         self.meff_plot_type,
+        #         sciprint(self.meff_cont, self.meff_cont_err, prec=3))
+        #     print "Chi^2: {}".format(self.cont_chi_squared)
 
         if self.meff_plot_type != "ma":
             return

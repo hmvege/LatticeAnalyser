@@ -10,7 +10,8 @@ class QtQ0EuclideanAnalyser(FlowAnalyser):
 	observable_name = r""
 	observable_name_compact = "qtq0e"
 	x_label = r"$t_e$ [fm]"
-	y_label = r"$\langle Q_{t_e} Q_{t_{e,0}} \rangle$ [GeV]"
+	# y_label = r"$\langle Q_{t_e} Q_{t_{e,0}} \rangle$ [GeV]"
+	y_label = r"$C(n_t)$"
 	mark_interval = 1
 	error_mark_interval = 1
 

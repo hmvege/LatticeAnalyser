@@ -8,6 +8,7 @@ import copy as cp
 from tools.postanalysisdatareader import PostAnalysisDataReader
 from tools.latticefunctions import get_lattice_spacing
 from tools.folderreadingtools import check_folder, get_NBoots
+from tools.sciprint import sciprint
 import warnings
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
@@ -339,6 +340,11 @@ class PostCore(object):
             ax.plot(x, y, "-", label=value["label"], color=self.colors[bn])
             ax.fill_between(x, y - y_err, y + y_err, alpha=0.5, edgecolor="",
                             facecolor=self.colors[bn])
+
+            if self.verbose:
+                print "Final autocorrelation for {}: {}".format(
+                    self.observable_name_compact,
+                    sciprint(y[-1], y_err[-1]))
 
         # Basic plotting commands
         ax.grid(True)
