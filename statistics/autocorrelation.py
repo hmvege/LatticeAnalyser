@@ -60,7 +60,7 @@ class _AutocorrelationCore(object):
         elif method == "correlate":
             self._numpy2_autocorrelation(self.data, self.data)
         elif method == "manual":
-            self._autocorrelation(self.data, self.data)
+            self.G, self.R = self._autocorrelation(self.data, self.data, self.N)
         else:
             raise KeyError("Method {0:s} of autocorrelation not recognized "
                            "among: corrcoef, correlate, manual".format(method))
@@ -79,7 +79,9 @@ class _AutocorrelationCore(object):
         """
         return len(self.R)
 
-    def _autocorrelation(self, data_x, data_y):
+    @staticmethod
+    # @nb.njit(cache=True)
+    def _autocorrelation(data_x, data_y, N):
         """
         Gets the autocorrelation from a dataset.
         Args:
@@ -87,16 +89,20 @@ class _AutocorrelationCore(object):
         Returns:
                 C(t)  (numpy array): normalized autocorrelation times
         """
-        avg_data_x = np.average(data_x)
-        avg_data_y = np.average(data_y)
-        for t in range(0, int(self.N/2)):
-            for i in range(0, self.N - t):
-                self.R[t] += (data_x[i] - avg_data_x) * \
+        R = np.zeros(int(N/2))
+        G = np.zeros(int(N/2))
+        C0 = np.var(data_x)
+        avg_data_x = np.mean(data_x)
+        avg_data_y = np.mean(data_y)
+        for t in range(0, int(N/2)):
+            for i in range(0, N - t):
+                R[t] += (data_x[i] - avg_data_x) * \
                     (data_y[i+t] - avg_data_y)
 
-            self.R[t] /= (self.N - t)
-        self.G = self.R * 2
-        self.R /= self.C0
+            R[t] /= (N - t)
+        G = R * 2
+        R /= C0
+        return G, R
 
     def _numpy_autocorrelation(self, data_x, data_y):
         """
@@ -111,17 +117,17 @@ class _AutocorrelationCore(object):
                                               data_y[t:self.N]]))[0, 1]
         self.G = self.R * self.C0 * 2
 
+    # @staticmethod
+    # @nb.njit(cache=True)
     def _numpy2_autocorrelation(self, x, y):
         """
         http://stackoverflow.com/q/14297012/190597
         http://en.wikipedia.org/wiki/Autocorrelation#Estimation
         """
-        n = len(x)
-        # variance = x.var()
         x = x-x.mean()
         y = y-y.mean()
-        self.G = np.correlate(x, y, mode="full")[-n:]
-        self.G /= np.arange(n, 0, -1)
+        self.G = np.correlate(x, y, mode="full")[-self.N:]
+        self.G /= np.arange(self.N, 0, -1)
         self.G = self.G[:int(self.N/2)]
         self.R = self.G/self.G[0]
 
@@ -763,36 +769,58 @@ def _testFullAC(data, N_bins, store_plots, time_ac_functions):
         const = 0.0763234462734
         return 0.25*const / Q_squared**(0.75)
 
-    print "Autocorrelation:"
-    ac1 = Autocorrelation(data, method="corrcoef", timefunc=True)
-    ac1.plot_autocorrelation((r"Autocorrelation for Topological "
-                              r"Suscpetibility $\beta = 6.2$"),
-                             "beta6_2_topc", dryrun=(not store_plots))
+    t1 = time.clock()
+    print "Autocorrelation(corrcoef:"
+    ac1 = Autocorrelation(data, method="corrcoef")
+    # ac1.plot_autocorrelation((r"Autocorrelation for Topological "
+    #                           r"Suscpetibility $\beta = 6.2$"),
+    #                          "beta6_2_topc", dryrun=(not store_plots))
     print(ac1.integrated_autocorrelation_time(plot_cutoff=True))
     print(ac1.integrated_autocorrelation_time_error())
     print(ac1.W)
+    print "Timing corrcoef:  ", time.clock() - t1
 
+    t1 = time.clock()
+    print "Autocorrelation(manual):"
+    ac1 = Autocorrelation(data, method="manual")
+    print(ac1.integrated_autocorrelation_time(plot_cutoff=True))
+    print(ac1.integrated_autocorrelation_time_error())
+    print(ac1.W)
+    print "Timing manual:    ", time.clock() - t1
+
+    t1 = time.clock()
+    print "Autocorrelation(correlate):"
+    ac1 = Autocorrelation(data, method="correlate")
+    print(ac1.integrated_autocorrelation_time(plot_cutoff=True))
+    print(ac1.integrated_autocorrelation_time_error())
+    print(ac1.W)
+    print "Timing correlate: ", time.clock() - t1
+
+
+    t1 = time.clock()
     print "PropagatedAutocorrelation:"
     ac2 = PropagatedAutocorrelation(data,
                                     function_derivative=chi_beta6_2_derivative,
-                                    method="corrcoef", timefunc=True)
-    ac2.plot_autocorrelation((r"Autocorrelation for Topological Suscpetibility"
-                              r" $\beta = 6.2$"), "beta6_2_topc",
-                             dryrun=(not store_plots))
+                                    method="corrcoef")
+    # ac2.plot_autocorrelation((r"Autocorrelation for Topological Suscpetibility"
+    #                           r" $\beta = 6.2$"), "beta6_2_topc",
+    #                          dryrun=(not store_plots))
     print(ac2.integrated_autocorrelation_time())
     print(ac2.integrated_autocorrelation_time_error())
     print(ac2.W)
+    print "Timing:", time.clock() - t1
 
+    t1 = time.clock()
     print "FullAutocorrelation:"
     ac3 = FullAutocorrelation([data],
-                              function_derivative=[chi_beta6_2_derivative], 
-                              timefunc=True)
-    ac3.plot_autocorrelation((r"Autocorrelation for Topological Suscpetibility"
-                              r" $\beta = 6.2$"), "beta6_2_topc",
-                             dryrun=(not store_plots))
+                              function_derivative=[chi_beta6_2_derivative])
+    # ac3.plot_autocorrelation((r"Autocorrelation for Topological Suscpetibility"
+    #                           r" $\beta = 6.2$"), "beta6_2_topc",
+    #                          dryrun=(not store_plots))
     print(ac3.integrated_autocorrelation_time())
     print(ac3.integrated_autocorrelation_time_error())
     print(ac3.W)
+    print "Timing:", time.clock() - t1
 
 
 def main():

@@ -27,7 +27,7 @@ def timing_function(func):
             time_used = t2-t1
             args[0].time_used = time_used
 
-            print("Autocorrelation: time used with function {:s}: {:.10f} "
+            print("Jackknife: time used with function {:s}: {:.10f} "
                   "secs/ {:.10f} minutes".format(func.__name__,
                                                  time_used, time_used/60.))
 

@@ -22,10 +22,6 @@ class TopcRPostAnalysis(PostCore):
     formula = r", $R = \langle Q^4_C \rangle = \langle Q^4 \rangle - $"
     formula += r"$3 \langle Q^2 \rangle^2$"
 
-    print_latex = False
-
-    dpi = 400
-
     lattice_sizes = {}
 
     def __init__(self, data, with_autocorr=True, figures_folder="../figures",
@@ -45,46 +41,45 @@ class TopcRPostAnalysis(PostCore):
         self.dryrun = dryrun
 
         self.beta_values = data.beta_values
-        self.batch_names = data.batch_names
+        self.sorted_batch_names = data.batch_names
         self.colors = data.colors
         self.lattice_sizes = data.lattice_sizes
         self.lattice_volumes = data.lattice_volumes
         self.size_labels = data.labels
         self.reference_values = data.reference_values
         self._setup_analysis_types(data.analysis_types)
-        self.print_latex = data.print_latex
 
-        self.data = {atype: {b: {} for b in self.batch_names}
+        self.data = {atype: {b: {} for b in self.sorted_batch_names}
                      for atype in self.analysis_types}
 
         self.data_map = {bn: {"lattice_volume": self.lattice_volumes[bn],
                               "beta": self.beta_values[bn]}
-                         for bn in self.batch_names}
+                         for bn in self.sorted_batch_names}
 
         self.flow_epsilon = {bn: data.flow_epsilon[bn]
-                             for bn in self.batch_names}
+                             for bn in self.sorted_batch_names}
 
-        self.sorted_batch_names = sorted(self.batch_names, key=lambda _k: (
+        self.sorted_batch_names = sorted(self.sorted_batch_names, key=lambda _k: (
             self.data_map[_k]["beta"], self.data_map[_k]["lattice_volume"]))
 
         # Q^2
-        self.topc2 = {atype: {bn: {} for bn in self.batch_names}
+        self.topc2 = {atype: {bn: {} for bn in self.sorted_batch_names}
                       for atype in self.analysis_types}
 
         # Q^4
-        self.topc4 = {atype: {bn: {} for bn in self.batch_names}
+        self.topc4 = {atype: {bn: {} for bn in self.sorted_batch_names}
                       for atype in self.analysis_types}
 
         # Q^4_C
-        self.topc4C = {atype: {bn: {} for bn in self.batch_names}
+        self.topc4C = {atype: {bn: {} for bn in self.sorted_batch_names}
                        for atype in self.analysis_types}
 
         # R = Q^4_C / Q^2
-        self.topcR = {atype: {bn: {} for bn in self.batch_names}
+        self.topcR = {atype: {bn: {} for bn in self.sorted_batch_names}
                       for atype in self.analysis_types}
 
         # Data will be copied from R
-        self.data = {atype: {bn: {} for bn in self.batch_names}
+        self.data = {atype: {bn: {} for bn in self.sorted_batch_names}
                      for atype in self.analysis_types}
 
         # Q^2 and Q^4 raw bs values
@@ -107,7 +102,7 @@ class TopcRPostAnalysis(PostCore):
 
         # First, gets the topc2, then topc4
         for atype in self.analysis_types:
-            for bn in self.batch_names:
+            for bn in self.sorted_batch_names:
                 # Q^2
                 self.topc2[atype][bn] = data.data_observables["topc2"][bn][self.ac][atype]
 
@@ -154,7 +149,7 @@ class TopcRPostAnalysis(PostCore):
         # Sets up the lattice spacing values with errors
         self.a_vals = {}
         self.a_vals_err = {}
-        for bn in self.batch_names:
+        for bn in self.sorted_batch_names:
             self.a_vals[bn], self.a_vals_err[bn] = \
                 get_lattice_spacing(self.beta_values[bn])
 
@@ -164,13 +159,13 @@ class TopcRPostAnalysis(PostCore):
 
         def vol_err(bn_):
             return 4*self.lattice_volumes[bn_]*self.a_vals[bn_]**3*self.a_vals_err[bn_]
-        self.V = {bn: vol(bn) for bn in self.batch_names}
-        self.V_err = {bn: vol_err(bn) for bn in self.batch_names}
+        self.V = {bn: vol(bn) for bn in self.sorted_batch_names}
+        self.V_err = {bn: vol_err(bn) for bn in self.sorted_batch_names}
 
     def _normalize_Q(self):
         """Normalizes Q4 and Q2"""
         for atype in self.analysis_types:
-            for bn in self.batch_names:
+            for bn in self.sorted_batch_names:
                 # self.topc2[atype][bn]["y_error"] /= self.V[bn]
                 self.topc2[atype][bn]["y_error"] = np.sqrt(
                     (self.topc2[atype][bn]["y_error"]/self.V[bn])**2 +
@@ -190,7 +185,7 @@ class TopcRPostAnalysis(PostCore):
         # Gets Q4C and R
         for atype in self.analysis_types:
 
-            for bn in self.batch_names:
+            for bn in self.sorted_batch_names:
 
                 self.topc4C[atype][bn] = {
 
@@ -213,7 +208,7 @@ class TopcRPostAnalysis(PostCore):
         # Gets Q4C and R
         for atype in self.analysis_types:
 
-            for bn in self.batch_names:
+            for bn in self.sorted_batch_names:
 
                 self.topcR[atype][bn] = {
 
@@ -242,7 +237,7 @@ class TopcRPostAnalysis(PostCore):
 
     def _initiate_plot_values(self, data, data_raw):
         """Sorts data into a format specific for the plotting method."""
-        for bn in self.batch_names:
+        for bn in self.sorted_batch_names:
             values = {}
             values["a"] = get_lattice_spacing(self.beta_values[bn])[0]
             values["sqrt8t"] = values["a"]*np.sqrt(8*data[bn]["x"])
@@ -361,7 +356,7 @@ class TopcRPostAnalysis(PostCore):
                         r"$\text{Ratio}(\langle Q^4 \rangle_C)$", r"$\text{Ratio}(R)$"]
         ratio_table = []
         for fk in self.article_flattened:
-            for bn in self.batch_names:
+            for bn in self.sorted_batch_names:
                 sub_list = []
 
                 sub_list.append(fk)
@@ -395,7 +390,7 @@ class TopcRPostAnalysis(PostCore):
         article values.
         """
 
-        self.data_ratios = {k: {bn: {} for bn in self.batch_names}
+        self.data_ratios = {k: {bn: {} for bn in self.sorted_batch_names}
                             for k in self.article_flattened.keys()}
 
         for flat_key in self.article_flattened:
@@ -445,15 +440,15 @@ class TopcRPostAnalysis(PostCore):
 
     def _setup_data_values(self, atype):
         """Sets up the data_values."""
-        self.data_values = {bn: {} for bn in self.batch_names}
+        self.data_values = {bn: {} for bn in self.sorted_batch_names}
         ref_vals = self._get_reference_value(atype)
 
         self.t0 = {bn: {"t0": ref_vals[bn]["t0a2"], "t0err": ref_vals[bn]["t0a2err"]}
-                   for bn in self.batch_names}
+                   for bn in self.sorted_batch_names}
 
         self.t0_indexes = [
             np.argmin(np.abs(self.topc2[atype][bn]["x"] - self.t0[bn]["t0"]))
-            for bn in self.batch_names]
+            for bn in self.sorted_batch_names]
 
         for t0_index, bn in zip(self.t0_indexes, self.sorted_batch_names):
             self.data_values[bn]["aL"] = ref_vals[bn]["aL"]
@@ -484,19 +479,19 @@ class TopcRPostAnalysis(PostCore):
         values_header = [r"$\beta$", r"$L/a$", r"$t_0/a^2$", r"$\langle Q^2 \rangle$",
                          r"$\langle Q^4 \rangle$", r"$\langle Q^4 \rangle_C$", r"$R$"]
         values_table = [
-            [self.beta_values[bn] for bn in self.batch_names],
+            [self.beta_values[bn] for bn in self.sorted_batch_names],
             ["{:.2f}".format(self.data_values[bn]["aL"])
-             for bn in self.batch_names],
+             for bn in self.sorted_batch_names],
             [sciprint(self.t0[bn]["t0"], self.t0[bn]["t0err"])
-             for bn in self.batch_names],
+             for bn in self.sorted_batch_names],
             [sciprint(self.data_values[bn]["Q2"], self.data_values[bn]["Q2Err"])
-             for bn in self.batch_names],
+             for bn in self.sorted_batch_names],
             [sciprint(self.data_values[bn]["Q4"], self.data_values[bn]["Q4Err"])
-             for bn in self.batch_names],
+             for bn in self.sorted_batch_names],
             [sciprint(self.data_values[bn]["Q4C"], self.data_values[bn]["Q4CErr"])
-             for bn in self.batch_names],
+             for bn in self.sorted_batch_names],
             [sciprint(self.data_values[bn]["R"], self.data_values[bn]["RErr"])
-             for bn in self.batch_names],
+             for bn in self.sorted_batch_names],
         ]
         values_table_printer = TablePrinter(values_header, values_table)
         values_table_printer.print_table(width=15)
@@ -508,7 +503,7 @@ class TopcRPostAnalysis(PostCore):
         Compares values at flow times given by the data we are comparing against
         """
 
-        if len(list(set(self.beta_values.values()))) != len(self.batch_names):
+        if len(list(set(self.beta_values.values()))) != len(self.sorted_batch_names):
             print("Multiple values for a beta value: {} --> Skipping"
                   " continuum extrapolation".format(self.beta_values.values()))
             return
@@ -585,7 +580,7 @@ class TopcRPostAnalysis(PostCore):
         # 	print "\nRatios between me and article"
         # 	for data_set in sorted(self.article_size_name[size]):
         # 		# Compares values by dividing my values by article values
-        # 		for bn in self.batch_names:
+        # 		for bn in self.sorted_batch_names:
         # 			beta_article = self.article_name_size[data_set][size]["beta"]
 
         # 			# Gets the approximate same t0 ref. value
