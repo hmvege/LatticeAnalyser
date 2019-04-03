@@ -246,7 +246,8 @@ class TopcRPostAnalysis(PostCore):
             values["y_err"] = data[bn]["y_error"]
             # values["y_raw"] = data_raw[bn][self.observable_name_compact]
             # values["tau_int"] = data[bn]["ac"]["tau_int"]
-            values["label"] = r"%s $\beta=%2.2f$" % (
+            values["label"] = r"%s, %s, $\beta=%2.2f$" % (
+                self.ensemble_names[bn],
                 self.size_labels[bn], self.beta_values[bn])
             self.plot_values[bn] = values
 

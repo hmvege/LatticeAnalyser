@@ -304,8 +304,8 @@ def analyse_qtq0_effective_mass(params):
         numprocs=params["numprocs"], verbose=params["verbose"])
 
     for q0_flow_time in params["q0_flow_times"]:
-        if q0_flow_time != 0.6:  # Only zeroth flow
-            continue
+        # if q0_flow_time != 0.6:  # Only zeroth flow
+        #     continue
         qtq0eff_analysis.set_time(q0_flow_time)
         analyse_default(qtq0eff_analysis, params["N_bs"],
                         perform_blocking_analysis=params["blocking_analysis"],

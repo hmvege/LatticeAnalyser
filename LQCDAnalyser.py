@@ -13,6 +13,8 @@ from analysis_batches.thermalization_comparison_analysis \
     import thermalization_analysis
 from analysis_batches.b645_L32x32_analysis import beta645_L32_analysis
 from analysis_batches.scaling_analysis import scaling_analysis
+from analysis_batches.ABC_analysis import ABC_analysis
+from analysis_batches.BCD_analysis import BCD_analysis
 
 
 def main():
@@ -38,34 +40,55 @@ def main():
     # observables = ["topsusqtq0"]
     observables = ["qtq0eff"]
     observables = ["qtq0e"]
-    observables = ["topcr"]
+    # observables = ["topcr"]
     # observables += ["topcMC"]
-    # observables += ["energy"]
+    observables = ["energy"]
     # observables = ["topc"]
 
     # Sets the post analysis type to use
     post_analysis_data_type = ["bootstrap_time_series", "bootstrap"]
 
-    # Full analysis of *all* elements available
-    beta645_L32_analysis(run_pre_analysis=run_pre_analysis,
-                         run_post_analysis=run_post_analysis,
-                         only_generate_data=only_generate_data,
-                         observables=observables,
-                         post_analysis_data_type=post_analysis_data_type,
-                         include_b645x48xx3x96=True)
+    # # Full analysis of *all* elements available
+    # beta645_L32_analysis(run_pre_analysis=run_pre_analysis,
+    #                      run_post_analysis=run_post_analysis,
+    #                      only_generate_data=only_generate_data,
+    #                      observables=observables,
+    #                      post_analysis_data_type=post_analysis_data_type,
+    #                      include_b645x48xx3x96=True)
 
-    main_analysis(run_pre_analysis=False,
-                  run_post_analysis=run_post_analysis,
-                  only_generate_data=only_generate_data,
-                  observables=observables,
-                  post_analysis_data_type=post_analysis_data_type)
+    # main_analysis(run_pre_analysis=False,
+    #               run_post_analysis=run_post_analysis,
+    #               only_generate_data=only_generate_data,
+    #               observables=observables,
+    #               post_analysis_data_type=post_analysis_data_type)
 
-    beta645_L32_analysis(run_pre_analysis=False,
-                         run_post_analysis=run_post_analysis,
-                         only_generate_data=only_generate_data,
-                         observables=observables,
-                         post_analysis_data_type=post_analysis_data_type,
-                         include_b645x48xx3x96=False)
+    # beta645_L32_analysis(run_pre_analysis=False,
+    #                      run_post_analysis=run_post_analysis,
+    #                      only_generate_data=only_generate_data,
+    #                      observables=observables,
+    #                      post_analysis_data_type=post_analysis_data_type,
+    #                      include_b645x48xx3x96=False)
+
+    ABC_analysis(run_pre_analysis=False,
+                 run_post_analysis=run_post_analysis,
+                 only_generate_data=only_generate_data,
+                 observables=observables,
+                 post_analysis_data_type=post_analysis_data_type)
+
+    BCD_analysis(run_pre_analysis=False,
+                 run_post_analysis=run_post_analysis,
+                 only_generate_data=only_generate_data,
+                 observables=observables,
+                 post_analysis_data_type=post_analysis_data_type,
+                 include_b645x48xx3x96=False)
+
+    BCD_analysis(run_pre_analysis=False,
+                 run_post_analysis=run_post_analysis,
+                 only_generate_data=only_generate_data,
+                 observables=observables,
+                 post_analysis_data_type=post_analysis_data_type,
+                 include_b645x48xx3x96=True)
+
 
     # distribution_analysis()
     # topc_modes_analysis()

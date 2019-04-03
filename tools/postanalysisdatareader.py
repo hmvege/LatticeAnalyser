@@ -211,6 +211,9 @@ class PostAnalysisDataReader:
 
         self.batch_names = [b["batch_name"] for b in batch_parameters]
 
+        self.ensemble_names = {b["batch_name"]: b["ensemble_name"] 
+                              for b in batch_parameters}
+
     def _set_lattice_parameters(self, batch_parameters):
         """Sets the correct labels, colors and lattice sizes."""
         self.lattice_sizes = {}

@@ -230,7 +230,8 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
                         data_raw[bn][self.observable_name_compact][sub_obs])
 
                     sub_values["label"] = (
-                        r"%s, $\beta=%2.2f$, $\sqrt{8t_f}=%.2f$" % (
+                        r"%s, %s, $\beta=%2.2f$, $\sqrt{8t_f}=%.2f$" % (
+                            self.ensemble_names[bn],
                             self.size_labels[bn], self.beta_values[bn],
                             self._convert_label(sub_obs)))
 
@@ -291,7 +292,8 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
                     # values["y_raw"] = self.fold_array(values["y_raw"], axis=0)
                     self.fold_position = values["x"][self.fold_range]
 
-                values["label"] = r"%s $\beta=%2.2f$, $\sqrt{8t_f}=%.2f$" % (
+                values["label"] = r"%s, %s, $\beta=%2.2f$, $\sqrt{8t_f}=%.2f$" % (
+                    self.ensemble_names[bn],
                     self.size_labels[bn], self.beta_values[bn], flow_index)
 
                 self.plot_values[bn] = values

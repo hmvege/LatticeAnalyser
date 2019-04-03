@@ -276,7 +276,8 @@ class TopcRMCIntervalPostAnalysis(TopcRPostAnalysis, MultiPlotCore, PostCore):
                         np.sqrt(8*data[bn][sub_obs]["x"])
                     sub_values["y"] = data[bn][sub_obs]["y"]
                     sub_values["y_err"] = data[bn][sub_obs]["y_error"]
-                    sub_values["label"] = r"%s, $\beta=%2.2f$, %s" % (
+                    sub_values["label"] = r"%s, %s, $\beta=%2.2f$, %s" % (
+                        self.ensemble_names[bn],
                         self.size_labels[bn], self.beta_values[bn],
                         self._convert_label(sub_obs))
                     values[sub_obs] = sub_values
@@ -287,7 +288,8 @@ class TopcRMCIntervalPostAnalysis(TopcRPostAnalysis, MultiPlotCore, PostCore):
                 values["x"] = values["a"] * np.sqrt(8*data[bn][int_key]["x"])
                 values["y"] = data[bn][int_key]["y"]
                 values["y_err"] = data[bn][int_key]["y_error"]
-                values["label"] = r"%s, $\beta=%2.2f$, %s" % (
+                values["label"] = r"%s, %s, $\beta=%2.2f$, %s" % (
+                    self.ensemble_names[bn],
                     self.size_labels[bn], self.beta_values[bn],
                     self._convert_label(int_key))
                 values["interval"] = int_key

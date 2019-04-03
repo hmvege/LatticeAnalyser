@@ -72,8 +72,9 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
                             data[bn][sub_obs][te_index]["ac"]["tau_int_err"]
 
                     sub_values["label"] = (
-                        r"%s, $\beta=%2.2f$, $\sqrt{8t_{f}}=%.2f$"
-                        % (self.size_labels[bn],
+                        r"%s, %s, $\beta=%2.2f$, $\sqrt{8t_{f}}=%.2f$"
+                        % (self.ensemble_names[bn],
+                           self.size_labels[bn],
                            self.beta_values[bn],
                            self._convert_label(sub_obs)))
 
@@ -105,7 +106,8 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
                         data[bn][tf_index][te_index]["ac"]["tau_int_err"]
 
                 values["label"] = (
-                    r"%s $\beta=%2.2f$, $\sqrt{8t_f}=%.2f$, $t_{e,0}/a=%d$" % (
+                    r"%s, %s, $\beta=%2.2f$, $\sqrt{8t_f}=%.2f$, $t_{e,0}/a=%d$" % (
+                        self.ensemble_names[bn],
                         self.size_labels[bn], self.beta_values[bn],
                         q0_flow_time, euclidean_index))
 
@@ -166,6 +168,7 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
         self.x_label = r"$t_f[fm]$"
 
         kwargs["legend_position"] = "best"
+        kwargs["error_shape"] = "bars"
 
         # Makes it a global constant so it can be added in plot figure name
         self.plot(**kwargs)

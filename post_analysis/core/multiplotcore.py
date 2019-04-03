@@ -53,9 +53,9 @@ class MultiPlotCore(PostCore):
                     sub_values["y_raw"] = \
                         data_raw[bn][self.observable_name_compact][sub_obs]
 
-                    sub_values["label"] = r"%s, $\beta=%2.2f$, %s" % (
-                        self.size_labels[bn], self.beta_values[bn],
-                        self._convert_label(sub_obs))
+                    sub_values["label"] = r"%s, %s, $\beta=%2.2f$, %s" % (
+                        self.ensemble_names[bn], self.size_labels[bn], 
+                        self.beta_values[bn], self._convert_label(sub_obs))
                     values[sub_obs] = sub_values
             else:
                 # sorted_intervals = sorted(data[beta].keys())
@@ -75,9 +75,9 @@ class MultiPlotCore(PostCore):
 
                 values["y_raw"] = \
                     data_raw[bn][self.observable_name_compact][int_key]
-                values["label"] = r"%s, $\beta=%2.2f$, %s" % (
-                    self.size_labels[bn], self.beta_values[bn],
-                    self._convert_label(int_key))
+                values["label"] = r"%s, %s, $\beta=%2.2f$, %s" % (
+                    self.ensemble_names, self.size_labels[bn], 
+                    self.beta_values[bn], self._convert_label(int_key))
                 values["interval"] = int_key
             self.plot_values[bn] = values
 

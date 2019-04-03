@@ -72,6 +72,7 @@ class PostCore(object):
         self.verbose = verbose
         self.dryrun = dryrun
 
+        self.ensemble_names = data.ensemble_names
         self.beta_values = data.beta_values
         self.batch_names = data.batch_names
         self.colors = data.colors
@@ -244,8 +245,8 @@ class PostCore(object):
                 values["tau_int_err"] = None
                 values["tau_raw"] = None
                 values["tau_raw_err"] = None
-            values["label"] = r"%s $\beta=%2.2f$" % (
-                self.size_labels[bn], values["beta"])
+            values["label"] = r"%s, %s, $\beta=%2.2f$" % (
+                self.ensemble_names[bn], self.size_labels[bn], values["beta"])
             values["color"] = self.colors[bn]
 
             self.plot_values[bn] = values

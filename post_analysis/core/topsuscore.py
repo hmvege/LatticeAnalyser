@@ -321,7 +321,7 @@ class TopsusCore(PostCore):
 
         # Sets of title string with the chi squared and fit target
         if isinstance(self.fit_target, str):
-            title_string = r"$%s, \chi^2 = %.2f$" % (
+            title_string = r"$%s, \chi^2/\mathrm{d.o.f.} = %.2f$" % (
                 self.fit_target, self.chi_squared)
         else:
             title_string = r"$\sqrt{8t_{f,\mathrm{extrap}}} = %.2f[fm], \chi^2 = %.2f$" % (

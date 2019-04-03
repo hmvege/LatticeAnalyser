@@ -137,8 +137,9 @@ class EnergyPostAnalysis(PostCore):
                 (data_raw[bn][self.observable_name_compact].T
                  * (data[bn]["x"]**2)).T
 
-            values["label"] = (r"%s $\beta=%2.2f$" %
-                               (self.size_labels[bn], values["beta"]))
+            values["label"] = (r"%s, %s, $\beta=%2.2f$" %
+                               (self.ensemble_names[bn], self.size_labels[bn], 
+                                values["beta"]))
 
             self.plot_values[bn] = values
 
@@ -305,7 +306,7 @@ class EnergyPostAnalysis(PostCore):
 
             bvals = self.batch_names
             tab = [
-                [r"{0:.2f}".format(self.beta_values[bn]) for bn in bvals],
+                [r"{0:s}".format(self.ensemble_names[bn]) for bn in bvals],
                 [r"{0:s}".format(sciprint.sciprint(
                     t0_dict[bn]["t0"],
                     t0_dict[bn]["t0err"])) for bn in bvals],
@@ -425,7 +426,8 @@ class EnergyPostAnalysis(PostCore):
                                 0, 0, self.w0_cont, self.w0_cont_error,
                                 r"w_{0,\mathrm{cont}}", fname,
                                 r"$w_0[\mathrm{fm}]$",
-                                r"$a^2[\mathrm{GeV}^{-2}]$")
+                                r"$a^2[\mathrm{GeV}^{-2}]$",
+                                y_limits=[0.1625, 0.1750])
 
         # Reverses values for storage.
         a_values, a_values_err, w0_values, w0err_values, = map(
@@ -475,7 +477,7 @@ class EnergyPostAnalysis(PostCore):
             # Header:
             # beta  w0  a^2  L/a  L  a
 
-            header = [r"$\beta$", r"$w_0[\fm]$",
+            header = [r"Ensemble", r"$w_0[\fm]$",
                       # r"$a^2[\mathrm{GeV}^{-2}]$", 
                       r"$w_0/a$",
                       r"$L/a$", r"$L[\fm]$",
@@ -483,7 +485,7 @@ class EnergyPostAnalysis(PostCore):
 
             bvals = self.sorted_batch_names
             tab = [
-                [r"{0:.2f}".format(self.beta_values[bn]) for bn in bvals],
+                [r"{0:s}".format(self.ensemble_names[bn]) for bn in bvals],
                 [r"{0:s}".format(sciprint.sciprint(
                     w0_dict[bn]["w0"], w0_dict[bn]["w0err"])) for bn in bvals],
                 [r"{0:s}".format(sciprint.sciprint(
@@ -512,7 +514,7 @@ class EnergyPostAnalysis(PostCore):
     def plot_continuum_fit(self, a_squared_cont, y_cont, y_cont_err,
                            chi_squared, x_fit, x_fit_err, y_fit, y_fit_err,
                            a0_cont, a0err_cont, y0_cont, y0err_cont,
-                           cont_label, figname, xlabel, ylabel):
+                           cont_label, figname, xlabel, ylabel, y_limits=[0.91, 0.97]):
         """
         Creates continuum extrapolation plot.
         """
@@ -531,7 +533,7 @@ class EnergyPostAnalysis(PostCore):
 
         # Plots the fit
         ax.plot(a_squared_cont, y_cont, color=self.fit_color, alpha=0.5,
-                label=r"$\chi=%.2f$" % chi_squared, zorder=10)
+                label=r"$\chi^2/\mathrm{d.o.f.}=%.2f$" % chi_squared, zorder=10)
         ax.fill_between(a_squared_cont, y_cont_err[0],
                         y_cont_err[1], alpha=0.5, edgecolor='',
                         facecolor=self.fit_fill_color, zorder=0)
@@ -554,6 +556,7 @@ class EnergyPostAnalysis(PostCore):
         ax.set_ylabel(xlabel)
         ax.set_xlabel(ylabel)
         ax.set_xlim(a_squared_cont[0], a_squared_cont[-1])
+        ax.set_ylim(y_limits)
         ax.legend()
         ax.grid(True)
 

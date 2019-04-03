@@ -544,22 +544,23 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
             print qtq0e_analysis
 
             for tf in q0_flow_times:  # Flow times
-                if tf != 0.6:
-                    continue
-                # qtq0e_analysis.plot_interval(tf)
+                # if tf != 0.6:
+                #     continue
+
+                qtq0e_analysis.plot_interval(tf)
                 for mtype in ["ma", "m", "r0ma"]:
                     qtq0e_analysis.plot_plateau(tf, plateau_limits,
                                                 meff_plot_type=mtype)
                     qtq0e_analysis.get_plateau_value(tf, plateau_limits, mtype)
 
-            # y_limits = [-1, 1]
-            # error_shape = "bars"
-            # qtq0e_analysis.plot_series([0, 1, 2, 3],
-            #                            error_shape=error_shape,
-            #                            y_limits=y_limits)
-            # qtq0e_analysis.plot_series([0, 2, 3, 5],
-            #                            error_shape=error_shape,
-            #                            y_limits=y_limits)
+            y_limits = [-1, 1]
+            error_shape = "bars"
+            qtq0e_analysis.plot_series([0, 1, 2, 3],
+                                       error_shape=error_shape,
+                                       y_limits=y_limits)
+            qtq0e_analysis.plot_series([0, 2, 3, 5],
+                                       error_shape=error_shape,
+                                       y_limits=y_limits)
 
     if "qtq0effMC" in observables:
         # if analysis_type != "unanalyzed": continue

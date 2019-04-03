@@ -139,7 +139,8 @@ class QtQ0EffectiveMassMCIntervalsPostAnalysis(MultiPlotCore):
 						data[bn][sub_obs][tf0_key],
 						data_raw[bn][self.observable_name_compact][sub_obs][tf0_key])
 
-					sub_values["label"] = r"%s, $\beta=%2.2f$, $t_f=%.2f$, $MC:%s$" % (
+					sub_values["label"] = r"%s, %s, $\beta=%2.2f$, $t_f=%.2f$, $MC:%s$" % (
+						self.ensemble_names[bn],
 						self.size_labels[bn], self.beta_values[bn], tf0, sub_obs)
 
 					sub_values["raw"] = data_raw[bn] \
@@ -209,7 +210,8 @@ class QtQ0EffectiveMassMCIntervalsPostAnalysis(MultiPlotCore):
 					# values["y_raw"] = self.fold_array(values["y_raw"], axis=0)
 					self.fold_position = values["x"][self.fold_range]
 
-				values["label"] = r"%s $\beta=%2.2f$, $t_f=%.2f$, $MC=%s$" % (
+				values["label"] = r"%s, %s, $\beta=%2.2f$, $t_f=%.2f$, $MC=%s$" % (
+					self.ensemble_names[bn],
 					self.size_labels[bn], self.beta_values[bn], tf0,
 					", ".join(["[%s)" % i for i in mc_int]))
 
