@@ -431,7 +431,7 @@ class ChiDer:
 
     def __call__(self, qq, qq_err):
         return np.sqrt((self.const_err*qq**0.25)**2 +
-                       (0.25*self.const_err*qq_err/qq**(0.75))**2)
+                       (0.25*self.const*qq_err/qq**(0.75))**2)
 
 
 def main():

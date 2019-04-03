@@ -669,6 +669,14 @@ class FlowAnalyser(object):
             self.save_raw_analysis_data(self.autocorrelations_errors,
                                         "autocorrelation_raw_error")
 
+        print "N cfgs: ", self.N_configurations
+        print "unanalyzed_y_std:         ", self.unanalyzed_y_std[-5:]
+        print "unanalyzed_y_std/sqrt(n): ", self.unanalyzed_y_std[-5:]/np.sqrt(float(self.N_configurations))
+        print "tau_int:                  ", self.integrated_autocorrelation_time[-5:]
+        print "sqrt(2*tau_int):          ", self.autocorrelation_error_correction[-5:]
+        print "self.bs_y_std:            ", self.bs_y_std[-5:]
+        print "bs_y_std*sqrt(2*tau_int): ", self.bs_y_std[-5:]*self.autocorrelation_error_correction[-5:]
+
         # Sets performed flag to true
         self.autocorrelation_performed = True
 
