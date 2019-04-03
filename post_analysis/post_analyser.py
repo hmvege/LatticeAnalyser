@@ -241,7 +241,7 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
         for analysis_type in post_analysis_data_type:
             topc_analysis.set_analysis_data_type(analysis_type)
             print topc_analysis
-            topc_analysis.plot(y_limits=[-5, 5])
+            topc_analysis.plot(y_limits=[-3, 3])
             topc_analysis.plot_autocorrelation()
             for t_flow in q0_flow_times:
                 topc_analysis.plot_autocorrelation_at(target_flow=t_flow)
@@ -544,8 +544,8 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
             print qtq0e_analysis
 
             for tf in q0_flow_times:  # Flow times
-                # if tf != 0.6:
-                #     continue
+                if tf < 0.2:
+                    continue
 
                 qtq0e_analysis.plot_interval(tf)
                 for mtype in ["ma", "m", "r0ma"]:

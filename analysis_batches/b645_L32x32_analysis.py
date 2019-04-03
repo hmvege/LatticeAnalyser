@@ -161,7 +161,7 @@ def beta645_L32_analysis(run_pre_analysis=True, run_post_analysis=True,
     databeta645_32xx4["MCInt"] = MC_intervals[3]
     databeta645_32xx4["N"] = 32
     databeta645_32xx4["NT"] = 32
-    databeta645_32xx4["color"] = "#98A519"  # Remember
+    databeta645_32xx4["color"] = "#98A519"
 
     # Adding relevant batches to args
     if include_b645x48xx3x96:

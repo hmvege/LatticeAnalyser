@@ -42,6 +42,7 @@ class TopcRPostAnalysis(PostCore):
 
         self.beta_values = data.beta_values
         self.sorted_batch_names = data.batch_names
+        self.ensemble_names = data.ensemble_names
         self.colors = data.colors
         self.lattice_sizes = data.lattice_sizes
         self.lattice_volumes = data.lattice_volumes

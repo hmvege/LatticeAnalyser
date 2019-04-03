@@ -229,11 +229,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
                         data[bn][sub_obs],
                         data_raw[bn][self.observable_name_compact][sub_obs])
 
-                    sub_values["label"] = (
-                        r"%s, %s, $\beta=%2.2f$, $\sqrt{8t_f}=%.2f$" % (
-                            self.ensemble_names[bn],
-                            self.size_labels[bn], self.beta_values[bn],
-                            self._convert_label(sub_obs)))
+                    sub_values["label"] = r"%s" % self.ensemble_names[bn]
 
                     sub_values["raw"] = \
                         data_raw[bn][self.observable_name_compact][sub_obs]
@@ -292,9 +288,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
                     # values["y_raw"] = self.fold_array(values["y_raw"], axis=0)
                     self.fold_position = values["x"][self.fold_range]
 
-                values["label"] = r"%s, %s, $\beta=%2.2f$, $\sqrt{8t_f}=%.2f$" % (
-                    self.ensemble_names[bn],
-                    self.size_labels[bn], self.beta_values[bn], flow_index)
+                values["label"] = r"%s" % self.ensemble_names[bn]
 
                 self.plot_values[bn] = values
 
@@ -464,6 +458,11 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
             a, a_err, meff, meff_err, t0, t0_err = \
                 self._plateau_fit(_prange)
 
+            if len(a) == 0:
+                print("Too few values retrieved from plateau fit for"
+                      " range", _prange)
+                return
+
             # Propagates error a
             a_squared = a**2 / t0
 
@@ -515,6 +514,10 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
         # print "Systematic error for %s: %g" % (
         #     self.meff_plot_type,
         #     systematic_error)
+        if self.skipped_plateau_plot:
+            print("Skipping get_plateau_value since we could not "
+                  "perform a proper plteau plot.")
+            return
 
         assert hasattr(self, "meff_cont"), "Run plot_plateau."
         assert hasattr(self, "meff_cont_err"), "Run plot_plateau."
@@ -624,6 +627,16 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
         a_squared_err = np.sqrt((2*a*a_err/t0)**2
                                 + (a**2*t0_err/t0**2)**2)
 
+        if np.any(meff == np.nan) or np.any(meff_err == np.nan):
+            print "nan value discovered in:", meff, meff_err
+            self.skipped_plateau_plot = True
+            return
+
+        if len(meff) <= 2:
+            print "Too few values for continuum fit:", len(meff)
+            self.skipped_plateau_plot = True
+            return
+
         # Continuum limit arrays
         N_cont = 1000
         a_squared_cont = np.linspace(-0.025, a_squared[-1]*1.1, N_cont)
@@ -694,17 +707,18 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
         ax.set_ylim(0, 3)
         ax.legend()
         ax.grid(True)
-
         # Saves figure
         fname = os.path.join(
             self.output_folder_path,
             "post_analysis_%s_%s.pdf" % (
                 self.observable_name_compact, self.analysis_data_type))
-        fig.savefig(fname, dpi=self.dpi)
+        fig.savefig(fname)
         if self.verbose:
             print "Continuum plot of %s created in %s" % (
                 self.observable_name_compact, fname)
 
+        plt.close(fig)
+        self.skipped_plateau_plot = False
         # Plot an overlay?
 
     def plot_with_article_masses(self, **kwargs):

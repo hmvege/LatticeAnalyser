@@ -343,8 +343,8 @@ class PostCore(object):
                             facecolor=self.colors[bn])
 
             if self.verbose:
-                print "Final autocorrelation for {}: {}".format(
-                    self.observable_name_compact,
+                print "Final autocorrelation for {} for {}: {}".format(
+                    self.observable_name_compact, bn,
                     sciprint(y[-1], y_err[-1]))
 
         # Basic plotting commands

@@ -18,7 +18,8 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
     observable_name = ""
     observable_name_compact = "qtq0e"
     x_label = r"$t_e$ [fm]"
-    y_label = r"$\langle Q_{t_e} Q_{t_{e,0}} \rangle$"  # $\chi_t^{1/4}[GeV]$
+    # y_label = r"$\langle Q_{t_e} Q_{t_{e,0}} \rangle$"  # $\chi_t^{1/4}[GeV]$
+    y_label = r"$\langle q(t_{e}) q(t_{e,0}) \rangle$"  # $\chi_t^{1/4}[GeV]$
     sub_obs = True
     sub_sub_obs = True
     subfolder_type = "tf"
@@ -165,7 +166,7 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 
         # Sets the x-label to proper units
         x_label_old = self.x_label
-        self.x_label = r"$t_f[fm]$"
+        self.x_label = r"$t_e[fm]$"
 
         kwargs["legend_position"] = "best"
         kwargs["error_shape"] = "bars"
