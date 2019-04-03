@@ -287,6 +287,7 @@ class EnergyPostAnalysis(PostCore):
                 self.sqrt_8t0_cont, self.sqrt_8t0_cont_error)
             print "t0/r0^2 = %.16f +/- %.16f" % (self.t0_cont,
                                             self.t0_cont_error)
+            print "chi^2/dof = %.16f" % chi_squared
             for bn in self.batch_names:
                 msg = "beta = %.2f || t0 = %10f +/- %-10f" % (
                     self.beta_values[bn], t0_dict[bn]["t0"], 
@@ -463,6 +464,7 @@ class EnergyPostAnalysis(PostCore):
         if self.verbose:
             print "w0 reference values table: "
             print "w0 = %.16f +/- %.16f" % (self.w0_cont, self.w0_cont_error)
+            print "chi^2/dof = %.16f" % chi_squared
             for bn in self.sorted_batch_names:
                 msg = "beta = %.2f" % self.beta_values[bn]
                 msg += " || w0 = %10f +/- %-10f" % (
@@ -531,9 +533,14 @@ class EnergyPostAnalysis(PostCore):
         ax.axvline(0, linestyle="dashed",
                    color=self.cont_axvline_color, zorder=5, linewidth=1.0)
 
+        if chi_squared < 0.01:
+            chi_squared_label = r"$\chi^2/\mathrm{d.o.f.}=%.4f$" % chi_squared
+        else:
+            chi_squared_label = r"$\chi^2/\mathrm{d.o.f.}=%.2f$" % chi_squared
+
         # Plots the fit
         ax.plot(a_squared_cont, y_cont, color=self.fit_color, alpha=0.5,
-                label=r"$\chi^2/\mathrm{d.o.f.}=%.2f$" % chi_squared, zorder=10)
+                label=chi_squared_label, zorder=10)
         ax.fill_between(a_squared_cont, y_cont_err[0],
                         y_cont_err[1], alpha=0.5, edgecolor='',
                         facecolor=self.fit_fill_color, zorder=0)
@@ -543,6 +550,14 @@ class EnergyPostAnalysis(PostCore):
                     capsize=5, capthick=1, color=self.lattice_points_color,
                     ecolor=self.lattice_points_color, zorder=15)
 
+        if y0err_cont < 0.001:
+            cont_lim_label = r"$%s=%.4f\pm%.4f$" % (
+                cont_label, y0_cont, y0err_cont)
+        else:
+            cont_lim_label = r"$%s=%.3f\pm%.3f$" % (
+                cont_label, y0_cont, y0err_cont)
+
+
         # Plots the continuum limit errorbar
         ax.errorbar(a0_cont, y0_cont,
                     xerr=[[a0err_cont], [a0err_cont]],
@@ -550,8 +565,7 @@ class EnergyPostAnalysis(PostCore):
                     fmt="o", capsize=5, capthick=1, 
                     color=self.cont_error_color, elinewidth=2.0,
                     ecolor=self.cont_error_color, 
-                    label=r"$%s=%.3f\pm%.3f$" % (
-                        cont_label, y0_cont, y0err_cont), zorder=15)
+                    label=cont_lim_label, zorder=15)
 
         ax.set_ylabel(xlabel)
         ax.set_xlabel(ylabel)

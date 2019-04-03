@@ -336,8 +336,14 @@ class TopsusCore(PostCore):
         ax.axvline(0, linestyle="dashed",
                    color=self.cont_axvline_color, linewidth=0.5)
 
+        if chi_squared < 0.01:
+            chi_squared_label = r"$\chi^2/\mathrm{d.o.f.}=%.4f$" % chi_squared
+        else:
+            chi_squared_label = r"$\chi^2/\mathrm{d.o.f.}=%.2f$" % chi_squared
+
         # Plots the fit
-        ax.plot(a_squared_cont, y_cont, color=self.fit_color, alpha=0.5)
+        ax.plot(a_squared_cont, y_cont, color=self.fit_color, alpha=0.5, 
+            label=chi_squared_label)
         ax.fill_between(a_squared_cont, y_cont_err[0], y_cont_err[1],
                         alpha=0.5, edgecolor='', facecolor=self.fit_fill_color)
 

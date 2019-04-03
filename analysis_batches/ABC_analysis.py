@@ -38,6 +38,8 @@ def ABC_analysis(run_pre_analysis=True, run_post_analysis=True,
 
     if not isinstance(observables, type(None)):
         default_params["observables"] = observables
+    else:
+        default_params["observables"] = ["energy", "topsus"]
 
     # Post analysis parameters
     line_fit_interval_points = 20
