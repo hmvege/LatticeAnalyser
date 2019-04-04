@@ -210,6 +210,7 @@ class PostAnalysisDataReader:
         self.batch_folder = list(_bfolders)[0]
 
         self.batch_names = [b["batch_name"] for b in batch_parameters]
+        self.sorted_batch_names = sorted(self.batch_names)
 
         self.ensemble_names = {b["batch_name"]: b["ensemble_name"] 
                               for b in batch_parameters}

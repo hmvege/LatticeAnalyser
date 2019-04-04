@@ -307,8 +307,10 @@ class TopcRPostAnalysis(PostCore):
         ]
 
         art_param_table_printer = TablePrinter(article_param_header,
-                                               article_param_table)
+                                               article_param_table,
+                                               clean_column_duplicates=[1])
         art_param_table_printer.print_table(width=15,
+                                            row_seperator=r"\addlinespace",
                                             row_seperator_positions=[5, 7, 9])
 
         article_values_header = [r"Lattice", r"$\langle Q^2 \rangle$",
@@ -328,6 +330,7 @@ class TopcRPostAnalysis(PostCore):
         art_values_table_printer = TablePrinter(article_values_header,
                                                 article_values_table)
         art_values_table_printer.print_table(width=15,
+                                             row_seperator=r"\addlinespace",
                                              row_seperator_positions=[5, 7, 9])
 
         article_normed_header = [r"Lattice",
@@ -349,10 +352,11 @@ class TopcRPostAnalysis(PostCore):
         art_normed_table_printer = TablePrinter(article_normed_header,
                                                 article_normed_table)
         art_normed_table_printer.print_table(width=15,
+                                             row_seperator=r"\addlinespace",
                                              row_seperator_positions=[5, 7, 9])
 
 
-        ratio_header = [r"Lattice", r"$\beta$",
+        ratio_header = [r"Lattice", r"Ensemble",
                         r"$\text{Ratio}(\langle Q^2 \rangle)$",
                         r"$\text{Ratio}(\langle Q^4 \rangle)$",
                         r"$\text{Ratio}(\langle Q^4 \rangle_C)$", r"$\text{Ratio}(R)$"]
@@ -362,7 +366,7 @@ class TopcRPostAnalysis(PostCore):
                 sub_list = []
 
                 sub_list.append(fk)
-                sub_list.append(self.beta_values[bn])
+                sub_list.append(self.ensemble_names[bn])
                 sub_list.append(sciprint(
                     self.data_ratios[fk][bn]["Q2"],
                     self.data_ratios[fk][bn]["Q2Err"]))
@@ -380,8 +384,10 @@ class TopcRPostAnalysis(PostCore):
 
         ratio_table = np.asarray(ratio_table).T.tolist()
         ratio_tab_pos = (4*np.arange(len(self.article_flattened))) - 1
-        ratio_table_printer = TablePrinter(ratio_header, ratio_table)
+        ratio_table_printer = TablePrinter(ratio_header, ratio_table,
+                                           clean_column_duplicates=[0,1])
         ratio_table_printer.print_table(width=15,
+                                        row_seperator=r"\addlinespace",
                                         row_seperator_positions=ratio_tab_pos)
 
         print "Reference scale t0(my data): %s" % self.t0
@@ -478,10 +484,10 @@ class TopcRPostAnalysis(PostCore):
 
     def print_batch_values(self):
         """Prints all of the batch/ensemble values."""
-        values_header = [r"$\beta$", r"$L/a$", r"$t_0/a^2$", r"$\langle Q^2 \rangle$",
+        values_header = [r"Ensemble", r"$L/a$", r"$t_0/a^2$", r"$\langle Q^2 \rangle$",
                          r"$\langle Q^4 \rangle$", r"$\langle Q^4 \rangle_C$", r"$R$"]
         values_table = [
-            [self.beta_values[bn] for bn in self.sorted_batch_names],
+            [self.ensemble_names[bn] for bn in self.sorted_batch_names],
             ["{:.2f}".format(self.data_values[bn]["aL"])
              for bn in self.sorted_batch_names],
             [sciprint(self.t0[bn]["t0"], self.t0[bn]["t0err"])
@@ -825,7 +831,7 @@ class TopcRPostAnalysis(PostCore):
                     },
                 },
 
-            "D": {
+            r"\tilde{D}": {
                     1: {
                         "beta": 5.96,
                         "t0cont": 2.79,  # t0/a^2

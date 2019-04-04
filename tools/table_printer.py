@@ -1,16 +1,24 @@
+import re
+
+
 class TablePrinter:
     """
     Class for generating a table from a header and table body. Prints in 
     either regular ascii text or in latex format.
     """
 
-    def __init__(self, header, table):
+    header_seperator = r"\midrule"
+
+    def __init__(self, header, table, clean_column_duplicates=None):
         """
         Initializer for TablePrinter. Sets up a NxM table.
 
         Args:
             header: list of N str elements, one for each row in table.
             table: list of N lists of M column elements.
+            clean_column_duplicates: list of columns to clean. Will remove 
+                duplicate valued items from column to make tables prettier. 
+                Default is None, i.e. not perform any cleaning.
 
         Raises:
             AssertionError: if length of header differs from length of table.
@@ -20,6 +28,28 @@ class TablePrinter:
             "Header length is not equal number of table columns")
 
         self.header = header
+
+        # Go through columns here and remove duplicates for better formatting.
+        if not isinstance(clean_column_duplicates, type(None)):
+
+            for icol in clean_column_duplicates:
+
+                if len(table[icol])<=1: print icol, table[icol], header[icol]
+
+                col = table[icol]
+                _column_elements = [col[0]]
+                _prev_row = 0  # Stores the previous unique col element
+                for irow in range(1, len(col)):
+                    if col[irow] == col[_prev_row]:
+                        _column_elements.append("")
+                    else:
+                        _column_elements.append(col[irow])
+                        _prev_row = irow
+
+                col = _column_elements
+
+                table[icol] = col
+
         self.table = self._transpose_table(table)
 
     def _transpose_table(self, tab):
@@ -53,11 +83,21 @@ class TablePrinter:
                              " element: " % type(elem) + elem))
 
         if latex and len(elem) > 0:
-            return "${0:<s}$".format(elem)
+
+            # In case the table element is already formatted.
+            if elem[0] == "$":
+                if elem[-1] != "$":
+                    print("Warning: ill-formatted table elements "
+                          "detected: {}".format(elem))
+                return elem
+            else:
+                return "${0:<s}$".format(elem)
+
         else:
             return elem
 
-    def _generate_table(self, latex=True, width=10, row_seperator=r"\hline",
+    def _generate_table(self, latex=True, width=10,
+                        row_seperator=r"\addlinespace",
                         row_seperator_positions=[], ignore_latex_cols=[]):
         """
         Internal table generator.
@@ -69,7 +109,7 @@ class TablePrinter:
                 to table. Default is 10.
             row_seperator: str, optional. One will always be placed after 
                 table header unless empty. Element to print between header and 
-                table. Default is hline.
+                table. Default is addlinespace.
             row_seperator_positions: list of ints, optional. Will place a 
                 row_seperator after each position in list.
             ignore_latex_cols: list of bools, optional, rows specified will 
@@ -97,7 +137,7 @@ class TablePrinter:
         if latex:
             tab += r" \\ "
 
-        tab += "{0:<s}".format(row_seperator)
+        tab += "{0:<s}".format(self.header_seperator)
 
         # Printing table contents
         for ir, row in enumerate(self.table):
@@ -124,7 +164,8 @@ class TablePrinter:
 
         return tab
 
-    def print_table(self, latex=True, width=10, row_seperator=r"\hline",
+    def print_table(self, latex=True, width=10, 
+                    row_seperator=r"\addlinespace",
                     row_seperator_positions=[], ignore_latex_cols=[],
                     filename=None):
         """
@@ -138,13 +179,15 @@ class TablePrinter:
                 Default is 10.
             row_seperator: str, optional. One will always be placed after 
                 table header unless empty. Element to print between header and 
-                table. Default is hline.
+                table. Default is addlinespace.
             row_seperator_positions: list of ints, optional. Will place a 
                 row_seperator after each position in list.
             ignore_latex_cols: list of bools, optional, rows specified will 
                 not be in LaTeX format if prompted.
             filename: str, if provided, will save table to txt file with 
-            provided filename. Default is None.
+                provided filename. Default is None.
+            clean_column_duplicates: bool, if True will remove duplicate valued
+                items from column to make tables prettier.
         """
 
         tb = self._generate_table(

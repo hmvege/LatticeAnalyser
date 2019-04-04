@@ -59,7 +59,7 @@ class FlowAnalyser(object):
     plot_vline_at = None
 
     # Color setup for continuum plots
-    plot_color = "r" # Mostly for errors
+    plot_color = "r"  # Mostly for errors
     points_color = "#000000"
     axline_color = "#000000"
     hist_color = "#225ea8"
@@ -108,6 +108,11 @@ class FlowAnalyser(object):
 
         # Sets the lattice sizes if one is provided
         self.lattice_size = data["lattice_size"]
+
+        assert self.lattice_size == self.NSpatial**3 * self.NTemporal, (
+            "Lattice size and spatial and temporal dimensions do not match:"
+            "{} != N^3 x N_T = {}".format(self.lattice_size,
+                                          self.NSpatial**3 * self.NTemporal))
 
         # Initializes up global constants
         self.N_bs = None
@@ -216,6 +221,10 @@ class FlowAnalyser(object):
         self.blocking_performed = False
         self.bootstrap_time_series_performed = False
 
+    def _get_flow_time_index(self, tf0):
+        """Simply returns the matching flow time index for t0."""
+        return np.argmin(np.abs(self.a * self.x - tf0))
+
     def _set_q0_time_and_index(self, q0_flow_time):
         """
         Internal method for setting q0_flow_time and finding the correct q0
@@ -241,8 +250,7 @@ class FlowAnalyser(object):
         self.q0_flow_time = q0_flow_time
 
         # Selects index closest to q0_flow_time
-        self.q0_flow_time_index = np.argmin(
-            np.abs(self.a * self.x - self.q0_flow_time))
+        self.q0_flow_time_index = self._get_flow_time_index(q0_flow_time)
 
         if self.verbose:
             print("Extracting values at flow time %.2f with index %d for"
@@ -669,13 +677,48 @@ class FlowAnalyser(object):
             self.save_raw_analysis_data(self.autocorrelations_errors,
                                         "autocorrelation_raw_error")
 
+        # from tools.sciprint import sciprint
+
+        # def __get_triple_row(_ind, _y, _ystd, _tau_err, _sqrt2tau, _N, _prec=3):
+        #     msg = r"${0:<10s}$ & ${1:<10s}$ & ${2:<10s}$ \\".format(
+        #         sciprint(_y[_ind], _ystd[_ind]/np.sqrt(float(_N)), prec=_prec),
+        #         sciprint(_y[_ind], _ystd[_ind]/np.sqrt(float(_N))*_sqrt2tau[_ind], prec=_prec),
+        #         sciprint(_sqrt2tau[_ind], _tau_err[_ind]/_sqrt2tau[_ind], prec=_prec))
+        #     return msg
+
         # print "N cfgs: ", self.N_configurations
-        # print "unanalyzed_y_std:         ", self.unanalyzed_y_std[-5:]
-        # print "unanalyzed_y_std/sqrt(n): ", self.unanalyzed_y_std[-5:]/np.sqrt(float(self.N_configurations))
-        # print "tau_int:                  ", self.integrated_autocorrelation_time[-5:]
-        # print "sqrt(2*tau_int):          ", self.autocorrelation_error_correction[-5:]
-        # print "self.bs_y_std:            ", self.bs_y_std[-5:]
-        # print "bs_y_std*sqrt(2*tau_int): ", self.bs_y_std[-5:]*self.autocorrelation_error_correction[-5:]
+        # # print "Coefficient: ", self.const, self.const_err
+        # t00_index = self._get_flow_time_index(0.0)
+        # print "sqrt(8t_f)=0.0 index:     ", t00_index
+        # print "unanalyzed_y:             ", self.unanalyzed_y[t00_index]
+        # print "unanalyzed_y_std:         ", self.unanalyzed_y_std[t00_index]
+        # print "unanalyzed_y_std/sqrt(n): ", self.unanalyzed_y_std[t00_index]/np.sqrt(float(self.N_configurations))
+        # print "tau_int:                  ", self.integrated_autocorrelation_time[t00_index]
+        # print "self.bs_y_std:            ", self.bs_y_std[t00_index]
+        # print "bs_y_std*sqrt(2*tau_int): ", self.bs_y_std[t00_index]*self.autocorrelation_error_correction[t00_index]
+        
+        # print "Unanalyzed Q | sqrt(2*tau_int) | corrected unanalyzed"
+        # print __get_triple_row(
+        #     t00_index, self.unanalyzed_y, self.unanalyzed_y_std, 
+        #     self.integrated_autocorrelation_time_error, 
+        #     self.autocorrelation_error_correction, 
+        #     self.N_configurations, _prec=3)
+        
+        # t06_index = self._get_flow_time_index(0.6)
+        # print "sqrt(8t_f)=0.6 index:     ", t06_index
+        # print "unanalyzed_y:             ", self.unanalyzed_y[t06_index]
+        # print "unanalyzed_y_std:         ", self.unanalyzed_y_std[t06_index]
+        # print "unanalyzed_y_std/sqrt(n): ", self.unanalyzed_y_std[t06_index]/np.sqrt(float(self.N_configurations))
+        # print "tau_int:                  ", self.integrated_autocorrelation_time[t06_index]
+        # print "self.bs_y_std:            ", self.bs_y_std[t06_index]
+        # print "bs_y_std*sqrt(2*tau_int): ", self.bs_y_std[t06_index]*self.autocorrelation_error_correction[t06_index]
+        # print "Unanalyzed Q | sqrt(2*tau_int) | corrected unanalyzed"
+        # print __get_triple_row(
+        #     t06_index, self.unanalyzed_y, self.unanalyzed_y_std, 
+        #     self.integrated_autocorrelation_time_error, 
+        #     self.autocorrelation_error_correction, 
+        #     self.N_configurations, _prec=3)
+        
 
         # Sets performed flag to true
         self.autocorrelation_performed = True

@@ -285,7 +285,7 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
         for analysis_type in post_analysis_data_type:
             topcr_analysis.set_analysis_data_type(analysis_type)
             print topcr_analysis
-            topcr_analysis.plot()
+            # topcr_analysis.plot()
             topcr_analysis.print_batch_values()
 
         topcr_analysis.compare_lattice_values(tf=topcr_tf)
@@ -368,8 +368,8 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
 
         for analysis_type in post_analysis_data_type:
             topsus_analysis.set_analysis_data_type(analysis_type)
-            topsus_analysis.plot()
-            topsus_analysis.plot_autocorrelation()
+            # topsus_analysis.plot()
+            # topsus_analysis.plot_autocorrelation()
             for cont_target in topsus_fit_targets:
                 for extrapolation_method in extrapolation_methods:
                     topsus_analysis.plot_continuum(
@@ -383,9 +383,9 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
                             analysis_type,
                             topsus_analysis.get_linefit_parameters())
 
-            for t_flow in q0_flow_times:
-                topsus_analysis.plot_autocorrelation_at(target_flow=t_flow)
-                topsus_analysis.plot_mc_history_at(target_flow=t_flow)
+            # for t_flow in q0_flow_times:
+            #     topsus_analysis.plot_autocorrelation_at(target_flow=t_flow)
+            #     topsus_analysis.plot_mc_history_at(target_flow=t_flow)
 
     if "topsusqtq0" in observables:
         topsusqtq0_analysis = TopsusQtQ0PostAnalysis(
@@ -543,15 +543,15 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
             qtq0e_analysis.set_analysis_data_type(analysis_type)
             print qtq0e_analysis
 
-            # for tf in q0_flow_times:  # Flow times
-            #     if tf < 0.2:
-            #         continue
+            for tf in q0_flow_times:  # Flow times
+                if tf < 0.2:
+                    continue
 
-            #     qtq0e_analysis.plot_interval(tf)
-            #     for mtype in ["ma", "m", "r0ma"]:
-            #         qtq0e_analysis.plot_plateau(tf, plateau_limits,
-            #                                     meff_plot_type=mtype)
-            #         qtq0e_analysis.get_plateau_value(tf, plateau_limits, mtype)
+                qtq0e_analysis.plot_interval(tf)
+                for mtype in ["ma", "m", "r0ma"]:
+                    qtq0e_analysis.plot_plateau(tf, plateau_limits,
+                                                meff_plot_type=mtype)
+                    qtq0e_analysis.get_plateau_value(tf, plateau_limits, mtype)
 
             error_shape = "bars"
             qtq0e_analysis.plot_series([0, 1, 2, 3],
@@ -598,6 +598,7 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
 
             write_fit_parameters_to_file(fit_parameters,
                                          os.path.join("param_file.txt"),
+                                         data.sorted_batch_names,
                                          skip_values=skip_values,
                                          verbose=verbose,
                                          tab_filename=tab_filename)

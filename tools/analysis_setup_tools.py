@@ -127,10 +127,17 @@ def append_fit_params(fplist, obs_name, analysis_name, fparams):
     return fplist
 
 
-def write_fit_parameters_to_file(fparams, fname, skip_values=None,
+def write_fit_parameters_to_file(fparams, fname, batch_names,
+                                 skip_values=None,
                                  verbose=False, verbose_latex=False,
                                  tab_filename=None):
     """Function for writing fit parameters to file."""
+
+    if len(fparams) == 0:
+        print("Skipping parameter file writing: No values to print or "
+              "write to file.")
+        return
+
     with open(fname, "w") as f:
         sorted_parameter_list = sorted(fparams, key=lambda d:
                                        (d["fit_target"], d["analysis_type"]))
@@ -180,14 +187,17 @@ def write_fit_parameters_to_file(fparams, fname, skip_values=None,
             f.write(line_values + "\n")
 
         # Obs  sqrt(8t)  extrap.method  int/slice  chi^2  topsus  Nf
-        table_header = [r"$\mathcal{O}$",
+        table_header = [r"Ensemble", 
+                        r"$\mathcal{O}$",
                         r"$\sqrt{8t_{f,0,\mathrm{extrap}}}$",
                         "Analysis method",
                         # "Extrap. method",
                         "Interval/slice",
                         r"$\chi^2/\mathrm{d.o.f.}$",
-                        r"$\chi_{t_f}^{\frac{1}{4}}$", r"$N_F$"]
+                        r"$\chi_{t_f}^{\frac{1}{4}}$",
+                        r"$N_F$"]
         table_body = [
+            [", ".join(batch_names) for fp in sorted_parameter_list],
             [fp["obs_name_latex"] for fp in sorted_parameter_list],
             [fp["fit_target"] for fp in sorted_parameter_list],
             [fp["analysis_type"] for fp in sorted_parameter_list],
@@ -201,13 +211,20 @@ def write_fit_parameters_to_file(fparams, fname, skip_values=None,
                 for fp in sorted_parameter_list],
         ]
 
+        _tmp_table = []
+        for col in table_body:
+            if len(col) != 0:
+                _tmp_table.append(col)
+
         width_list = [len(tab)+2 for tab in table_header]
-        width_list[0] = 45
+        width_list[0] = len[table_body[0][0]] + 4
         width_list[1] = 45
-        width_list[2] = 30
-        # width_list[3] = 30
-        width_list[4] = 30
-        topsus_table = TablePrinter(table_header, table_body)
+        width_list[2] = 50
+        width_list[3] = 30
+        # width_list[4] = 30
+        width_list[5] = 30
+        topsus_table = TablePrinter(table_header, table_body,
+                                    clean_column_duplicates=[0, 1, 2, 3, 4])
         topsus_table.print_table(width=width_list, ignore_latex_cols=[
                                  3], filename=tab_filename)
 
