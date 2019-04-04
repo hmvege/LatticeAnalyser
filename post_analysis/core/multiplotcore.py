@@ -53,9 +53,11 @@ class MultiPlotCore(PostCore):
                     sub_values["y_raw"] = \
                         data_raw[bn][self.observable_name_compact][sub_obs]
 
-                    sub_values["label"] = r"%s, %s, $\beta=%2.2f$, %s" % (
-                        self.ensemble_names[bn], self.size_labels[bn], 
-                        self.beta_values[bn], self._convert_label(sub_obs))
+                    # sub_values["label"] = r"%s, %s, $\beta=%2.2f$, %s" % (
+                    #     self.ensemble_names[bn], self.size_labels[bn],
+                    #     self.beta_values[bn], self._convert_label(sub_obs))
+                    sub_values["label"] = r"%s, %s" % (
+                        self.ensemble_names[bn], self._convert_label(sub_obs))
                     values[sub_obs] = sub_values
             else:
                 # sorted_intervals = sorted(data[beta].keys())
@@ -71,13 +73,16 @@ class MultiPlotCore(PostCore):
 
                 if self.with_autocorr:
                     values["tau_int"] = data[bn][int_key]["ac"]["tau_int"]
-                    values["tau_int_err"] = data[bn][int_key]["ac"]["tau_int_err"]
+                    values["tau_int_err"] = \
+                        data[bn][int_key]["ac"]["tau_int_err"]
 
                 values["y_raw"] = \
                     data_raw[bn][self.observable_name_compact][int_key]
-                values["label"] = r"%s, %s, $\beta=%2.2f$, %s" % (
-                    self.ensemble_names, self.size_labels[bn], 
-                    self.beta_values[bn], self._convert_label(int_key))
+                # values["label"] = r"%s, %s, $\beta=%2.2f$, %s" % (
+                #     self.ensemble_names, self.size_labels[bn],
+                #     self.beta_values[bn], self._convert_label(int_key))
+                values["label"] = r"%s, %s" % (
+                    self.ensemble_names, self._convert_label(int_key))
                 values["interval"] = int_key
             self.plot_values[bn] = values
 
@@ -129,7 +134,8 @@ class MultiPlotCore(PostCore):
                 intervals: list of ordered beta values to check.
         """
 
-        num_intervals = list(set([len(val) for val in self.observable_intervals.values()]))
+        num_intervals = list(
+            set([len(val) for val in self.observable_intervals.values()]))
         assert len(num_intervals) == 1, "Uneven number of intervals."
         num_intervals = num_intervals[0]
 
@@ -154,12 +160,12 @@ class MultiPlotCore(PostCore):
             #             "%s has not been computed. Available intervals: %s" % (
             #             l, self.observable_intervals[bn])
 
-
             intervals = []
             for i in range(num_intervals):
                 _tmp_sorted_intervals = []
                 for bn in self.sorted_batch_names:
-                    _tmp_sorted_intervals.append(sorted(self.observable_intervals[bn])[i])
+                    _tmp_sorted_intervals.append(
+                        sorted(self.observable_intervals[bn])[i])
                 # _tmp = [sorted(val[i]) for bn, val in self.observable_intervals]
 
                 intervals.append(_tmp_sorted_intervals)
@@ -170,8 +176,8 @@ class MultiPlotCore(PostCore):
 
         return intervals
 
-    def plot_series(self, indexes, x_limits=False,
-                    y_limits=False, plot_with_formula=False, error_shape="band"):
+    def plot_series(self, indexes, x_limits=False, y_limits=False,
+                    plot_with_formula=False, error_shape="band"):
         """
         Method for plotting 4 axes together.
 
@@ -180,8 +186,8 @@ class MultiPlotCore(PostCore):
                         together.
                 x_limits: limits of the x-axis. Default is False.
                 y_limits: limits of the y-axis. Default is False.
-                plot_with_formula: bool, default is false, is True will look for
-                        formula for the y-value to plot in title.
+                plot_with_formula: bool, default is false, is True will look 
+                        for formula for the y-value to plot in title.
                 error_shape: plot with error bands or with error bars.
                         Options: band, bars
         """
@@ -190,12 +196,14 @@ class MultiPlotCore(PostCore):
                                    self.data_raw[self.analysis_data_type])
 
         self._series_plot_core(indexes, x_limits=x_limits,
-                               y_limits=y_limits, plot_with_formula=plot_with_formula,
+                               y_limits=y_limits,
+                               plot_with_formula=plot_with_formula,
                                error_shape=error_shape)
 
-    def _series_plot_core(self, indexes, x_limits=False,
-                          y_limits=False, plot_with_formula=False, error_shape="band",
-                          fname=None):
+    def _series_plot_core(self, indexes, x_limits=None,
+                          y_limits=None, plot_with_formula=False,
+                          error_shape="band", fname=None, filename_addendum="",
+                          legend_loc="best", plot_overlay=None):
         """
         Core structure of the series plot, allows to easily be expanded upon
         by the needs of the different observables.
@@ -211,6 +219,10 @@ class MultiPlotCore(PostCore):
                         Options: band, bars
                 fname: str, figure name. Default is
                         post_analysis_{obs_name}_{analysis_type}.pdf
+                filename_addendum: str, default is ''. Adds extra string at end
+                        of filename.
+                legend_loc: str, position of legend box. Default is 'best'.
+                plot_overlay: list of dicts, default is None.
         """
 
         old_rc_paramx = plt.rcParams['xtick.labelsize']
@@ -255,15 +267,30 @@ class MultiPlotCore(PostCore):
                     raise KeyError("%s is not a valid error bar shape." %
                                    error_shape)
 
-                # Basic plotting commands
-                ax.grid(True)
-                ax.legend(loc="best", prop={"size": 4})
+            # Sets axes limits if provided
+            if not isinstance(x_limits, type(None)):
+                ax.set_xlim(x_limits)
+            else:
+                x_limits = [x[0], x[-1]]
+            if not isinstance(y_limits, type(None)):
+                ax.set_ylim(y_limits)
 
-                # Sets axes limits if provided
-                if x_limits != False:
-                    ax.set_xlim(x_limits)
-                if y_limits != False:
-                    ax.set_ylim(y_limits)
+            # Plotting plot overlay
+            if not isinstance(plot_overlay, type(None)):
+                for _po in plot_overlay:
+                    x = np.linspace(x_limits[0], x_limits[1],
+                                    self.num_overlay_points)
+                    y = np.ones(self.num_overlay_points)*_po["mass"]
+                    y_err = np.ones(self.num_overlay_points)
+                    y_err *= _po["mass_error"]
+                    ax.plot(x, y, _po["ls"], label=_po["label"],
+                            color=_po["color"])
+                    ax.fill_between(x, y - y_err, y + y_err, alpha=0.5,
+                                    edgecolor="", facecolor=_po["color"])
+
+            # Basic plotting commands
+            ax.grid(True)
+            ax.legend(loc=legend_loc, prop={"size": 4})
 
         # Set common labels
         # https://stackoverflow.com/questions/6963035/pyplot-axes-labels-for-subplots
@@ -275,19 +302,23 @@ class MultiPlotCore(PostCore):
         # Sets the title string
         # title_string = r"%s" % self.observable_name
         # if plot_with_formula:
-        # 	title_string += r" %s" % self.formula
+        #   title_string += r" %s" % self.formula
         # plt.suptitle(title_string)
         # plt.tight_layout(pad=1.7)
 
         # Saves and closes figure
-        folder_name = "beta%s" % "-".join([str(bn) for bn in self.beta_values.values()])
+        folder_name = "beta%s" % "-".join(
+            [str(bn) for bn in self.beta_values.values()])
         folder_name += "_N%s" % "".join([str(i) for i in indexes])
         folder_path = os.path.join(self.output_folder_path, folder_name)
         check_folder(folder_path, False, True)
 
         if isinstance(fname, types.NoneType):
-            fpath = os.path.join(folder_path, "post_analysis_%s_%s.pdf" % (
-                self.observable_name_compact, self.analysis_data_type))
+            fpath = os.path.join(folder_path,
+                                 "post_analysis_%s_%s%s.pdf" % (
+                                     self.observable_name_compact,
+                                     self.analysis_data_type,
+                                     filename_addendum))
         else:
             fpath = os.path.join(folder_path, fname)
 
@@ -305,7 +336,8 @@ class MultiPlotCore(PostCore):
         Continuum plotter for topsus qtq0 in fixed flow time.
 
         Args:
-                fit_target: float value at which we extrapolate to continuum from.
+                fit_target: float value at which we extrapolate to continuum 
+                        from.
                 interval_keys: list of str, for a given interval euclidean
                         specified from setup_interval().
                 **kwargs: passed to plot_continuum().
@@ -339,8 +371,10 @@ class MultiPlotCore(PostCore):
         if self.verbose:
             print "Fit targets: ", fit_targets
 
-        self.output_folder_path = os.path.join(self.output_folder_path, 
-        	"-".join([("%.2f" % _ft).replace(".", "_") for _ft in fit_targets]))
+        self.output_folder_path = os.path.join(
+            self.output_folder_path,
+            "-".join([("%.2f" % _ft).replace(".", "_")
+                      for _ft in fit_targets]))
         check_folder(self.output_folder_path, self.dryrun, self.verbose)
 
         super(MultiPlotCore, self).plot_continuum(fit_target, **kwargs)

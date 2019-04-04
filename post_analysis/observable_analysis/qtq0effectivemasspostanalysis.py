@@ -62,6 +62,13 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
         "r0ma": [-1, 10],
     }
 
+    meff_unit_labels = {
+        "ma": r"[GeV]",
+        "m": r"",
+        "r0ma": r"",
+    }
+
+
     def __init__(self, *args, **kwargs):
         # Ensures we load correct data
         self.observable_name_compact_old = self.observable_name_compact
@@ -229,7 +236,8 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
                         data[bn][sub_obs],
                         data_raw[bn][self.observable_name_compact][sub_obs])
 
-                    sub_values["label"] = r"%s" % self.ensemble_names[bn]
+                    sub_values["label"] = r"%s, $\sqrt{8t_f}=%.2f$" % (
+                        self.ensemble_names[bn], self._convert_label(sub_obs))
 
                     sub_values["raw"] = \
                         data_raw[bn][self.observable_name_compact][sub_obs]
@@ -288,7 +296,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
                     # values["y_raw"] = self.fold_array(values["y_raw"], axis=0)
                     self.fold_position = values["x"][self.fold_range]
 
-                values["label"] = r"%s" % self.ensemble_names[bn]
+                values["label"] = r"%s" % (self.ensemble_names[bn])
 
                 self.plot_values[bn] = values
 
@@ -535,31 +543,19 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
             self.meff_plot_type, eff_mass_str)
         print msg
 
-        meff_labels = {
-            "ma": r"$m_\mathrm{eff}$",
-            "m": r"$am_\mathrm{eff}$",
-            "r0ma": r"$r_0 m_\mathrm{eff}$",
-        }
-
-        meff_unit_labels = {
-            "ma": r"[GeV]",
-            "m": r"",
-            "r0ma": r"",
-        }
-
         # Method 1
         # Make histogram of mass
         # Take std of histogram
         fig1, ax1 = plt.subplots()
         ax1.hist(meff_values,
                  label=r"%s$=%s$%s" % (
-                     meff_labels[self.meff_plot_type], eff_mass_str,
-                     meff_unit_labels[self.meff_plot_type]),
+                     self.meff_labels[self.meff_plot_type], eff_mass_str,
+                     self.meff_unit_labels[self.meff_plot_type]),
                  density=True)
         ax1.grid(True)
         ax1.set_xlabel("%s%s" % (
-            meff_labels[self.meff_plot_type],
-            meff_unit_labels[self.meff_plot_type]))
+            self.meff_labels[self.meff_plot_type],
+            self.meff_unit_labels[self.meff_plot_type]))
         ax1.set_xlim(self.meff_hist_x_limits[self.meff_plot_type])
         fig1.legend(loc="upper right")
 
@@ -685,6 +681,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
         ax.plot(a_squared_cont, y_cont, color=self.fit_color, alpha=0.5)
         ax.fill_between(a_squared_cont, y_cont_err[0], y_cont_err[1],
                         alpha=0.5, edgecolor='',
+                        label=r"$\chi^2/\mathrm{d.o.f.}=%.2f$" % chi_squared,
                         facecolor=self.fit_fill_color)
 
         # Plot lattice points
@@ -710,8 +707,9 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
         # Saves figure
         fname = os.path.join(
             self.output_folder_path,
-            "post_analysis_%s_%s.pdf" % (
-                self.observable_name_compact, self.analysis_data_type))
+            "post_analysis_%s_%s_%s.pdf" % (
+                self.observable_name_compact, self.analysis_data_type,
+                self.meff_plot_type))
         fig.savefig(fname)
         if self.verbose:
             print "Continuum plot of %s created in %s" % (
@@ -721,13 +719,8 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
         self.skipped_plateau_plot = False
         # Plot an overlay?
 
-    def plot_with_article_masses(self, **kwargs):
-        """Plots the effective mass together with different masses from other 
-        papers.
-
-        The gluon mass goes through the A_1^{-+} channel
-        """
-
+    def _get_article_values(self):
+        """Retrieves the article values for the set effetive mass type."""
         # https://arxiv.org/pdf/hep-lat/0510074.pdf
         gb1_Mr0 = 6.25
         gb1_Mr0_error = 0.06
@@ -757,27 +750,9 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
         gb3_color = "#a65628"
         gb3_ls = ":"
 
-        xlimits = [-0.1, 0.8]
-
-        kwargs["plot_with_formula"] = True
-        kwargs["error_shape"] = "bars"
-        kwargs["x_label"] = self.x_label
-
-        kwargs["y_label"] = self.meff_labels[self.meff_plot_type]
-        kwargs["y_limits"] = self.meff_y_limits[self.meff_plot_type]
-
-        kwargs["figure_name_appendix"] = "_" + self.meff_plot_type
-        kwargs["legend_position"] = "best"
-        kwargs["x_limits"] = xlimits
-        kwargs["return_axes"] = True
-
-        fig, ax = super(QtQ0EffectiveMassPostAnalysis, self)._plot_core(
-            self.plot_values, **kwargs)
-
         eff_masses = []
         if self.meff_plot_type == "m":
             print "No data for 'm'. Continuing."
-            return
 
         elif self.meff_plot_type == "ma":
             eff_masses.append({
@@ -801,7 +776,6 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
                 "color": gb3_color,
                 "ls": gb3_ls,
             })
-            ylimits = [-0.5, 4.0]
 
         elif self.meff_plot_type == "r0ma":
             eff_masses.append({
@@ -818,15 +792,49 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
                 "color": gb3_color,
                 "ls": gb3_ls,
             })
-            ylimits = [-1, 10]
 
-        num_overlay_points = 10
+        return eff_masses
+
+
+
+    def plot_with_article_masses(self, **kwargs):
+        """Plots the effective mass together with different masses from other 
+        papers.
+
+        The gluon mass goes through the A_1^{-+} channel
+        """
+
+        xlimits = [-0.1, 0.8]
+
+        kwargs["plot_with_formula"] = True
+        kwargs["error_shape"] = "bars"
+        kwargs["x_label"] = self.x_label
+
+        kwargs["y_label"] = self.meff_labels[self.meff_plot_type]
+        kwargs["y_limits"] = self.meff_y_limits[self.meff_plot_type]
+
+        kwargs["figure_name_appendix"] = "_" + self.meff_plot_type
+        kwargs["legend_position"] = "best"
+        kwargs["x_limits"] = xlimits
+        kwargs["return_axes"] = True
+
+        fig, ax = super(QtQ0EffectiveMassPostAnalysis, self)._plot_core(
+            self.plot_values, **kwargs)
+
+        eff_masses = self._get_article_values()
+        if self.meff_plot_type == "m":
+            print "No data for 'm'. Continuing."
+            return
+        elif self.meff_plot_type == "ma":
+            ylimits = [-0.5, 4.0]
+        elif self.meff_plot_type == "r0ma":
+            ylimits = [-1, 10]
 
         # fig, ax = plt.subplots()
         for mass_dict in eff_masses:
-            x = np.linspace(xlimits[0], xlimits[1], num_overlay_points)
-            y = np.ones(num_overlay_points)*mass_dict["mass"]
-            y_err = np.ones(num_overlay_points)*mass_dict["mass_error"]
+            x = np.linspace(xlimits[0], xlimits[1], self.num_overlay_points)
+            y = np.ones(self.num_overlay_points)*mass_dict["mass"]
+            y_err = np.ones(self.num_overlay_points)*mass_dict["mass_error"]
             ax.plot(x, y, mass_dict["ls"], label=mass_dict["label"],
                     color=mass_dict["color"])
             ax.fill_between(x, y - y_err, y + y_err, alpha=0.5,
@@ -848,6 +856,50 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
             print "Figure saved in %s" % fname
 
         plt.close(fig)
+
+
+    def plot_series(self, indexes, x_limits=None,
+                    y_limits=None, plot_with_formula=False, 
+                    error_shape="band"):
+        """
+        Method for plotting 4 axes together.
+
+        Args:
+                indexes: list containing integers of which intervals to plot
+                        together.
+                x_limits: limits of the x-axis. Default is False.
+                y_limits: limits of the y-axis. Default is False.
+                plot_with_formula: bool, default is false, is True will look for
+                        formula for the y-value to plot in title.
+                error_shape: plot with error bands or with error bars.
+                        Options: band, bars
+        """
+
+        for meff_plot_type in self.meff_plot_types:
+
+            self.meff_plot_type = meff_plot_type
+
+            self.plot_values = {}
+            self._initiate_plot_values(self.data[self.analysis_data_type],
+                                       self.data_raw[self.analysis_data_type])
+
+
+            y_limits = self.meff_y_limits[self.meff_plot_type]
+            _tmp_ylabel = self.y_label
+            self.y_label = "%s%s" % (
+                self.meff_labels[self.meff_plot_type],
+                self.meff_unit_labels[self.meff_plot_type])
+
+            self._series_plot_core(indexes, x_limits=[-0.05, 1.0],
+                                   y_limits=y_limits, 
+                                   plot_with_formula=plot_with_formula,
+                                   error_shape=error_shape, 
+                                   filename_addendum="_" + self.meff_plot_type,
+                                   legend_loc="upper right",
+                                   plot_overlay=self._get_article_values())
+
+            self.y_label = _tmp_ylabel
+
 
 
 def main():

@@ -37,6 +37,9 @@ class PostCore(object):
     sub_sub_obs = False
     interval = []
 
+    # For use when plotting effective mass
+    num_overlay_points = 10
+
     # Color setup for continuum plots
     cont_error_color = "#0c2c84"  # For the single continuum point
     cont_axvline_color = "#000000"

@@ -30,20 +30,22 @@ def main():
                                "jackknife", "blocked", "bootstrap_time_series"]
 
     # Overriding params for what to run
-    # run_pre_analysis = False
+    run_pre_analysis = False
     # run_post_analysis = False
     only_generate_data = True
 
-    # Observables selection
+    # Observables selection, full
     observables = ["plaq", "topc", "topc2", "topc4", "topcr", "topsus",
-                   "topsusqtq0", "qtq0e", "qtq0eff"]
+                   "topsusqtq0", "qtq0e", "qtq0eff", "topcMC"]
+    # The essential observables we are inspecting
+    observables = ["topc", "topcr", "topsus", "topsusqtq0", "qtq0e", "qtq0eff"]
     # observables = ["topsusqtq0"]
     # observables = ["qtq0e"]
     # observables = ["topcr"]
     # observables = ["topcMC"]
     # observables = ["energy"]
-    observables = ["qtq0eff"] # For proper labels
-    observables = ["topc"] # Run pre-analysis with figures and print some of the final values. Might be that the D1 set is incorrect somehow.
+    observables = ["qtq0eff"]
+    # observables = ["topc"]
     # observables = ["topsus", "topsusqtq0"]
 
     # Sets the post analysis type to use
@@ -70,22 +72,24 @@ def main():
     #                      post_analysis_data_type=post_analysis_data_type,
     #                      include_b645x48xx3x96=False)
 
-    # ABC_analysis(run_pre_analysis=False,
-    #              run_post_analysis=run_post_analysis,
-    #              only_generate_data=only_generate_data,
-    #              post_analysis_data_type=post_analysis_data_type)
+    # # Only run these in presence of topological susceptibility
+    # if "topsus" in observables:
+    #     ABC_analysis(run_pre_analysis=False,
+    #                  run_post_analysis=run_post_analysis,
+    #                  only_generate_data=only_generate_data,
+    #                  post_analysis_data_type=post_analysis_data_type)
 
-    # BCD_analysis(run_pre_analysis=False,
-    #              run_post_analysis=run_post_analysis,
-    #              only_generate_data=only_generate_data,
-    #              post_analysis_data_type=post_analysis_data_type,
-    #              include_b645x48xx3x96=False)
+    #     BCD_analysis(run_pre_analysis=False,
+    #                  run_post_analysis=run_post_analysis,
+    #                  only_generate_data=only_generate_data,
+    #                  post_analysis_data_type=post_analysis_data_type,
+    #                  include_b645x48xx3x96=False)
 
-    # BCD_analysis(run_pre_analysis=False,
-    #              run_post_analysis=run_post_analysis,
-    #              only_generate_data=only_generate_data,
-    #              post_analysis_data_type=post_analysis_data_type,
-    #              include_b645x48xx3x96=True)
+    #     BCD_analysis(run_pre_analysis=False,
+    #                  run_post_analysis=run_post_analysis,
+    #                  only_generate_data=only_generate_data,
+    #                  post_analysis_data_type=post_analysis_data_type,
+    #                  include_b645x48xx3x96=True)
 
 
     # distribution_analysis()

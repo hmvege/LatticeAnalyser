@@ -72,11 +72,16 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
                         sub_values["tau_int_err"] = \
                             data[bn][sub_obs][te_index]["ac"]["tau_int_err"]
 
+                    # sub_values["label"] = (
+                    #     r"%s, %s, $\beta=%2.2f$, $\sqrt{8t_{f}}=%.2f$"
+                    #     % (self.ensemble_names[bn],
+                    #        self.size_labels[bn],
+                    #        self.beta_values[bn],
+                    #        self._convert_label(sub_obs)))
+                    
                     sub_values["label"] = (
-                        r"%s, %s, $\beta=%2.2f$, $\sqrt{8t_{f}}=%.2f$"
+                        r"%s, $\sqrt{8t_{f}}=%.2f$"
                         % (self.ensemble_names[bn],
-                           self.size_labels[bn],
-                           self.beta_values[bn],
                            self._convert_label(sub_obs)))
 
                     values[sub_obs] = sub_values
@@ -106,11 +111,17 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
                     values["tau_int_err"] = \
                         data[bn][tf_index][te_index]["ac"]["tau_int_err"]
 
+                # values["label"] = (
+                #     r"%s, %s, $\beta=%2.2f$, $\sqrt{8t_f}=%.2f$, $t_{e,0}/a=%d$" % (
+                #         self.ensemble_names[bn],
+                #         self.size_labels[bn], self.beta_values[bn],
+                #         q0_flow_time, euclidean_index))
+
                 values["label"] = (
-                    r"%s, %s, $\beta=%2.2f$, $\sqrt{8t_f}=%.2f$, $t_{e,0}/a=%d$" % (
+                    r"%s, $\sqrt{8t_f}=%.2f$, $t_{e,0}/a=%d$" % (
                         self.ensemble_names[bn],
-                        self.size_labels[bn], self.beta_values[bn],
                         q0_flow_time, euclidean_index))
+
 
                 self.plot_values[bn] = values
 
