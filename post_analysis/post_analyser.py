@@ -360,7 +360,6 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
             topcmc_analysis.plot_series([0, 1, 2, 3])
             topcmc_analysis.plot_autocorrelation()
 
-    # Loops over different extrapolation methods
     if "topsus" in observables:
 
         topsus_analysis = TopsusPostAnalysis(
