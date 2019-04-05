@@ -79,10 +79,7 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
                     #        self.beta_values[bn],
                     #        self._convert_label(sub_obs)))
                     
-                    sub_values["label"] = (
-                        r"%s, $\sqrt{8t_{f}}=%.2f$"
-                        % (self.ensemble_names[bn],
-                           self._convert_label(sub_obs)))
+                    sub_values["label"] = self.ensemble_names[bn]
 
                     values[sub_obs] = sub_values
                 self.plot_values[bn] = values
@@ -240,9 +237,21 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
                 self.observable_name_compact,
                 self.analysis_data_type, int(euclidean_percent*100))
 
+
+        _tmp_sub_values = sorted(self.observable_intervals.values()[0])
+        sub_titles = [
+            r"$\sqrt{8t_f}=%.2f$" % (
+                self._convert_label(_tsv))
+            for _tsv in _tmp_sub_values]
+
         self._series_plot_core(indexes, x_limits=x_limits,
                                y_limits=y_limits, plot_with_formula=False,
-                               fname=fname)
+                               legend_loc="upper right",
+                               use_common_legend=True,
+                               common_legend_anchor=(0.5, 0),
+                               sub_adjust_bottom=0.15,
+                               x_label_bottom_pos=(0.51, 0.09),
+                               fname=fname, sub_titles=sub_titles)
 
 
 def main():

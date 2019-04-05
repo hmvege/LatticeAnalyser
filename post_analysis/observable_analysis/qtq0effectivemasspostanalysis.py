@@ -68,7 +68,6 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
         "r0ma": r"",
     }
 
-
     def __init__(self, *args, **kwargs):
         # Ensures we load correct data
         self.observable_name_compact_old = self.observable_name_compact
@@ -236,8 +235,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
                         data[bn][sub_obs],
                         data_raw[bn][self.observable_name_compact][sub_obs])
 
-                    sub_values["label"] = r"%s, $\sqrt{8t_f}=%.2f$" % (
-                        self.ensemble_names[bn], self._convert_label(sub_obs))
+                    sub_values["label"] = self.ensemble_names[bn]
 
                     sub_values["raw"] = \
                         data_raw[bn][self.observable_name_compact][sub_obs]
@@ -296,7 +294,7 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
                     # values["y_raw"] = self.fold_array(values["y_raw"], axis=0)
                     self.fold_position = values["x"][self.fold_range]
 
-                values["label"] = r"%s" % (self.ensemble_names[bn])
+                values["label"] = self.ensemble_names[bn]
 
                 self.plot_values[bn] = values
 
@@ -795,8 +793,6 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 
         return eff_masses
 
-
-
     def plot_with_article_masses(self, **kwargs):
         """Plots the effective mass together with different masses from other 
         papers.
@@ -857,9 +853,8 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
 
         plt.close(fig)
 
-
     def plot_series(self, indexes, x_limits=None,
-                    y_limits=None, plot_with_formula=False, 
+                    y_limits=None, plot_with_formula=False,
                     error_shape="band"):
         """
         Method for plotting 4 axes together.
@@ -883,23 +878,32 @@ class QtQ0EffectiveMassPostAnalysis(MultiPlotCore):
             self._initiate_plot_values(self.data[self.analysis_data_type],
                                        self.data_raw[self.analysis_data_type])
 
-
             y_limits = self.meff_y_limits[self.meff_plot_type]
             _tmp_ylabel = self.y_label
             self.y_label = "%s%s" % (
                 self.meff_labels[self.meff_plot_type],
                 self.meff_unit_labels[self.meff_plot_type])
 
+            _tmp_sub_values = sorted(self.observable_intervals.values()[0])
+            sub_titles = [
+                r"$\sqrt{8t_f}=%.2f$" % (
+                    self._convert_label(_tsv))
+                for _tsv in _tmp_sub_values]
+
+            overlay_masses = self._get_article_values()
+
             self._series_plot_core(indexes, x_limits=[-0.05, 1.0],
-                                   y_limits=y_limits, 
+                                   y_limits=y_limits,
                                    plot_with_formula=plot_with_formula,
-                                   error_shape=error_shape, 
+                                   error_shape=error_shape,
                                    filename_addendum="_" + self.meff_plot_type,
                                    legend_loc="upper right",
-                                   plot_overlay=self._get_article_values())
+                                   legend_size=8,
+                                   use_common_legend=True,
+                                   plot_overlay=overlay_masses,
+                                   sub_titles=sub_titles)
 
             self.y_label = _tmp_ylabel
-
 
 
 def main():

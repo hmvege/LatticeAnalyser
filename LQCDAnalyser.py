@@ -40,17 +40,18 @@ def main():
     # The essential observables we are inspecting
     observables = ["topc", "topcr", "topsus", "topsusqtq0", "qtq0e", "qtq0eff"]
     # observables = ["topsusqtq0"]
-    # observables = ["qtq0e"]
-    observables = ["topcr", "qtq0e", "qtq0eff", "energy"]
+    observables = ["qtq0e"]
+    # observables = ["topcr", "qtq0e", "qtq0eff", "energy"]
     # observables = ["topcMC"]
     # observables = ["energy"]
     # observables = ["qtq0eff"]
     # observables = ["topc"]
-    observables = ["topcMC", "topsus", "topsusqtq0"]
+    # observables = ["topcMC"]
     # observables = ["topsus"]
     # observables = ["topcr"]
     # observables = ["topsus", "topsusqtq0"]
     # observables = ["topsus"]
+    observables = ["topsusqtq0"]
 
     # Sets the post analysis type to use
     post_analysis_data_type = ["bootstrap_time_series", "bootstrap"]

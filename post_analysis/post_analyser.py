@@ -285,7 +285,7 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
         for analysis_type in post_analysis_data_type:
             topcr_analysis.set_analysis_data_type(analysis_type)
             print topcr_analysis
-            # topcr_analysis.plot()
+            topcr_analysis.plot()
             topcr_analysis.print_batch_values()
 
         topcr_analysis.compare_lattice_values(tf=topcr_tf)
@@ -419,7 +419,7 @@ def post_analysis(batch_parameter_list, observables, topsus_fit_targets,
                                 analysis_type,
                                 topsusqtq0_analysis.get_linefit_parameters())
 
-            topsusqtq0_analysis.plot_series([0, 1, 2, 3])
+            topsusqtq0_analysis.plot_series([0, 1, 2, 3], )
             topsusqtq0_analysis.plot_series([3, 4, 5, 6])
             topsusqtq0_analysis.plot_series([0, 2, 4, 6])
             topsusqtq0_analysis.plot_autocorrelation()

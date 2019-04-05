@@ -177,8 +177,8 @@ class MultiPlotCore(PostCore):
         return intervals
 
     def plot_series(self, indexes, x_limits=None, y_limits=None,
-                    plot_with_formula=False, error_shape="band", 
-                    legend_loc="best"):
+                    plot_with_formula=False, error_shape="band",
+                    legend_loc="best", **kwargs):
         """
         Method for plotting 4 axes together.
 
@@ -200,12 +200,18 @@ class MultiPlotCore(PostCore):
         self._series_plot_core(indexes, x_limits=x_limits,
                                y_limits=y_limits,
                                plot_with_formula=plot_with_formula,
-                               error_shape=error_shape)
+                               error_shape=error_shape, **kwargs)
 
     def _series_plot_core(self, indexes, x_limits=None,
                           y_limits=None, plot_with_formula=False,
                           error_shape="band", fname=None, filename_addendum="",
-                          legend_loc="best", plot_overlay=None):
+                          legend_loc="best", legend_size=6,
+                          use_common_legend=False,
+                          sub_adjust_bottom=0.18,
+                          x_label_bottom_pos=(0.51, 0.115),
+                          common_legend_anchor=(0.5, -0.01),
+                          plot_overlay=None,
+                          sub_titles=None):
         """
         Core structure of the series plot, allows to easily be expanded upon
         by the needs of the different observables.
@@ -224,7 +230,18 @@ class MultiPlotCore(PostCore):
                 filename_addendum: str, default is ''. Adds extra string at end
                         of filename.
                 legend_loc: str, position of legend box. Default is 'best'.
+                legend_size: int, fontsize. Default is 6.
+                use_common_legend: bool, if True will use commond legend. 
+                        Default is False.
+                sub_adjust_bottom: float, scales the plot to make more room at
+                        bottom. Default is 0.18.
+                x_label_bottom_ypos: float, position of common x-label. Default
+                        is 0.115.
+                common_legend_anchor: tuple of floats, common legend offset 
+                        at bottom. Default is (0.5,-0.01).
                 plot_overlay: list of dicts, default is None.
+                sub_title: list, defualt is None. Will make strings in list
+                        as title for each plot.
         """
 
         old_rc_paramx = plt.rcParams['xtick.labelsize']
@@ -285,19 +302,38 @@ class MultiPlotCore(PostCore):
                     y = np.ones(self.num_overlay_points)*_po["mass"]
                     y_err = np.ones(self.num_overlay_points)
                     y_err *= _po["mass_error"]
-                    ax.plot(x, y, _po["ls"], label=_po["label"],
-                            color=_po["color"])
+                    if ("label" in _po):
+                        ax.plot(x, y, _po["ls"], label=_po["label"],
+                                color=_po["color"])
+                    else:
+                        ax.plot(x, y, _po["ls"],
+                                color=_po["color"])
                     ax.fill_between(x, y - y_err, y + y_err, alpha=0.5,
                                     edgecolor="", facecolor=_po["color"])
 
             # Basic plotting commands
             ax.grid(True)
-            ax.legend(loc=legend_loc, prop={"size": 6})
+            if not use_common_legend:
+                ax.legend(loc=legend_loc, prop={"size": legend_size})
+
+            if not isinstance(sub_titles, type(None)):
+                ax.set_title(sub_titles[i], fontsize=8)
+
+        # In case we use common legend box for all plots
+        if use_common_legend:
+            # https://stackoverflow.com/questions/4700614/how-to-put-the-legend-out-of-the-plot
+            # Shrink current axis's height by 10% on the bottom
+            handles, labels = axes[0, 0].get_legend_handles_labels()
+            fig.legend(handles, labels, loc="lower center", ncol=5,
+                       bbox_to_anchor=common_legend_anchor)
+            plt.subplots_adjust(bottom=sub_adjust_bottom)
+        else:
+            x_label_bottom_pos = (0.52, 0.035)
 
         # Set common labels
         # https://stackoverflow.com/questions/6963035/pyplot-axes-labels-for-subplots
-        fig.text(0.52, 0.035, self.x_label, ha='center', va='center',
-                 fontsize=11)
+        fig.text(x_label_bottom_pos[0], x_label_bottom_pos[1], self.x_label, ha='center',
+                 va='center', fontsize=11)
         fig.text(0.03, 0.5, self.y_label, ha='center', va='center',
                  rotation='vertical', fontsize=11)
 
