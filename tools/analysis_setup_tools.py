@@ -127,7 +127,7 @@ def append_fit_params(fplist, obs_name, analysis_name, fparams):
     return fplist
 
 
-def write_fit_parameters_to_file(fparams, fname, batch_names,
+def write_fit_parameters_to_file(fparams, fname, ensemble_names,
                                  skip_values=None,
                                  verbose=False, verbose_latex=False,
                                  tab_filename=None):
@@ -187,7 +187,7 @@ def write_fit_parameters_to_file(fparams, fname, batch_names,
             f.write(line_values + "\n")
 
         # Obs  sqrt(8t)  extrap.method  int/slice  chi^2  topsus  Nf
-        table_header = [r"Ensemble", 
+        table_header = [r"Ensemble",
                         r"$\mathcal{O}$",
                         r"$\sqrt{8t_{f,0,\mathrm{extrap}}}$",
                         "Analysis method",
@@ -197,7 +197,8 @@ def write_fit_parameters_to_file(fparams, fname, batch_names,
                         r"$\chi_{t_f}^{\frac{1}{4}}$",
                         r"$N_F$"]
         table_body = [
-            [", ".join(batch_names) for fp in sorted_parameter_list],
+            [", ".join(sorted(ensemble_names.values()))
+                for fp in sorted_parameter_list],
             [fp["obs_name_latex"] for fp in sorted_parameter_list],
             [fp["fit_target"] for fp in sorted_parameter_list],
             [fp["analysis_type"] for fp in sorted_parameter_list],
@@ -217,11 +218,11 @@ def write_fit_parameters_to_file(fparams, fname, batch_names,
                 _tmp_table.append(col)
 
         width_list = [len(tab)+2 for tab in table_header]
-        width_list[0] = len[table_body[0][0]] + 4
+        width_list[0] = 42
         width_list[1] = 45
         width_list[2] = 50
         width_list[3] = 30
-        # width_list[4] = 30
+        width_list[4] = 35
         width_list[5] = 30
         topsus_table = TablePrinter(table_header, table_body,
                                     clean_column_duplicates=[0, 1, 2, 3, 4])

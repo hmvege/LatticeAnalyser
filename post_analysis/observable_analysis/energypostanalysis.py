@@ -137,9 +137,10 @@ class EnergyPostAnalysis(PostCore):
                 (data_raw[bn][self.observable_name_compact].T
                  * (data[bn]["x"]**2)).T
 
-            values["label"] = (r"%s, %s, $\beta=%2.2f$" %
-                               (self.ensemble_names[bn], self.size_labels[bn], 
-                                values["beta"]))
+            # values["label"] = (r"%s, %s, $\beta=%2.2f$" %
+            #                    (self.ensemble_names[bn], self.size_labels[bn], 
+            #                     values["beta"]))
+            values["label"] = r"%s" % self.ensemble_names[bn]
 
             self.plot_values[bn] = values
 

@@ -248,8 +248,9 @@ class PostCore(object):
                 values["tau_int_err"] = None
                 values["tau_raw"] = None
                 values["tau_raw_err"] = None
-            values["label"] = r"%s, %s, $\beta=%2.2f$" % (
-                self.ensemble_names[bn], self.size_labels[bn], values["beta"])
+            # values["label"] = r"%s, %s, $\beta=%2.2f$" % (
+            #     self.ensemble_names[bn], self.size_labels[bn], values["beta"])
+            values["label"] = r"%s" % self.ensemble_names[bn]
             values["color"] = self.colors[bn]
 
             self.plot_values[bn] = values
@@ -479,7 +480,7 @@ class PostCore(object):
     def plot_mc_history_at(self, target_flow=0, x_limits=False,
                            y_limits=False, figure_folder=None,
                            plot_vline_at=None, plot_hline_at=None,
-                           show_plot=False):
+                           show_plot=False, legend_position="upper right"):
         """
         Plots the Monte-Carlo history at a given flow time target_flow.
         """
@@ -527,7 +528,7 @@ class PostCore(object):
                     color=self.colors[bn])
 
             ax.grid(True)
-            ax.legend(prop={"size": 8}, loc="upper right")
+            ax.legend(prop={"size": 8}, loc=legend_position)
 
             if i != len(flow_indices) - 1:
                 ax.tick_params(labelbottom=False)

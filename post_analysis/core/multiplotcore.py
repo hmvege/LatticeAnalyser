@@ -176,8 +176,9 @@ class MultiPlotCore(PostCore):
 
         return intervals
 
-    def plot_series(self, indexes, x_limits=False, y_limits=False,
-                    plot_with_formula=False, error_shape="band"):
+    def plot_series(self, indexes, x_limits=None, y_limits=None,
+                    plot_with_formula=False, error_shape="band", 
+                    legend_loc="best"):
         """
         Method for plotting 4 axes together.
 
@@ -190,6 +191,7 @@ class MultiPlotCore(PostCore):
                         for formula for the y-value to plot in title.
                 error_shape: plot with error bands or with error bars.
                         Options: band, bars
+                legend_loc: str, location of legend box. Default is 'best'.
         """
         self.plot_values = {}
         self._initiate_plot_values(self.data[self.analysis_data_type],
@@ -290,12 +292,12 @@ class MultiPlotCore(PostCore):
 
             # Basic plotting commands
             ax.grid(True)
-            ax.legend(loc=legend_loc, prop={"size": 4})
+            ax.legend(loc=legend_loc, prop={"size": 6})
 
         # Set common labels
         # https://stackoverflow.com/questions/6963035/pyplot-axes-labels-for-subplots
         fig.text(0.52, 0.035, self.x_label, ha='center', va='center',
-                 fontsize=9)
+                 fontsize=11)
         fig.text(0.03, 0.5, self.y_label, ha='center', va='center',
                  rotation='vertical', fontsize=11)
 
