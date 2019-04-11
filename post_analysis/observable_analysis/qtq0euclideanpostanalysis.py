@@ -240,11 +240,12 @@ class QtQ0EuclideanPostAnalysis(MultiPlotCore):
 
         _tmp_sub_values = sorted(self.observable_intervals.values()[0])
         sub_titles = [
-            r"$\sqrt{8t_f}=%.2f$" % (
+            r"$\sqrt{8t_f}=%.2f$ fm" % (
                 self._convert_label(_tsv))
             for _tsv in _tmp_sub_values]
 
         self._series_plot_core(indexes, x_limits=x_limits,
+                               # error_shape="bars",
                                y_limits=y_limits, plot_with_formula=False,
                                legend_loc="upper right",
                                use_common_legend=True,

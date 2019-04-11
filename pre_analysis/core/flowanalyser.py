@@ -1120,7 +1120,7 @@ class FlowAnalyser(object):
         y_std = self.autocorrelations_errors[flow_time_index, :]
 
         # Sets up the title and filename strings
-        title_string = r"Autocorrelation of %s, $t_f=%.2f$" % (
+        title_string = r"Autocorrelation of %s, $t_f/a^2=%.2f$" % (
             self.observable_name, flow_time_index*self.flow_epsilon)
         fname_path = os.path.join(
             self.observable_output_folder_path,
@@ -1234,7 +1234,7 @@ class FlowAnalyser(object):
         assert flow_time_index < N_unanalyzed, assertion_str
 
         # Sets up title and file name strings
-        title_string = r"Spread of %s, $t_f=%.2f$" % (
+        title_string = r"Spread of %s, $t_f/a^2=%.2f$" % (
             self.observable_name, flow_time_index*self.flow_epsilon)
         fname_path = os.path.join(
             self.observable_output_folder_path,
@@ -1355,7 +1355,7 @@ class FlowAnalyser(object):
             t_f = iHist * self.flow_epsilon
             ax.hist(self.unanalyzed_y_data[iHist],
                     color=self.hist_color,
-                    bins=NBins, label=r"$t_f=%.2f$" % t_f, density=True)
+                    bins=NBins, label=r"$t_f/a^2=%.2f$" % t_f, density=True)
             ax.grid(True)
             ax.legend(loc="upper right")
             if iHist == histogram_slices[1]:
@@ -1395,7 +1395,7 @@ class FlowAnalyser(object):
         assert flow_time_index < len(self.unanalyzed_y_data), assertion_str
 
         # Sets up title and file name strings
-        title_string = r"Monte Carlo history at $t_f = %.2f$" % (
+        title_string = r"Monte Carlo history at $t_f/a^2 = %.2f$" % (
             flow_time_index*self.flow_epsilon)
         fname_path = os.path.join(
             self.observable_output_folder_path,

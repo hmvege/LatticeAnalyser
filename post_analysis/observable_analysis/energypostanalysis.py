@@ -429,7 +429,8 @@ class EnergyPostAnalysis(PostCore):
                                 r"w_{0,\mathrm{cont}}", fname,
                                 r"$w_0[\mathrm{fm}]$",
                                 r"$a^2[\mathrm{GeV}^{-2}]$",
-                                y_limits=[0.1625, 0.1750])
+                                y_limits=[0.1625, 0.1750],
+                                cont_label_unit=" fm")
 
         # Reverses values for storage.
         a_values, a_values_err, w0_values, w0err_values, = map(
@@ -517,7 +518,8 @@ class EnergyPostAnalysis(PostCore):
     def plot_continuum_fit(self, a_squared_cont, y_cont, y_cont_err,
                            chi_squared, x_fit, x_fit_err, y_fit, y_fit_err,
                            a0_cont, a0err_cont, y0_cont, y0err_cont,
-                           cont_label, figname, xlabel, ylabel, y_limits=[0.91, 0.97]):
+                           cont_label, figname, xlabel, ylabel, y_limits=[0.91, 0.97],
+                           cont_label_unit=""):
         """
         Creates continuum extrapolation plot.
         """
@@ -552,11 +554,15 @@ class EnergyPostAnalysis(PostCore):
                     ecolor=self.lattice_points_color, zorder=15)
 
         if y0err_cont < 0.001:
-            cont_lim_label = r"$%s=%.4f\pm%.4f$" % (
-                cont_label, y0_cont, y0err_cont)
+            cont_lim_label = r"$%s=%s$%s" % (
+                cont_label,
+                sciprint.sciprint(y0_cont, y0err_cont, prec=4),
+                cont_label_unit)
         else:
-            cont_lim_label = r"$%s=%.3f\pm%.3f$" % (
-                cont_label, y0_cont, y0err_cont)
+            cont_lim_label = r"$%s=%s$%s" % (
+                cont_label, 
+                sciprint.sciprint(y0_cont, y0err_cont, prec=3),
+                cont_label_unit)
 
 
         # Plots the continuum limit errorbar

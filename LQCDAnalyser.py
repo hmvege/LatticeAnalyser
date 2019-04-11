@@ -40,7 +40,7 @@ def main():
     # The essential observables we are inspecting
     observables = ["topc", "topcr", "topsus", "topsusqtq0", "qtq0e", "qtq0eff"]
     # observables = ["topsusqtq0"]
-    # observables = ["qtq0e"]
+    observables = ["qtq0e"]
     # observables = ["topcr", "qtq0e", "qtq0eff", "energy"]
     # observables = ["topcMC"]
     # observables = ["energy"]
@@ -49,7 +49,7 @@ def main():
     # observables = ["topcMC"]
     # observables = ["topsus"]
     # observables = ["topcr"]
-    # observables = ["topsus", "topsusqtq0"]
+    observables = ["topsus", "topsusqtq0"]
     # observables = ["topsus"]
     # observables = ["topsusqtq0"]
 
@@ -79,24 +79,29 @@ def main():
                          post_analysis_data_type=post_analysis_data_type,
                          include_b645x48xx3x96=False)
 
-    # Only run these in presence of topological susceptibility
-    if "topsus" in observables:
-        ABC_analysis(run_pre_analysis=False,
-                     run_post_analysis=run_post_analysis,
-                     only_generate_data=only_generate_data,
-                     post_analysis_data_type=post_analysis_data_type)
+    # # Only run these in presence of topological susceptibility
+    # if ("topsus" in observables) or ("energy" in observables):
+    #     observables = list(set(observables) & set(["topsus", "energy"]))
 
-        BCD_analysis(run_pre_analysis=False,
-                     run_post_analysis=run_post_analysis,
-                     only_generate_data=only_generate_data,
-                     post_analysis_data_type=post_analysis_data_type,
-                     include_b645x48xx3x96=False)
+    #     ABC_analysis(run_pre_analysis=False,
+    #                  run_post_analysis=run_post_analysis,
+    #                  only_generate_data=only_generate_data,
+    #                  observables=observables,
+    #                  post_analysis_data_type=post_analysis_data_type)
 
-        BCD_analysis(run_pre_analysis=False,
-                     run_post_analysis=run_post_analysis,
-                     only_generate_data=only_generate_data,
-                     post_analysis_data_type=post_analysis_data_type,
-                     include_b645x48xx3x96=True)
+    #     BCD_analysis(run_pre_analysis=False,
+    #                  run_post_analysis=run_post_analysis,
+    #                  only_generate_data=only_generate_data,
+    #                  observables=observables,
+    #                  post_analysis_data_type=post_analysis_data_type,
+    #                  include_b645x48xx3x96=False)
+
+    #     BCD_analysis(run_pre_analysis=False,
+    #                  run_post_analysis=run_post_analysis,
+    #                  only_generate_data=only_generate_data,
+    #                  observables=observables,
+    #                  post_analysis_data_type=post_analysis_data_type,
+    #                  include_b645x48xx3x96=True)
 
 
     # distribution_analysis()

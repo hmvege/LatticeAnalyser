@@ -26,7 +26,7 @@ def analyse_precision(input_file, output_folder, figure_folder):
         data["Taylor4"] = get_val(f)
         data["header"] = [r"$N$",
                           r"$\mathrm{Taylor}(N)$",
-                          r"abs$(\mathrm{Luscher}-\mathrm{Taylor}(N))$",
+                          r"abs$(\mathrm{L\ddot{u}scher}-\mathrm{Taylor}(N))$",
                           r"abs$(\mathrm{Morningstar}-\mathrm{Taylor}(N))$",
                           r"rel$(\mathrm{Morningstar}-\mathrm{Taylor}(N))$",
                           r"abs$(\mathrm{Taylor}(2)-\mathrm{Taylor}(N))$",
@@ -118,7 +118,7 @@ def analyse_times(input_file, output_folder, figure_folder):
 def main():
     # Read in data
     base_folder = "/Users/hansmathiasmamenvege/Programming/LQCD"
-    input_folder = "GluonAction/output/defaultPerformanceRun/observables"
+    input_folder = "GLAC/output/defaultPerformanceRun/observables"
     precision_data_file = os.path.join(
         base_folder, input_folder, "exp_precision.dat")
     timing_data_file = os.path.join(

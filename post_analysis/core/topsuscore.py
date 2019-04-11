@@ -5,6 +5,7 @@ import numpy as np
 from postcore import PostCore
 from tools.latticefunctions import get_lattice_spacing
 from tools.latticefunctions import witten_veneziano
+import tools.sciprint as sciprint
 from statistics.linefit import LineFit, extract_fit_target
 import warnings
 with warnings.catch_warnings():
@@ -341,6 +342,9 @@ class TopsusCore(PostCore):
         else:
             chi_squared_label = r"$\chi^2/\mathrm{d.o.f.}=%.2f$" % chi_squared
 
+        topsus_continuum_label = sciprint.sciprint(self.topsus_continuum, 
+            self.topsus_continuum_error, prec=3)
+
         # Plots the fit
         ax.plot(a_squared_cont, y_cont, color=self.fit_color, alpha=0.5, 
             label=chi_squared_label)
@@ -357,8 +361,8 @@ class TopsusCore(PostCore):
                     yerr=y0_err, fmt="o", capsize=5,
                     capthick=1, color=self.cont_error_color,
                     ecolor=self.cont_error_color,
-                    label=r"$\chi_{t_f}^{1/4}=%.3f\pm%.3f$" % (
-                        self.topsus_continuum, self.topsus_continuum_error))
+                    label=r"$\chi_{t_f}^{1/4}=%s$ GeV" % (
+                        topsus_continuum_label))
 
         ax.set_ylabel(self.y_label_continuum)
         ax.set_xlabel(self.x_label_continuum)
@@ -369,7 +373,7 @@ class TopsusCore(PostCore):
         ax.grid(True)
 
         if self.verbose:
-            print "Target: %.16f +/- %.16f" % (self.topsus_continuum,
+            print "Target: %.16f +/- %.16f GeV" % (self.topsus_continuum,
                                                self.topsus_continuum_error)
 
         # Saves figure
